@@ -1,0 +1,67 @@
+#!/bin/sh
+
+
+# Construct IOC parameter string array
+#
+#   IocParameter <flag> <value>
+#
+declare -a IOC_PARAMETERS
+IocParameter()
+{
+    IOC_PARAMETERS[${#IOC_PARAMETERS[@]}]="$1$2"
+}
+
+
+export DB_PARAMETERS="DEVICE=$(hostname)"
+DbParameter()
+{
+    DB_PARAMETERS="$DB_PARAMETERS,$1=$2"
+}
+
+
+cd "$(dirname "$0")/../.."
+
+. /etc/sysconfig/tmbf_ioc
+
+
+PIDFILE=/var/run/ioc.pid
+BIN_DIR=./bin/linux-arm
+
+while getopts 'nh' option; do
+    case "$option" in
+    n)  IocParameter -n ;;
+    h)  cat <<'EOF'
+Usage: runioc [options]
+    -n          run non-interactive without an IOC shell
+EOF
+        exit 0 ;;
+    *)  echo >&2 'Invalid arguments: try -h for help'
+        exit 1 ;;
+    esac
+done
+# No extra arguments allowed
+if (($# >= OPTIND)); then
+    echo >&2 'Invalid arguments: try -h for help'
+    exit 1
+fi
+
+
+IocParameter -p "$PIDFILE"
+IocParameter "$BIN_DIR"/st.cmd
+
+export EPICS_CA_MAX_ARRAY_BYTES=1000000
+
+DbParameter DACDLY $IOC_DACDLY
+DbParameter FIR_CYCLES $IOC_FIR_CYCLES
+DbParameter FIR_LENGTH $IOC_FIR_LENGTH
+
+
+# Now run the IOC.
+echo
+echo 'Starting IOC at' $(date)
+echo "IOC parameters: ${IOC_PARAMETERS[*]}"
+trap 'rm -f "$PIDFILE"' EXIT
+"$BIN_DIR"/tmbf "${IOC_PARAMETERS[@]}"
+echo 'IOC stopped at' $(date)
+echo
+

@@ -1,0 +1,38 @@
+#!/bin/sh
+
+. /etc/init.d/functions
+. /etc/sysconfig/tmbf_ioc
+
+IOC_LOG="${IOC_LOG:-/var/log/ioc}"
+
+
+case "$1" in
+    start)
+        echo -n "Starting TMBF EPICS"
+        if [ -e /var/run/ioc.pid ]; then
+            echo -n " - already running?"
+            print_status failure
+        else
+            # Run as a daemon with all output sent to log file.
+            "$TMBF_IOC" -n >>"$IOC_LOG" 2>&1 </dev/null &
+            evaluate_retval
+        fi
+        ;;
+
+    stop)
+        echo -n "Stopping TMBF EPICS"
+        [ -e /var/run/ioc.pid ] && kill "$(cat /var/run/ioc.pid)"
+        evaluate_retval
+        rm -f /var/run/ioc.pid
+        ;;
+
+    restart)
+        "$0" stop
+        sleep 1
+        "$0" start
+        ;;
+
+    *)  echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac

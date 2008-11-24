@@ -1,0 +1,145 @@
+#!/bin/sh
+
+set -e
+
+function Error()
+{
+    echo >&2 "$@"
+    exit 1
+}
+
+[ "$(uname -m)" = armv5tel ]  ||
+    Error 'This script must be run on Libera'
+
+
+SOURCE="$(cd "$(dirname "$0")"/..; pwd)"
+LOCATIONS="$(cat "$SOURCE"/install/locations)"
+
+CONFIGDIR=/etc/sysconfig
+
+
+# Parse local installation options
+TARGET=none
+AUTOSTART=0
+STARTNOW=0
+REMOUNT_RW=0
+while getopts 'ftlaswh' option; do
+    case "$option" in
+    f)  TARGET=final ;;
+    t)  TARGET=test ;;
+    a)  AUTOSTART=1 ;;
+    l)  echo 'The -l option is obsolete: use -a'
+        AUTOSTART=1 ;;
+    s)  STARTNOW=1 ;;
+    w)  REMOUNT_RW=1 ;;
+    h)  echo -n 'Usage: tmbf-install-ioc <options>'
+        if [ -n "$LOCATIONS" ]; then echo ' <location>'; else echo; fi
+        cat <<'EOF'
+where <options> includes
+    -f  Final install: copy files to local /opt directory
+    -t  Testing install: don't copy files, use from configured location
+    -a  Enable autostart via /etc/init.d/libera script.
+    -s  Start IOC after installation
+    -w  Remount ro rootfs rw if necessary
+EOF
+        [ -n "$LOCATIONS" ]  &&  cat <<EOF
+and <location> is a location code used to configure location specific
+settings, one of: $(echo -n $LOCATIONS).
+EOF
+        exit 0 ;;
+    *)  Error 'Invalid option: try -h for help' ;;
+    esac
+done
+shift $((OPTIND - 1))
+[ $TARGET == none ]  &&
+    Error 'Specify installation option.  Try -h for help.'
+
+# Read the location code, but only if it's actually required!  The set of
+# location codes is determined by a simple pattern match: if this set is
+# empty then no location needs to be specified, otherwise the code should be
+# one of these patterns.
+if [ -n "$LOCATIONS" ]; then
+    (($# > 0))  ||  Error "Must specify a location, one of:" $LOCATIONS
+    LOCATION="$1"
+    shift
+    # Check the location given is one of the ones we know
+    echo "$LOCATIONS" | grep "^$LOCATION\$" >/dev/null  ||
+        Error "Invalid location $LOCATION: use one of" $LOCATIONS
+fi
+
+(($# != 0))  &&
+    Error 'Invalid arguments: try -h for help'
+
+    
+# Check whether we can write to the filesystem.
+if cat /proc/mounts | grep -q ' / [^ ]* ro '; then
+    # Root is mounted read only.  Bail unless remount requested.
+    if ((REMOUNT_RW)); then
+        mount -o rw,remount /  ||
+            Error 'Unable to remount rootfs for writing'
+        trap 'mount -o ro,remount /' EXIT
+    else
+        Error 'Rootfs is mounted read-only.  Try -w option'
+    fi
+fi
+
+# Ensure epics driver isn't running at the moment.
+if [ -e /var/run/ioc.pid ]; then
+    /etc/init.d/epics stop
+fi
+/etc/init.d/libera stop
+
+
+# If final installation selected then copy over all the run-time files and
+# update the configuration file to point to them.
+if [ $TARGET == final ]; then
+    # Hard-wired targets on local file system
+    IOC_TARGET=/opt/ioc
+    STATE_DIR=/opt/state
+
+    # Ensure the state directory exists (but don't interfere with it!)
+    mkdir -p "$STATE_DIR"  
+
+    # Copy over all the runtime files.  First make sure the target directory
+    # is fresh.
+    rm -rf "$IOC_TARGET"  
+    umask 22  
+    mkdir -p "$IOC_TARGET"  
+    for dir in bin dbd db; do
+        cp -r "$SOURCE/$dir" "$IOC_TARGET"
+    done
+else
+    # Compute EPICS and IOC paths relative to this directory.  
+    PARENT="$(cd "$SOURCE/.."; pwd)"
+    IOC_TARGET="$PARENT/tmbf"
+    # Check that the parent directory contains the right files!
+    [ "$IOC_TARGET" = "$SOURCE" ]  ||
+        Error "Inconsistent test installation environment"
+fi  
+
+# Now install the epics_ioc file.
+(
+    # Add on the paths required for running the IOC
+    echo "TMBF_IOC='$IOC_TARGET/bin/linux-arm/runioc'"
+    # Any lines starting IOC_ are passed through, lines starting
+    # $LOCATION_IOC_ are translated to IOC_, the rest are discarded.
+    sed -rn 's/^'$LOCATION'_(IOC_)/\1/; /^IOC_/p' "$SOURCE"/install/CONFIG
+    # If libera autostart is configured then add the appropriate entry
+    ((AUTOSTART))  &&  echo 'START_EPICS=yes'
+) > $CONFIGDIR/tmbf_ioc
+
+# Copy the startup scripts
+cp -f "$SOURCE"/install/epics /etc/init.d  
+
+
+# Configure autostart as required.  First clear out any existing autostart
+# method, then install the chosen one.  Either we start epics separately from
+# libera, or we invite the libera script to start/stop us at the same time.
+rm -f /etc/rc3.d/S900epics /etc/rc6.d/K100epics  
+rm -f $CONFIGDIR/libera-server  
+rm -f /etc/init.d/libera-server
+
+if ((STARTNOW)); then
+    /etc/init.d/libera start
+    ((AUTOSTART))  ||  /etc/init.d/epics start
+fi

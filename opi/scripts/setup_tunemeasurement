@@ -1,0 +1,128 @@
+#!/bin/sh
+
+# Simple script for setting the TMBF into the appropriate tune measurement
+# mode.
+
+HERE="$(dirname "$0")"
+
+DEVICE="${1:?Specify device}"
+MODE="${2:?Specify mode}"
+
+HARMONIC=80
+BUNCH=450
+
+[ $MODE = SBFB ]  &&  HARMONIC=0
+
+
+bb_func()
+{
+    echo -n 936
+    for ((i=0; i<936; i++)); do
+        echo -n ' '
+        if ((i == $3)); then
+            echo -n $2
+        else
+            echo -n $1
+        fi
+    done
+    echo
+}
+
+put()
+{
+    caput -w 5 -s $DEVICE:$1 "$2"
+}
+
+
+# Sets the range of tunes.  Called as:
+#
+#   set_tune <start_freq> <low> <high> <stop_freq>
+#
+set_tune()
+{
+    STARTFREQ=$1
+    STOPFREQ=$4
+    LOW=$2
+    HIGH=$3
+}
+
+
+# Control features different in AP mode, including Tune frequency range.
+case $MODE in
+    TUNE|SBFB)
+        case $DEVICE in
+            SR21C-DI-TMBF-01|TS-DI-TMBF-01)
+                # nominal tune is .2256
+                set_tune .1756 .2156 .2356 .2756
+                ;;
+            SR21C-DI-TMBF-02)
+                # nominal tune is .3630
+                set_tune .3130 .3530 .3730 .4130
+                ;;
+            *)  echo "Don't recognise that device!" >&2
+                exit 1
+        esac
+        IQSCALE=7
+        DDCINPUT=FIR
+        ;;
+    AP)
+        set_tune .01 .0 .5 .49
+        IQSCALE=5
+        DDCINPUT=ADC
+        ;;
+    *)  echo Mode must be one of TUNE, AP or SBFB. >&2
+        exit 1
+        ;;
+esac
+
+# Control features unique to TUNE mode
+case $MODE in
+    TUNE)
+        HOMGAIN=-45dB
+        ;;
+    AP|SBFB)
+        HOMGAIN=-21dB
+        ;;
+esac
+
+# Control features unique to SBFB mode
+case $MODE in
+    TUNE|AP)
+        TEMPDACOUT=HOM
+        BUNCH=1023
+        BUNCHMODE=Off
+        ;;
+    SBFB)
+        TEMPDACOUT=Off
+        BUNCH=$((BUNCH+8))
+        BUNCHMODE=On
+        ;;
+esac
+
+
+put GROWDAMPMODE_S 'Off'
+put DACOUT_S 'Off'
+put TUNESWEEPMODE_S 'On'
+put PROGCLKVAL_S 25000
+put TUNESCAN.SCAN '1 second'
+put HB_BUF_LOWER_R.SCAN 'Passive'
+put ARCHIVE_S 'I+Q'
+put TRIGSEL_S 'Soft'
+put FIRGAIN_S '-24dB'
+put BUNCHMODE_S $BUNCHMODE
+put HOMGAIN_S $HOMGAIN
+put SWPSTARTFREQ_S $HARMONIC$STARTFREQ
+put SWPSTOPFREQ_S $HARMONIC$STOPFREQ
+put IQSCALE_S $IQSCALE
+put BUNCH_W $BUNCH
+put TEMPDACOUT_S $TEMPDACOUT
+put DDCINPUT_S $DDCINPUT
+put TUNE.HIGH $HIGH
+put TUNE.LOW $LOW
+put TUNE.HSV MINOR
+put TUNE.LSV MINOR
+
+if [ $MODE = SBFB ]; then
+    caput -w 5 -a $DEVICE:BB_DACS_W $(bb_func 1 3 $BUNCH)
+    caput -w 5 -a $DEVICE:BB_GAINS_W $(bb_func 1 1 1)
+fi

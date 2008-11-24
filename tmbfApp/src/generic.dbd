@@ -1,0 +1,4 @@
+device(ai, INST_IO, devAiGeneric, "Generic")
+device(ao, INST_IO, devAoGeneric, "Generic")
+device(waveform, INST_IO, devWaveformGeneric, "Generic")
+device(mbbo, INST_IO, devMbboGeneric, "Generic")
