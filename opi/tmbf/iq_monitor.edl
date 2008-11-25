@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2557
-y 557
+x 2067
+y 538
 w 636
-h 278
+h 382
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -19,7 +19,7 @@ ctlBgColor1 index 0
 ctlBgColor2 index 14
 topShadowColor index 0
 botShadowColor index 14
-title "Tune Measurement"
+title "IQ Monitor"
 showGrid
 snapToGrid
 gridSize 8
@@ -35,9 +35,10 @@ release 0
 # Geometry
 x 8
 y 40
-w 624
-h 200
+w 304
+h 304
 # Appearance
+graphTitle "DDC Response"
 fgColor index 14
 bgColor index 3
 gridColor index 14
@@ -45,11 +46,9 @@ font "helvetica-medium-r-12.0"
 # Operating Modes
 nPts 2
 # X axis properties
-showXAxis
 xAxisSrc "AutoScale"
 xMax 1
 # Y axis properties
-showYAxis
 yAxisSrc "AutoScale"
 yMin 1
 yMax 2
@@ -59,13 +58,19 @@ y2Max 1
 # Trace Properties
 numTraces 1
 xPv {
-  0 "$(device):TUNESCALE"
+  0 "$(device):DDC_I"
 }
 yPv {
-  0 "$(device):TUNEPOWER"
+  0 "$(device):DDC_Q"
+}
+plotStyle {
+  0 "point"
 }
 plotUpdateMode {
   0 "xOrY"
+}
+plotSymbolType {
+  0 "circle"
 }
 opMode {
   0 "plot"
@@ -96,7 +101,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 73
 value {
-  "$(device) Tune Measurement"
+  "$(device) IQ Monitor"
 }
 endObjectProperties
 
@@ -106,8 +111,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 568
-y 248
+x 560
+y 352
 w 64
 h 24
 fgColor index 25
@@ -137,29 +142,69 @@ font "helvetica-bold-r-14.0"
 buttonLabel "?"
 numCmds 1
 command {
-  0 "diagnostics-help TMBF_Tune_Monitor"
+  0 "diagnostics-help TMBF_IQ_Monitor"
 }
 includeHelpIcon
 endObjectProperties
 
-# (Menu Button)
-object activeMenuButtonClass
+# (X-Y Graph)
+object xyGraphClass
 beginObjectProperties
 major 4
-minor 0
+minor 3
 release 0
-x 440
-y 248
-w 120
-h 24
+# Geometry
+x 320
+y 40
+w 304
+h 304
+# Appearance
+graphTitle "DDC Integral"
 fgColor index 14
-bgColor index 4
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):TUNESCAN.SCAN"
-indicatorPv "$(device):TUNESCAN.SCAN"
-font "helvetica-medium-r-14.0"
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+xAxisSrc "AutoScale"
+xMax 1
+# Y axis properties
+yAxisSrc "AutoScale"
+yMin 1
+yMax 2
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 1
+xPv {
+  0 "$(device):CUMSUM_I"
+}
+yPv {
+  0 "$(device):CUMSUM_Q"
+}
+plotStyle {
+  0 "point"
+}
+plotUpdateMode {
+  0 "xOrY"
+}
+plotSymbolType {
+  0 "circle"
+}
+opMode {
+  0 "plot"
+}
+xSigned {
+  0 5572
+}
+ySigned {
+  0 5069
+}
+plotColor {
+  0 index 14
+}
 endObjectProperties
 
 # (Text Monitor)
@@ -168,18 +213,18 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 64
-y 248
+x 80
+y 352
 w 96
 h 21
-controlPv "$(device):TUNE"
+controlPv "$(device):TUNECUMSUM"
 font "helvetica-medium-r-18.0"
 fgColor index 14
 fgAlarm
 bgColor index 0
 useDisplayBg
 autoHeight
-precision 5
+limitsFromDb
 nullColor index 0
 useHexPrefix
 newPos
@@ -193,7 +238,7 @@ major 4
 minor 1
 release 0
 x 8
-y 248
+y 352
 w 47
 h 21
 font "helvetica-medium-r-18.0"
@@ -206,72 +251,47 @@ value {
 autoSize
 endObjectProperties
 
-# (Shell Command)
-object shellCmdClass
-beginObjectProperties
-major 4
-minor 2
-release 0
-x 336
-y 248
-w 96
-h 24
-fgColor index 25
-bgColor index 3
-topShadowColor index 1
-botShadowColor index 11
-font "helvetica-bold-r-12.0"
-buttonLabel "Setup"
-numCmds 1
-command {
-  0 "xterm -T 'Setup Tune' -e 'setup_tunemeasurement $(device) TUNE; read -p \"press return\"'"
-}
-endObjectProperties
-
-# (Related Display)
-object relatedDisplayClass
-beginObjectProperties
-major 4
-minor 2
-release 0
-x 264
-y 248
-w 64
-h 24
-fgColor index 43
-bgColor index 4
-topShadowColor index 1
-botShadowColor index 11
-font "helvetica-bold-r-12.0"
-buttonLabel "IQ"
-numPvs 4
-numDsps 1
-displayFileName {
-  0 "tmbf/iq_monitor.edl"
-}
-endObjectProperties
-
 # (Text Monitor)
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
 minor 1
 release 0
-x 168
-y 248
+x 296
+y 352
 w 96
 h 21
-controlPv "$(device):TUNECUMSUM"
+controlPv "$(device):TUNEPHASE"
 font "helvetica-medium-r-18.0"
 fgColor index 14
 fgAlarm
 bgColor index 0
 useDisplayBg
 autoHeight
-precision 5
+limitsFromDb
 nullColor index 0
 useHexPrefix
 newPos
 objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 224
+y 352
+w 55
+h 21
+font "helvetica-medium-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Phase:"
+}
+autoSize
 endObjectProperties
 

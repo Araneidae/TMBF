@@ -17,8 +17,6 @@ FIR_LENGTH = Parameter('FIR_LENGTH')
 aInOut('BUNCH', 0, 1023, VAL = 1023)
 aInOut('READOUT')
 aInOut('NCO')
-aInOut('SWP_START')
-aInOut('SWP_STOP')
 aInOut('ADC_OFF_AB')
 aInOut('ADC_OFF_CD')
 aInOut('DELAY')
@@ -119,20 +117,6 @@ mbbOut('GROWDAMPMODE_S',
 mbbOut('BUNCHMODE_S',
     'Off', 'On',  VAL  = 0,   FLNK = status)
 
-tunescale = Waveform('TUNESCALE', 16384, 'FLOAT')
-startfreq = aOut('SWPSTARTFREQ_S', 0, 468, VAL  = 0.05, PREC = 4,
-    DESC = 'Sweep start freq', MDEL = -1, FLNK = tunescale)
-stopfreq  = aOut('SWPSTOPFREQ_S',  0, 468, VAL  = 0.45, PREC = 4,
-    DESC = 'Sweep stop freq', MDEL = -1, FLNK = tunescale)
-freqstep = aOut('SWPFREQSTEP_S',  VAL  = 1,  PREC = 4,
-    DESC = 'Phase advance step', FLNK = tunescale)
-records.calcout('SWPFREQSTEP_C',
-    CALC = '(B-A)/4096',
-    INPA = CP(startfreq),
-    INPB = CP(stopfreq),
-    OUT  = PP(freqstep),
-    OOPT = 'Every Time')
-
 aOut('IQSCALE_S', 0, 7, VAL  = 0, FLNK = status,
     DESC = 'IQ output scaling')
 aOut('GROWDAMPPERIOD_S', 0, 255, VAL  = 1,   
@@ -154,19 +138,61 @@ mbbOut('BUNCHSYNC_S',
     DESC = 'Soft Arm')
 
 
+# -----------------------------------------------------------------------------
 # Tune measurement.
+
+
+tunescale = Waveform('TUNESCALE', 4096, 'FLOAT',
+    DESC = 'Scale for tune measurement')
+startfreq = aOut('SWPSTARTFREQ_S', 0, 468, VAL  = 0.05, PREC = 4,
+    DESC = 'Sweep start freq', MDEL = -1, FLNK = tunescale)
+stopfreq  = aOut('SWPSTOPFREQ_S',  0, 468, VAL  = 0.45, PREC = 4,
+    DESC = 'Sweep stop freq', MDEL = -1, FLNK = tunescale)
+freqstep = aOut('SWPFREQSTEP_S',  VAL  = 1,  PREC = 4,
+    DESC = 'Phase advance step', FLNK = tunescale)
+records.calcout('SWPFREQSTEP_C',
+    CALC = '(B-A)/4096',
+    INPA = CP(startfreq),
+    INPB = CP(stopfreq),
+    OUT  = PP(freqstep),
+    OOPT = 'Every Time')
+
+
 #
 # The TUNESCAN record is designed to be configured to automatically scan.  On
 # each scan it processes the dual buffer (to ensure current IQ data is
 # captured) and then converts this to power and tune measurements.  Finally
 # the soft trigger is fired to trigger another round of capture.
-tune = aIn('TUNE', PREC = 4)
-create_fanout('TUNESCAN',
+tune_records = [
+    # Read the IQ data from the internal buffer
     hb_buf_lower,
-    Waveform('TUNEPOWER', 16384, FLNK = tune),
-    softtrig,
-    SCAN = 'Passive')
+    # Update the I and Q waveforms
+    Waveform('DDC_I', 4096,
+        DESC = 'DDC response, I component'),
+    Waveform('DDC_Q', 4096,
+        DESC = 'DDC response, Q component'),
+    # Compute the tune power spectrum 
+    Waveform('TUNEPOWER', 4096,
+        DESC = 'DDC power spectrum'),
+    # Compute the peak power and return this as the tune
+    aIn('TUNE', PREC = 4,
+        DESC = 'Measured tune'),
+    # Compute the cumulative sum of tune power
+    Waveform('CUMSUM_I', 4096,
+        DESC = 'DDC cumulative sum, I part'),
+    Waveform('CUMSUM_Q', 4096,
+        DESC = 'DDC cumulative sum, Q part'),
+    # Now compute the tune and phase from the cumulative sum
+    aIn('TUNECUMSUM', PREC = 5,
+        DESC = 'Measured tune using cumsum'),
+    aIn('TUNEPHASE', PREC = 2, EGU = 'deg',
+        DESC = 'Phase response at tune'),
+    
+    # Finally trigger capture of the next round of data.
+    softtrig]
+create_fanout('TUNESCAN', SCAN = 'Passive', *tune_records)
 
+aOut('DDCSKEW_S', DESC = 'Direct update of DDC skew')
 
 
 WriteRecords(sys.argv[1])

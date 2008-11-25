@@ -51,13 +51,16 @@ set_tune()
 case $MODE in
     TUNE|SBFB)
         case $DEVICE in
-            SR21C-DI-TMBF-01|TS-DI-TMBF-01)
+            SR21C-DI-TMBF-01)
                 # nominal tune is .2256
                 set_tune .1756 .2156 .2356 .2756
                 ;;
             SR21C-DI-TMBF-02)
                 # nominal tune is .3630
                 set_tune .3130 .3530 .3730 .4130
+                ;;
+            TS-DI-TMBF-01)
+                set_tune .0 .0 .5 .5
                 ;;
             *)  echo "Don't recognise that device!" >&2
                 exit 1

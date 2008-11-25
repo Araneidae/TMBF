@@ -47,7 +47,7 @@ fi
 
 
 IocParameter -p "$PIDFILE"
-IocParameter "$BIN_DIR"/st.cmd
+IocParameter -k $((IOC_DDC_SKEW))
 
 export EPICS_CA_MAX_ARRAY_BYTES=1000000
 
@@ -61,7 +61,7 @@ echo
 echo 'Starting IOC at' $(date)
 echo "IOC parameters: ${IOC_PARAMETERS[*]}"
 trap 'rm -f "$PIDFILE"' EXIT
-"$BIN_DIR"/tmbf "${IOC_PARAMETERS[@]}"
+"$BIN_DIR"/tmbf "${IOC_PARAMETERS[@]}" "$BIN_DIR"/st.cmd
 echo 'IOC stopped at' $(date)
 echo
 

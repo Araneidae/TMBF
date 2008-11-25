@@ -8,6 +8,7 @@ VERSION=1.0-test
 # different TMBF machines
 X_IOC_DACDLY=619
 Y_IOC_DACDLY=620
+T_IOC_DACDLY=620
 
 # Parameters for filter.  The filter is canonically constructed from N cycles
 # of a sine wave fitted into M points.  For X we use 2/9, for Y 3/8.
@@ -15,3 +16,10 @@ X_IOC_FIR_CYCLES=2
 X_IOC_FIR_LENGTH=9
 Y_IOC_FIR_CYCLES=3
 Y_IOC_FIR_LENGTH=8
+T_IOC_FIR_CYCLES=2
+T_IOC_FIR_LENGTH=9
+
+# Internal skew between input and output of DDC in ns.
+X_IOC_DDC_SKEW=32
+Y_IOC_DDC_SKEW=32
+T_IOC_DDC_SKEW=-231
