@@ -139,6 +139,17 @@ rm -f /etc/rc3.d/S900epics /etc/rc6.d/K100epics
 rm -f $CONFIGDIR/libera-server  
 rm -f /etc/init.d/libera-server
 
+rm -f /etc/rc*.d/*libera
+
+for rcd in 3.d/S800 0.d/K100 6.d/K100; do
+    ln -fs ../init.d/libera /etc/rc${rcd}libera
+done
+
+if ((AUTOSTART)); then
+    echo 'SERVER_BOOT=yes' >/etc/sysconfig/libera-server
+    ln -s epics /etc/init.d/libera-server
+fi
+
 if ((STARTNOW)); then
     /etc/init.d/libera start
     ((AUTOSTART))  ||  /etc/init.d/epics start
