@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 477
-y 551
+x 482
+y 573
 w 636
 h 278
 font "helvetica-medium-r-18.0"
@@ -206,37 +206,15 @@ value {
 autoSize
 endObjectProperties
 
-# (Shell Command)
-object shellCmdClass
-beginObjectProperties
-major 4
-minor 2
-release 0
-x 336
-y 248
-w 96
-h 24
-fgColor index 25
-bgColor index 3
-topShadowColor index 1
-botShadowColor index 11
-font "helvetica-bold-r-12.0"
-buttonLabel "Setup"
-numCmds 1
-command {
-  0 "xterm -T 'Setup Tune' -e 'setup_tunemeasurement $(device) TUNE; read -p \"press return\"'"
-}
-endObjectProperties
-
 # (Related Display)
 object relatedDisplayClass
 beginObjectProperties
 major 4
 minor 2
 release 0
-x 264
+x 352
 y 248
-w 64
+w 80
 h 24
 fgColor index 43
 bgColor index 4

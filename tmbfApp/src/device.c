@@ -772,10 +772,8 @@ static void compute_cumsum_tune(Variant *v)
 
 static void compute_cumsum_phase(Variant *v)
 {
-    double phase = atan2(buffer_I[cumsum_peak], buffer_Q[cumsum_peak]);
-    double cycle;
-    v->buffer[0] = 360.0 * modf(
-        fir_phase / 360.0 - phase / 2.0 / M_PI, &cycle);
+    v->buffer[0] = 180.0 / M_PI *
+        atan2(-buffer_Q[cumsum_peak], -buffer_I[cumsum_peak]);
 }
 
 

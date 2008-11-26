@@ -110,11 +110,7 @@ if [ $TARGET == final ]; then
     done
 else
     # Compute EPICS and IOC paths relative to this directory.  
-    PARENT="$(cd "$SOURCE/.."; pwd)"
-    IOC_TARGET="$PARENT/tmbf"
-    # Check that the parent directory contains the right files!
-    [ "$IOC_TARGET" = "$SOURCE" ]  ||
-        Error "Inconsistent test installation environment"
+    IOC_TARGET="$(cd "$SOURCE/.."; pwd)"
 fi  
 
 # Now install the epics_ioc file.
