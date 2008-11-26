@@ -64,6 +64,10 @@ void AssertFail(const char * FileName, int LineNumber)
         (int) var != -1; \
     } )
 
+#define SQR(x)  ((x)*(x))
+
+
+
 #define FF_CONFIG_ADDRESS       0x1402C000
 #define FF_DATA_ADDRESS         0x14028000
 
@@ -591,7 +595,7 @@ static float ScaleWaveform[4096];
  *    For economy of calculation, we precompute the rotations as scaled
  * integers so that the final computation can be a simple integer
  * multiplication (one instruction when the compiler is in the right mood). */
-static int DDC_skew;
+static int DDC_skew = 0;
 static int rotate_I[4096];  // 2**30 * cos(phase)
 static int rotate_Q[4096];  // 2**30 * sin(phase)
 
@@ -683,8 +687,6 @@ static void read_buffer_q(Variant *v)
 
 
 static int PowerPeak;
-
-#define SQR(x)  ((x)*(x))
 
 static void compute_power(Variant *v)
 {
@@ -826,11 +828,8 @@ static void dump_registers(const iocshArgBuf *args)
 
 static const iocshFuncDef debugDef = { "d", 0, NULL };
 
-bool InitialiseTunes(int DDC_skew_in)
+bool InitialiseTunes()
 {
-    DDC_skew = DDC_skew_in;
-    printf("skew = %d\n", DDC_skew);
-    
     GenericRegister("SWPSTARTFREQ_S", set_sweepstartfreq, 0);
     GenericRegister("SWPSTOPFREQ_S", set_sweepstopfreq, 0);
     GenericRegister("SWPFREQSTEP_S", set_freq_step, 0);
@@ -852,7 +851,7 @@ bool InitialiseTunes(int DDC_skew_in)
 }
 
 
-int GenericInit(int DDC_skew_in)
+int GenericInit()
 {
     iocshRegister(&debugDef, dump_registers);
 
@@ -930,5 +929,5 @@ int GenericInit(int DDC_skew_in)
     GenericRegister("ADCMEAN_R", get_adcmean, 0);
     GenericRegister("ADCSTD_R", get_adcstd, 0);
 
-    return InitialiseTunes(DDC_skew_in);
+    return InitialiseTunes();
 }

@@ -2,7 +2,7 @@
 # Libera IOC.  The IOC files will be placed in $INSTALL_HOST/tmbf.
 INSTALL_HOST=/home/libera/nfs/testing
 
-VERSION=1.0-test
+VERSION=1.0.0
 
 # Extra delay on DAC output to align bunches.  This needs to be different for
 # different TMBF machines
@@ -20,6 +20,5 @@ T_IOC_FIR_CYCLES=2
 T_IOC_FIR_LENGTH=9
 
 # Internal skew between input and output of DDC in ns.
-X_IOC_DDC_SKEW=32
-Y_IOC_DDC_SKEW=32
+IOC_DDC_SKEW=32
 T_IOC_DDC_SKEW=-231

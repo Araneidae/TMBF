@@ -11,6 +11,7 @@ from dls.builder import *
 DACDLY = Parameter('DACDLY')
 FIR_CYCLES = Parameter('FIR_CYCLES')
 FIR_LENGTH = Parameter('FIR_LENGTH')
+DDC_SKEW = Parameter('DDC_SKEW')
 
 
 # Bunch number
@@ -192,7 +193,9 @@ tune_records = [
     softtrig]
 create_fanout('TUNESCAN', SCAN = 'Passive', *tune_records)
 
-aOut('DDCSKEW_S', DESC = 'Direct update of DDC skew')
+aOut('DDCSKEW_S',
+    VAL = DDC_SKEW, PINI = 'YES',
+    DESC = 'Direct update of DDC skew')
 
 
 WriteRecords(sys.argv[1])

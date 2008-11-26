@@ -15,9 +15,6 @@
 
 static bool Interactive = true;
 
-/* Skew between DDC input and output, used to correct measured phase of
- * tune. */
-static int DDC_skew = 0;
 
 
 /* Write the PID of this process to the given file. */
@@ -43,32 +40,15 @@ static bool WritePid(const char * FileName)
 }
 
 
-/* Parses an integer, reports if invalid. */
-
-static bool ParseInt(const char *optarg, int *Target)
-{
-    char *end;
-    *Target = strtol(optarg, &end, 10);
-    if (optarg == end  ||  *end != '\0')
-    {
-        printf("Not a valid integer: \"%s\"\n", optarg);
-        return false;
-    }
-    else
-        return true;
-}
-
-
 static bool ProcessOptions(int *argc, char ** *argv)
 {
     bool Ok = true;
     while (Ok)
     {
-        switch (getopt(*argc, *argv, "+np:k:"))
+        switch (getopt(*argc, *argv, "+np:"))
         {
             case 'n':   Interactive = false;                break;
             case 'p':   Ok = WritePid(optarg);              break;
-            case 'k':   Ok = ParseInt(optarg, &DDC_skew);   break;
             default:
                 printf("Sorry, didn't understand\n");
                 return false;
@@ -106,7 +86,7 @@ int main(int argc,char *argv[])
     if (!ProcessOptions(&argc, &argv))
         return 1;
     
-    GenericInit(DDC_skew);
+    GenericInit();
     for (int i = 0; i < argc; i ++)
     {
         iocsh(argv[i]);

@@ -46,14 +46,14 @@ if (($# >= OPTIND)); then
 fi
 
 
-IocParameter -p "$PIDFILE"
-IocParameter -k $((IOC_DDC_SKEW))
-
 export EPICS_CA_MAX_ARRAY_BYTES=1000000
+
+IocParameter -p "$PIDFILE"
 
 DbParameter DACDLY $IOC_DACDLY
 DbParameter FIR_CYCLES $IOC_FIR_CYCLES
 DbParameter FIR_LENGTH $IOC_FIR_LENGTH
+DbParameter DDC_SKEW $((IOC_DDC_SKEW))
 
 
 # Now run the IOC.

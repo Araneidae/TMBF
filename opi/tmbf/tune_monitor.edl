@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2557
-y 557
+x 477
+y 551
 w 636
 h 278
 font "helvetica-medium-r-18.0"
@@ -249,29 +249,5 @@ numDsps 1
 displayFileName {
   0 "tmbf/iq_monitor.edl"
 }
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 168
-y 248
-w 96
-h 21
-controlPv "$(device):TUNECUMSUM"
-font "helvetica-medium-r-18.0"
-fgColor index 14
-fgAlarm
-bgColor index 0
-useDisplayBg
-autoHeight
-precision 5
-nullColor index 0
-useHexPrefix
-newPos
-objType "monitors"
 endObjectProperties
 
