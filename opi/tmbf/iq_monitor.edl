@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2067
-y 538
+x 769
+y 45
 w 636
 h 382
 font "helvetica-medium-r-18.0"
@@ -38,20 +38,22 @@ y 40
 w 304
 h 304
 # Appearance
+border
 graphTitle "DDC Response"
 fgColor index 14
 bgColor index 3
-gridColor index 14
+gridColor index 5
 font "helvetica-medium-r-12.0"
 # Operating Modes
 nPts 2
 # X axis properties
 xAxisSrc "AutoScale"
 xMax 1
+xShowLabelGrid
 # Y axis properties
 yAxisSrc "AutoScale"
-yMin 1
-yMax 2
+yMax 1
+yShowLabelGrid
 # Y2 axis properties
 y2AxisSrc "AutoScale"
 y2Max 1
@@ -62,24 +64,6 @@ xPv {
 }
 yPv {
   0 "$(device):DDC_Q"
-}
-plotStyle {
-  0 "point"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-plotSymbolType {
-  0 "circle"
-}
-opMode {
-  0 "plot"
-}
-xSigned {
-  0 1
-}
-ySigned {
-  0 1
 }
 plotColor {
   0 index 14
@@ -159,20 +143,22 @@ y 40
 w 304
 h 304
 # Appearance
+border
 graphTitle "DDC Integral"
 fgColor index 14
 bgColor index 3
-gridColor index 14
+gridColor index 5
 font "helvetica-medium-r-12.0"
 # Operating Modes
 nPts 2
 # X axis properties
 xAxisSrc "AutoScale"
 xMax 1
+xShowLabelGrid
 # Y axis properties
 yAxisSrc "AutoScale"
-yMin 1
-yMax 2
+yMax 1
+yShowLabelGrid
 # Y2 axis properties
 y2AxisSrc "AutoScale"
 y2Max 1
@@ -183,24 +169,6 @@ xPv {
 }
 yPv {
   0 "$(device):CUMSUM_Q"
-}
-plotStyle {
-  0 "point"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-plotSymbolType {
-  0 "circle"
-}
-opMode {
-  0 "plot"
-}
-xSigned {
-  0 5572
-}
-ySigned {
-  0 5069
 }
 plotColor {
   0 index 14

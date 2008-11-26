@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2900
-y 882
+x 55
+y 72
 w 296
 h 113
 font "helvetica-medium-r-14.0"
@@ -90,7 +90,7 @@ buttonLabel "TMBF-02"
 numPvs 4
 numDsps 1
 displayFileName {
-  0 "tmbf_overview.edl"
+  0 "tmbf/tmbf_overview.edl"
 }
 symbols {
   0 "device=SR21C-DI-TMBF-02"
