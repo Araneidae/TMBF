@@ -97,7 +97,6 @@ case $MODE in
         ;;
     SBFB)
         TEMPDACOUT=Off
-        BUNCH=$((BUNCH+8))
         BUNCHMODE=On
         ;;
 esac
@@ -126,6 +125,6 @@ put TUNE.HSV MINOR
 put TUNE.LSV MINOR
 
 if [ $MODE = SBFB ]; then
-    caput -w 5 -a $DEVICE:BB_DACS_W $(bb_func 1 3 $BUNCH)
+    caput -w 5 -a $DEVICE:BB_DACS_W $(bb_func 1 3 $((BUNCH-8)))
     caput -w 5 -a $DEVICE:BB_GAINS_W $(bb_func 1 1 1)
 fi
