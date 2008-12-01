@@ -5,6 +5,8 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
+#USR_CFLAGS += -S
+#USR_CFLAGS += -E
 USR_CFLAGS += -std=gnu99
 USR_CFLAGS += -Werror -Wall -Wextra -Wno-unused-parameter
 
@@ -33,11 +35,9 @@ DBD += generic.dbd
 tmbf_SRCS += tmbf_registerRecordDeviceDriver.c 
 tmbf_SRCS += device.c
 tmbf_SRCS += GenericDevice.c
+tmbf_SRCS += epics_device.c
+tmbf_SRCS += hardware.c
 tmbf_SRCS += tmbfMain.c
-tmbf_SRCS_vxWorks += -nil-
-
-#The following adds support from base/src/vxWorks
-tmbf_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 
 tmbf_LIBS += $(EPICS_BASE_IOC_LIBS)
 
@@ -52,3 +52,8 @@ include $(TOP)/configure/RULES
 # current. 
 tmbfMain.o: EMPTY
 EMPTY:
+
+device.o: device_EPICS.c
+
+%_EPICS.c: %.c epics_device.h
+	$(CPP) -D__DEFINE_EPICS__ $(INCLUDES) $< | ../make_EPICS >$@

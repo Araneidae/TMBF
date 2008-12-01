@@ -16,20 +16,13 @@ DDC_SKEW = Parameter('DDC_SKEW')
 
 # Bunch number
 aInOut('BUNCH', 0, 1023, VAL = 1023)
-aInOut('READOUT')
 aInOut('NCO')
 aInOut('ADC_OFF_AB')
 aInOut('ADC_OFF_CD')
-aInOut('DELAY')
 
 status = aIn('STATUS_R')
 
-arcbuf = Waveform('ARCBUF', 4096, PINI = 'YES')
 wInOut('COEFFS', 12)
-Waveform('DAC_MINMAX_ALL_R', 936, PINI = 'YES')
-Waveform('BB_GAIN_COE_ALL_W', 936,
-    DESC = 'Bunch based gain/dac_out',
-    FLNK = status)
 
 Waveform('BB_GAINS_W', 936, 'FLOAT')
 Waveform('BB_DACS_W',  936, 'SHORT')
@@ -48,10 +41,6 @@ create_fanout('SCAN_ADC',
         DESC = 'Readback ADC diff variance'),
     SCAN = '.1 second')
     
-Waveform('HB_BUF_R', 16384,
-    PINI = 'YES',   FLNK = status,
-    DESC = 'BRAM buffer 32-bits')
-
 hb_buf_upper = Waveform('HB_BUF_UPPER_R', 16384, 'SHORT',
     FLNK = status,
     DESC = 'BRAM buffer upper 16-bits')
