@@ -50,6 +50,7 @@ xAxisSrc "AutoScale"
 xMax 1
 # Y axis properties
 showYAxis
+yAxisStyle "log10"
 yAxisSrc "AutoScale"
 yMin 1
 yMax 2
@@ -246,11 +247,11 @@ botShadowColor index 11
 font "helvetica-bold-r-12.0"
 xPosOffset -5
 yPosOffset -22
-buttonLabel "Log"
+buttonLabel "Linear"
 numPvs 4
 numDsps 1
 displayFileName {
-  0 "tmbf/tune_monitor_log.edl"
+  0 "tmbf/tune_monitor.edl"
 }
 closeAction {
   0 1
