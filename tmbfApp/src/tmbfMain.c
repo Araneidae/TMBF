@@ -14,6 +14,13 @@
 #include "device.h"
 
 
+/* External declaration of caRepeater thread.  This should really be
+ * published by a standard EPICS header file, but for the time being we pick
+ * it up like this. */
+extern void caRepeaterThread(void *);
+
+
+
 #define TEST_EPICS(command, args...) \
     ( { \
         int __status__ = (command)(args); \
@@ -64,6 +71,23 @@ void print_error(const char * Message, const char * FileName, int LineNumber)
     printf("%s\n", ErrorMessage);
 }
 
+
+
+/* This routine spawns a caRepeater thread, as recommended by Andrew Johnson
+ * (private communication, 2006/12/04).  This means that this IOC has no
+ * external EPICS dependencies (otherwise the caRepeater application needs to
+ * be run). */
+
+static bool StartCaRepeater()
+{
+    epicsThreadId caRepeaterId = epicsThreadCreate(
+        "CAC-repeater", epicsThreadPriorityLow,
+        epicsThreadGetStackSize(epicsThreadStackMedium),
+        caRepeaterThread, 0);
+    if (caRepeaterId == 0)
+        perror("Error starting caRepeater thread");
+    return caRepeaterId != 0;
+}
 
 
 /* Write the PID of this process to the given file. */
@@ -140,6 +164,7 @@ int main(int argc,char *argv[])
     bool Ok = 
         ProcessOptions(&argc, &argv) &&
         InitialiseHardware()  &&
+        StartCaRepeater()  &&
         GenericInit();
     for (int i = 0; Ok && i < argc; i ++)
         Ok = TEST_EPICS(iocsh, argv[i]);

@@ -6,9 +6,11 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <pthread.h>
 
 #include "test_error.h"
 #include "hardware.h"
+
 
 
 #define TMBF_CONFIG_ADDRESS       0x1402C000
@@ -39,6 +41,20 @@ typedef struct
 /* These three pointers directly overlay the FF memory. */
 static TMBF_CONFIG_SPACE * ConfigSpace;
 static int * DataSpace;
+
+
+
+static pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static void Lock()
+{
+    pthread_mutex_lock(&global_lock);
+}
+
+static void Unlock()
+{
+    pthread_mutex_unlock(&global_lock);
+}
 
 
 
@@ -97,13 +113,18 @@ static unsigned int ReadBitField(
 #define DEFINE_BIT_FIELD_R(name, register, start, count) \
     DECLARE_REGISTER_R(name) \
     { \
-        return ReadBitField(register, start, count); \
+        Lock(); \
+        unsigned int result = ReadBitField(register, start, count); \
+        Unlock(); \
+        return result; \
     }
 
 #define DEFINE_BIT_FIELD_W(name, register, start, count) \
     DECLARE_REGISTER_W(name) \
     { \
+        Lock(); \
         WriteBitField(&register, start, count, value); \
+        Unlock(); \
     }
 
 #define DEFINE_BIT_FIELD(name, register, start_count) \
@@ -146,13 +167,18 @@ DELAY_REGISTER(DELAY_GROW_DAMP)
 #define DIRECT_REGISTER_R(name) \
     DECLARE_REGISTER_R(name) \
     { \
-        return ConfigSpace->name; \
+        Lock(); \
+        unsigned int result = ConfigSpace->name; \
+        Unlock(); \
+        return result; \
     }
 
 #define DIRECT_REGISTER_W(name) \
     DECLARE_REGISTER_W(name) \
     { \
+        Lock(); \
         ConfigSpace->name = value; \
+        Unlock(); \
     }
 
 #define DIRECT_REGISTER(name) \
@@ -184,15 +210,19 @@ DIRECT_REGISTER(AdcOffCD)
 
 void read_FIR_coeffs(int coeffs[MAX_FIR_COEFFS])
 {
+    Lock();
     for (int i = 0; i < MAX_FIR_COEFFS; i ++)
         coeffs[i] = ConfigSpace->FIR_coeffs[i];
+    Unlock();
 }
 
 void write_FIR_coeffs(const int coeffs[MAX_FIR_COEFFS])
 {
+    Lock();
     WRITE_CTRL(SET_PLANE, 1);
     for (int i = 0; i < MAX_FIR_COEFFS; i ++)
         ConfigSpace->FIR_coeffs[i] = coeffs[i];
+    Unlock();
 }
 
 
@@ -213,6 +243,7 @@ typedef union
 void read_ADC_MinMax(
     short ADC_min[MAX_BUNCH_COUNT], short ADC_max[MAX_BUNCH_COUNT])
 {
+    Lock();
     for (int n = 0; n < 4; n++)
     {
         /* Channel select and read enable for ADC */
@@ -226,12 +257,14 @@ void read_ADC_MinMax(
         }
     }
     ConfigSpace->AdcChnSel = 0;
+    Unlock();
 }
 
 
 void read_DataSpace(
     short int LowData[MAX_DATA_LENGTH], short int HighData[MAX_DATA_LENGTH])
 {
+    Lock();
     for (int n = 0; n < 4; n++)
     {
         WRITE_CTRL(CH_SELECT, n);
@@ -243,11 +276,13 @@ void read_DataSpace(
             HighData[4*i + n] = packed.upper;
         }
     }
+    Unlock();
 }
 
 
 void write_BB_gains(short int gains[MAX_BUNCH_COUNT])
 {
+    Lock();
     for (int n=0; n < 4; n++)
     {
         WRITE_CTRL(CH_SELECT, n);
@@ -259,10 +294,12 @@ void write_BB_gains(short int gains[MAX_BUNCH_COUNT])
             ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
         }
     }
+    Unlock();
 }
 
 void write_BB_DACs(short int dacs[MAX_BUNCH_COUNT])
 {
+    Lock();
     for (int n=0; n < 4; n++)
     {
         WRITE_CTRL(CH_SELECT, n);
@@ -274,6 +311,7 @@ void write_BB_DACs(short int dacs[MAX_BUNCH_COUNT])
             ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
         }
     }
+    Unlock();
 }
 
 
@@ -285,6 +323,7 @@ void write_BB_DACs(short int dacs[MAX_BUNCH_COUNT])
 
 void set_softTrigger()
 {
+    Lock();
     /* The sequence is as follows:
      *  1. Select soft trigger
      *  2. Select soft arming
@@ -302,35 +341,19 @@ void set_softTrigger()
     WRITE_CTRL(SOFT_TRIG, 1);
     usleep(1000);
     WRITE_CTRL(SOFT_TRIG, 0);
+    Unlock();
 }
 
 void set_bunchSync()
 {
+    Lock();
     WRITE_CTRL(BUNCH_SYNC,  0);
     usleep(1000);
     WRITE_CTRL(BUNCH_SYNC,  1);
     usleep(1000);
     WRITE_CTRL(BUNCH_SYNC,  0);
+    Unlock();
 }
-
-#if 0
-/* Processing SOFTARM configures hardware triggering (otherwise what's the
- * point?) */
-static void set_softarm(Variant *v)
-{
-#if 1
-    unsigned int * buf = (unsigned int *)v->buffer;
-    LiberaCtrl(CTRL_SOFT_ARM, buf[0]);
-#else
-    LiberaCtrl(CTRL_TRIG_SEL,  1);  /* Select hard trigger */
-    LiberaCtrl(CTRL_ARM_SEL,   1);  /* Select soft arm */
-    LiberaCtrl(CTRL_SOFT_ARM,  0);  /* Force arm through a rising edge */
-    LiberaCtrl(CTRL_SOFT_ARM,  1);
-#endif
-}
-#endif
-
-
 
 
 

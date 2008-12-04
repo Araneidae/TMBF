@@ -34,7 +34,6 @@ DBD += generic.dbd
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 tmbf_SRCS += tmbf_registerRecordDeviceDriver.c 
 tmbf_SRCS += device.c
-tmbf_SRCS += GenericDevice.c
 tmbf_SRCS += epics_device.c
 tmbf_SRCS += hardware.c
 tmbf_SRCS += tmbfMain.c
@@ -53,7 +52,7 @@ include $(TOP)/configure/RULES
 tmbfMain.o: EMPTY
 EMPTY:
 
-device.o: device_EPICS.c
+device.o: device.EPICS
 
-%_EPICS.c: %.c epics_device.h
+%.EPICS: %.c epics_device.h
 	$(CPP) -D__DEFINE_EPICS__ $(INCLUDES) $< | ../make_EPICS >$@

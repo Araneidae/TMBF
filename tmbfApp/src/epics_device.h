@@ -180,9 +180,13 @@ typedef I_waveform_void I_waveform;
 /*                                                                           */
 /*****************************************************************************/
 
-// /* Calling this will mark the given record as signalled.  If it is configured
-//  * for I/O Intr processing then an I/O Intr event will be generated. */
-// bool SignalRecord(RECORD_HANDLE Record);
+typedef struct RECORD_BASE *RECORD_HANDLE;
+
+/* Calling this will mark the given record as signalled.  If it is configured
+ * for I/O Intr processing then an I/O Intr event will be generated. */
+bool SignalRecord(RECORD_HANDLE Record);
+
+RECORD_HANDLE LookupRecord(const char *name);
 
 
 
@@ -263,7 +267,7 @@ typedef I_waveform_void I_waveform;
     }
 
 #define WRAP_METHOD(action) \
-    static bool wrap_##action(int ignored) \
+    static bool wrap_##action(bool ignored) \
     { \
         action(); \
         return true; \
@@ -298,8 +302,8 @@ typedef I_waveform_void I_waveform;
 
 #define PUBLISH_METHOD(name, action) \
     WRAP_METHOD(action) \
-    PUBLISH(longout, name, wrap_##action)
-// should be bo above
+    PUBLISH(bo, name, wrap_##action)
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                            Publication Macros                             */
@@ -309,40 +313,66 @@ typedef I_waveform_void I_waveform;
  * records to the generic device.  Scalar and waveform records are declared
  * differently, as waveform records need special handling. */
 
-
-#ifdef __DEFINE_EPICS__
-
-/* Publishing EPICS records through a common interface.  The most general
- * record publishing declaration is of the form:
- *
- *  PUBLISH(type, name, process, etc)
- *
- * where the values that can be passed to etc depend on the record type. */
-#define PUBLISH(record, record_name, args...) \
-    __PUBLISH_DATA__::<<<(I_RECORD *) &(I_##record) { \
+#define PUBLISH_WRAPPER(record, record_name, args...) \
+    (I_##record) { \
         .record_type = RECORD_TYPE_##record, \
-        .name = record_name, args },>>>
+        .name = record_name, args }
 
-/* Publishing EPICS waveform records.  Theese are declared by the following
- * form:
- *
- *  PUBLISH_WAVEFORM(type, name, process, etc)
- *
- * where etc can specify record initialisation and other parameters. */
-#define PUBLISH_WAVEFORM(type, record_name, args...) \
-    __PUBLISH_DATA__::<<<(I_RECORD *) &(I_waveform_##type) { \
+#define PUBLISH_WAVEFORM_WRAPPER(type, record_name, args...) \
+    (I_waveform_##type) { \
         .record_type = RECORD_TYPE_waveform, \
-        .name = record_name, .field_type = waveform_TYPE_##type, args },>>>
+        .name = record_name, .field_type = waveform_TYPE_##type, args }
 
+
+/* During normal compilation the wrapped definitions are simply discarded.  A
+ * second pass (with __DEFINE_EPICS__ defined) is used to extract the
+ * exported definitions -- these can then be assembled into a structure to be
+ * passed to PublishEpicsData(). */
+#ifdef __DEFINE_EPICS__
+#define PUBLISH_EXPORT_WRAPPER(publish_data) \
+    __PUBLISH_DATA__::<<<(I_RECORD *) &publish_data,>>>
 #else
-
-/* In normal compilation the PUBLISH macros generate nothing. */
-#define PUBLISH(record, record_name, args...)
-#define PUBLISH_WAVEFORM(type, record_name, args...)
+#define PUBLISH_EXPORT_WRAPPER(publish_data)
 #endif
 
 
 
+/* Publishing EPICS records through a common interface.  The most general
+ * record publishing declaration is of the form:
+ *
+ *  PUBLISH(type, name, process, etc...)
+ *
+ * where the values that can be passed to etc depend on the record type. */
+#define PUBLISH(args...) \
+    PUBLISH_EXPORT_WRAPPER(PUBLISH_WRAPPER(args))
+
+/* Publishing EPICS waveform records.  Theese are declared by the following
+ * form:
+ *
+ *  PUBLISH_WAVEFORM(type, name, process, etc...)
+ *
+ * where etc can specify record initialisation and other parameters. */
+#define PUBLISH_WAVEFORM(args...) \
+    PUBLISH_EXPORT_WRAPPER(PUBLISH_WAVEFORM_WRAPPER(args))
+
+
+#define PUBLISH_DYNAMIC(record, args...) \
+    ( { \
+        I_##record * iRecord = malloc(sizeof(I_##record)); \
+        *iRecord = PUBLISH_WRAPPER(record, args); \
+        PublishDynamic((I_RECORD *) iRecord); \
+    } )
+
+#define PUBLISH_WAVEFORM_DYNAMIC(type, args...) \
+    ( { \
+        I_waveform_##type * iRecord = malloc(sizeof(I_waveform_##type)); \
+        *iRecord = PUBLISH_WAVEFORM_WRAPPER(type, args); \
+        PublishDynamic((I_RECORD *) iRecord); \
+    } )
+
+
+
+RECORD_HANDLE PublishDynamic(const I_RECORD* iRecord);
 bool PublishEpicsData(const I_RECORD * publish_data[]);
 #define PUBLISH_EPICS_DATA() \
     PublishEpicsData(EPICS_publish_data)

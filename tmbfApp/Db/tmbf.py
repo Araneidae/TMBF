@@ -15,12 +15,12 @@ DDC_SKEW = Parameter('DDC_SKEW')
 
 
 # Bunch number
-aInOut('BUNCH', 0, 1023, VAL = 1023)
-aInOut('NCO')
-aInOut('ADC_OFF_AB')
-aInOut('ADC_OFF_CD')
+longInOut('BUNCH', 0, 1023, VAL = 1023)
+longInOut('NCO')
+longInOut('ADC_OFF_AB')
+longInOut('ADC_OFF_CD')
 
-status = aIn('STATUS_R')
+status = longIn('STATUS_R')
 
 wInOut('COEFFS', 12)
 
@@ -85,16 +85,16 @@ mbbOut('DDRINPUT_S',  'ADC', 'DAC',
     DESC = 'DDR input select')
 
 MAX_FIR_TAPS = 9
-aOut('FIRCYCLES_S', 1, MAX_FIR_TAPS,
+longOut('FIRCYCLES_S', 1, MAX_FIR_TAPS,
     VAL  = FIR_CYCLES,  PINI = 'YES',
     DESC = 'Cycles in filter')
-aOut('FIRLENGTH_S', 1, MAX_FIR_TAPS,
+longOut('FIRLENGTH_S', 1, MAX_FIR_TAPS,
     VAL  = FIR_LENGTH,  PINI = 'YES',
     DESC = 'Length of filter')
 aOut('FIRPHASE_S', -360, 360, VAL  = 0,   
     DESC = 'FIR phase')
 
-dacdly_s = aOut('DACDLY_S', 4, 935,
+dacdly_s = longOut('DACDLY_S', 4, 935,
     VAL  = DACDLY,  PINI = 'YES',
     DESC = 'DAC output delay')
 
@@ -107,11 +107,11 @@ mbbOut('GROWDAMPMODE_S',
 mbbOut('BUNCHMODE_S',
     'Off', 'On',  VAL  = 0,   FLNK = status)
 
-aOut('IQSCALE_S', 0, 7, VAL  = 0, FLNK = status,
+longOut('IQSCALE_S', 0, 7, VAL  = 0, FLNK = status,
     DESC = 'IQ output scaling')
-aOut('GROWDAMPPERIOD_S', 0, 255, VAL  = 1,   
+longOut('GROWDAMPPERIOD_S', 0, 255, VAL  = 1,   
     DESC = 'Grow damp period')
-aOut('PROGCLKVAL_S', VAL  = 12500,   
+longOut('PROGCLKVAL_S', VAL  = 12500,   
     DESC = 'Programmable clock value')
 
 mbbOut('TUNESWEEPMODE_S',
@@ -119,12 +119,12 @@ mbbOut('TUNESWEEPMODE_S',
     DESC = 'Tune sweep enable')
 
 # Processing the soft trigger will perform a triggered data capture.
-softtrig = mbbOut('SOFTTRIG_S', 'Trigger', DESC = 'Soft trigger')
+softtrig = boolOut('SOFTTRIG_S', 'Trigger', DESC = 'Soft trigger')
 # Processing the arm record will enable a hardware data capture.
 mbbOut('SOFTARM_S', 'Arm', DESC = 'Soft Arm')
 
-mbbOut('BUNCHSYNC_S',
-    'Off', 'On', VAL  = 0,   FLNK = status,
+boolOut('BUNCHSYNC_S',
+    'Sync', FLNK = status,
     DESC = 'Soft Arm')
 
 
@@ -182,7 +182,7 @@ tune_records = [
     softtrig]
 create_fanout('TUNESCAN', SCAN = 'Passive', *tune_records)
 
-aOut('DDCSKEW_S',
+longOut('DDCSKEW_S',
     VAL = DDC_SKEW, PINI = 'YES',
     DESC = 'Direct update of DDC skew')
 

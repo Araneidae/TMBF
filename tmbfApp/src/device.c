@@ -8,8 +8,6 @@
 #include <sys/mman.h>
 #include <math.h>
 
-#include "GenericDevice.h"
-
 #include "hardware.h"
 #include "test_error.h"
 #include "epics_device.h"
@@ -106,24 +104,16 @@ PUBLISH_VARIABLE_READ(ai, "ADCSTD_R",  var_diff)
 static short int hb_buf_lower[MAX_DATA_LENGTH];
 static short int hb_buf_upper[MAX_DATA_LENGTH];
 
-static bool hb_buf_lower_read(
-    short *buffer, size_t length, size_t *new_length)
+static void hb_buf_lower_read(short *buffer)
 {
     read_DataSpace(hb_buf_lower, hb_buf_upper);
     memcpy(buffer, hb_buf_lower, sizeof(hb_buf_lower));
-    return true;
-}
-
-static bool hb_buf_upper_read(
-    short *buffer, size_t length, size_t *new_length)
-{
-    memcpy(buffer, hb_buf_upper, sizeof(hb_buf_upper));
-    return true;
 }
 
 
-PUBLISH_WAVEFORM(short, "HB_BUF_LOWER_R", hb_buf_lower_read)
-PUBLISH_WAVEFORM(short, "HB_BUF_UPPER_R", hb_buf_upper_read)
+PUBLISH_SIMPLE_WAVEFORM(
+    short, "HB_BUF_LOWER_R", MAX_DATA_LENGTH, hb_buf_lower_read)
+PUBLISH_READ_WAVEFORM(short, "HB_BUF_UPPER_R", MAX_DATA_LENGTH, hb_buf_upper)
 
 
 PUBLISH_METHOD("SOFTTRIG_S",  set_softTrigger)
@@ -311,12 +301,10 @@ static void update_tune_scale()
     }
 }
 
-static bool set_tune_scale(
-    float * buffer, size_t max_length, size_t* new_length)
+static void set_tune_scale(float * buffer)
 {
     update_tune_scale();
     memcpy(buffer, ScaleWaveform, sizeof(ScaleWaveform));
-    return true;
 }
 
 static bool update_ddc_skew(int new_skew)
@@ -364,7 +352,7 @@ static void update_IQ()
 }
 
 
-static bool compute_power(int *spectrum, size_t max_length, size_t *new_length)
+static void compute_power(int *spectrum)
 {
     update_IQ();
     
@@ -386,8 +374,6 @@ static bool compute_power(int *spectrum, size_t max_length, size_t *new_length)
             PowerPeak = i;
         }
     }
-
-    return true;
 }
 
 static bool compute_tune(double *tune)
@@ -426,18 +412,12 @@ static void update_cumsum_IQ()
     }
 }
 
-static bool read_cumsum_i(int *buffer, size_t max_length, size_t *new_length)
+static void read_cumsum_i(int *buffer)
 {
     update_cumsum_IQ();
     read_waveform(cumsum_I, 4096, buffer);
-    return true;
 }
 
-static bool read_cumsum_q(int *buffer, size_t max_length, size_t *new_length)
-{
-    read_waveform(cumsum_Q, 4096, buffer);
-    return true;
-}
 
 static bool compute_cumsum_tune(double *tune)
 {
@@ -459,15 +439,15 @@ PUBLISH_SIMPLE_WRITE(ao, "HOMFREQ_S", set_homfreq)
 PUBLISH_SIMPLE_WRITE(ao, "SWPSTARTFREQ_S", set_sweepstartfreq)
 PUBLISH_SIMPLE_WRITE(ao, "SWPSTOPFREQ_S", set_sweepstopfreq)
 PUBLISH_SIMPLE_WRITE(ao, "SWPFREQSTEP_S", set_freq_step)
-PUBLISH_WAVEFORM(float, "TUNESCALE", set_tune_scale)
+PUBLISH_SIMPLE_WAVEFORM(float, "TUNESCALE", 4096, set_tune_scale)
 
 PUBLISH_READ_WAVEFORM(int, "DDC_I", 4096, buffer_I)
 PUBLISH_READ_WAVEFORM(int, "DDC_Q", 4096, buffer_Q)
-PUBLISH_WAVEFORM(int, "TUNEPOWER", compute_power)
+PUBLISH_SIMPLE_WAVEFORM(int, "TUNEPOWER", 4096, compute_power)
 PUBLISH(ai, "TUNE", compute_tune)
 
-PUBLISH_WAVEFORM(int, "CUMSUM_I", read_cumsum_i)
-PUBLISH_WAVEFORM(int, "CUMSUM_Q", read_cumsum_q)
+PUBLISH_SIMPLE_WAVEFORM(int, "CUMSUM_I", 4096, read_cumsum_i)
+PUBLISH_READ_WAVEFORM(int, "CUMSUM_Q", 4096, cumsum_Q)
 PUBLISH(ai, "TUNECUMSUM", compute_cumsum_tune)
 PUBLISH(ai, "TUNEPHASE", compute_cumsum_phase)
 
@@ -529,20 +509,14 @@ GENERIC_REGISTER("ADC_OFF_CD",  AdcOffCD)
 
 
 
-
-
-
-
 #ifndef __DEFINE_EPICS__
-#include "device_EPICS.c"
+#include "device.EPICS"
 #endif
-
-
 
 int GenericInit()
 {
     printf("Registering Generic Device functions\n");
-    RegisterGenericHook(GenericGlobalLock);
+//    RegisterGenericHook(GenericGlobalLock);
 
     return PUBLISH_EPICS_DATA();
 }
