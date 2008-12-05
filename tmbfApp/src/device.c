@@ -166,14 +166,13 @@ static void set_fircoeffs()
     write_FIR_coeffs(coeffs);
 }
 
-static bool set_fircycles(int cycles)
+static void set_fircycles(int cycles)
 {
     fir_cycles = cycles;
     set_fircoeffs();
-    return true;
 }
 
-static bool set_firlength(int new_length)
+static bool set_firlength(void *context, int new_length)
 {
     if (new_length < 1  ||  MAX_FIR_LENGTH < new_length)
     {
@@ -188,17 +187,16 @@ static bool set_firlength(int new_length)
     }
 }
 
-static bool set_firphase(double new_phase)
+static void set_firphase(double new_phase)
 {
     fir_phase = new_phase;
     set_fircoeffs();
-    return true;
 }
 
 
-PUBLISH(longout, "FIRCYCLES_S", set_fircycles)
+PUBLISH_SIMPLE_WRITE(longout, "FIRCYCLES_S", set_fircycles)
 PUBLISH(longout, "FIRLENGTH_S", set_firlength)
-PUBLISH(ao,      "FIRPHASE_S",  set_firphase)
+PUBLISH_SIMPLE_WRITE(ao,      "FIRPHASE_S",  set_firphase)
 
 /* Direct access to the FIR coefficients through register interface. */
 PUBLISH_SIMPLE_WAVEFORM(int, "COEFFS_R", MAX_FIR_COEFFS, read_FIR_coeffs)
@@ -307,11 +305,10 @@ static void set_tune_scale(float * buffer)
     memcpy(buffer, ScaleWaveform, sizeof(ScaleWaveform));
 }
 
-static bool update_ddc_skew(int new_skew)
+static void update_ddc_skew(int new_skew)
 {
     DDC_skew = new_skew;
     update_tune_scale();
-    return true;
 }
 
 
@@ -376,11 +373,10 @@ static void compute_power(int *spectrum)
     }
 }
 
-static bool compute_tune(double *tune)
+static double compute_tune()
 {
     double harmonic;
-    *tune = modf(ScaleWaveform[PowerPeak], &harmonic);
-    return true;
+    return modf(ScaleWaveform[PowerPeak], &harmonic);
 }
 
 
@@ -419,18 +415,16 @@ static void read_cumsum_i(int *buffer)
 }
 
 
-static bool compute_cumsum_tune(double *tune)
+static double compute_cumsum_tune()
 {
     double harmonic;
-    *tune = modf(ScaleWaveform[cumsum_peak], &harmonic);
-    return true;
+    return modf(ScaleWaveform[cumsum_peak], &harmonic);
 }
 
-static bool compute_cumsum_phase(double *phase)
+static double compute_cumsum_phase()
 {
-    *phase = 180.0 / M_PI *
+    return 180.0 / M_PI *
         atan2(-buffer_Q[cumsum_peak], -buffer_I[cumsum_peak]);
-    return true;
 }
 
 
@@ -444,14 +438,14 @@ PUBLISH_SIMPLE_WAVEFORM(float, "TUNESCALE", 4096, set_tune_scale)
 PUBLISH_READ_WAVEFORM(int, "DDC_I", 4096, buffer_I)
 PUBLISH_READ_WAVEFORM(int, "DDC_Q", 4096, buffer_Q)
 PUBLISH_SIMPLE_WAVEFORM(int, "TUNEPOWER", 4096, compute_power)
-PUBLISH(ai, "TUNE", compute_tune)
+PUBLISH_SIMPLE_READ(ai, "TUNE", compute_tune)
 
 PUBLISH_SIMPLE_WAVEFORM(int, "CUMSUM_I", 4096, read_cumsum_i)
 PUBLISH_READ_WAVEFORM(int, "CUMSUM_Q", 4096, cumsum_Q)
-PUBLISH(ai, "TUNECUMSUM", compute_cumsum_tune)
-PUBLISH(ai, "TUNEPHASE", compute_cumsum_phase)
+PUBLISH_SIMPLE_READ(ai, "TUNECUMSUM", compute_cumsum_tune)
+PUBLISH_SIMPLE_READ(ai, "TUNEPHASE", compute_cumsum_phase)
 
-PUBLISH(longout, "DDCSKEW_S", update_ddc_skew)
+PUBLISH_SIMPLE_WRITE(longout, "DDCSKEW_S", update_ddc_skew)
 
 
 
@@ -516,7 +510,5 @@ GENERIC_REGISTER("ADC_OFF_CD",  AdcOffCD)
 int GenericInit()
 {
     printf("Registering Generic Device functions\n");
-//    RegisterGenericHook(GenericGlobalLock);
-
     return PUBLISH_EPICS_DATA();
 }

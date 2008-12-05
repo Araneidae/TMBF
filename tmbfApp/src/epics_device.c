@@ -143,9 +143,9 @@ RECORD_HANDLE PublishDynamic(const I_RECORD* iRecord)
 
 bool PublishEpicsData(const I_RECORD* publish_data[])
 {
-    for (const I_RECORD **data = publish_data; *data != NULL; data ++)
+    for (int i = 0; publish_data[i] != NULL; i ++)
     {
-        if (PublishDynamic(*data) == NULL)
+        if (PublishDynamic(publish_data[i]) == NULL)
             return false;
     }
     return true;
@@ -164,7 +164,7 @@ bool PublishEpicsData(const I_RECORD* publish_data[])
 static epicsAlarmSeverity get_alarm_status(I_RECORD *iRecord)
 {
     if (iRecord->get_alarm_status)
-        return iRecord->get_alarm_status();
+        return iRecord->get_alarm_status(iRecord->context);
     else
         return epicsSevNone;
 }
@@ -172,7 +172,7 @@ static epicsAlarmSeverity get_alarm_status(I_RECORD *iRecord)
 static bool get_timestamp(I_RECORD *iRecord, struct timespec *time)
 {
     if (iRecord->get_timestamp)
-        return iRecord->get_timestamp(time);
+        return iRecord->get_timestamp(iRecord->context, time);
     else
         return false;
 }
@@ -229,32 +229,32 @@ static void SetTimestamp(dbCommon *pr, struct timespec *Timestamp)
 /* Reads a value from the appropriate record interface.  An intermediate
  * value is used so that the record interface type doesn't need to precisely
  * match the data type stored in the EPICS record. */
-#define ACTION_READ_INDIRECT(record, action, field) \
+#define ACTION_READ_INDIRECT(record, iRecord, action, field) \
     ( { \
         TYPEOF(record) Value; \
-        bool Ok = action(&Value); \
+        bool Ok = iRecord->action(iRecord->context, &Value); \
         if (Ok) field = Value; \
         Ok; \
     } )
 
-#define ACTION_READ_DIRECT(record, action, field) \
-    action(&field)
-
+#define ACTION_READ_DIRECT(record, iRecord, action, field) \
+    iRecord->action(iRecord->context, &field)
 
 /* Note that ACTION_READ_##record expands to either ACTION_READ_DIRECT or
  * ACTION_READ_INDIRECT, depending on the record in question. */
-#define ACTION_read(record, pr, base, action, field) \
+#define ACTION_read(record, pr, iRecord, action, field) \
     ( { \
-        bool Ok = ACTION_READ_##record(record, action, field); \
+        bool Ok = ACTION_READ_##record(record, iRecord, action, field); \
         pr->udf = ! Ok; \
         Ok; \
     } )
 
+
 /* Writing is a bit more involved: if it fails then we need to restore the
  * value we had before. */
-#define ACTION_write(record, pr, base, action, field) \
+#define ACTION_write(record, pr, iRecord, action, field) \
     ( { \
-        bool Ok = action(field); \
+        bool Ok = iRecord->action(iRecord->context, field); \
         if (Ok) \
             memcpy(base->WriteData, &field, sizeof(field)); \
         else \
@@ -271,10 +271,6 @@ static void SetTimestamp(dbCommon *pr, struct timespec *Timestamp)
         return ERROR; \
     I_##record * var = (I_##record *) base->iRecord
 
-#define SET_ALARM(pr, ACTION, iRecord) \
-    (void) recGblSetSevr(pr, ACTION##_ALARM, get_alarm_status(iRecord))
-
-
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -290,23 +286,22 @@ static bool init_record_(
     RECORD_BASE * base = LookupRecord(Name);
     if (base == NULL)
         return false;
+    else if (base->iRecord->record_type != record_type)
+    {
+        printf("Record %s type mismatch: %d != %d\n",
+            Name, base->iRecord->record_type, record_type);
+        return false;
+    }
     else
     {
         pr->dpvt = base;
-        if (base->iRecord->record_type == record_type)
-            return true;
-        else
-        {
-            printf("Record %s type mismatch: %d != %d\n",
-                Name, base->iRecord->record_type, record_type);
-            return false;
-        }
+        return true;
     }
 }
 
 
 
-/* Record initialisation post processed: ensures that the EPICS data
+/* Record initialisation post processing: ensures that the EPICS data
  * structures are appropriately initialised.  The data has already been read,
  * but we still need to set up the alarm state and give the data a sensible
  * initial timestamp. */
@@ -334,7 +329,7 @@ static void post_init_record_out(dbCommon *pr, I_RECORD *iRecord)
     { \
         GET_RECORD(record, pr, base, iRecord); \
         if (iRecord->init != NULL) \
-            (void) ACTION_read(record, pr, base, iRecord->init, field); \
+            (void) ACTION_read(record, pr, iRecord, init, field); \
         memcpy(base->WriteData, &field, sizeof(field)); \
         post_init_record_out((dbCommon*)pr, (I_RECORD *) iRecord); \
         return INIT_OK; \
@@ -385,7 +380,7 @@ static void post_process(dbCommon *pr, epicsEnum16 nsta, I_RECORD *iRecord)
     { \
         GET_RECORD(record, pr, base, iRecord); \
         bool Ok = ACTION_##action( \
-            record, pr, base, iRecord->action, pr->VAL); \
+            record, pr, iRecord, action, pr->VAL); \
         post_process((dbCommon *)pr, action##_ALARM, (I_RECORD *) iRecord); \
         return Ok ? PROC_OK : ERROR; \
     }
@@ -496,7 +491,8 @@ static bool CheckWaveformType(waveformRecord * pr, I_waveform * iRecord)
         if (!CheckWaveformType(pr, iRecord)) \
             return ERROR; \
         if (iRecord->init != NULL) \
-            pr->udf = iRecord->init(pr->bptr, CAST(size_t*, &pr->nord)); \
+            pr->udf = iRecord->init( \
+                iRecord->context, pr->bptr, CAST(size_t*, &pr->nord)); \
         post_init_record_out((dbCommon*) pr, (I_RECORD *) iRecord); \
         return INIT_OK; \
     }
@@ -509,7 +505,7 @@ static long process_waveform(waveformRecord * pr)
     /* Naughty cast: I want to a reference to size_t, pr->nord is actually an
      * unsigned int.  Force the two to match! */
     bool Ok = i_waveform->process(
-        pr->bptr, pr->nelm, CAST(size_t*, &pr->nord));
+        i_waveform->context, pr->bptr, pr->nelm, CAST(size_t*, &pr->nord));
     post_process((dbCommon *) pr, READ_ALARM, (I_RECORD *) i_waveform);
     /* Note, by the way, that the waveform record support carefully ignores
      * my return code! */

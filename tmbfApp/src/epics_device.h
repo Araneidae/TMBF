@@ -86,8 +86,8 @@ typedef enum
 /* The I_<record> structures are used to define the complete interface to a
  * record. */
 
-typedef bool GET_TIMESTAMP(struct timespec *time);
-typedef epicsAlarmSeverity GET_ALARM_STATUS();
+typedef bool GET_TIMESTAMP(void * context, struct timespec *time);
+typedef epicsAlarmSeverity GET_ALARM_STATUS(void * context);
 
 
 /* This is as close to subclassing as we can come.  Note that name needs to
@@ -95,6 +95,7 @@ typedef epicsAlarmSeverity GET_ALARM_STATUS();
  * properly. */
 #define I_COMMON_FIELDS \
     RECORD_TYPE record_type; \
+    void * context; \
     bool io_intr; \
     GET_TIMESTAMP * get_timestamp; \
     GET_ALARM_STATUS * get_alarm_status; \
@@ -107,15 +108,16 @@ typedef struct {
 
 
 #define DECLARE_I_READER(record) \
-    typedef bool READ_##record(TYPEOF(record)* result); \
+    typedef bool READ_##record(void * context, TYPEOF(record)* result); \
     typedef struct { \
         I_COMMON_FIELDS; \
         READ_##record * read; \
     } I_##record
 
 #define DECLARE_I_WRITER(record) \
-    typedef bool WRITE_##record (TYPEOF(record) value); \
-    typedef bool INIT_##record (TYPEOF(record)* initial_value); \
+    typedef bool WRITE_##record (void * context, TYPEOF(record) value); \
+    typedef bool INIT_##record ( \
+        void * context, TYPEOF(record)* initial_value); \
     typedef struct { \
         I_COMMON_FIELDS; \
         WRITE_##record * write; \
@@ -151,8 +153,10 @@ typedef enum {
 
 #define DECLARE_I_WAVEFORM(type) \
     typedef bool PROCESS_waveform_##type( \
+        void * context, \
         type * array, size_t max_length, size_t* new_length); \
-    typedef bool INIT_waveform_##type(type * array, size_t* new_length); \
+    typedef bool INIT_waveform_##type( \
+        void * context, type * array, size_t* new_length); \
     typedef struct { \
         I_COMMON_FIELDS; \
         waveform_TYPE field_type; \
@@ -202,6 +206,7 @@ RECORD_HANDLE LookupRecord(const char *name);
  * into a waveform process method. */
 #define WRAP_SIMPLE_WAVEFORM(type, true_length, process_waveform) \
     static bool wrap_##process_waveform( \
+        void * context, \
         type *array, size_t max_length, size_t *new_length) \
     { \
         if (max_length == true_length) \
@@ -239,35 +244,40 @@ RECORD_HANDLE LookupRecord(const char *name);
  *      type read()
  * into a record processing method. */
 #define WRAP_SIMPLE_READ(record, read) \
-    static bool wrap_##read(TYPEOF(record)* result) \
+    static bool wrap_##read(void * context, TYPEOF(record)* result) \
     { \
         *result = read(); \
         return true; \
     }
 
 #define WRAP_SIMPLE_WRITE(record, write) \
-    static bool wrap_##write(TYPEOF(record) value) \
+    static bool wrap_##write(void * context, TYPEOF(record) value) \
     { \
         write(value); \
         return true; \
     }
 
 #define WRAP_VARIABLE_READ(record, variable) \
-    static bool read_##variable(TYPEOF(record)* result) \
+    static bool read_##variable(void * context, TYPEOF(record)* result) \
     { \
         *result = variable; \
         return true; \
     }
 
 #define WRAP_VARIABLE_WRITE(record, variable) \
-    static bool write_##variable(TYPEOF(record) value) \
+    static bool write_##variable(void * context, TYPEOF(record) value) \
     { \
         variable = value; \
+        return true; \
+    } \
+    static bool init_##variable(void * context, TYPEOF(record)* result) \
+    { \
+        *result = variable; \
         return true; \
     }
 
 #define WRAP_METHOD(action) \
-    static bool wrap_##action(bool ignored) \
+    static bool wrap_##action(void * context, bool ignored) \
     { \
         action(); \
         return true; \
@@ -298,7 +308,7 @@ RECORD_HANDLE LookupRecord(const char *name);
     PUBLISH(record, name, read_##variable)
 #define PUBLISH_VARIABLE_WRITE(record, name, variable) \
     WRAP_VARIABLE_WRITE(record, variable) \
-    PUBLISH(record, name, write_##variable)
+    PUBLISH(record, name, write_##variable, .init = init_##variable)
 
 #define PUBLISH_METHOD(name, action) \
     WRAP_METHOD(action) \
