@@ -11,6 +11,7 @@
 
 #include "test_error.h"
 #include "hardware.h"
+#include "tune.h"
 #include "device.h"
 
 
@@ -165,6 +166,7 @@ int main(int argc,char *argv[])
         ProcessOptions(&argc, &argv) &&
         InitialiseHardware()  &&
         StartCaRepeater()  &&
+        InitialiseTune()  &&
         GenericInit();
     for (int i = 0; Ok && i < argc; i ++)
         Ok = TEST_EPICS(iocsh, argv[i]);

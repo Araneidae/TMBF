@@ -163,15 +163,18 @@ yShowLabelGrid
 y2AxisSrc "AutoScale"
 y2Max 1
 # Trace Properties
-numTraces 1
+numTraces 2
 xPv {
-  0 "$(device):CUMSUM_I"
+  0 "$(device):RAWCUMSUM_I"
+  1 "$(device):CUMSUM_I"
 }
 yPv {
-  0 "$(device):CUMSUM_Q"
+  0 "$(device):RAWCUMSUM_Q"
+  1 "$(device):CUMSUM_Q"
 }
 plotColor {
-  0 index 14
+  0 index 33
+  1 index 14
 }
 endObjectProperties
 

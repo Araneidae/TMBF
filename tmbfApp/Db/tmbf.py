@@ -156,6 +156,8 @@ records.calcout('SWPFREQSTEP_C',
 tune_records = [
     # Read the IQ data from the internal buffer
     hb_buf_lower,
+    # Prepare the tune measurement data
+    boolOut('PROCESS_TUNE'),
     # Update the I and Q waveforms
     Waveform('DDC_I', 4096,
         DESC = 'DDC response, I component'),
@@ -168,6 +170,10 @@ tune_records = [
     aIn('TUNE', PREC = 4,
         DESC = 'Measured tune'),
     # Compute the cumulative sum of tune power
+    Waveform('RAWCUMSUM_I', 4096,
+        DESC = 'DDC cumulative sum, I part'),
+    Waveform('RAWCUMSUM_Q', 4096,
+        DESC = 'DDC cumulative sum, Q part'),
     Waveform('CUMSUM_I', 4096,
         DESC = 'DDC cumulative sum, I part'),
     Waveform('CUMSUM_Q', 4096,

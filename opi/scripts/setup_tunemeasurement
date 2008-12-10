@@ -60,6 +60,7 @@ case $MODE in
                 set_tune .3130 .3530 .3730 .4130
                 ;;
             TS-DI-TMBF-01)
+                HARMONIC=1
                 set_tune .0 .0 .5 .5
                 ;;
             *)  echo "Don't recognise that device!" >&2

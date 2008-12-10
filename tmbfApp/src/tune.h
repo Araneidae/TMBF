@@ -1,0 +1,3 @@
+/* Tune measurement. */
+
+bool InitialiseTune();
