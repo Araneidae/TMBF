@@ -4,11 +4,11 @@ import sys
 import os
 
 from pkg_resources import require
-require("dls.builder==1.5")
+require("iocbuilder==1.6")
 
-from dls.builder import TemplateRecordNames, Configure
-Configure(recordnames = TemplateRecordNames())
-from dls.builder import *
+from iocbuilder import TemplateRecordNames, ConfigureTemplate
+ConfigureTemplate(record_names = TemplateRecordNames())
+from iocbuilder import *
 
 
 # The generic device module is in our own root.

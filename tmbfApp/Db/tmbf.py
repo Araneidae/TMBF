@@ -1,10 +1,10 @@
 import sys
 
-# It is important to import support before importing dls.builder, as the
-# support module initialises dls.builder (and determines which symbols it
+# It is important to import support before importing iocbuilder, as the
+# support module initialises iocbuilder (and determines which symbols it
 # exports!)
 from support import * 
-from dls.builder import *
+from iocbuilder import *
 
 
 # Parameters for this file
