@@ -73,6 +73,11 @@ void write_FIR_coeffs(const int coeffs[MAX_FIR_COEFFS]);
 void read_ADC_MinMax(
     short int ADC_min[MAX_BUNCH_COUNT], short int ADC_max[MAX_BUNCH_COUNT]);
 
+/* Read DAC minimum and maximum values. */
+void read_DAC_MinMax(
+    short int DAC_min[MAX_BUNCH_COUNT], short int DAC_max[MAX_BUNCH_COUNT]);
+
+
 void read_DataSpace(
     short int LowData[MAX_DATA_LENGTH], short int HighData[MAX_DATA_LENGTH]);
 

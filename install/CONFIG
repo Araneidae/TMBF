@@ -3,7 +3,7 @@
 INSTALL_HOST=/home/libera/nfs/testing
 # INSTALL_HOST=/home/ops-libera/testing
 
-VERSION=1.0.1
+VERSION=1.0.3
 
 # Extra delay on DAC output to align bunches.  This needs to be different for
 # different TMBF machines

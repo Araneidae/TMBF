@@ -260,6 +260,28 @@ void read_ADC_MinMax(
     Unlock();
 }
 
+/* copy paste of ADC buffer below, with rename to DAC, surely there's a better
+ * way...*/
+void read_DAC_MinMax(
+    short DAC_min[MAX_BUNCH_COUNT], short DAC_max[MAX_BUNCH_COUNT])
+{
+    Lock();
+    for (int n = 0; n < 4; n++)
+    {
+        /* Channel select and read enable for DAC */
+        ConfigSpace->DacChnSel = 2*n + 1; 
+        for (int i = 0; i < MAX_BUNCH_COUNT/4; i++)
+        {
+            PACKED_DATA packed;
+            packed.packed = ConfigSpace->BB_Dac_MinMax[i];
+            DAC_max[4*i + n] = packed.lower;
+            DAC_min[4*i + n] = packed.upper;
+        }
+    }
+    ConfigSpace->DacChnSel = 0;
+    Unlock();
+}
+
 
 void read_DataSpace(
     short int LowData[MAX_DATA_LENGTH], short int HighData[MAX_DATA_LENGTH])

@@ -27,7 +27,7 @@ wInOut('COEFFS', 12)
 Waveform('BB_GAINS_W', 936, 'FLOAT')
 Waveform('BB_DACS_W',  936, 'SHORT')
 
-# The following records are polled together at 100ms intervals
+# The following records are polled together at 200ms intervals
 create_fanout('SCAN_ADC', 
     Waveform('ADC_MINBUF_R', 936, 'SHORT',
         DESC = 'ADC min value per bunch'),
@@ -39,7 +39,22 @@ create_fanout('SCAN_ADC',
         DESC = 'Readback ADC diff mean'),
     aIn('ADCSTD_R', PREC = 2,
         DESC = 'Readback ADC diff variance'),
-    SCAN = '.1 second')
+    SCAN = '.2 second')
+
+create_fanout('SCAN_DAC', 
+    Waveform('DAC_MINBUF_R', 936, 'SHORT',
+        DESC = 'DAC min value per bunch'),
+    Waveform('DAC_MAXBUF_R', 936, 'SHORT',
+        DESC = 'DAC max value per bunch'),
+    Waveform('DAC_DIFFBUF_R', 936, 'SHORT',
+        DESC = 'DAC max min diff per bunch'),
+    aIn('DACMEAN_R', PREC = 2,
+        DESC = 'Readback DAC diff mean'),
+    aIn('DACSTD_R', PREC = 2,
+        DESC = 'Readback DAC diff variance'),
+    SCAN = 'Passive')
+
+
     
 hb_buf_upper = Waveform('HB_BUF_UPPER_R', 16384, 'SHORT',
     FLNK = status,

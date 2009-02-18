@@ -54,8 +54,8 @@ PUBLISH_SIMPLE_WAVEFORM(short, "BB_DACS_W",  MAX_BUNCH_COUNT, write_BB_DACs)
 static short int ADC_min_buf[MAX_BUNCH_COUNT];
 static short int ADC_max_buf[MAX_BUNCH_COUNT];
 static short int ADC_diff_buf[MAX_BUNCH_COUNT];
-static float mean_diff;
-static float var_diff; 
+static float ADC_mean_diff;
+static float ADC_var_diff; 
 
 static void adc_minbuf_read(short *buffer)
 {
@@ -71,8 +71,8 @@ static void adc_minbuf_read(short *buffer)
         sum_var  += (int) diff*diff;
     }
     
-    mean_diff = sum_diff / (float) MAX_BUNCH_COUNT;
-    var_diff = sum_var / (float) MAX_BUNCH_COUNT - mean_diff*mean_diff;
+    ADC_mean_diff = sum_diff / (float) MAX_BUNCH_COUNT;
+    ADC_var_diff = sum_var / (float) MAX_BUNCH_COUNT - ADC_mean_diff*ADC_mean_diff;
     
     
     memcpy(buffer, ADC_min_buf, sizeof(ADC_min_buf));
@@ -84,15 +84,58 @@ PUBLISH_READ_WAVEFORM(
     short, "ADC_MAXBUF_R", MAX_BUNCH_COUNT, ADC_max_buf)
 PUBLISH_READ_WAVEFORM(
     short, "ADC_DIFFBUF_R", MAX_BUNCH_COUNT, ADC_diff_buf)
-PUBLISH_VARIABLE_READ(ai, "ADCMEAN_R", mean_diff)
-PUBLISH_VARIABLE_READ(ai, "ADCSTD_R",  var_diff)
+PUBLISH_VARIABLE_READ(ai, "ADCMEAN_R", ADC_mean_diff)
+PUBLISH_VARIABLE_READ(ai, "ADCSTD_R",  ADC_var_diff)
 
+
+/* copy paste of ADC buffer below, with rename to DAC, surely there's a better
+ * way...*/
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*                            DAC Min/Max Buffer                             */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+static short int DAC_min_buf[MAX_BUNCH_COUNT];
+static short int DAC_max_buf[MAX_BUNCH_COUNT];
+static short int DAC_diff_buf[MAX_BUNCH_COUNT];
+static float DAC_mean_diff;
+static float DAC_var_diff; 
+
+static void dac_minbuf_read(short *buffer)
+{
+    read_DAC_MinMax(DAC_min_buf, DAC_max_buf);
+
+    int sum_diff = 0;
+    long long int sum_var = 0;
+    for (unsigned int i = 0; i < MAX_BUNCH_COUNT; ++i)
+    {
+        short int diff = DAC_max_buf[i] - DAC_min_buf[i];
+        DAC_diff_buf[i] = diff; 
+        sum_diff += diff;
+        sum_var  += (int) diff*diff;
+    }
+    
+    DAC_mean_diff = sum_diff / (float) MAX_BUNCH_COUNT;
+    DAC_var_diff = sum_var / (float) MAX_BUNCH_COUNT - DAC_mean_diff*DAC_mean_diff;
+    
+    
+    memcpy(buffer, DAC_min_buf, sizeof(DAC_min_buf));
+}
+
+PUBLISH_SIMPLE_WAVEFORM(
+    short, "DAC_MINBUF_R", MAX_BUNCH_COUNT, dac_minbuf_read)
+PUBLISH_READ_WAVEFORM(
+    short, "DAC_MAXBUF_R", MAX_BUNCH_COUNT, DAC_max_buf)
+PUBLISH_READ_WAVEFORM(
+    short, "DAC_DIFFBUF_R", MAX_BUNCH_COUNT, DAC_diff_buf)
+PUBLISH_VARIABLE_READ(ai, "DACMEAN_R", DAC_mean_diff)
+PUBLISH_VARIABLE_READ(ai, "DACSTD_R",  DAC_var_diff)
 
 
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/*                            ??????????????????                             */
+/*                        Selectable Buffer (ADC/DAC/I-Q)                    */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
