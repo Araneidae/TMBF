@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 769
-y 45
+x 1069
+y 672
 w 636
-h 382
+h 400
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -96,7 +96,7 @@ major 4
 minor 1
 release 0
 x 560
-y 352
+y 368
 w 64
 h 24
 fgColor index 25
@@ -184,12 +184,13 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 80
+x 408
 y 352
-w 96
+w 80
 h 21
-controlPv "$(device):TUNECUMSUM"
+controlPv "$(device):CUMSUMTUNE"
 font "helvetica-medium-r-18.0"
+fontAlign "right"
 fgColor index 14
 fgAlarm
 bgColor index 0
@@ -208,7 +209,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 8
+x 344
 y 352
 w 47
 h 21
@@ -228,12 +229,13 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 296
-y 352
-w 96
+x 408
+y 376
+w 80
 h 21
-controlPv "$(device):TUNEPHASE"
+controlPv "$(device):CUMSUMPHASE"
 font "helvetica-medium-r-18.0"
+fontAlign "right"
 fgColor index 14
 fgAlarm
 bgColor index 0
@@ -252,8 +254,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 224
-y 352
+x 344
+y 376
 w 55
 h 21
 font "helvetica-medium-r-18.0"
@@ -262,6 +264,96 @@ bgColor index 0
 useDisplayBg
 value {
   "Phase:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 104
+y 352
+w 80
+h 21
+controlPv "$(device):TUNE"
+font "helvetica-medium-r-18.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 104
+y 376
+w 80
+h 21
+controlPv "$(device):TUNEPHASE"
+font "helvetica-medium-r-18.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 40
+y 376
+w 55
+h 21
+font "helvetica-medium-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Phase:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 40
+y 352
+w 47
+h 21
+font "helvetica-medium-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Tune:"
 }
 autoSize
 endObjectProperties

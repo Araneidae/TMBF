@@ -154,6 +154,7 @@ static int buffer_Q[TUNE_LENGTH];
 
 static int tune_power[TUNE_LENGTH];
 static double peak_power_tune;
+static double peak_power_phase;
 
 static int raw_cumsum_I[TUNE_LENGTH];
 static int raw_cumsum_Q[TUNE_LENGTH];
@@ -211,6 +212,9 @@ static void compute_power_tune()
 
     double harmonic;
     peak_power_tune = modf(ScaleWaveform[PowerPeak], &harmonic);
+    peak_power_phase = 180.0 / M_PI *
+        atan2(-buffer_Q[PowerPeak], -buffer_I[PowerPeak]);
+
 }
 
 
@@ -306,13 +310,14 @@ PUBLISH_READ_WAVEFORM(int, "DDC_I", TUNE_LENGTH, buffer_I)
 PUBLISH_READ_WAVEFORM(int, "DDC_Q", TUNE_LENGTH, buffer_Q)
 PUBLISH_READ_WAVEFORM(int, "TUNEPOWER", TUNE_LENGTH, tune_power)
 PUBLISH_VARIABLE_READ(ai, "TUNE", peak_power_tune)
+PUBLISH_VARIABLE_READ(ai, "TUNEPHASE", peak_power_phase)
 
 PUBLISH_READ_WAVEFORM(int, "RAWCUMSUM_I", TUNE_LENGTH, raw_cumsum_I)
 PUBLISH_READ_WAVEFORM(int, "RAWCUMSUM_Q", TUNE_LENGTH, raw_cumsum_Q)
 PUBLISH_READ_WAVEFORM(int, "CUMSUM_I", TUNE_LENGTH, cumsum_I)
 PUBLISH_READ_WAVEFORM(int, "CUMSUM_Q", TUNE_LENGTH, cumsum_Q)
-PUBLISH_VARIABLE_READ(ai, "TUNECUMSUM", cumsum_tune)
-PUBLISH_VARIABLE_READ(ai, "TUNEPHASE", cumsum_phase)
+PUBLISH_VARIABLE_READ(ai, "CUMSUMTUNE", cumsum_tune)
+PUBLISH_VARIABLE_READ(ai, "CUMSUMPHASE", cumsum_phase)
 
 
 

@@ -184,6 +184,8 @@ tune_records = [
     # Compute the peak power and return this as the tune
     aIn('TUNE', PREC = 4,
         DESC = 'Measured tune'),
+    aIn('TUNEPHASE', PREC = 2, EGU = 'deg',
+        DESC = 'Phase at tune'),
     # Compute the cumulative sum of tune power
     Waveform('RAWCUMSUM_I', 4096,
         DESC = 'DDC cumulative sum, I part'),
@@ -194,10 +196,10 @@ tune_records = [
     Waveform('CUMSUM_Q', 4096,
         DESC = 'DDC cumulative sum, Q part'),
     # Now compute the tune and phase from the cumulative sum
-    aIn('TUNECUMSUM', PREC = 5,
+    aIn('CUMSUMTUNE', PREC = 5,
         DESC = 'Measured tune using cumsum'),
-    aIn('TUNEPHASE', PREC = 2, EGU = 'deg',
-        DESC = 'Phase response at tune'),
+    aIn('CUMSUMPHASE', PREC = 2, EGU = 'deg',
+        DESC = 'Phase at cumsum tune'),
     
     # Finally trigger capture of the next round of data.
     softtrig]
