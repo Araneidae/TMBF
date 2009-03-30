@@ -209,5 +209,6 @@ longOut('DDCSKEW_S',
     VAL = DDC_SKEW, PINI = 'YES',
     DESC = 'Direct update of DDC skew')
 
+stringOut('VERSION', PINI = 'YES', DESC = 'TMBF version')
 
 WriteRecords(sys.argv[1])

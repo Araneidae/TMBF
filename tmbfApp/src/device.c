@@ -296,6 +296,14 @@ GENERIC_REGISTER("ADC_OFF_AB",  AdcOffAB)
 GENERIC_REGISTER("ADC_OFF_CD",  AdcOffCD)
 
 
+static bool read_version(void *context, EPICS_STRING *result)
+{
+    EPICS_STRING version = TMBF_VERSION;
+    CopyEpicsString(version, result);
+    return true;
+}
+PUBLISH(stringin, "VERSION", read_version)
+
 
 #ifndef __DEFINE_EPICS__
 #include "device.EPICS"
