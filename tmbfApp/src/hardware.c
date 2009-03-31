@@ -233,8 +233,8 @@ typedef union
 {
     struct
     {
-        short int upper;
         short int lower;
+        short int upper;
     };
     int packed;
 } PACKED_DATA;
@@ -252,8 +252,8 @@ void read_ADC_MinMax(
         {
             PACKED_DATA packed;
             packed.packed = ConfigSpace->BB_Adc_MinMax[i];
-            ADC_max[4*i + n] = packed.lower;
-            ADC_min[4*i + n] = packed.upper;
+            ADC_max[4*i + n] = packed.upper;
+            ADC_min[4*i + n] = packed.lower;
         }
     }
     ConfigSpace->AdcChnSel = 0;
@@ -274,8 +274,8 @@ void read_DAC_MinMax(
         {
             PACKED_DATA packed;
             packed.packed = ConfigSpace->BB_Dac_MinMax[i];
-            DAC_max[4*i + n] = packed.lower;
-            DAC_min[4*i + n] = packed.upper;
+            DAC_max[4*i + n] = packed.upper;
+            DAC_min[4*i + n] = packed.lower;
         }
     }
     ConfigSpace->DacChnSel = 0;
@@ -284,7 +284,7 @@ void read_DAC_MinMax(
 
 
 void read_DataSpace(
-    short int LowData[MAX_DATA_LENGTH], short int HighData[MAX_DATA_LENGTH])
+    short int HighData[MAX_DATA_LENGTH], short int LowData[MAX_DATA_LENGTH])
 {
     Lock();
     for (int n = 0; n < 4; n++)

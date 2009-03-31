@@ -79,7 +79,7 @@ void read_DAC_MinMax(
 
 
 void read_DataSpace(
-    short int LowData[MAX_DATA_LENGTH], short int HighData[MAX_DATA_LENGTH]);
+    short int HighData[MAX_DATA_LENGTH], short int LowData[MAX_DATA_LENGTH]);
 
 /* The bunch-by-bunch gain and DAC settings share the same registers, but we
  * conceal this in the API below. */
