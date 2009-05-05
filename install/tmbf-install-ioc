@@ -110,7 +110,7 @@ if [ $TARGET == final ]; then
     done
 else
     # Compute EPICS and IOC paths relative to this directory.  
-    IOC_TARGET="$(cd "$SOURCE/.."; pwd)"
+    IOC_TARGET="$SOURCE"
 fi  
 
 # Now install the epics_ioc file.

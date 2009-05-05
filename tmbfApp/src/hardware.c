@@ -312,7 +312,7 @@ void write_BB_gains(short int gains[MAX_BUNCH_COUNT])
         {
             PACKED_DATA packed;
             packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
-            packed.lower = gains[4*n + i];
+            packed.lower = gains[4*i + n];
             ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
         }
     }
@@ -329,7 +329,7 @@ void write_BB_DACs(short int dacs[MAX_BUNCH_COUNT])
         {
             PACKED_DATA packed;
             packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
-            packed.upper = dacs[4*n + i];
+            packed.upper = dacs[4*i + n];
             ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
         }
     }
