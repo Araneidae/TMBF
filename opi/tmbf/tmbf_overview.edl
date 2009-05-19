@@ -1572,7 +1572,6 @@ topShadowColor index 1
 botShadowColor index 11
 font "helvetica-bold-r-12.0"
 buttonLabel "Tune Special"
-password "X"
 numCmds 1
 command {
   0 "xterm -T 'Setup Tune Measurement Special' -e 'setup_tunemeasurement $(device) AP; read -p \"press return\"'"
