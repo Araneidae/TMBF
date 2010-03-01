@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 388
-y 1352
+x 517
+y 487
 w 636
 h 278
 font "helvetica-medium-r-18.0"
@@ -30,7 +30,7 @@ endScreenProperties
 object xyGraphClass
 beginObjectProperties
 major 4
-minor 3
+minor 5
 release 0
 # Geometry
 x 8
@@ -51,9 +51,9 @@ xMax 1
 # Y axis properties
 showYAxis
 yAxisStyle "log10"
-yAxisSrc "AutoScale"
+yAxisSrc "fromUser"
 yMin 1
-yMax 2
+yMax 1e+06
 # Y2 axis properties
 y2AxisSrc "AutoScale"
 y2Max 1
@@ -167,7 +167,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 1
+minor 4
 release 0
 x 64
 y 248
@@ -185,6 +185,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "monitors"
+noExecuteClipMask
 endObjectProperties
 
 # (Static Text)
