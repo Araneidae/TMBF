@@ -32,8 +32,7 @@ class GenericDevice(hardware.Device):
                 address = name
             record = self.builder(name, **fields)
             record.DTYP = 'Generic'
-#            setattr(record, self.addr_name, '@' + address)
-            setattr(record, self.addr_name, address)
+            setattr(record, self.addr_name, '@' + address)
 
             # Check for a description, make a report if none given.
             if 'DESC' not in fields:

@@ -343,7 +343,7 @@ static void post_init_record_out(dbCommon *pr, I_RECORD *iRecord)
     static long init_record_##record(record##Record *pr) \
     { \
         if (init_record_( \
-                (dbCommon *) pr, pr->inOrOut.value.constantStr, \
+                (dbCommon *) pr, pr->inOrOut.value.instio.string, \
                 RECORD_TYPE_##record)) \
             POST_INIT_##post_init(record, pr, pr->VAL, INIT_OK) \
         else \
