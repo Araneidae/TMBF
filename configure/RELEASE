@@ -2,4 +2,4 @@
 EPICS_BASE=/dls_sw/epics/R3.14.9/base
 
 # Identifies which python compiler to use.  Must be at least version 2.4.
-PYTHON=python2.4
+PYTHON=dls-python2.4
