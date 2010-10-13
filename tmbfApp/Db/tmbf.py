@@ -155,6 +155,10 @@ stopfreq  = aOut('SWPSTOPFREQ_S',  0, 468, VAL  = 0.45, PREC = 4,
     DESC = 'Sweep stop freq', MDEL = -1, FLNK = tunescale)
 freqstep = aOut('SWPFREQSTEP_S',  VAL  = 1,  PREC = 4,
     DESC = 'Phase advance step', FLNK = tunescale)
+longOut('DDCSKEW_S',
+    VAL = DDC_SKEW, PINI = 'YES',
+    DESC = 'Direct update of DDC skew', FLNK = tunescale)
+
 records.calcout('SWPFREQSTEP_C',
     CALC = '(B-A)/4096',
     INPA = CP(startfreq),
@@ -204,10 +208,6 @@ tune_records = [
     # Finally trigger capture of the next round of data.
     softtrig]
 create_fanout('TUNESCAN', SCAN = 'Passive', *tune_records)
-
-longOut('DDCSKEW_S',
-    VAL = DDC_SKEW, PINI = 'YES',
-    DESC = 'Direct update of DDC skew')
 
 stringOut('VERSION', PINI = 'YES', DESC = 'TMBF version')
 

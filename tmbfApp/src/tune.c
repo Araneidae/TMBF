@@ -13,6 +13,7 @@
 #include "hardware.h"
 #include "test_error.h"
 #include "epics_device.h"
+#include "numeric.h"
 
 #include "tune.h"
 
@@ -22,17 +23,6 @@
 
 
 #define SQR(x)  ((x)*(x))
-
-
-/* Computes MulSS(x,y) = 2^-32 * x * y in a single fast instruction. */
-inline int MulSS(int x, int y)
-{
-    unsigned int result, temp; 
-    __asm__("smull   %1, %0, %2, %3" :
-        "=&r"(result), "=&r"(temp) : "r"(x), "r"(y)); 
-    return result; 
-}
-
 
 
 
@@ -66,11 +56,6 @@ static unsigned int tune_to_freq(double tune)
     return (unsigned int) round(pow(2,33)*tune/936.0); 
 }
 
-static double freq_to_tune(unsigned int freq)
-{
-    return 936.0 * freq / pow(2, 33);
-}
-
 /* Set NCO */
 static void set_homfreq (double new_freq)
 {
@@ -95,26 +80,25 @@ static void set_freq_step(double new_freq)
 }
 
 
-
 static void update_tune_scale(void)
 {
-    double start = freq_to_tune(read_SweepStartFreq());
-    double stop  = freq_to_tune(read_SweepStopFreq());
-    double step  = freq_to_tune(read_SweepStep());
+    unsigned int start = read_SweepStartFreq();
+    unsigned int stop  = read_SweepStopFreq();
+    unsigned int step  = read_SweepStep();
 
-    double phase_scale = - DDC_skew / 936.0 / 2.0;
-    double two30 = (double) (1 << 30);
+    uint32_t wf_scaling;
+    int wf_shift;
+    compute_scaling(936.0, &wf_scaling, &wf_shift);
+    wf_shift -= 33;
+
+    unsigned int sweep = start;
     for (int i = 0; i < TUNE_LENGTH; i++)
     {
-        ScaleWaveform[i] = (float) (start + i * step);
-        if (ScaleWaveform[i] > stop)
-            ScaleWaveform[i] = stop;
-
-        double cycle;
-        double phase = 2 * M_PI * modf(
-            phase_scale * ScaleWaveform[i], &cycle);
-        rotate_I[i] = (int) round(two30 * cos(phase));
-        rotate_Q[i] = (int) round(two30 * sin(phase));
+        fixed_to_single(sweep, &ScaleWaveform[i], wf_scaling, wf_shift);
+        cos_sin(-DDC_skew * (sweep/4), &rotate_I[i], &rotate_Q[i]);
+        sweep += step;
+        if (sweep > stop)
+            sweep = stop;
     }
 }
 

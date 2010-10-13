@@ -49,6 +49,7 @@ tmbf_SRCS += device.c
 tmbf_SRCS += epics_device.c
 tmbf_SRCS += hardware.c
 tmbf_SRCS += tmbfMain.c
+tmbf_SRCS += numeric.c
 
 tmbf_LIBS += $(EPICS_BASE_IOC_LIBS)
 
@@ -68,8 +69,15 @@ include $(TOP)/configure/RULES
 tmbfMain.o: EMPTY
 EMPTY:
 
+# The numeric module uses a pre-built lookup table.
+numeric.o: numeric-lookup.h
+
+
 # Make everything listed in EPICS_EXPORTS depend on its associated .EPICS file
 $(EPICS_EXPORTS:=.o): %.o: %.EPICS
 
 %.EPICS: %.c epics_device.h
 	$(CPP) -D__DEFINE_EPICS__ $(INCLUDES) $< | ../make_EPICS >$@
+
+%.h: ../%.py
+	$(PYTHON) $< >$@
