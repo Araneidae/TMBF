@@ -14,7 +14,7 @@
 /* Epics strings are rather limited: a massive 39 characters are available! */
 typedef char EPICS_STRING[40];
 
-extern inline void CopyEpicsString(const EPICS_STRING in, EPICS_STRING *out)
+static inline void CopyEpicsString(const EPICS_STRING in, EPICS_STRING *out)
 {
     /* Don't be foolish, there is no guarantee that strings are word aligned
      * -- use memcpy which knows how to handle this. */
@@ -67,7 +67,7 @@ typedef enum
 /* The I_<record> structures are used to define the complete interface to a
  * record. */
 
-typedef bool GET_TIMESTAMP(void * context, struct timespec *time);
+typedef bool GET_TIMESTAMP(void * context, struct timespec *ts);
 typedef epicsAlarmSeverity GET_ALARM_STATUS(void * context);
 
 

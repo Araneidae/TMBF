@@ -1,3 +1,3 @@
 /* Tune measurement. */
 
-bool InitialiseTune();
+bool InitialiseTune(void);

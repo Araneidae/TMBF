@@ -46,12 +46,12 @@ static int * DataSpace;
 
 static pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static void Lock()
+static void Lock(void)
 {
     pthread_mutex_lock(&global_lock);
 }
 
-static void Unlock()
+static void Unlock(void)
 {
     pthread_mutex_unlock(&global_lock);
 }
@@ -343,7 +343,7 @@ void write_BB_DACs(short int dacs[MAX_BUNCH_COUNT])
 /*****************************************************************************/
 
 
-void set_softTrigger()
+void set_softTrigger(void)
 {
     Lock();
     /* The sequence is as follows:
@@ -366,7 +366,7 @@ void set_softTrigger()
     Unlock();
 }
 
-void set_bunchSync()
+void set_bunchSync(void)
 {
     Lock();
     WRITE_CTRL(BUNCH_SYNC,  0);
@@ -379,7 +379,7 @@ void set_bunchSync()
 
 
 
-void dump_registers()
+void dump_registers(void)
 {
     unsigned int * registers = (unsigned int *) ConfigSpace;
     for (int i = 0; i < 4; i ++)
@@ -437,7 +437,7 @@ static unsigned int OsPageMask;
 #define CONTROL_AREA_SIZE   (1 << 12)
 #define DATA_AREA_SIZE      (1 << 14)
 
-static bool MapTmbfMemory()
+static bool MapTmbfMemory(void)
 {
     int mem;
     char * map_config_base;
@@ -451,14 +451,14 @@ static bool MapTmbfMemory()
             0, DATA_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
             mem, TMBF_DATA_ADDRESS & ~OsPageMask)  &&
         DO_(
-            ConfigSpace = (TMBF_CONFIG_SPACE *)
+            ConfigSpace = (TMBF_CONFIG_SPACE *) (void *)
                 (map_config_base + (TMBF_CONFIG_ADDRESS & OsPageMask));
-            DataSpace = (int *)
+            DataSpace = (int *) (void *)
                 (map_data_base + (TMBF_DATA_ADDRESS & OsPageMask)));
 }
 
 
-bool InitialiseHardware()
+bool InitialiseHardware(void)
 {
     OsPageSize = getpagesize();
     OsPageMask = OsPageSize - 1;

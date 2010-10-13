@@ -14,7 +14,7 @@
 
 /* Register read access. */
 #define DECLARE_REGISTER_R(name) \
-    unsigned int read_##name()
+    unsigned int read_##name(void)
 
 /* Register write access. */
 #define DECLARE_REGISTER_W(name) \
@@ -87,16 +87,16 @@ void write_BB_gains(short int gains[MAX_BUNCH_COUNT]);
 void write_BB_DACs(short int dacs[MAX_BUNCH_COUNT]);
 
 
-void set_softTrigger();
-void set_bunchSync();
+void set_softTrigger(void);
+void set_bunchSync(void);
 
 
 
 /* Dump all control registers to the console. */
-void dump_registers();
+void dump_registers(void);
 
 
-bool InitialiseHardware();
+bool InitialiseHardware(void);
 
 
 #undef DECLARE_REGISTER

@@ -169,10 +169,10 @@ static epicsAlarmSeverity get_alarm_status(I_RECORD *iRecord)
         return epicsSevNone;
 }
 
-static bool get_timestamp(I_RECORD *iRecord, struct timespec *time)
+static bool get_timestamp(I_RECORD *iRecord, struct timespec *ts)
 {
     if (iRecord->get_timestamp)
-        return iRecord->get_timestamp(iRecord->context, time);
+        return iRecord->get_timestamp(iRecord->context, ts);
     else
         return false;
 }
@@ -232,9 +232,9 @@ static void SetTimestamp(dbCommon *pr, struct timespec *Timestamp)
 #define ACTION_READ_INDIRECT(record, iRecord, action, field) \
     ( { \
         TYPEOF(record) Value; \
-        bool Ok = iRecord->action(iRecord->context, &Value); \
-        if (Ok) field = Value; \
-        Ok; \
+        bool _Ok = iRecord->action(iRecord->context, &Value); \
+        if (_Ok) field = Value; \
+        _Ok; \
     } )
 
 #define ACTION_READ_DIRECT(record, iRecord, action, field) \
@@ -379,10 +379,10 @@ static void post_process(dbCommon *pr, epicsEnum16 nsta, I_RECORD *iRecord)
     static long action##_##record(record##Record * pr) \
     { \
         GET_RECORD(record, pr, base, iRecord); \
-        bool Ok = ACTION_##action( \
+        bool ok = ACTION_##action( \
             record, pr, iRecord, action, pr->VAL); \
         post_process((dbCommon *)pr, action##_ALARM, (I_RECORD *) iRecord); \
-        return Ok ? PROC_OK : ERROR; \
+        return ok ? PROC_OK : ERROR; \
     }
 
 #define read_ALARM      READ_ALARM
@@ -399,13 +399,12 @@ static void post_process(dbCommon *pr, epicsEnum16 nsta, I_RECORD *iRecord)
     DEFINE_DEFAULT_PROCESS(record, VAL, write, PROC_OK)
 
 
-#if 0
-/* Redefine epicsExportAddress to avoid strict aliasing warnings. */
+/* Redefine epicsExportAddress to avoid warnings about increased alignment of
+ * target type (somewhat concerning, have to suggest). */
 #undef epicsExportAddress
 #define epicsExportAddress(typ,obj) \
     epicsShareExtern typeof(obj) *EPICS_EXPORT_POBJ(typ, obj); \
     epicsShareDef typeof(obj) *EPICS_EXPORT_POBJ(typ, obj) = &obj
-#endif
 
 
 #define DEFINE_DEVICE(record, length, args...) \

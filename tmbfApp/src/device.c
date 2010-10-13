@@ -170,7 +170,7 @@ static double fir_phase = 0;
 
 #define MAX_FIR_LENGTH  9
 
-static void set_fircoeffs()
+static void set_fircoeffs(void)
 {
     double tune = (double) fir_cycles / fir_length;    
 
@@ -309,7 +309,7 @@ PUBLISH(stringin, "VERSION", read_version)
 #include "device.EPICS"
 #endif
 
-int GenericInit()
+int GenericInit(void)
 {
     printf("Registering Generic Device functions\n");
     return PUBLISH_EPICS_DATA();

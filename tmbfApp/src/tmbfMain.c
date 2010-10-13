@@ -79,7 +79,7 @@ void print_error(const char * Message, const char * FileName, int LineNumber)
  * external EPICS dependencies (otherwise the caRepeater application needs to
  * be run). */
 
-static bool StartCaRepeater()
+static bool StartCaRepeater(void)
 {
     epicsThreadId caRepeaterId = epicsThreadCreate(
         "CAC-repeater", epicsThreadPriorityLow,
@@ -140,7 +140,7 @@ static bool ProcessOptions(int *argc, char ** *argv)
 
 /* Prints interactive startup message as recommended by GPL. */
 
-static void StartupMessage()
+static void StartupMessage(void)
 {
     printf(
 "\n"

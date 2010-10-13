@@ -96,7 +96,7 @@ static void set_freq_step(double new_freq)
 
 
 
-static void update_tune_scale()
+static void update_tune_scale(void)
 {
     double start = freq_to_tune(read_SweepStartFreq());
     double stop  = freq_to_tune(read_SweepStopFreq());
@@ -167,7 +167,7 @@ static double cumsum_phase;
 
 
 
-static void update_IQ()
+static void update_IQ(void)
 {
     short int hb_buf_lower[MAX_DATA_LENGTH];
     short int hb_buf_upper[MAX_DATA_LENGTH];
@@ -190,7 +190,7 @@ static void update_IQ()
 }
 
 
-static void compute_power_tune()
+static void compute_power_tune(void)
 {
     /* Convert the extracted IQ waveform into a power spectrum.  After
      * accumulation and rotation, the I and Q values are signed 16 bit values
@@ -241,7 +241,7 @@ static void accumulate_difference(int difference, int length, int waveform[])
 }
 
 
-static void update_cumsum_IQ()
+static void update_cumsum_IQ(void)
 {
     /* First compute the raw cumulative sum. */
     int sum_i = 0;
@@ -287,7 +287,7 @@ static void update_cumsum_IQ()
 
 /* This is called each time a tune measurement needs to be done. */
 
-static void process_tune()
+static void process_tune(void)
 {
     /* First capture the IQ readings from the last tune scan. */
     update_IQ();
@@ -326,7 +326,7 @@ PUBLISH_VARIABLE_READ(ai, "CUMSUMPHASE", cumsum_phase)
 #include "tune.EPICS"
 #endif
 
-bool InitialiseTune()
+bool InitialiseTune(void)
 {
     return PUBLISH_EPICS_DATA();
 }
