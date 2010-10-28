@@ -1,6 +1,0 @@
-# This is where installed files will be placed ready for deployment to the
-# Libera IOC.  The IOC files will be placed in $INSTALL_HOST/pbpm.
-#INSTALL_HOST=/home/libera/nfs/testing
-INSTALL_HOST=/dls_sw/work/hardware/Libera/iu42
-
-VERSION=1.0.0

@@ -1,6 +1,0 @@
-#!/bin/sh
-
-cp -f db/pbpm.db /scratch/iu42/rootfs/opt
-cp -f dbd/*.dbd /scratch/iu42/rootfs/opt
-cp -f install/st.cmd /scratch/iu42/rootfs/opt
-cp -f bin/linux-ppc405/pbpm /scratch/iu42/rootfs/opt
