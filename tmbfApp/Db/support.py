@@ -3,8 +3,17 @@
 import sys
 import os
 
-from pkg_resources import require
-require("iocbuilder==1.6")
+# All this palaver is to pick up the IOC builder version from
+# configure/RELEASE so that it can be maintained properly.
+builder_version = os.environ['IOCBUILDER']
+if builder_version == '':
+    # Assume iocbuilder already on python path, do nothing more
+    pass
+elif builder_version[0] == '/':
+    sys.path.append(builder_version)
+else:
+    from pkg_resources import require
+    require('iocbuilder==%s' % builder_version)
 
 from iocbuilder import TemplateRecordNames, ConfigureTemplate
 ConfigureTemplate(record_names = TemplateRecordNames())
@@ -19,8 +28,8 @@ ModuleVersion('GenericDevice', home=HomeDir, use_name=False)
 
 # This class wraps the creation of records which talk directly to the
 # Libera device driver.
-class GenericDevice(hardware.Device):
-    DbdFileList = ['generic.dbd']
+class GenericDevice(Device):
+    DbdFileList = ['generic']
 
     class makeRecord:
         def __init__(self, builder, addr_name):

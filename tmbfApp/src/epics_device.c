@@ -60,7 +60,7 @@
 
 #define TABLESIZE   256
 
-static void * hash_table = NULL;
+static struct gphPvt * hash_table = NULL;
 
 
 /* Common information about records: this is written to the dpvt field. */

@@ -1,0 +1,39 @@
+# CONFIG_SITE
+
+# Make any application-specific changes to the EPICS build
+# configuration variables in this file.
+#
+# Host/target specific settings can be specified in files named
+#  CONFIG_SITE.$(EPICS_HOST_ARCH).Common
+#  CONFIG_SITE.Common.$(T_A)
+#  CONFIG_SITE.$(EPICS_HOST_ARCH).$(T_A)
+
+STATIC_BUILD = YES
+
+
+CROSS_COMPILER_TARGET_ARCHS =
+# Choose the appropriate target architecture here:
+#
+CROSS_COMPILER_TARGET_ARCHS += linux-arm
+#       Typically targets Libera systems with firmware 1.46 to 1.82,
+#       targeting glibc 2.3.2 on Libera.  The recommended build here is to
+#       use gcc 3.4.4 and glibc 2.3.6 -- this toolchain was built using
+#       crosstool.
+#
+# CROSS_COMPILER_TARGET_ARCHS += linux-arm_el
+#       Targets newer Libera systems using the ARM "embedded" EABI.  At 
+#       Diamond we target glibc 2.7 using gcc 4.3.2 with a toolchain built
+#       using crosstool-ng, however there is no reason not to use this target
+#       with the standard iTech toolchain.
+#
+
+# Identify which python interpreter to use.  Must be at least version 2.4.
+PYTHON = dls-python2.6
+
+# Identifies either the path to the IOC builder python library or its
+# pkg_resources version identification.  Very simple test: if it begins with /
+# it's a path!  If this is left blank then the builder is assumed to be on the
+# path.
+#    Note: if the IOC builder is not installed, please place the prebuilt .db
+# files in the liberaApp/Db directory to avoid any need to invoke this.
+IOCBUILDER = 3.3

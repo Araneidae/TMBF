@@ -46,7 +46,7 @@ cd "$(dirname "$0")/.."
 
 
 # First check that we're publishing the version we expect.
-VERSION="$(sed -n '/^VERSION=/{s///;p;q;}' install/CONFIG)"
+VERSION="$(sed -n '/^VERSION=/{s///;p;q;}' install_d/CONFIG)"
 [ "$VERSION" = "${1?Specify release version}" ]  ||
     Error "Release version mismatch: $1 != $VERSION"
 

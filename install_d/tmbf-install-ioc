@@ -13,7 +13,7 @@ function Error()
 
 
 SOURCE="$(cd "$(dirname "$0")"/..; pwd)"
-LOCATIONS="$(cat "$SOURCE"/install/locations)"
+LOCATIONS="$(cat "$SOURCE"/install_d/locations)"
 
 CONFIGDIR=/etc/sysconfig
 
@@ -119,13 +119,13 @@ fi
     echo "TMBF_IOC='$IOC_TARGET/bin/linux-arm/runioc'"
     # Any lines starting IOC_ are passed through, lines starting
     # $LOCATION_IOC_ are translated to IOC_, the rest are discarded.
-    sed -rn 's/^'$LOCATION'_(IOC_)/\1/; /^IOC_/p' "$SOURCE"/install/CONFIG
+    sed -rn 's/^'$LOCATION'_(IOC_)/\1/; /^IOC_/p' "$SOURCE"/install_d/CONFIG
     # If libera autostart is configured then add the appropriate entry
     ((AUTOSTART))  &&  echo 'START_EPICS=yes'
 ) > $CONFIGDIR/tmbf_ioc
 
 # Copy the startup scripts
-cp -f "$SOURCE"/install/epics /etc/init.d  
+cp -f "$SOURCE"/install_d/epics /etc/init.d  
 
 
 # Configure autostart as required.  First clear out any existing autostart

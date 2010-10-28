@@ -10,7 +10,7 @@ INSTALL_DIRS='bin dbd db'
 
 
 SOURCE="$(cd "$(dirname "$0")"/..; pwd)"  
-. "$SOURCE"/install/CONFIG  
+. "$SOURCE"/install_d/CONFIG  
 if (($# > 0)); then
     INSTALL_HOST="$1"
     FPGA_SOURCE="$2"
@@ -22,7 +22,7 @@ fi
 # install.
 TARGET="$INSTALL_HOST"/tmbf
 rm -rf "$TARGET"
-mkdir -p "$TARGET"/install
+mkdir -p "$TARGET"/install_d
 
 # Copy over the appropriate components
 for dir in $INSTALL_DIRS; do
@@ -31,7 +31,7 @@ done
 
 # Copy over the installation specific files into the install directory.
 for f in $INSTALL_FILES; do
-    cp "$SOURCE"/install/$f "$TARGET"/install
+    cp "$SOURCE"/install_d/$f "$TARGET"/install_d
 done
 
 # To be friendly create a redirector script to invoke the true runioc script.

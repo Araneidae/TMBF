@@ -2,5 +2,5 @@
 O.*
 /db
 /dbd
-/install/locations
+/install_d/locations
 *.pyc
