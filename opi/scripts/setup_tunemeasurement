@@ -7,9 +7,13 @@ HERE="$(dirname "$0")"
 
 DEVICE="${1:?Specify device}"
 MODE="${2:?Specify mode}"
+CONFIG="${3:-/home/ops/diagnostics/concentrator/TMBF_tune.config}"
 
 HARMONIC=80
 BUNCH=450
+
+# Pull in configured tune settings
+. "$CONFIG"
 
 [ $MODE = SBFB ]  &&  HARMONIC=0
 
@@ -48,40 +52,38 @@ set_tune()
 
 
 # Determine the nominal tune
-# NOTE: Don't put leading zeros in the numbers below, as otherwise they'll get
-# interpreted as octal numbers!  (whoops...)
 sweep_range=500     # 0.05
 alarm_range=100     # 0.10
 
-bad_mode()
+# Called with $1 = X or Y, sets up tune, cycles, length
+set_computed_tune()
 {
-    echo >&2 "Unknown ring mode" "<$1>"
-    tune=2500
-    sweep_range=2450
-    alarm_range=2450
+    mode=$(caget -t SR-CS-RING-01:MODE | sed 's/ $//')
+    eval tune=\$$1_tune_$mode
+    eval cycles=\$$1_cycles_$mode
+    eval length=\$$1_length_$mode
+    
+    if [ -z "$tune" -o -z "$cycles" -o -z "$length" ]; then
+        echo >&2 "Don't recognise mode $mode"
+	echo >&2 "Check configuration in $CONFIG"
+	echo >&2 "Check PV SR-CS-RING-01:MODE"
+    else
+        set_tune $tune $sweep_range $alarm_range
+	put FIRCYCLES_S $cycles
+	put FIRLENGTH_S $length
+    fi
 }
+
 
 # Control features different in AP mode, including Tune frequency range.
 case $MODE in
     TUNE|SBFB)
         case $DEVICE in
             SR21C-DI-TMBF-01)
-                tune=2050
-                set_tune $tune $sweep_range $alarm_range
+	        set_computed_tune X
                 ;;
             SR21C-DI-TMBF-02)
-                cycles=3; length=8; tune=3630
-                mode=$(caget -t SR-CS-RING-01:MODE | sed 's/ $//')
-                case $mode in
-                    SR)         ;;
-                    SRI13)      tune=950;  cycles=1; length=9 ;;
-                    SRLE3ps)    ;;
-                    SRLEm3ps)   ;;
-                    *)          bad_mode "$mode" ;;
-                esac
-                set_tune $tune $sweep_range $alarm_range
-                put FIRCYCLES_S $cycles
-                put FIRLENGTH_S $length
+	    	set_computed_tune Y
                 ;;
             TS-DI-TMBF-01)
                 HARMONIC=1
