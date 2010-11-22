@@ -36,34 +36,56 @@ put()
 
 # Sets the range of tunes.  Called as:
 #
-#   set_tune <start_freq> <low> <high> <stop_freq>
+#   set_tune <centre_freq> <sweep_range> <alarm_range>
 #
 set_tune()
 {
-    STARTFREQ=$1
-    STOPFREQ=$4
-    LOW=$2
-    HIGH=$3
+    STARTFREQ=$(printf .%04d $(($1-$2)))
+    STOPFREQ=$(printf .%04d $(($1+$2)))
+    LOW=$(printf .%04d $(($1-$3)))
+    HIGH=$(printf .%04d $(($1+$3)))
 }
 
+
+# Determine the nominal tune
+# NOTE: Don't put leading zeros in the numbers below, as otherwise they'll get
+# interpreted as octal numbers!  (whoops...)
+sweep_range=500     # 0.05
+alarm_range=100     # 0.10
+
+bad_mode()
+{
+    echo >&2 "Unknown ring mode" "<$1>"
+    tune=2500
+    sweep_range=2450
+    alarm_range=2450
+}
 
 # Control features different in AP mode, including Tune frequency range.
 case $MODE in
     TUNE|SBFB)
         case $DEVICE in
             SR21C-DI-TMBF-01)
-                # nominal was tune .2256
-                # set_tune .1756 .2156 .2356 .2756
-                # nominal tune is .2050
-                set_tune .1550 .1950 .2150 .2550
+                tune=2050
+                set_tune $tune $sweep_range $alarm_range
                 ;;
             SR21C-DI-TMBF-02)
-                # nominal tune is .3630
-                set_tune .3130 .3530 .3730 .4130
+                cycles=3; length=8; tune=3630
+                mode=$(caget -t SR-CS-RING-01:MODE | sed 's/ $//')
+                case $mode in
+                    SR)         ;;
+                    SRI13)      tune=950;  cycles=1; length=9 ;;
+                    SRLE3ps)    ;;
+                    SRLEm3ps)   ;;
+                    *)          bad_mode "$mode" ;;
+                esac
+                set_tune $tune $sweep_range $alarm_range
+                put FIRCYCLES_S $cycles
+                put FIRLENGTH_S $length
                 ;;
             TS-DI-TMBF-01)
                 HARMONIC=1
-                set_tune .0 .0 .5 .5
+                set_tune 2500 2500 2500
                 ;;
             *)  echo "Don't recognise that device!" >&2
                 exit 1
@@ -72,7 +94,7 @@ case $MODE in
         DDCINPUT=FIR
         ;;
     AP)
-        set_tune .01 .0 .5 .49
+        set_tune 2500 2450 2450
         IQSCALE=5
         DDCINPUT=ADC
         ;;
