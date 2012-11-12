@@ -43,7 +43,7 @@ tmbf_DBD += generic.dbd
 DBD += generic.dbd
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
-tmbf_SRCS += tmbf_registerRecordDeviceDriver.c 
+tmbf_SRCS += tmbf_registerRecordDeviceDriver.c
 tmbf_SRCS += tune.c
 tmbf_SRCS += device.c
 tmbf_SRCS += epics_device.c
@@ -65,7 +65,7 @@ include $(TOP)/configure/RULES
 #  ADD RULES AFTER THIS LINE
 
 # Force tmbfMain to be rebuilt every time so that the build date and time is
-# current. 
+# current.
 tmbfMain.o: EMPTY
 EMPTY:
 

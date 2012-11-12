@@ -46,7 +46,7 @@ class GenericDevice(Device):
             # Check for a description, make a report if none given.
             if 'DESC' not in fields:
                 print 'No description for', name
-                
+
             return record
 
     @classmethod
@@ -78,19 +78,19 @@ def add_PINI(result):
     try:
         result.VAL.Value()
     except KeyError:
-        # VAL field not defined, so don't add 
+        # VAL field not defined, so don't add
         pass
     else:
         result.PINI = 'YES'
     return result
-    
+
 
 def aIn(name, **fields):
     return GenericDevice.ai(name, **fields)
 
 def aOut(name, DRVL=None, DRVH=None, **fields):
     return add_PINI(GenericDevice.ao(name, address=name,
-        OMSL = 'supervisory', 
+        OMSL = 'supervisory',
         DRVL = DRVL,  DRVH = DRVH,
 #        EGUL = DRVL,  EGUF = DRVH,
         **fields))
@@ -101,7 +101,7 @@ def boolIn(name, ZNAM=None, ONAM=None, **fields):
 
 def boolOut(name, ZNAM=None, ONAM=None, **fields):
     return add_PINI(GenericDevice.bo(name, address=name,
-        OMSL = 'supervisory', 
+        OMSL = 'supervisory',
         ZNAM = ZNAM, ONAM = ONAM, **fields))
 
 
@@ -139,7 +139,7 @@ def process_mbb_values(fields, option_values):
             option, value = option_value, default
         fields[prefix + 'ST'] = option
         fields[prefix + 'VL'] = value
-        
+
 def mbbIn(name, *option_values, **fields):
     process_mbb_values(fields, option_values)
     return GenericDevice.mbbi(name, **fields)
@@ -152,11 +152,11 @@ def mbbOut(name, *option_values, **fields):
 
 def stringIn(name, **fields):
     return GenericDevice.stringin(name, **fields)
-    
+
 def stringOut(name, **fields):
     return add_PINI(GenericDevice.stringin(name, **fields))
 
-    
+
 def Waveform(name, length, FTVL='LONG', **fields):
     return GenericDevice.waveform(name, name,
         NELM = length,  FTVL = FTVL, **fields)
@@ -189,7 +189,7 @@ def wInOut(name, NELM):
     Waveform(name + '_W', NELM)
 
 
-    
+
 __all__ = [
     'aIn',      'aOut',     'boolIn',   'boolOut',  'longIn',   'longOut',
     'mbbOut',   'mbbOut',   'stringIn', 'stringOut',    'Waveform',

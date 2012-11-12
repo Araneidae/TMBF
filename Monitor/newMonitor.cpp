@@ -22,8 +22,8 @@ void AssertFail(const char * FileName, int LineNumber)
             LineNumber, FileName, errno, strerror(errno));
     exit(1);
 }
-  
- 
+
+
 //#define MAP_SIZE 4096UL
 #define MAP_SIZE (1 << 14)
 #define MAP_MASK (MAP_SIZE - 1)
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
     int mem = open("/dev/mem", O_RDWR | O_SYNC);
     ASSERT(mem != -1);
 //    fflush(stdout);
-    
+
     /* Map one page */
     char * map_base = (char *) mmap(
         0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
@@ -134,10 +134,10 @@ int main(int argc, char **argv)
     close(mem);
     return 0;
 #if 0
-    
-    
+
+
     int fd;
-    char *map_base, *virt_addr; 
+    char *map_base, *virt_addr;
     unsigned long read_result, writeval;
     off_t target;
     int access_type = 'w';
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
             "\tdata    : data to be written\n\n", argv[0]);
         exit(1);
     }
-    
+
     target = strtoul(argv[1], 0, 0);
     if(argc > 2)
         access_type = tolower(argv[2][0]);
@@ -159,13 +159,13 @@ int main(int argc, char **argv)
     fd = open("/dev/mem", O_RDWR | O_SYNC);
     ASSERT(fd != -1);
     fflush(stdout);
-    
+
     /* Map one page */
     map_base = (char *) mmap(
         0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
         fd, target & ~MAP_MASK);
     ASSERT(map_base != (void *) -1);
-    
+
     virt_addr = map_base + (target & MAP_MASK);
     if(argc <= 3)
     {
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 	}
 	
         printf("Value at address 0x%X (%p): 0x%X\n",
-               target, virt_addr, read_result); 
+               target, virt_addr, read_result);
         fflush(stdout);
     }
 

@@ -16,6 +16,6 @@ clean:
 	rm -f locations
 
 # The list of possible installation locations is derived from CONFIG.
-LOC_SED_COMMAND = '/^([[:alnum:]])_IOC_.*$$/{s//\1/;p;}' 
+LOC_SED_COMMAND = '/^([[:alnum:]])_IOC_.*$$/{s//\1/;p;}'
 locations: CONFIG
 	sed -rn $(LOC_SED_COMMAND) $< | sort | uniq >$@

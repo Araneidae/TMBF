@@ -55,7 +55,7 @@ static short int ADC_min_buf[MAX_BUNCH_COUNT];
 static short int ADC_max_buf[MAX_BUNCH_COUNT];
 static short int ADC_diff_buf[MAX_BUNCH_COUNT];
 static float ADC_mean_diff;
-static float ADC_var_diff; 
+static float ADC_var_diff;
 
 static void adc_minbuf_read(short *buffer)
 {
@@ -66,15 +66,15 @@ static void adc_minbuf_read(short *buffer)
     for (unsigned int i = 0; i < MAX_BUNCH_COUNT; ++i)
     {
         short int diff = ADC_max_buf[i] - ADC_min_buf[i];
-        ADC_diff_buf[i] = diff; 
+        ADC_diff_buf[i] = diff;
         sum_diff += diff;
         sum_var  += (int) diff*diff;
     }
-    
+
     ADC_mean_diff = sum_diff / (float) MAX_BUNCH_COUNT;
     ADC_var_diff = sum_var / (float) MAX_BUNCH_COUNT - ADC_mean_diff*ADC_mean_diff;
-    
-    
+
+
     memcpy(buffer, ADC_min_buf, sizeof(ADC_min_buf));
 }
 
@@ -99,7 +99,7 @@ static short int DAC_min_buf[MAX_BUNCH_COUNT];
 static short int DAC_max_buf[MAX_BUNCH_COUNT];
 static short int DAC_diff_buf[MAX_BUNCH_COUNT];
 static float DAC_mean_diff;
-static float DAC_var_diff; 
+static float DAC_var_diff;
 
 static void dac_minbuf_read(short *buffer)
 {
@@ -110,15 +110,15 @@ static void dac_minbuf_read(short *buffer)
     for (unsigned int i = 0; i < MAX_BUNCH_COUNT; ++i)
     {
         short int diff = DAC_max_buf[i] - DAC_min_buf[i];
-        DAC_diff_buf[i] = diff; 
+        DAC_diff_buf[i] = diff;
         sum_diff += diff;
         sum_var  += (int) diff*diff;
     }
-    
+
     DAC_mean_diff = sum_diff / (float) MAX_BUNCH_COUNT;
     DAC_var_diff = sum_var / (float) MAX_BUNCH_COUNT - DAC_mean_diff*DAC_mean_diff;
-    
-    
+
+
     memcpy(buffer, DAC_min_buf, sizeof(DAC_min_buf));
 }
 
@@ -172,7 +172,7 @@ static double fir_phase = 0;
 
 static void set_fircoeffs(void)
 {
-    double tune = (double) fir_cycles / fir_length;    
+    double tune = (double) fir_cycles / fir_length;
 
     /* Only work on the active part of the filter, leaving the beginning of
      * the filter padded with zeros.  This ensures zero extra delay from the
@@ -189,12 +189,12 @@ static void set_fircoeffs(void)
     double max_int = pow(2, 31) - 1;
     for (unsigned int i = 0; i < fir_length; i++)
     {
-        int tap = (int) round(max_int * 
+        int tap = (int) round(max_int *
             sin(2*M_PI * (tune * (i+0.5) + fir_phase/360.0)));
         coeffs[i + fir_start] = tap;
         sum += tap;
     }
-    
+
     /* Fixup the DC offset introduced by the residual sum.  Turns out that
      * this is generally quite miniscule (0, 1 or -1), so it doesn't hugely
      * matter where we put it... unless we're really unlucky (eg, tune==1),
@@ -257,9 +257,9 @@ PUBLISH_SIMPLE_WAVEFORM(int, "COEFFS_W", MAX_FIR_COEFFS, write_FIR_coeffs)
 
 
 #define PUBLISH_REGISTER_R(record, name, register) \
-    PUBLISH_SIMPLE_READ (record, name, read_##register) 
+    PUBLISH_SIMPLE_READ (record, name, read_##register)
 #define PUBLISH_REGISTER_W(record, name, register) \
-    PUBLISH_SIMPLE_WRITE(record, name, write_##register) 
+    PUBLISH_SIMPLE_WRITE(record, name, write_##register)
 
 /* Register access PVs have a very consistent style. */
 #define GENERIC_REGISTER(pv_name, field) \

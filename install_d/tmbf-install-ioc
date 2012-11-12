@@ -70,7 +70,7 @@ fi
 (($# != 0))  &&
     Error 'Invalid arguments: try -h for help'
 
-    
+
 # Check whether we can write to the filesystem.
 if cat /proc/mounts | grep -q ' / [^ ]* ro '; then
     # Root is mounted read only.  Bail unless remount requested.
@@ -98,20 +98,20 @@ if [ $TARGET == final ]; then
     STATE_DIR=/opt/state
 
     # Ensure the state directory exists (but don't interfere with it!)
-    mkdir -p "$STATE_DIR"  
+    mkdir -p "$STATE_DIR"
 
     # Copy over all the runtime files.  First make sure the target directory
     # is fresh.
-    rm -rf "$IOC_TARGET"  
-    umask 22  
-    mkdir -p "$IOC_TARGET"  
+    rm -rf "$IOC_TARGET"
+    umask 22
+    mkdir -p "$IOC_TARGET"
     for dir in bin dbd db; do
         cp -r "$SOURCE/$dir" "$IOC_TARGET"
     done
 else
-    # Compute EPICS and IOC paths relative to this directory.  
+    # Compute EPICS and IOC paths relative to this directory.
     IOC_TARGET="$SOURCE"
-fi  
+fi
 
 # Now install the epics_ioc file.
 (
@@ -125,14 +125,14 @@ fi
 ) > $CONFIGDIR/tmbf_ioc
 
 # Copy the startup scripts
-cp -f "$SOURCE"/install_d/epics /etc/init.d  
+cp -f "$SOURCE"/install_d/epics /etc/init.d
 
 
 # Configure autostart as required.  First clear out any existing autostart
 # method, then install the chosen one.  Either we start epics separately from
 # libera, or we invite the libera script to start/stop us at the same time.
-rm -f /etc/rc3.d/S900epics /etc/rc6.d/K100epics  
-rm -f $CONFIGDIR/libera-server  
+rm -f /etc/rc3.d/S900epics /etc/rc6.d/K100epics
+rm -f $CONFIGDIR/libera-server
 rm -f /etc/init.d/libera-server
 
 rm -f /etc/rc*.d/*libera

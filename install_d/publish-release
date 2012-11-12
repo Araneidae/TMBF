@@ -54,12 +54,12 @@ VERSION="$(sed -n '/^VERSION=/{s///;p;q;}' install_d/CONFIG)"
 svn ls "$SVN_RELEASE/$VERSION"  >/dev/null 2>&1  &&
     Error "Release $VERSION already published to subversion"
 
-# Check that we're up to date with subversion.  
+# Check that we're up to date with subversion.
 CheckSvnCurrent . ||
     Error "TMBF files not checked in"
 
-    
-# Make the release into subversion.  
+
+# Make the release into subversion.
 svn cp -m "TMBF: Release $VERSION" "$SVN_TRUNK" "$SVN_RELEASE/$VERSION" ||
     Error "Problem making subversion release"
 

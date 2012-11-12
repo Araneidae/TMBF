@@ -44,12 +44,12 @@ void print_error(const char * Message, const char * FileName, int LineNumber);
  *      Computes
  *          Result = function(arguments)
  *      and reports an error message if Result == -1.
- *  
+ *
  *  TEST_(function, arguments)
  *      Computes
  *          function(arguments)
  *      and reports an error message if the function returns -1.
- *  
+ *
  *  TEST_0(function, arguments)
  *      Computes
  *          function(arguments)
@@ -58,7 +58,7 @@ void print_error(const char * Message, const char * FileName, int LineNumber);
  *      functions, and the returned value is assigned to errno.
  *
  * The following is slightly different in purpose.
- *  
+ *
  *  TEST_OK(test)
  *      Evaluates test as a boolean and prints an error message if it
  *      evaluates to false. */
@@ -116,5 +116,5 @@ void print_error(const char * Message, const char * FileName, int LineNumber);
  * Compile time assertion tests! */
 #define COMPILE_TIME_ASSERT(pred) \
     do switch(0) { case 0: case pred:; } while (0)
-//#define COMPILE_TIME_ASSERT(pred) 
+//#define COMPILE_TIME_ASSERT(pred)
 

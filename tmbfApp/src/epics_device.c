@@ -125,7 +125,7 @@ RECORD_HANDLE PublishDynamic(const I_RECORD* iRecord)
 {
     if (hash_table == NULL)
         gphInitPvt(&hash_table, TABLESIZE);
-    
+
     GPHENTRY * entry = gphAdd(hash_table, iRecord->name, NULL);
     if (entry == NULL)
     {
@@ -198,16 +198,16 @@ bool SignalRecord(RECORD_HANDLE base)
 /* Common I/O Intr scanning support: uses the fact that pr->dpvt always
  * contains the appropriate GetIoInt implementation. */
 
-static long get_ioint_(int cmd, dbCommon *pr, IOSCANPVT *pIoscanpvt) 
-{ 
-    RECORD_BASE * base = (RECORD_BASE *) pr->dpvt; 
-    if (base == NULL) 
-        return ERROR; 
-    else 
+static long get_ioint_(int cmd, dbCommon *pr, IOSCANPVT *pIoscanpvt)
+{
+    RECORD_BASE * base = (RECORD_BASE *) pr->dpvt;
+    if (base == NULL)
+        return ERROR;
+    else
     {
         *pIoscanpvt = base->ioscanpvt;
-        return OK; 
-    } 
+        return OK;
+    }
 }
 
 
@@ -309,7 +309,7 @@ static bool init_record_(
 static void post_init_record_out(dbCommon *pr, I_RECORD *iRecord)
 {
     (void) recGblSetSevr(pr, READ_ALARM, get_alarm_status(iRecord));
-    recGblResetAlarms(pr); 
+    recGblResetAlarms(pr);
     struct timespec Timestamp;
     if (!get_timestamp(iRecord, &Timestamp))
         /* If the record doesn't have its own timestamp then synthesise one
@@ -397,7 +397,7 @@ static void post_process(dbCommon *pr, epicsEnum16 nsta, I_RECORD *iRecord)
 
 #define DEFINE_DEFAULT_READ(record, VAL, INIT_OK, PROC_OK) \
     INIT_RECORD(record, VAL, inp, inp, INIT_OK) \
-    DEFINE_DEFAULT_PROCESS(record, VAL, read, PROC_OK) 
+    DEFINE_DEFAULT_PROCESS(record, VAL, read, PROC_OK)
 #define DEFINE_DEFAULT_WRITE(record, VAL, INIT_OK, PROC_OK) \
     INIT_RECORD(record, VAL, out, out, INIT_OK) \
     DEFINE_DEFAULT_PROCESS(record, VAL, write, PROC_OK)
@@ -451,7 +451,7 @@ static void post_process(dbCommon *pr, epicsEnum16 nsta, I_RECORD *iRecord)
 #define stringout_MLST  no_MLST
 #define mbbo_MLST       do_MLST
 
-    
+
 
 /* Mostly we can use simple boilerplate for the process routines. */
 DEFINE_DEFAULT_READ (longin,    val,    OK,         OK)

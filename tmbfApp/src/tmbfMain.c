@@ -48,7 +48,7 @@ void print_error(const char * Message, const char * FileName, int LineNumber)
     const int MESSAGE_LENGTH = 512;
     int Error = errno;
     char ErrorMessage[MESSAGE_LENGTH];
-    
+
     int Count = snprintf(ErrorMessage, MESSAGE_LENGTH,
         "%s (%s, %d)", Message, FileName, LineNumber);
     if (errno != 0)
@@ -162,7 +162,7 @@ static void iocsh_dump_registers(const iocshArgBuf *args)
 
 int main(int argc,char *argv[])
 {
-    bool Ok = 
+    bool Ok =
         ProcessOptions(&argc, &argv) &&
         InitialiseHardware()  &&
         StartCaRepeater()  &&

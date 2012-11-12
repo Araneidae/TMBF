@@ -34,7 +34,7 @@
 static float ScaleWaveform[TUNE_LENGTH];
 
 /* Waveforms for compensating IQ by DDC_skew.
- * 
+ *
  * The DDC skew is a group delay in ns.  We translate this into a phase
  * advance of
  *
@@ -53,7 +53,7 @@ static int rotate_Q[TUNE_LENGTH];  // 2**30 * sin(phase)
 
 static unsigned int tune_to_freq(double tune)
 {
-    return (unsigned int) round(pow(2,33)*tune/936.0); 
+    return (unsigned int) round(pow(2,33)*tune/936.0);
 }
 
 /* Set NCO */
@@ -66,7 +66,7 @@ static void set_homfreq (double new_freq)
 static void set_sweepstartfreq (double new_freq)
 {
     write_SweepStartFreq(tune_to_freq(new_freq));
-}  
+}
 
 /* Set Sweep Stop Freq */
 static void set_sweepstopfreq (double new_freq)
@@ -156,18 +156,18 @@ static void update_IQ(void)
     short int hb_buf_lower[MAX_DATA_LENGTH];
     short int hb_buf_upper[MAX_DATA_LENGTH];
     read_DataSpace(hb_buf_lower, hb_buf_upper);
-    
+
     for (int i = 0; i < TUNE_LENGTH; i ++)
     {
         int I =
-            hb_buf_lower[4*i + 0] + hb_buf_lower[4*i + 1] + 
+            hb_buf_lower[4*i + 0] + hb_buf_lower[4*i + 1] +
             hb_buf_lower[4*i + 2] + hb_buf_lower[4*i + 3];
         int Q =
-            hb_buf_upper[4*i + 0] + hb_buf_upper[4*i + 1] + 
+            hb_buf_upper[4*i + 0] + hb_buf_upper[4*i + 1] +
             hb_buf_upper[4*i + 2] + hb_buf_upper[4*i + 3];
         int rI = rotate_I[i];
         int rQ = rotate_Q[i];
-        
+
         buffer_I[i] = MulSS(I, rI) - MulSS(Q, rQ);
         buffer_Q[i] = MulSS(I, rQ) + MulSS(Q, rI);
     }
@@ -181,7 +181,7 @@ static void compute_power_tune(void)
      * again, so can use them as they are. */
     for (int i = 0; i < TUNE_LENGTH; i ++)
         tune_power[i] = SQR(buffer_I[i]) + SQR(buffer_Q[i]);
-    
+
     /* Find the index of the peak power. */
     int PeakValue = 0;
     int PowerPeak = 0;
@@ -275,7 +275,7 @@ static void process_tune(void)
 {
     /* First capture the IQ readings from the last tune scan. */
     update_IQ();
-    
+
     /* Compute the tune from the peak power. */
     compute_power_tune();
 

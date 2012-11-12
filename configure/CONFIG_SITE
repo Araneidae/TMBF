@@ -21,7 +21,7 @@ CROSS_COMPILER_TARGET_ARCHS += linux-arm
 #       crosstool.
 #
 # CROSS_COMPILER_TARGET_ARCHS += linux-arm_el
-#       Targets newer Libera systems using the ARM "embedded" EABI.  At 
+#       Targets newer Libera systems using the ARM "embedded" EABI.  At
 #       Diamond we target glibc 2.7 using gcc 4.3.2 with a toolchain built
 #       using crosstool-ng, however there is no reason not to use this target
 #       with the standard iTech toolchain.

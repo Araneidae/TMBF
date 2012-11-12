@@ -16,7 +16,7 @@
 #define TMBF_CONFIG_ADDRESS       0x1402C000
 #define TMBF_DATA_ADDRESS         0x14028000
 
-typedef struct 
+typedef struct
 {
     unsigned int Ctrl;                  // 000  Main control register
     unsigned int BunchSelect;           // 004  Bunch number selection
@@ -129,14 +129,14 @@ static unsigned int ReadBitField(
 
 #define DEFINE_BIT_FIELD(name, register, start_count) \
     DEFINE_BIT_FIELD_R(name, register, start_count) \
-    DEFINE_BIT_FIELD_W(name, register, start_count) 
+    DEFINE_BIT_FIELD_W(name, register, start_count)
 
 #define CTRL_REGISTER(name) \
     DEFINE_BIT_FIELD(name, ConfigSpace->Ctrl, name##_FIELD)
-    
+
 #define DELAY_REGISTER(name) \
     DEFINE_BIT_FIELD(name, ConfigSpace->Delay, name##_FIELD)
-    
+
 
 /* Direct access to control register fields. */
 CTRL_REGISTER(CTRL_DAC_OUT)
@@ -183,7 +183,7 @@ DELAY_REGISTER(DELAY_GROW_DAMP)
 
 #define DIRECT_REGISTER(name) \
     DIRECT_REGISTER_R(name) \
-    DIRECT_REGISTER_W(name) 
+    DIRECT_REGISTER_W(name)
 
 DIRECT_REGISTER(BunchSelect)
 DIRECT_REGISTER(DDC_dwellTime)
@@ -247,7 +247,7 @@ void read_ADC_MinMax(
     for (int n = 0; n < 4; n++)
     {
         /* Channel select and read enable for ADC */
-        ConfigSpace->AdcChnSel = 2*n + 1; 
+        ConfigSpace->AdcChnSel = 2*n + 1;
         for (int i = 0; i < MAX_BUNCH_COUNT/4; i++)
         {
             PACKED_DATA packed;
@@ -269,7 +269,7 @@ void read_DAC_MinMax(
     for (int n = 0; n < 4; n++)
     {
         /* Channel select and read enable for DAC */
-        ConfigSpace->DacChnSel = 2*n + 1; 
+        ConfigSpace->DacChnSel = 2*n + 1;
         for (int i = 0; i < MAX_BUNCH_COUNT/4; i++)
         {
             PACKED_DATA packed;
@@ -396,22 +396,22 @@ void dump_registers(void)
         ReadBitField(ctrl, CTRL_FIR_INVERT_FIELD),
         ReadBitField(ctrl, CTRL_SOFT_TRIG_FIELD),
         ReadBitField(ctrl, CTRL_ARCHIVE_FIELD),
-        
+
         ReadBitField(ctrl, CTRL_FIR_GAIN_FIELD),
         ReadBitField(ctrl, CTRL_HOM_GAIN_FIELD),
         ReadBitField(ctrl, CTRL_TRIG_SEL_FIELD),
         ReadBitField(ctrl, CTRL_ARM_SEL_FIELD),
-        
+
         ReadBitField(ctrl, CTRL_SOFT_ARM_FIELD),
         ReadBitField(ctrl, CTRL_GROW_DAMP_FIELD),
         ReadBitField(ctrl, CTRL_TEMP_DAC_OUT_FIELD),
         ReadBitField(ctrl, CTRL_DDR_INPUT_FIELD),
-        
+
         ReadBitField(ctrl, CTRL_SET_PLANE_FIELD),
         ReadBitField(ctrl, CTRL_CH_SELECT_FIELD),
         ReadBitField(ctrl, CTRL_DDC_INPUT_FIELD),
         ReadBitField(ctrl, CTRL_BUNCH_MODE_FIELD),
-        
+
         ReadBitField(ctrl, CTRL_IQ_SCALE_FIELD),
         ReadBitField(ctrl, CTRL_BUNCH_SYNC_FIELD));
     unsigned int delay = ConfigSpace->Delay;
@@ -462,6 +462,6 @@ bool InitialiseHardware(void)
 {
     OsPageSize = getpagesize();
     OsPageMask = OsPageSize - 1;
-    
+
     return MapTmbfMemory();
 }

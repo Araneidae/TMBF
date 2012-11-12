@@ -3,7 +3,7 @@ import sys
 # It is important to import support before importing iocbuilder, as the
 # support module initialises iocbuilder (and determines which symbols it
 # exports!)
-from support import * 
+from support import *
 from iocbuilder import *
 
 
@@ -28,7 +28,7 @@ Waveform('BB_GAINS_W', 936, 'FLOAT')
 Waveform('BB_DACS_W',  936, 'SHORT')
 
 # The following records are polled together at 200ms intervals
-create_fanout('SCAN_ADC', 
+create_fanout('SCAN_ADC',
     Waveform('ADC_MINBUF_R', 936, 'SHORT',
         DESC = 'ADC min value per bunch'),
     Waveform('ADC_MAXBUF_R', 936, 'SHORT',
@@ -41,7 +41,7 @@ create_fanout('SCAN_ADC',
         DESC = 'Readback ADC diff variance'),
     SCAN = '.2 second')
 
-create_fanout('SCAN_DAC', 
+create_fanout('SCAN_DAC',
     Waveform('DAC_MINBUF_R', 936, 'SHORT',
         DESC = 'DAC min value per bunch'),
     Waveform('DAC_MAXBUF_R', 936, 'SHORT',
@@ -55,7 +55,7 @@ create_fanout('SCAN_DAC',
     SCAN = 'Passive')
 
 
-    
+
 hb_buf_upper = Waveform('HB_BUF_UPPER_R', 16384, 'SHORT',
     FLNK = status,
     DESC = 'BRAM buffer upper 16-bits')
@@ -63,10 +63,10 @@ hb_buf_lower = Waveform('HB_BUF_LOWER_R', 16384, 'SHORT',
     DESC = 'BRAM buffer lower 16-bits',
     PINI = 'YES',   FLNK = hb_buf_upper)
 
-mbbOut('DACOUT_S', 'Off', 'FIR', 'HOM+FIR', 'HOM', 
+mbbOut('DACOUT_S', 'Off', 'FIR', 'HOM+FIR', 'HOM',
     VAL  = 0,   FLNK = status,
     DESC = 'DAC output')
-mbbOut('TEMPDACOUT_S', 'Off', 'FIR', 'HOM+FIR', 'HOM', 
+mbbOut('TEMPDACOUT_S', 'Off', 'FIR', 'HOM+FIR', 'HOM',
     VAL  = 0,   FLNK = status,
     DESC = 'DAC output')
 mbbOut('FIRGAIN_S',
@@ -106,7 +106,7 @@ longOut('FIRCYCLES_S', 1, MAX_FIR_TAPS,
 longOut('FIRLENGTH_S', 1, MAX_FIR_TAPS,
     VAL  = FIR_LENGTH,  PINI = 'YES',
     DESC = 'Length of filter')
-aOut('FIRPHASE_S', -360, 360, VAL  = 0,   
+aOut('FIRPHASE_S', -360, 360, VAL  = 0,
     DESC = 'FIR phase')
 
 dacdly_s = longOut('DACDLY_S', 4, 935,
@@ -124,13 +124,13 @@ mbbOut('BUNCHMODE_S',
 
 longOut('IQSCALE_S', 0, 7, VAL  = 0, FLNK = status,
     DESC = 'IQ output scaling')
-longOut('GROWDAMPPERIOD_S', 0, 255, VAL  = 1,   
+longOut('GROWDAMPPERIOD_S', 0, 255, VAL  = 1,
     DESC = 'Grow damp period')
-longOut('PROGCLKVAL_S', VAL  = 12500,   
+longOut('PROGCLKVAL_S', VAL  = 12500,
     DESC = 'Programmable clock value')
 
 mbbOut('TUNESWEEPMODE_S',
-    'Off', 'On', VAL  = 0,   
+    'Off', 'On', VAL  = 0,
     DESC = 'Tune sweep enable')
 
 # Processing the soft trigger will perform a triggered data capture.
@@ -182,7 +182,7 @@ tune_records = [
         DESC = 'DDC response, I component'),
     Waveform('DDC_Q', 4096,
         DESC = 'DDC response, Q component'),
-    # Compute the tune power spectrum 
+    # Compute the tune power spectrum
     Waveform('TUNEPOWER', 4096,
         DESC = 'DDC power spectrum'),
     # Compute the peak power and return this as the tune
@@ -204,7 +204,7 @@ tune_records = [
         DESC = 'Measured tune using cumsum'),
     aIn('CUMSUMPHASE', PREC = 2, EGU = 'deg',
         DESC = 'Phase at cumsum tune'),
-    
+
     # Finally trigger capture of the next round of data.
     softtrig]
 create_fanout('TUNESCAN', SCAN = 'Passive', *tune_records)

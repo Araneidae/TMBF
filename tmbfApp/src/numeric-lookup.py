@@ -97,7 +97,7 @@ ln2 = math.log(2)
 def Log2(A):
     a = 1 + 2**-LOG2_N * (A + 0.5)
     return lround(2**27 * math.log(a, 2)), lround(2**28 / (a * ln2))
-    
+
 
 
 print '/* log2 lookup table. */'
@@ -133,11 +133,11 @@ EXP2_M = 27 - EXP2_N
 
 
 # Computes exp2 lookup entry, which should be
-#   2^31 2^a  
+#   2^31 2^a
 def Exp2(A):
     a = 2**-EXP2_N * (A + 0.5)
     return lround(2**(31 + a))
-    
+
 print '/* exp2 lookup table. */'
 print
 print '#define EXP2_N_BITS   %d' % EXP2_N
@@ -167,7 +167,7 @@ print
 # -----------------------------------------------------------------------------
 #  Miscellaneous constants
 
-    
+
 print '/* Constants for db() calculation. */'
 print
 
