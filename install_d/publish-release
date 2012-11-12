@@ -68,7 +68,7 @@ svn cp -m "TMBF: Release $VERSION" "$SVN_TRUNK" "$SVN_RELEASE/$VERSION" ||
 # done by the release builder, so we prepare its instructions here.
 
 QUEUE_DIR=/dls_sw/work/etc/build/queue
-RELEASE_JOB=Release-TMBF-$VERSION.sh
+RELEASE_JOB=Release-TMBF-$VERSION.sh5
 
 # Create the release job as a hidden file (so the builder doesn't start it
 # prematurely) and then rename it make it happen.
