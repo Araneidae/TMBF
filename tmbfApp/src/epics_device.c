@@ -331,9 +331,13 @@ static void post_init_record_out(dbCommon *pr, I_RECORD *iRecord)
         if (iRecord->init != NULL) \
             (void) ACTION_read(record, pr, iRecord, init, field); \
         memcpy(base->WriteData, &field, sizeof(field)); \
+        record##_MLST(pr->mlst = field); \
         post_init_record_out((dbCommon*)pr, (I_RECORD *) iRecord); \
         return INIT_OK; \
     }
+/* The MLST field update is only for selected record types. */
+#define do_MLST(action) action
+#define no_MLST(action)
 
 
 /* Record initialisation is simply a matter of constructing an instance of
@@ -439,6 +443,13 @@ static void post_process(dbCommon *pr, epicsEnum16 nsta, I_RECORD *iRecord)
 #define ACTION_READ_stringout  ACTION_READ_DIRECT
 #define ACTION_READ_mbbi       ACTION_READ_INDIRECT
 #define ACTION_READ_mbbo       ACTION_READ_INDIRECT
+
+/* For out records we defined whether the MLST field is defined. */
+#define longout_MLST    do_MLST
+#define ao_MLST         do_MLST
+#define bo_MLST         do_MLST
+#define stringout_MLST  no_MLST
+#define mbbo_MLST       do_MLST
 
     
 
