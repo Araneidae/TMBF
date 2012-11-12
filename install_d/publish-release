@@ -39,7 +39,7 @@ SVN_TRUNK="$SVN_ROOT/diamond/trunk/ioc/TMBF"
 SVN_RELEASE="$SVN_ROOT/$RELEASE_PATH"
 
 # This is where the released software will be finally published and built.
-PROD_ROOT="/dls_sw/prod/R3.14.9/ioc/TMBF"
+PROD_ROOT="/dls_sw/prod/R3.14.11/ioc/TMBF"
 
 
 cd "$(dirname "$0")/.."
