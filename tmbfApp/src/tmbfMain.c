@@ -13,6 +13,7 @@
 #include "hardware.h"
 #include "tune.h"
 #include "device.h"
+#include "pvlogging.h"
 
 
 /* External declaration of caRepeater thread.  This should really be
@@ -167,6 +168,7 @@ int main(int argc,char *argv[])
         InitialiseHardware()  &&
         StartCaRepeater()  &&
         InitialiseTune()  &&
+        HookLogging()  &&
         GenericInit();
     for (int i = 0; Ok && i < argc; i ++)
         Ok = TEST_EPICS(iocsh, argv[i]);
