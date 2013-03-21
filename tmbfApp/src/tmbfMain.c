@@ -2,14 +2,16 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <epicsThread.h>
 #include <iocsh.h>
 #include <caerr.h>
 
-#include "test_error.h"
+#include "error.h"
 #include "hardware.h"
 #include "tune.h"
 #include "device.h"
@@ -42,7 +44,7 @@ static bool Interactive = true;
 /* Routine for printing an error message complete with associated file name
  * and line number. */
 
-void print_error(const char * Message, const char * FileName, int LineNumber)
+void print_error(const char * Message, ...)
 {
     /* Large enough not to really worry about overflow.  If we do generate a
      * silly message that's too big, then that's just too bad. */
@@ -50,9 +52,11 @@ void print_error(const char * Message, const char * FileName, int LineNumber)
     int Error = errno;
     char ErrorMessage[MESSAGE_LENGTH];
 
-    int Count = snprintf(ErrorMessage, MESSAGE_LENGTH,
-        "%s (%s, %d)", Message, FileName, LineNumber);
-    if (errno != 0)
+    va_list args;
+    va_start(args, Message);
+    int Count = vsnprintf(ErrorMessage, MESSAGE_LENGTH, Message, args);
+
+    if (Error != 0)
     {
         /* This is very annoying: strerror() is not not necessarily thread
          * safe ... but not for any compelling reason, see:

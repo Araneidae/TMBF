@@ -14,13 +14,7 @@
 /* Epics strings are rather limited: a massive 39 characters are available! */
 typedef char EPICS_STRING[40];
 
-static inline void CopyEpicsString(const EPICS_STRING in, EPICS_STRING *out)
-{
-    /* Don't be foolish, there is no guarantee that strings are word aligned
-     * -- use memcpy which knows how to handle this. */
-    memcpy(out, in, sizeof(EPICS_STRING));
-}
-
+void CopyEpicsString(const EPICS_STRING in, EPICS_STRING *out);
 
 
 /*****************************************************************************/
@@ -67,7 +61,7 @@ typedef enum
 /* The I_<record> structures are used to define the complete interface to a
  * record. */
 
-typedef bool GET_TIMESTAMP(void * context, struct timespec *ts);
+typedef bool GET_TIMESTAMP(void * context, struct timespec *time);
 typedef epicsAlarmSeverity GET_ALARM_STATUS(void * context);
 
 
@@ -103,6 +97,7 @@ typedef struct {
         I_COMMON_FIELDS; \
         WRITE_##record * write; \
         INIT_##record * init; \
+        bool persist; \
     } I_##record
 
 DECLARE_I_READER(longin);
@@ -207,7 +202,7 @@ RECORD_HANDLE LookupRecord(const char *name);
 #define WRAP_VARIABLE_READ_WAVEFORM(type, true_length, waveform) \
     static void read_##waveform(type *array) \
     { \
-        COMPILE_TIME_ASSERT(sizeof(array[0]) == sizeof(type)); \
+        COMPILE_ASSERT(sizeof(array[0]) == sizeof(type)); \
         memcpy(array, waveform, sizeof(type) * (true_length)); \
     } \
     WRAP_SIMPLE_WAVEFORM(type, true_length, read_##waveform)
@@ -215,7 +210,7 @@ RECORD_HANDLE LookupRecord(const char *name);
 #define WRAP_VARIABLE_WRITE_WAVEFORM(type, true_length, waveform) \
     static void write_##waveform(type *array) \
     { \
-        COMPILE_TIME_ASSERT(sizeof(array[0]) == sizeof(type)); \
+        COMPILE_ASSERT(sizeof(array[0]) == sizeof(type)); \
         memcpy(waveform, array, sizeof(type) * (true_length)); \
     } \
     WRAP_SIMPLE_WAVEFORM(type, true_length, write_##waveform)
@@ -281,15 +276,19 @@ RECORD_HANDLE LookupRecord(const char *name);
 #define PUBLISH_SIMPLE_READ(record, name, read) \
     WRAP_SIMPLE_READ(record, read) \
     PUBLISH(record, name, wrap_##read)
-#define PUBLISH_SIMPLE_WRITE(record, name, write) \
+#define PUBLISH_SIMPLE_WRITE(record, name, write, extra...) \
     WRAP_SIMPLE_WRITE(record, write) \
-    PUBLISH(record, name, wrap_##write)
+    PUBLISH(record, name, wrap_##write, ##extra)
+#define PUBLISH_SIMPLE_WRITE_INIT(record, name, write, initialiser, extra...) \
+    WRAP_SIMPLE_WRITE(record, write) \
+    WRAP_SIMPLE_READ(record, initialiser) \
+    PUBLISH(record, name, wrap_##write, .init = wrap_##initialiser, ##extra)
 #define PUBLISH_VARIABLE_READ(record, name, variable) \
     WRAP_VARIABLE_READ(record, variable) \
     PUBLISH(record, name, read_##variable)
-#define PUBLISH_VARIABLE_WRITE(record, name, variable) \
+#define PUBLISH_VARIABLE_WRITE(record, name, variable, extra...) \
     WRAP_VARIABLE_WRITE(record, variable) \
-    PUBLISH(record, name, write_##variable, .init = init_##variable)
+    PUBLISH(record, name, write_##variable, .init = init_##variable, ##extra)
 
 #define PUBLISH_METHOD(name, action) \
     WRAP_METHOD(action) \

@@ -16,7 +16,6 @@
 #include <recSup.h>
 #include <dbScan.h>
 #include <epicsExport.h>
-#include <gpHash.h>
 
 #include <alarm.h>
 #include <dbFldTypes.h>
@@ -33,6 +32,9 @@
 #include <mbbiRecord.h>
 #include <mbboRecord.h>
 #include <waveformRecord.h>
+
+#include "hashtable.h"
+#include "persistence.h"
 
 #include "epics_device.h"
 
@@ -53,14 +55,18 @@
 
 
 
+void CopyEpicsString(const EPICS_STRING in, EPICS_STRING *out)
+{
+    memcpy(out, in, sizeof(EPICS_STRING));
+}
+
+
 
 /****************************************************************************/
 /*                       I_RECORD publish and lookup                        */
 /****************************************************************************/
 
-#define TABLESIZE   256
-
-static struct gphPvt * hash_table = NULL;
+static struct hash_table *hash_table = NULL;
 
 
 /* Common information about records: this is written to the dpvt field. */
@@ -91,6 +97,41 @@ static size_t WriteDataSize(RECORD_TYPE record_type)
 }
 
 
+/* Returns record persistence flag from iRecord. */
+#define CASE_TAG(record) \
+    case RECORD_TYPE_##record: \
+        return ((const I_##record *) iRecord)->persist
+static bool get_persistent(const I_RECORD *iRecord)
+{
+    switch (iRecord->record_type)
+    {
+        CASE_TAG(longout);
+        CASE_TAG(ao);
+        CASE_TAG(bo);
+        CASE_TAG(stringout);
+        CASE_TAG(mbbo);
+        default: return NULL;
+    }
+}
+
+/* Returns associated persistence type. */
+#define CASE_TYPE(record, type) \
+    case RECORD_TYPE_##record: \
+        return PERSISTENT_##type
+static enum PERSISTENCE_TYPES get_persistent_type(RECORD_TYPE record_type)
+{
+    switch (record_type)
+    {
+        CASE_TYPE(longout, INT);
+        CASE_TYPE(ao, DOUBLE);
+        CASE_TYPE(bo, INT);
+        CASE_TYPE(stringout, STRING);
+        CASE_TYPE(mbbo, INT);
+        default: return PERSISTENT_INT;     // Safe, will not happen
+    }
+}
+
+
 static RECORD_BASE * create_RECORD_BASE(const I_RECORD *iRecord)
 {
     size_t WriteSize = WriteDataSize(iRecord->record_type);
@@ -102,6 +143,10 @@ static RECORD_BASE * create_RECORD_BASE(const I_RECORD *iRecord)
             scanIoInit(&base->ioscanpvt);
         else
             base->ioscanpvt = NULL;
+
+        if (get_persistent(iRecord))
+            create_persistent_variable(
+                iRecord->name, get_persistent_type(iRecord->record_type));
     }
     return base;
 }
@@ -110,34 +155,28 @@ static RECORD_BASE * create_RECORD_BASE(const I_RECORD *iRecord)
 /* Looks up the given record by name. */
 RECORD_HANDLE LookupRecord(const char * Name)
 {
-    GPHENTRY * entry = gphFind(hash_table, Name, NULL);
-    if (entry == NULL)
-    {
+    RECORD_HANDLE handle = hash_table_lookup(hash_table, Name);
+    if (handle == NULL)
         printf("No record found for %s\n", Name);
-        return NULL;
-    }
-    else
-        return (RECORD_HANDLE) entry->userPvt;
+    return handle;
 }
 
 
 RECORD_HANDLE PublishDynamic(const I_RECORD* iRecord)
 {
     if (hash_table == NULL)
-        gphInitPvt(&hash_table, TABLESIZE);
+        hash_table = hash_table_create(false);
 
-    GPHENTRY * entry = gphAdd(hash_table, iRecord->name, NULL);
-    if (entry == NULL)
+    /* Check entry doesn't already exist. */
+    if (hash_table_lookup(hash_table, iRecord->name))
     {
-        printf("Failed to add entry \"%s\"\n", iRecord->name);
+        printf("Entry \"%s\" already exists!\n", iRecord->name);
         return NULL;
     }
-    else
-    {
-        RECORD_BASE * base = create_RECORD_BASE(iRecord);
-        entry->userPvt = (void *) base;
-        return base;
-    }
+
+    RECORD_BASE * base = create_RECORD_BASE(iRecord);
+    hash_table_insert(hash_table, iRecord->name, base);
+    return base;
 }
 
 
@@ -161,7 +200,7 @@ bool PublishEpicsData(const I_RECORD* publish_data[])
 
 
 
-static epicsAlarmSeverity get_alarm_status(I_RECORD *iRecord)
+static epicsAlarmSeverity get_alarm_status(const I_RECORD *iRecord)
 {
     if (iRecord->get_alarm_status)
         return iRecord->get_alarm_status(iRecord->context);
@@ -169,7 +208,7 @@ static epicsAlarmSeverity get_alarm_status(I_RECORD *iRecord)
         return epicsSevNone;
 }
 
-static bool get_timestamp(I_RECORD *iRecord, struct timespec *ts)
+static bool get_timestamp(const I_RECORD *iRecord, struct timespec *ts)
 {
     if (iRecord->get_timestamp)
         return iRecord->get_timestamp(iRecord->context, ts);
@@ -232,9 +271,9 @@ static void SetTimestamp(dbCommon *pr, struct timespec *Timestamp)
 #define ACTION_READ_INDIRECT(record, iRecord, action, field) \
     ( { \
         TYPEOF(record) Value; \
-        bool _Ok = iRecord->action(iRecord->context, &Value); \
-        if (_Ok) field = Value; \
-        _Ok; \
+        bool Ok_ = iRecord->action(iRecord->context, &Value); \
+        if (Ok_) field = Value; \
+        Ok_; \
     } )
 
 #define ACTION_READ_DIRECT(record, iRecord, action, field) \
@@ -251,12 +290,16 @@ static void SetTimestamp(dbCommon *pr, struct timespec *Timestamp)
 
 
 /* Writing is a bit more involved: if it fails then we need to restore the
- * value we had before. */
+ * value we had before, and the persistence layer may want to know. */
 #define ACTION_write(record, pr, iRecord, action, field) \
     ( { \
         bool Ok = iRecord->action(iRecord->context, field); \
         if (Ok) \
+        { \
             memcpy(base->WriteData, &field, sizeof(field)); \
+            if (iRecord->persist) \
+                write_persistent_variable(iRecord->name, &field); \
+        } \
         else \
             memcpy(&field, base->WriteData, sizeof(field)); \
         Ok; \
@@ -269,7 +312,7 @@ static void SetTimestamp(dbCommon *pr, struct timespec *Timestamp)
     RECORD_BASE * base = (RECORD_BASE *) pr->dpvt; \
     if (base == NULL) \
         return ERROR; \
-    I_##record * var = (I_##record *) base->iRecord
+    const I_##record * var = (const I_##record *) base->iRecord
 
 
 
@@ -306,7 +349,7 @@ static bool init_record_(
  * but we still need to set up the alarm state and give the data a sensible
  * initial timestamp. */
 
-static void post_init_record_out(dbCommon *pr, I_RECORD *iRecord)
+static void post_init_record_out(dbCommon *pr, const I_RECORD *iRecord)
 {
     (void) recGblSetSevr(pr, READ_ALARM, get_alarm_status(iRecord));
     recGblResetAlarms(pr);
@@ -319,20 +362,22 @@ static void post_init_record_out(dbCommon *pr, I_RECORD *iRecord)
 }
 
 
-
 /* For inp records there is no special post initialisation processing. */
 #define POST_INIT_inp(record, pr, field, INIT_OK)   return INIT_OK;
 
 /* For out records we need to read the current underlying device value and
- * save a good copy as part of initialisation. */
+ * save a good copy as part of initialisation.  The logic is a little tricky: we
+ * only invoke the init method if we can't read a persistent value. */
 #define POST_INIT_out(record, pr, field, INIT_OK) \
     { \
         GET_RECORD(record, pr, base, iRecord); \
-        if (iRecord->init != NULL) \
+        if (!(iRecord->persist  && \
+              read_persistent_variable(iRecord->name, &field))  && \
+            iRecord->init != NULL) \
             (void) ACTION_read(record, pr, iRecord, init, field); \
         memcpy(base->WriteData, &field, sizeof(field)); \
         record##_MLST(pr->mlst = field); \
-        post_init_record_out((dbCommon*)pr, (I_RECORD *) iRecord); \
+        post_init_record_out((dbCommon*)pr, (const I_RECORD *) iRecord); \
         return INIT_OK; \
     }
 /* The MLST field update is only for selected record types. */
@@ -365,7 +410,8 @@ static void post_init_record_out(dbCommon *pr, I_RECORD *iRecord)
 /* Common record post-processing.  Updates the alarm state as appropriate,
  * and checks if the timestamp should be written here. */
 
-static void post_process(dbCommon *pr, epicsEnum16 nsta, I_RECORD *iRecord)
+static void post_process(
+    dbCommon *pr, epicsEnum16 nsta, const I_RECORD *iRecord)
 {
     (void) recGblSetSevr(pr, nsta, get_alarm_status(iRecord));
     struct timespec Timestamp;
@@ -385,7 +431,8 @@ static void post_process(dbCommon *pr, epicsEnum16 nsta, I_RECORD *iRecord)
         GET_RECORD(record, pr, base, iRecord); \
         bool ok = ACTION_##action( \
             record, pr, iRecord, action, pr->VAL); \
-        post_process((dbCommon *)pr, action##_ALARM, (I_RECORD *) iRecord); \
+        post_process((dbCommon *)pr, action##_ALARM, \
+            (const I_RECORD *) iRecord); \
         return ok ? PROC_OK : ERROR; \
     }
 
@@ -401,14 +448,6 @@ static void post_process(dbCommon *pr, epicsEnum16 nsta, I_RECORD *iRecord)
 #define DEFINE_DEFAULT_WRITE(record, VAL, INIT_OK, PROC_OK) \
     INIT_RECORD(record, VAL, out, out, INIT_OK) \
     DEFINE_DEFAULT_PROCESS(record, VAL, write, PROC_OK)
-
-
-/* Redefine epicsExportAddress to avoid warnings about increased alignment of
- * target type (somewhat concerning, have to suggest). */
-#undef epicsExportAddress
-#define epicsExportAddress(typ,obj) \
-    epicsShareExtern typeof(obj) *EPICS_EXPORT_POBJ(typ, obj); \
-    epicsShareDef typeof(obj) *EPICS_EXPORT_POBJ(typ, obj) = &obj
 
 
 #define DEFINE_DEVICE(record, length, args...) \
@@ -444,7 +483,7 @@ static void post_process(dbCommon *pr, epicsEnum16 nsta, I_RECORD *iRecord)
 #define ACTION_READ_mbbi       ACTION_READ_INDIRECT
 #define ACTION_READ_mbbo       ACTION_READ_INDIRECT
 
-/* For out records we defined whether the MLST field is defined. */
+/* For out records define whether the MLST field is defined. */
 #define longout_MLST    do_MLST
 #define ao_MLST         do_MLST
 #define bo_MLST         do_MLST
@@ -472,7 +511,7 @@ DEFINE_DEFAULT_WRITE(mbbo,      rval,   OK,         OK)
 
 /* Routine to validate record type: ensure that we don't mismatch the record
  * declarations in the code and in the database. */
-static bool CheckWaveformType(waveformRecord * pr, I_waveform * iRecord)
+static bool CheckWaveformType(waveformRecord * pr, const I_waveform * iRecord)
 {
     epicsEnum16 expected = DBF_NOACCESS;
     switch (iRecord->field_type)
@@ -503,7 +542,7 @@ static bool CheckWaveformType(waveformRecord * pr, I_waveform * iRecord)
         if (iRecord->init != NULL) \
             pr->udf = iRecord->init( \
                 iRecord->context, pr->bptr, CAST(size_t*, &pr->nord)); \
-        post_init_record_out((dbCommon*) pr, (I_RECORD *) iRecord); \
+        post_init_record_out((dbCommon*) pr, (const I_RECORD *) iRecord); \
         return INIT_OK; \
     }
 
@@ -516,7 +555,7 @@ static long process_waveform(waveformRecord * pr)
      * unsigned int.  Force the two to match! */
     bool Ok = i_waveform->process(
         i_waveform->context, pr->bptr, pr->nelm, CAST(size_t*, &pr->nord));
-    post_process((dbCommon *) pr, READ_ALARM, (I_RECORD *) i_waveform);
+    post_process((dbCommon *) pr, READ_ALARM, (const I_RECORD *) i_waveform);
     /* Note, by the way, that the waveform record support carefully ignores
      * my return code! */
     return Ok ? OK : ERROR;
@@ -535,6 +574,10 @@ static long linconv_ao(aoRecord *pr, int cmd) { return OK; }
 
 #include "recordDevice.h"
 
+/* The epicsExportAddress macro used in the definitions below casts a structure
+ * pointer via (char*) and thus generates a cast alignment error.  We want to
+ * just ignore this here. */
+#pragma GCC diagnostic ignored "-Wcast-align"
 DEFINE_DEVICE(longin,    5, read_longin);
 DEFINE_DEVICE(longout,   5, write_longout);
 DEFINE_DEVICE(ai,        6, read_ai,  linconv_ai);

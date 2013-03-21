@@ -9,7 +9,7 @@
 #include <math.h>
 
 #include "hardware.h"
-#include "test_error.h"
+#include "error.h"
 #include "epics_device.h"
 
 #include "device.h"

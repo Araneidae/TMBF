@@ -8,7 +8,7 @@
 #include <sys/mman.h>
 #include <pthread.h>
 
-#include "test_error.h"
+#include "error.h"
 #include "hardware.h"
 
 
@@ -443,13 +443,13 @@ static bool MapTmbfMemory(void)
     char * map_config_base;
     char * map_data_base;
     return
-        TEST_IO(mem, open, "/dev/mem", O_RDWR | O_SYNC)  &&
-        TEST_IO(map_config_base, mmap,
+        TEST_IO(mem = open("/dev/mem", O_RDWR | O_SYNC))  &&
+        TEST_IO(map_config_base = mmap(
             0, CONTROL_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-            mem, TMBF_CONFIG_ADDRESS & ~OsPageMask)  &&
-        TEST_IO(map_data_base, mmap,
+            mem, TMBF_CONFIG_ADDRESS & ~OsPageMask))  &&
+        TEST_IO(map_data_base = mmap(
             0, DATA_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-            mem, TMBF_DATA_ADDRESS & ~OsPageMask)  &&
+            mem, TMBF_DATA_ADDRESS & ~OsPageMask))  &&
         DO_(
             ConfigSpace = (TMBF_CONFIG_SPACE *) (void *)
                 (map_config_base + (TMBF_CONFIG_ADDRESS & OsPageMask));
