@@ -7,13 +7,6 @@ from support import *
 from iocbuilder import *
 
 
-# Parameters for this file
-DACDLY = Parameter('DACDLY')
-FIR_CYCLES = Parameter('FIR_CYCLES')
-FIR_LENGTH = Parameter('FIR_LENGTH')
-DDC_SKEW = Parameter('DDC_SKEW')
-
-
 # Bunch number
 longInOut('BUNCH', 0, 1023, VAL = 1023)
 longInOut('NCO')
@@ -101,16 +94,16 @@ mbbOut('DDRINPUT_S',  'ADC', 'DAC',
 
 MAX_FIR_TAPS = 9
 longOut('FIRCYCLES_S', 1, MAX_FIR_TAPS,
-    VAL  = FIR_CYCLES,  PINI = 'YES',
+    VAL  = 2,  PINI = 'YES',
     DESC = 'Cycles in filter')
 longOut('FIRLENGTH_S', 1, MAX_FIR_TAPS,
-    VAL  = FIR_LENGTH,  PINI = 'YES',
+    VAL  = 9,  PINI = 'YES',
     DESC = 'Length of filter')
 aOut('FIRPHASE_S', -360, 360, VAL  = 0,
     DESC = 'FIR phase')
 
 dacdly_s = longOut('DACDLY_S', 4, 935,
-    VAL  = DACDLY,  PINI = 'YES',
+    VAL  = 620,  PINI = 'YES',
     DESC = 'DAC output delay')
 
 aOut('HOMFREQ_S', 0, 468, VAL  = 0.3, PREC = 4,
@@ -156,7 +149,7 @@ stopfreq  = aOut('SWPSTOPFREQ_S',  0, 468, VAL  = 0.45, PREC = 4,
 freqstep = aOut('SWPFREQSTEP_S',  VAL  = 1,  PREC = 4,
     DESC = 'Phase advance step', FLNK = tunescale)
 longOut('DDCSKEW_S',
-    VAL = DDC_SKEW, PINI = 'YES',
+    VAL = 32, PINI = 'YES',
     DESC = 'Direct update of DDC skew', FLNK = tunescale)
 
 records.calcout('SWPFREQSTEP_C',

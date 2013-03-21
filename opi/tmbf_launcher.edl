@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2898
-y 880
+x 2899
+y 881
 w 296
 h 113
 font "helvetica-medium-r-14.0"
@@ -120,6 +120,32 @@ displayFileName {
 }
 symbols {
   0 "device=TS-DI-TMBF-01"
+}
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 192
+y 80
+w 88
+h 24
+fgColor index 43
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "TMBF-03"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/tmbf_overview.edl"
+}
+symbols {
+  0 "device=SR21C-DI-TMBF-03"
 }
 endObjectProperties
 
