@@ -1,0 +1,63 @@
+#!/bin/sh
+
+
+Error()
+{
+    echo >&2 "$@"
+    exit 1
+}
+
+
+# Construct IOC parameter string array
+#
+#   IocParameter <flag> <value>
+#
+IOC_PARAMETERS=''
+IocParameter()
+{
+    IOC_PARAMETERS="$IOC_PARAMETERS $1$2"
+}
+
+
+
+cd "$(dirname "$0")/.."
+
+. /etc/tmbf_ioc
+
+
+export HOSTNAME=$(hostname)
+
+PIDFILE=/var/run/ioc.pid
+STATE_FILE=/opt/state/$HOSTNAME.state
+
+
+while getopts 'nh' option; do
+    case "$option" in
+    n)  IocParameter -n ;;
+    h)  cat <<'EOF'
+Usage: runioc [options]
+    -n          run non-interactive without an IOC shell
+EOF
+        exit 0 ;;
+    *)  Error 'Invalid arguments: try -h for help' ;;
+    esac
+done
+shift $((OPTIND - 1))
+[ $# -ne 0 ]  &&  Error 'Invalid arguments: try -h for help'
+
+
+export EPICS_CA_MAX_ARRAY_BYTES=1000000
+export DB_PARAMETERS="DEVICE=$HOSTNAME"
+
+
+IocParameter -p "$PIDFILE"
+IocParameter -s "$STATE_FILE"
+
+# Now run the IOC.
+echo
+echo 'Starting IOC at' $(date)
+echo "IOC parameters: $IOC_PARAMETERS"
+trap 'rm -f "$PIDFILE"' EXIT
+bin/linux-arm_el/tmbf $IOC_PARAMETERS scripts/st.cmd
+echo 'IOC stopped at' $(date)
+echo

@@ -1,6 +1,6 @@
 /bin
-O.*
 /db
 /dbd
-/install_d/locations
+O.*
 *.pyc
+*~

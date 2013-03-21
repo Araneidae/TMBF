@@ -1,38 +1,45 @@
 #!/bin/sh
 
 . /etc/init.d/functions
-. /etc/sysconfig/tmbf_ioc
+. /etc/tmbf_ioc
 
-IOC_LOG="${IOC_LOG:-/var/log/ioc}"
+: "${IOC_LOG:=/dev/console}"
+
+: "${TMBF_IOC:?}"
+: "${DESIGN:?}"
 
 
-case "$1" in
-    start)
-        echo -n "Starting TMBF EPICS"
-        if [ -e /var/run/ioc.pid ]; then
-            echo -n " - already running?"
-            print_status failure
-        else
-            # Run as a daemon with all output sent to log file.
-            "$TMBF_IOC" -n >>"$IOC_LOG" 2>&1 </dev/null &
-            evaluate_retval
-        fi
-        ;;
+do_start()
+{
+    if [ -e /var/run/ioc.pid ]; then
+        echo -n " - already running?"
+    else
+        # Load and initialise FPGA
+        /opt/bin/fp < "$DESIGN"
+        /opt/bin/fpga_init
+        /opt/bin/ddrInit
 
-    stop)
-        echo -n "Stopping TMBF EPICS"
-        [ -e /var/run/ioc.pid ] && kill "$(cat /var/run/ioc.pid)"
-        evaluate_retval
-        rm -f /var/run/ioc.pid
-        ;;
+        # Ensure MSP driver is running
+#         modprobe msp
 
-    restart)
-        "$0" stop
-        sleep 1
-        "$0" start
-        ;;
+        # Run as a daemon with all output sent to log file.
+        "$TMBF_IOC" -n >>"$IOC_LOG" 2>&1 </dev/null &
+    fi
+}
 
-    *)  echo "Usage: $0 {start|stop|restart}"
-        exit 1
-        ;;
-esac
+do_stop()
+{
+    [ -e /var/run/ioc.pid ]  &&  kill "$(cat /var/run/ioc.pid)"
+    rm -f /var/run/ioc.pid
+
+#     modprobe -r msp
+}
+
+do_restart()
+{
+    "$0" stop
+    sleep 1
+    "$0" start
+}
+
+do_start_stop "$1" TMBF

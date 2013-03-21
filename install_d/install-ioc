@@ -1,12 +1,6 @@
 #!/bin/sh
 
-INSTALL_FILES='
-    CONFIG
-    epics
-    locations
-    tmbf-install-ioc'
-
-INSTALL_DIRS='bin dbd db'
+INSTALL_DIRS='runioc bin dbd db base scripts install_d'
 
 
 SOURCE="$(cd "$(dirname "$0")"/..; pwd)"
@@ -28,18 +22,5 @@ mkdir -p "$TARGET"/install_d
 for dir in $INSTALL_DIRS; do
     cp -r "$SOURCE/$dir" "$TARGET"
 done
-
-# Copy over the installation specific files into the install directory.
-for f in $INSTALL_FILES; do
-    cp "$SOURCE"/install_d/$f "$TARGET"/install_d
-done
-
-# To be friendly create a redirector script to invoke the true runioc script.
-# This is only intended for testing use.
-cat <<'EOF' >"$TARGET/runioc"
-#!/bin/sh
-"$(dirname "$0")/bin/linux-arm/runioc" "$@"
-EOF
-chmod +x "$TARGET/runioc"
 
 echo TMBF IOC installed in "$TARGET".

@@ -1,0 +1,158 @@
+#!/bin/sh
+
+# Configuration tool for reconfiguring Libera network configuration.
+
+
+Error()
+{
+    echo >&2 "$@"
+    exit 1
+}
+
+Usage() { Error 'Network reconfiguration tool.  Try -h for help.'; }
+
+Warning()
+{
+    echo >&2 Warning: "$@"
+}
+
+
+# Looks up the specified host name in our table of predefined addresses.
+lookup_hostname()
+{
+    if [ "${1:0:11}" = TS-DI-TMBF- ]; then
+        # Must be a lab machine.  Place -01 at .9 and so forth.
+        local IP="${1:11}"
+        echo -n 172.23.252.$((${IP#0} + 8))
+    else
+        # Look it up in our table of addresses.
+        cat /opt/lib/tmbf-ips |
+        sed -n '/^'$1' /{s///;p;q;}'
+    fi
+}
+
+
+# Sanity check before we try running: only designed to be run on a DLS Libera.
+[ "$(uname -m)" = armv5tel ]  &&  [ "$(head -c4 /etc/version)" = 'DLS ' ]  ||
+    Error "This doesn't appear to be a DLS Libera"
+[ -e /opt/lib/tmbf-ips ]  ||  Error "IP list file missing"
+
+
+# Default configuration.
+NETMASK=255.255.240.0
+GATEWAY=
+network=
+
+WRITE_CONFIG=false
+RESTART_NETWORK=false
+while getopts 'hm:g:n:wr' option; do
+    case "$option" in
+        h)  cat <<EOF
+Usage: $0 [options] <new host name> [<new IP address>]
+
+Reconfigure network configuration to use the new host name.  If possible the
+host name will be looked up or computed, otherwise a new IP address can also
+be specified.
+
+Options:
+    -m: Specify new net mask
+    -g: Specify new gateway
+    -n: Specify network, typically either lab or pri: used for resolv.conf
+        and extra mounts.
+    -w  Write new configuration; otherwise the new configuration is displayed
+    -r  Restart network after reconfiguration.
+EOF
+            exit 0 ;;
+        m)  NETMASK="$OPTARG" ;;
+        g)  GATEWAY="$OPTARG" ;;
+        n)  network="$OPTARG" ;;
+        w)  WRITE_CONFIG=true ;;
+        r)  RESTART_NETWORK=true ;;
+        *)  Error Invalid option.  Try -h for help. ;;
+    esac
+done
+shift $((OPTIND-1))
+
+# Parse one or two arguments: host name and address.
+[ $# -gt 0 -a $# -le 2 ]  ||  Usage
+HOSTNAME="$1"
+if [ $# = 2 ]; then
+    IPADDR="$2"
+else
+    # Compute IP address from host name
+    IPADDR="$(lookup_hostname "$HOSTNAME")"
+    [ -n "$IPADDR" ]  ||
+        Error Unable to find IP address for host "$HOSTNAME"
+fi
+
+
+# Compute the network and broadcast.
+eval $(ipcalc -nb $IPADDR $NETMASK)
+
+if [ -z "$network" ]; then
+    # Figure out which network we're on: this is used to configure the
+    # extra mounts and resolv.conf.
+    case "$NETWORK" in
+        172.23.240.0)
+            [ -n "$GATEWAY" ]  ||  GATEWAY=172.23.240.254
+            network=lab ;;
+        172.23.192.0)
+            network=pri ;;
+        *)  Warning "network $NETWORK not recognised." ;;
+    esac
+fi
+
+NEW_CONFIG="auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+    address $IPADDR
+    network $NETWORK
+    netmask $NETMASK
+    broadcast $BROADCAST"
+[ -n "$GATEWAY" ]  &&
+    NEW_CONFIG="$NEW_CONFIG
+    gateway $GATEWAY"
+
+
+if $WRITE_CONFIG; then
+    # Now do the requested reconfiguration
+    mount -o remount,rw /
+    trap 'mount -o remount,ro /' EXIT
+
+    if $RESTART_NETWORK; then
+        /etc/init.d/mount-extra stop
+        /etc/init.d/network stop
+    fi
+
+    echo "$NEW_CONFIG" >/etc/network/interfaces
+    if [ -n "$HOSTNAME" ]; then
+        echo "$HOSTNAME" >/etc/hostname
+    else
+        rm /etc/hostname
+    fi
+    if [ -n "$network" ]; then
+        [ -r /etc/fstab.$network ]  ||
+            Warning "file /etc/fstab.$network not found"
+        echo "FSTABS=/etc/fstab.$network" >/etc/mount-extra
+    else
+        rm /etc/mount-extra
+    fi
+    if [ -n "$network" ]; then
+        [ -r /etc/resolv.conf.$network ]  ||
+            Warning "file /etc/resolv.conf.$network not found"
+        ln -sf resolv.conf.$network /etc/resolv.conf
+    else
+        rm /etc/resolv.conf
+    fi
+
+    if $RESTART_NETWORK; then
+        /etc/init.d/network start
+        /etc/init.d/mount-extra start
+    fi
+else
+    echo "$NEW_CONFIG"
+    echo "hostname = $HOSTNAME"
+    echo "network = $network"
+fi
