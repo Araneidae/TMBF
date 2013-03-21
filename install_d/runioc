@@ -26,6 +26,7 @@ cd "$(dirname "$0")/../.."
 
 PIDFILE=/var/run/ioc.pid
 BIN_DIR=./bin/linux-arm
+STATE_FILE=/opt/state/$HOSTNAME.state
 
 while getopts 'nh' option; do
     case "$option" in
@@ -49,6 +50,7 @@ fi
 export EPICS_CA_MAX_ARRAY_BYTES=1000000
 
 IocParameter -p "$PIDFILE"
+IocParameter -s "$STATE_FILE"
 
 DbParameter DACDLY $IOC_DACDLY
 DbParameter FIR_CYCLES $IOC_FIR_CYCLES

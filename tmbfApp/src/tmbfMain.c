@@ -6,6 +6,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <semaphore.h>
+#include <signal.h>
 
 #include <epicsThread.h>
 #include <iocsh.h>
@@ -16,6 +18,7 @@
 #include "tune.h"
 #include "device.h"
 #include "pvlogging.h"
+#include "persistence.h"
 
 
 /* External declaration of caRepeater thread.  This should really be
@@ -23,6 +26,13 @@
  * it up like this. */
 extern void caRepeaterThread(void *);
 
+/* If the IOC shell is not running then this semaphore is used to request IOC
+ * shutdown. */
+static sem_t ShutdownSemaphore;
+
+/* Persistence state management. */
+static const char *persistence_state_file = NULL;
+static int persistence_interval = 1200;             // 20 minute update interval
 
 
 #define TEST_EPICS(command, args...) \
@@ -96,6 +106,32 @@ static bool StartCaRepeater(void)
 }
 
 
+static void at_exit(int sig)
+{
+    sem_post(&ShutdownSemaphore);
+    if (Interactive)
+        /* If the IOC shell is running we have a problem.  Closing stdin
+         * *sometimes* works... */
+        close(0);
+}
+
+/* Set up basic signal handling environment.  We configure four shutdown
+ * signals (HUP, INT, QUIT and TERM) to call AtExit(). */
+static bool InitialiseSignals(void)
+{
+    struct sigaction action = {
+        .sa_handler = at_exit, .sa_flags = 0 };
+    return
+        /* Block all signals during AtExit() signal processing. */
+        TEST_IO(sigfillset(&action.sa_mask))  &&
+        /* Catch all the usual culprits: HUP, INT, QUIT and TERM. */
+        TEST_IO(sigaction(SIGHUP,  &action, NULL))  &&
+        TEST_IO(sigaction(SIGINT,  &action, NULL))  &&
+        TEST_IO(sigaction(SIGQUIT, &action, NULL))  &&
+        TEST_IO(sigaction(SIGTERM, &action, NULL));
+}
+
+
 /* Write the PID of this process to the given file. */
 
 static bool WritePid(const char * FileName)
@@ -124,10 +160,12 @@ static bool ProcessOptions(int *argc, char ** *argv)
     bool Ok = true;
     while (Ok)
     {
-        switch (getopt(*argc, *argv, "+np:"))
+        switch (getopt(*argc, *argv, "+np:s:i:"))
         {
-            case 'n':   Interactive = false;                break;
-            case 'p':   Ok = WritePid(optarg);              break;
+            case 'n':   Interactive = false;                    break;
+            case 'p':   Ok = WritePid(optarg);                  break;
+            case 's':   persistence_state_file = optarg;        break;
+            case 'i':   persistence_interval = atoi(optarg);    break;
             default:
                 printf("Sorry, didn't understand\n");
                 return false;
@@ -169,11 +207,15 @@ int main(int argc,char *argv[])
 {
     bool Ok =
         ProcessOptions(&argc, &argv) &&
+        initialise_persistent_state(
+            persistence_state_file, persistence_interval)  &&
         InitialiseHardware()  &&
         StartCaRepeater()  &&
         InitialiseTune()  &&
         HookLogging()  &&
-        GenericInit();
+        InitialiseSignals()  &&
+        GenericInit()  &&
+        load_persistent_state();
     for (int i = 0; Ok && i < argc; i ++)
         Ok = TEST_EPICS(iocsh, argv[i]);
     if (Ok)
@@ -188,9 +230,10 @@ int main(int argc,char *argv[])
                 "Kill process %d to close.\n", getpid());
             fflush(stdout);
             /* Now just block until we are killed. */
-            while (true)
-                sleep((unsigned int)-1);
+            sem_wait(&ShutdownSemaphore);
         }
+
+        terminate_persistent_state();
     }
     return Ok ? 0 : 1;
 }
