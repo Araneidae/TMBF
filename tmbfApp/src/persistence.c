@@ -319,8 +319,8 @@ static bool parse_persistence_file(const char *filename)
     {
         line_number += 1;
 
-        /* Skip lines beginning with # and ignore blank lines.  All other
-         * lines are processed. */
+        /* Skip lines beginning with # and ignore blank lines.  All other lines
+         * are processed. */
         if (line[0] != '#')
         {
             int len = strlen(line);
@@ -329,9 +329,9 @@ static bool parse_persistence_file(const char *filename)
                 line[len - 1] = '\0';
 
             if (*line != '\0')
-                /* Allow parsing of individual lines to fail, but
-                 * accumulate overall error code.  This shouldn't actually
-                 * ever happen, of course. */
+                /* Allow parsing of individual lines to fail, but accumulate
+                 * overall error code.  This shouldn't actually ever happen, of
+                 * course. */
                 ok = parse_line(line, line_number)  &&  ok;
         }
     }

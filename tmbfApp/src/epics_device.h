@@ -157,7 +157,9 @@ struct record_base;
  * for I/O Intr processing then an I/O Intr event will be generated. */
 bool SignalRecord(struct record_base *Record);
 
-struct record_base *LookupRecord(const char *name);
+struct record_base *LookupRecord(
+    enum record_type record_type, const char *name);
+#define LOOKUP_RECORD(type, name) LookupRecord(RECORD_TYPE_##type, name)
 
 
 
@@ -231,6 +233,13 @@ struct record_base *LookupRecord(const char *name);
         return true; \
     }
 
+#define WRAP_VARIABLE_INIT(record, variable) \
+    static bool init_##variable(void *context, TYPEOF(record) *result) \
+    { \
+        *result = variable; \
+        return true; \
+    }
+
 #define WRAP_VARIABLE_WRITE(record, variable) \
     static bool write_##variable(void *context, TYPEOF(record) value) \
     { \
@@ -269,18 +278,18 @@ struct record_base *LookupRecord(const char *name);
     PUBLISH_WAVEFORM( \
         type, true_length, name, \
         wrap_##write_waveform, wrap_##read_waveform, ##extra)
-#define PUBLISH_READ_WAVEFORM(type, name, true_length, waveform) \
+#define PUBLISH_READ_WAVEFORM(type, name, true_length, waveform, extra...) \
     WRAP_VARIABLE_READ_WAVEFORM(type, true_length, waveform) \
-    PUBLISH_WAVEFORM(type, true_length, name, wrap_read_##waveform)
+    PUBLISH_WAVEFORM(type, true_length, name, wrap_read_##waveform, ##extra)
 #define PUBLISH_WRITE_WAVEFORM(type, name, true_length, waveform, extra...) \
     WRAP_VARIABLE_WRITE_WAVEFORM(type, true_length, waveform) \
     WRAP_VARIABLE_READ_WAVEFORM(type, true_length, waveform) \
     PUBLISH_WAVEFORM( \
         type, true_length, name, \
         wrap_write_##waveform, wrap_read_##waveform, ##extra)
-#define PUBLISH_SIMPLE_READ(record, name, read) \
+#define PUBLISH_SIMPLE_READ(record, name, read, extra...) \
     WRAP_SIMPLE_READ(record, read) \
-    PUBLISH(record, name, wrap_##read)
+    PUBLISH(record, name, wrap_##read, ##extra)
 #define PUBLISH_SIMPLE_WRITE(record, name, write, extra...) \
     WRAP_SIMPLE_WRITE(record, write) \
     PUBLISH(record, name, wrap_##write, ##extra)
@@ -288,22 +297,30 @@ struct record_base *LookupRecord(const char *name);
     WRAP_SIMPLE_WRITE(record, write) \
     WRAP_SIMPLE_READ(record, initialiser) \
     PUBLISH(record, name, wrap_##write, .init = wrap_##initialiser, ##extra)
-#define PUBLISH_VARIABLE_READ(record, name, variable) \
+#define PUBLISH_VARIABLE_READ(record, name, variable, extra...) \
     WRAP_VARIABLE_READ(record, variable) \
-    PUBLISH(record, name, read_##variable)
+    PUBLISH(record, name, read_##variable, ##extra)
 #define PUBLISH_VARIABLE_WRITE(record, name, variable, extra...) \
     WRAP_VARIABLE_WRITE(record, variable) \
-    WRAP_VARIABLE_READ(record, variable) \
-    PUBLISH(record, name, write_##variable, .init = read_##variable, ##extra)
+    WRAP_VARIABLE_INIT(record, variable) \
+    PUBLISH(record, name, write_##variable, .init = init_##variable, ##extra)
 #define PUBLISH_VARIABLE_WRITE_ACTION( \
         record, name, variable, action, extra...) \
     WRAP_VARIABLE_WRITE_ACTION(record, variable, action) \
-    WRAP_VARIABLE_READ(record, variable) \
-    PUBLISH(record, name, write_##variable, .init = read_##variable, ##extra)
+    WRAP_VARIABLE_INIT(record, variable) \
+    PUBLISH(record, name, write_##variable, .init = init_##variable, ##extra)
 
 #define PUBLISH_METHOD(name, action) \
     WRAP_METHOD(action) \
     PUBLISH(bo, name, wrap_##action)
+
+static inline bool wrap_on_trigger_callback(void *context, bool *result)
+{
+    *result = true;
+    return true;
+}
+#define PUBLISH_TRIGGER(name) \
+    PUBLISH(bi, name, wrap_on_trigger_callback, .io_intr = true)
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

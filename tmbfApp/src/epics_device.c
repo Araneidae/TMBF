@@ -184,12 +184,33 @@ static struct record_base *create_record_base(const struct i_record *iRecord)
 }
 
 
-/* Looks up the given record by name. */
-struct record_base *LookupRecord(const char *Name)
+/* Converts record_type into printable name. */
+static const char *get_type_name(enum record_type record_type)
 {
-    struct record_base *handle = hash_table_lookup(hash_table, Name);
+    static const char *names[] = {
+        "longin",       "longout",          "ai",           "ao",
+        "bi",           "bo",               "stringin",     "stringout",
+        "mbbi",         "mbbo",             "waveform" };
+    if (record_type < ARRAY_SIZE(names))
+        return names[record_type];
+    else
+        return "(invalid)";
+}
+
+
+/* Construct key by concatenating record_type and name. */
+#define BUILD_KEY(key, name, record_type) \
+    char key[strlen(name) + 20]; \
+    sprintf(key, "%s:%s", get_type_name(record_type), name)
+
+
+/* Looks up the given record by name. */
+struct record_base *LookupRecord(enum record_type record_type, const char *name)
+{
+    BUILD_KEY(key, name, record_type);
+    struct record_base *handle = hash_table_lookup(hash_table, key);
     if (handle == NULL)
-        printf("No record found for %s\n", Name);
+        printf("No record found for %s\n", key);
     return handle;
 }
 
@@ -197,17 +218,18 @@ struct record_base *LookupRecord(const char *Name)
 struct record_base *PublishDynamic(const struct i_record *iRecord)
 {
     if (hash_table == NULL)
-        hash_table = hash_table_create(false);
+        hash_table = hash_table_create(true);
 
     /* Check entry doesn't already exist. */
-    if (hash_table_lookup(hash_table, iRecord->name))
+    BUILD_KEY(key, iRecord->name, iRecord->record_type);
+    if (hash_table_lookup(hash_table, key))
     {
-        printf("Entry \"%s\" already exists!\n", iRecord->name);
+        printf("Entry \"%s\" already exists!\n", key);
         return NULL;
     }
 
     struct record_base *base = create_record_base(iRecord);
-    hash_table_insert(hash_table, iRecord->name, base);
+    hash_table_insert(hash_table, key, base);
     return base;
 }
 
@@ -358,7 +380,7 @@ static void SetTimestamp(dbCommon *pr, struct timespec *Timestamp)
 static bool init_record_(
     dbCommon *pr, const char *Name, enum record_type record_type)
 {
-    struct record_base *base = LookupRecord(Name);
+    struct record_base *base = LookupRecord(record_type, Name);
     if (base == NULL)
         return false;
     else if (base->iRecord->record_type != record_type)
