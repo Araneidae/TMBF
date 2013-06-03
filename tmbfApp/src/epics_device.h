@@ -237,11 +237,14 @@ struct record_base *LookupRecord(const char *name);
         variable = value; \
         return true; \
     } \
-    static bool init_##variable(void *context, TYPEOF(record) *result) \
+
+#define WRAP_VARIABLE_WRITE_ACTION(record, variable, action) \
+    static bool write_##variable(void *context, TYPEOF(record) value) \
     { \
-        *result = variable; \
+        variable = value; \
+        action(); \
         return true; \
-    }
+    } \
 
 #define WRAP_METHOD(action) \
     static bool wrap_##action(void *context, bool ignored) \
@@ -290,7 +293,13 @@ struct record_base *LookupRecord(const char *name);
     PUBLISH(record, name, read_##variable)
 #define PUBLISH_VARIABLE_WRITE(record, name, variable, extra...) \
     WRAP_VARIABLE_WRITE(record, variable) \
-    PUBLISH(record, name, write_##variable, .init = init_##variable, ##extra)
+    WRAP_VARIABLE_READ(record, variable) \
+    PUBLISH(record, name, write_##variable, .init = read_##variable, ##extra)
+#define PUBLISH_VARIABLE_WRITE_ACTION( \
+        record, name, variable, action, extra...) \
+    WRAP_VARIABLE_WRITE_ACTION(record, variable, action) \
+    WRAP_VARIABLE_READ(record, variable) \
+    PUBLISH(record, name, write_##variable, .init = read_##variable, ##extra)
 
 #define PUBLISH_METHOD(name, action) \
     WRAP_METHOD(action) \

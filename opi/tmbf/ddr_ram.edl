@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 696
-y 39
+x 45
+y 518
 w 641
-h 464
+h 469
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -34,7 +34,7 @@ minor 6
 release 0
 # Geometry
 x 8
-y 56
+y 40
 w 624
 h 184
 # Appearance
@@ -47,8 +47,9 @@ font "helvetica-medium-r-12.0"
 nPts 2
 # X axis properties
 showXAxis
-xAxisSrc "AutoScale"
-xMax 1
+xAxisSrc "fromUser"
+xMin 0
+xMax 18000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -57,22 +58,18 @@ yMax 1
 y2AxisSrc "AutoScale"
 y2Max 1
 # Trace Properties
-numTraces 2
+numTraces 1
 yPv {
-  0 "$(device):DAC_MAXBUF"
-  1 "$(device):DAC_MINBUF"
+  0 "$(device):DDR:BUNCHWF"
 }
 plotUpdateMode {
   0 "y"
-  1 "y"
 }
 ySigned {
   0 1
-  1 1
 }
 plotColor {
   0 index 27
-  1 index 20
 }
 endObjectProperties
 
@@ -91,7 +88,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 73
 value {
-  "$(device) DAC Min/Max and Diff Data"
+  "$(device) DDR Long Buffer"
 }
 endObjectProperties
 
@@ -132,7 +129,7 @@ font "helvetica-bold-r-14.0"
 buttonLabel "?"
 numCmds 1
 command {
-  0 "diagnostics-help TMBF_ADC"
+  0 "diagnostics-help TMBF_DDR"
 }
 includeHelpIcon
 endObjectProperties
@@ -145,7 +142,7 @@ minor 6
 release 0
 # Geometry
 x 8
-y 240
+y 224
 w 624
 h 184
 # Appearance
@@ -171,7 +168,7 @@ y2Max 16600
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):DAC_DIFFBUF"
+  0 "$(device):DDR:TURNWF"
 }
 plotUpdateMode {
   0 "y"
@@ -184,51 +181,88 @@ plotColor {
 }
 endObjectProperties
 
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 416
+w 96
+h 22
+fgColor index 14
+onColor index 4
+offColor index 3
+topShadowColor index 1
+botShadowColor index 14
+controlPv "$(device):DDR:ARM_S.PROC"
+pressValue "0"
+onLabel "Armed"
+offLabel "Arm"
+3d
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 440
+w 96
+h 22
+fgColor index 14
+onColor index 4
+offColor index 3
+topShadowColor index 1
+botShadowColor index 14
+controlPv "$(device):DDR:SOFT_TRIG_S.PROC"
+pressValue "0"
+onLabel "Triggering"
+offLabel "Trigger"
+3d
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
 # (Menu Button)
 object activeMenuButtonClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 440
-y 432
-w 120
-h 24
+x 112
+y 416
+w 96
+h 22
 fgColor index 14
-bgColor index 4
+bgColor index 3
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):SCAN_DAC.SCAN"
-indicatorPv "$(device):SCAN_DAC.SCAN"
-font "helvetica-medium-r-14.0"
+controlPv "$(device):DDR:TRIGMODE_S"
+font "helvetica-medium-r-12.0"
 endObjectProperties
 
-# (Text Monitor)
-object activeXTextDspClass:noedit
+# (Menu Button)
+object activeMenuButtonClass
 beginObjectProperties
 major 4
-minor 5
+minor 0
 release 0
-x 64
-y 440
-w 48
-h 16
-controlPv "$(device):DACMEAN"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
+x 216
+y 416
+w 96
+h 22
 fgColor index 14
-bgColor index 5
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-useHexPrefix
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):DDR:INPUT_S"
+font "helvetica-medium-r-12.0"
 endObjectProperties
 
 # (Static Text)
@@ -237,18 +271,68 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 8
-y 440
-w 40
-h 16
-font "helvetica-medium-r-14.0"
+x 320
+y 424
+w 81
+h 14
+font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Mean:"
+  "Bunch offset:"
 }
 autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 408
+y 420
+w 72
+h 18
+controlPv "$(device):DDR:BUNCHSEL_S"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 408
+y 440
+w 72
+h 18
+controlPv "$(device):DDR:TURNSEL_S"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
 endObjectProperties
 
 # (Static Text)
@@ -257,44 +341,17 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 152
+x 320
 y 440
-w 27
-h 16
-font "helvetica-medium-r-14.0"
+w 71
+h 14
+font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Var:"
+  "Turn offset:"
 }
 autoSize
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 200
-y 440
-w 88
-h 16
-controlPv "$(device):DACSTD"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 5
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-useHexPrefix
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
 endObjectProperties
 

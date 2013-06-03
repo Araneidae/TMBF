@@ -17,6 +17,7 @@
 #include "hardware.h"
 #include "tune.h"
 #include "device.h"
+#include "ddr_epics.h"
 #include "pvlogging.h"
 #include "persistence.h"
 
@@ -53,7 +54,6 @@ static bool Interactive = true;
 
 /* Routine for printing an error message complete with associated file name
  * and line number. */
-
 void print_error(const char * Message, ...)
 {
     /* Large enough not to really worry about overflow.  If we do generate a
@@ -84,7 +84,16 @@ void print_error(const char * Message, ...)
         snprintf(ErrorMessage + Count, MESSAGE_LENGTH - Count,
             ": (%d) %s", Error, strerror_r(Error, StrError, sizeof(StrError)));
     }
-    printf("%s\n", ErrorMessage);
+    fprintf(stderr, "%s\n", ErrorMessage);
+}
+
+
+void panic_error(const char *filename, int line)
+{
+    print_error("Panic at %s, line %d", filename, line);
+    fflush(stderr);
+    fflush(stdout);
+    _exit(255);
 }
 
 
@@ -188,7 +197,7 @@ static void StartupMessage(void)
     printf(
 "\n"
 "EPICS TMBF Driver, Version %s.  Built: %s.\n"
-"Copyright (C) 2007-2008\n"
+"Copyright (c) 2007-2013\n"
 "Isa Uzun, James Rowland, Michael Abbott, Diamond Light Source.\n"
 "This program comes with ABSOLUTELY NO WARRANTY.  This is free software,\n"
 "and you are welcome to redistribute it under certain conditions.\n"
@@ -209,6 +218,7 @@ int main(int argc,char *argv[])
         HookLogging()  &&
         InitialiseSignals()  &&
         GenericInit()  &&
+        initialise_ddr_epics()  &&
         load_persistent_state();
     for (int i = 0; Ok && i < argc; i ++)
         Ok = TEST_EPICS(iocsh, argv[i]);

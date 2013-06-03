@@ -202,7 +202,6 @@ static unsigned int fir_cycles = 1;
 static unsigned int fir_length = 1;
 static double fir_phase = 0;
 
-#define MAX_FIR_LENGTH  9
 
 static void set_fircoeffs(void)
 {
@@ -211,9 +210,9 @@ static void set_fircoeffs(void)
     /* Only work on the active part of the filter, leaving the beginning of
      * the filter padded with zeros.  This ensures zero extra delay from the
      * filter if the length is shorter than the filter length. */
-    int fir_start = MAX_FIR_LENGTH - fir_length;
+    int fir_start = MAX_FIR_COEFFS - fir_length;
 
-    /* Note that MAX_FIR_LENGTH < MAX_FIR_COEFFS.  We still have to write all
+    /* Note that MAX_FIR_COEFFS < MAX_FIR_COEFFS.  We still have to write all
      * of the coefficients. */
     int coeffs[MAX_FIR_COEFFS];
     memset(coeffs, 0, sizeof(coeffs));
@@ -247,7 +246,7 @@ static void set_fircycles(int cycles)
 
 static bool set_firlength(void *context, int new_length)
 {
-    if (new_length < 1  ||  MAX_FIR_LENGTH < new_length)
+    if (new_length < 1  ||  MAX_FIR_COEFFS < new_length)
     {
         printf("Invalid FIR length %d\n", new_length);
         return false;
@@ -274,6 +273,8 @@ PUBLISH_SIMPLE_WRITE(ao,      "FIRPHASE",  set_firphase, .persist = true)
 /* Direct access to the FIR coefficients through register interface. */
 PUBLISH_SIMPLE_WAVEFORM_INIT(
     int, "COEFFS", MAX_FIR_COEFFS, write_FIR_coeffs, read_FIR_coeffs)
+PUBLISH_WAVEFORM(
+    int, MAX_FIR_COEFFS, "COEFFSRB", wrap_read_FIR_coeffs)
 
 
 
@@ -294,6 +295,9 @@ PUBLISH_SIMPLE_WAVEFORM_INIT(
     PUBLISH_SIMPLE_WRITE_INIT( \
         record, name, write_##register, read_##register, .persist = true)
 
+#define PUBLISH_PULSE(name, register) \
+    PUBLISH_METHOD(name, pulse_##register)
+
 
 PUBLISH_REGISTER_P(mbbo,    "DACENA",         CTRL_DAC_ENA)
 PUBLISH_REGISTER_P(mbbo,    "ARCHIVE",        CTRL_ARCHIVE)
@@ -302,7 +306,6 @@ PUBLISH_REGISTER_P(mbbo,    "HOMGAIN",        CTRL_HOM_GAIN)
 PUBLISH_REGISTER_P(mbbo,    "TRIGSEL",        CTRL_TRIG_SEL)
 PUBLISH_REGISTER_P(mbbo,    "ARMSEL",         CTRL_ARM_SEL)
 PUBLISH_REGISTER_P(mbbo,    "GROWDAMPMODE",   CTRL_GROW_DAMP)
-PUBLISH_REGISTER_P(mbbo,    "DDRINPUT",       CTRL_DDR_INPUT)
 PUBLISH_REGISTER_P(mbbo,    "CHSELECT",       CTRL_CH_SELECT)
 PUBLISH_REGISTER_P(mbbo,    "DDCINPUT",       CTRL_DDC_INPUT)
 PUBLISH_REGISTER_P(longout, "IQSCALE",        CTRL_IQ_SCALE)

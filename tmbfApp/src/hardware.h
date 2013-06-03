@@ -6,7 +6,7 @@
 
 
 /* Some standard array size definitions. */
-#define MAX_FIR_COEFFS      12
+#define MAX_FIR_COEFFS      10
 #define MAX_BUNCH_COUNT     936
 #define MAX_DATA_LENGTH     16384
 
@@ -25,6 +25,10 @@
     DECLARE_REGISTER_R(name); \
     DECLARE_REGISTER_W(name)
 
+/* Pulses a control bit. */
+#define DECLARE_PULSE(name) \
+    void pulse_##name(void)
+
 
 /* Some of these will not be published longer term, others will change... */
 
@@ -39,11 +43,13 @@ DECLARE_REGISTER(CTRL_ARM_SEL);     // Select soft or external arming
 DECLARE_REGISTER(CTRL_SOFT_ARM);    // Write to arm the soft trigger
 DECLARE_REGISTER(CTRL_GROW_DAMP);   // Set to enable grow damp test
 DECLARE_REGISTER(CTRL_DDR_INPUT);   // Select data to write to fast DDR memory
-DECLARE_REGISTER(CTRL_SET_PLANE);   // Should be set to one
 DECLARE_REGISTER(CTRL_CH_SELECT);   // Channel readout selection
 DECLARE_REGISTER(CTRL_DDC_INPUT);   // Select input to DDC
 DECLARE_REGISTER(CTRL_IQ_SCALE);    // DDC output gain
 DECLARE_REGISTER(CTRL_BUNCH_SYNC);  // Bunch synchronisation
+
+DECLARE_PULSE(CTRL_ARM_DDR);
+DECLARE_PULSE(CTRL_TRIG_DDR);
 
 /* Delay register fields. */
 DECLARE_REGISTER(DELAY_DAC);        // DAC output delay (in 2ns intervals)

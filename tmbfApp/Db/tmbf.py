@@ -7,6 +7,11 @@ from support import *
 from iocbuilder import *
 
 
+SAMPLES_PER_TURN = 936
+
+MAX_FIR_TAPS = 10
+
+
 # Bunch number
 longOut('BUNCH', 0, 1023, VAL = 1023)
 longOut('NCO')
@@ -15,19 +20,20 @@ longOut('ADC_OFF_CD')
 
 status = longIn('STATUS')
 
-WaveformOut('COEFFS', 12)
+WaveformOut('COEFFS', MAX_FIR_TAPS)
+Waveform('COEFFSRB', MAX_FIR_TAPS)
 
-WaveformOut('BB_GAINS', 936, 'FLOAT')
-WaveformOut('BB_DACS',  936, 'SHORT')
-WaveformOut('BB_TEMPDACS',  936, 'SHORT')
+WaveformOut('BB_GAINS', SAMPLES_PER_TURN, 'FLOAT')
+WaveformOut('BB_DACS',  SAMPLES_PER_TURN, 'SHORT')
+WaveformOut('BB_TEMPDACS',  SAMPLES_PER_TURN, 'SHORT')
 
 # The following records are polled together at 200ms intervals
 create_fanout('SCAN_ADC',
-    Waveform('ADC_MINBUF', 936, 'SHORT',
+    Waveform('ADC_MINBUF', SAMPLES_PER_TURN, 'SHORT',
         DESC = 'ADC min value per bunch'),
-    Waveform('ADC_MAXBUF', 936, 'SHORT',
+    Waveform('ADC_MAXBUF', SAMPLES_PER_TURN, 'SHORT',
         DESC = 'ADC max value per bunch'),
-    Waveform('ADC_DIFFBUF', 936, 'SHORT',
+    Waveform('ADC_DIFFBUF', SAMPLES_PER_TURN, 'SHORT',
         DESC = 'ADC max min diff per bunch'),
     aIn('ADCMEAN', PREC = 2,
         DESC = 'Readback ADC diff mean'),
@@ -36,11 +42,11 @@ create_fanout('SCAN_ADC',
     SCAN = '.2 second')
 
 create_fanout('SCAN_DAC',
-    Waveform('DAC_MINBUF', 936, 'SHORT',
+    Waveform('DAC_MINBUF', SAMPLES_PER_TURN, 'SHORT',
         DESC = 'DAC min value per bunch'),
-    Waveform('DAC_MAXBUF', 936, 'SHORT',
+    Waveform('DAC_MAXBUF', SAMPLES_PER_TURN, 'SHORT',
         DESC = 'DAC max value per bunch'),
-    Waveform('DAC_DIFFBUF', 936, 'SHORT',
+    Waveform('DAC_DIFFBUF', SAMPLES_PER_TURN, 'SHORT',
         DESC = 'DAC max min diff per bunch'),
     aIn('DACMEAN', PREC = 2,
         DESC = 'Readback DAC diff mean'),
@@ -64,9 +70,6 @@ mbbOut('FIRGAIN',
     VAL  = 15,  FLNK = status,
     DESC = 'FIR gain select',
     *['%sdB' % db for db in range(21, -25, -3)])
-mbbOut('FIRINVERT', 'Off', 'On',
-    VAL  = 0,   FLNK = status,
-    DESC = 'FIR output invert')
 mbbOut('HOMGAIN',
     VAL  = 15,  FLNK = status,
     DESC = 'HOM gain select',
@@ -86,15 +89,11 @@ mbbOut('ARMSEL',   'Soft', 'External',
 mbbOut('DDCINPUT',  'FIR', 'ADC',
     VAL  = 1,   FLNK = status,
     DESC = 'DDC input select')
-mbbOut('DDRINPUT',  'ADC', 'DAC',
-    VAL  = 0,   FLNK = status,
-    DESC = 'DDR input select')
 
-MAX_FIR_TAPS = 9
 longOut('FIRCYCLES', 1, MAX_FIR_TAPS,
-    VAL  = 2, DESC = 'Cycles in filter')
+    DESC = 'Cycles in filter')
 longOut('FIRLENGTH', 1, MAX_FIR_TAPS,
-    VAL  = 9, DESC = 'Length of filter')
+    DESC = 'Length of filter')
 aOut('FIRPHASE', -360, 360, VAL  = 0,
     DESC = 'FIR phase')
 
@@ -193,6 +192,43 @@ tune_records = [
     # Finally trigger capture of the next round of data.
     softtrig]
 create_fanout('TUNESCAN', SCAN = '1 second', *tune_records)
+
+
+# ------------------------------------------------------------------------------
+# DDR access records
+
+
+TURN_WF_COUNT = 256
+
+BUFFER_TURN_COUNT = 16 * 1024 * 1024 // SAMPLES_PER_TURN
+TURN_WF_LENGTH = SAMPLES_PER_TURN * TURN_WF_COUNT
+
+ddr_bunch_buffer = Waveform('DDR:BUNCHWF', BUFFER_TURN_COUNT, 'SHORT')
+ddr_turn_buffer  = Waveform('DDR:TURNWF', TURN_WF_LENGTH, 'SHORT')
+boolIn('DDR:TRIG', SCAN = 'I/O Intr',
+    FLNK = create_fanout('DDRFAN',
+        ddr_bunch_buffer, ddr_turn_buffer,
+        boolOut('DDR:TRIGDONE', DESC = 'DDR trigger done')),
+    DESC = 'DDR trigger event')
+
+mbbOut('DDR:INPUT', 'ADC', 'DAC',
+    DESC = 'DDR input select')
+mbbOut('DDR:TRIGMODE', 'Retrigger', 'One Shot',
+    DESC = 'DDR retrigger enable')
+
+boolOut('DDR:ARM', DESC = 'DDR arm trigger')
+boolOut('DDR:SOFT_TRIG', DESC = 'DDR soft trigger')
+
+longOut('DDR:BUNCHSEL', 0, 935, FLNK = ddr_bunch_buffer,
+    DESC = 'Select bunch for DDR readout')
+longOut('DDR:TURNSEL',
+    -BUFFER_TURN_COUNT/2, BUFFER_TURN_COUNT/2 - TURN_WF_COUNT,
+    FLNK = ddr_turn_buffer,
+    DESC = 'Select start turn for readout')
+
+
+
+# ------------------------------------------------------------------------------
 
 stringIn('VERSION', PINI = 'YES', DESC = 'TMBF version')
 

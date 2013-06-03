@@ -39,8 +39,8 @@ struct tmbf_config_space
 };
 
 /* These three pointers directly overlay the FF memory. */
-static struct tmbf_config_space * ConfigSpace;
-static int * DataSpace;
+static struct tmbf_config_space *ConfigSpace;
+static int *DataSpace;
 
 
 
@@ -67,6 +67,8 @@ static void Unlock(void)
  * below. */
 
 #define CTRL_DAC_ENA_FIELD        0, 1
+#define CTRL_ARM_DDR_FIELD        1
+#define CTRL_TRIG_DDR_FIELD       2
 #define CTRL_SOFT_TRIG_FIELD      3, 1
 #define CTRL_ARCHIVE_FIELD        4, 2
 #define CTRL_FIR_GAIN_FIELD       6, 4
@@ -76,7 +78,6 @@ static void Unlock(void)
 #define CTRL_SOFT_ARM_FIELD       16, 1
 #define CTRL_GROW_DAMP_FIELD      17, 1
 #define CTRL_DDR_INPUT_FIELD      21, 1
-#define CTRL_SET_PLANE_FIELD      22, 1
 #define CTRL_CH_SELECT_FIELD      23, 2
 #define CTRL_DDC_INPUT_FIELD      25, 1
 #define CTRL_IQ_SCALE_FIELD       27, 3
@@ -91,8 +92,8 @@ static void Unlock(void)
 /* Writes to a sub field of a register by reading the register and writing
  * the appropriately masked value. */
 static void WriteBitField(
-    unsigned int *Register, unsigned int startbit, unsigned int numbits,
-    unsigned int value)
+    volatile unsigned int *Register, unsigned int startbit,
+    unsigned int numbits, unsigned int value)
 {
     unsigned int mask = ((1 << numbits) - 1) << startbit;
     *Register = (*Register & ~mask) | ((value << startbit) & mask);
@@ -104,6 +105,16 @@ static unsigned int ReadBitField(
     unsigned int Register, unsigned int startbit, unsigned int numbits)
 {
     return (Register >> startbit) & ((1 << numbits) - 1);
+}
+
+
+static void PulseBit(unsigned int *Register, unsigned int startbit)
+{
+    Lock();
+    WriteBitField(Register, startbit, 1, 0);    // Shouldn't be necessary
+    WriteBitField(Register, startbit, 1, 1);
+    WriteBitField(Register, startbit, 1, 0);
+    Unlock();
 }
 
 
@@ -124,12 +135,21 @@ static unsigned int ReadBitField(
         Unlock(); \
     }
 
+#define DEFINE_PULSE(name, register, start) \
+    DECLARE_PULSE(name) \
+    { \
+        PulseBit(&register, start); \
+    }
+
 #define DEFINE_BIT_FIELD(name, register, start_count) \
     DEFINE_BIT_FIELD_R(name, register, start_count) \
     DEFINE_BIT_FIELD_W(name, register, start_count)
 
 #define CTRL_REGISTER(name) \
     DEFINE_BIT_FIELD(name, ConfigSpace->Ctrl, name##_FIELD)
+
+#define CTRL_PULSE(name) \
+    DEFINE_PULSE(name, ConfigSpace->Ctrl, name##_FIELD)
 
 #define DELAY_REGISTER(name) \
     DEFINE_BIT_FIELD(name, ConfigSpace->Delay, name##_FIELD)
@@ -146,11 +166,13 @@ CTRL_REGISTER(CTRL_ARM_SEL)
 CTRL_REGISTER(CTRL_SOFT_ARM)
 CTRL_REGISTER(CTRL_GROW_DAMP)
 CTRL_REGISTER(CTRL_DDR_INPUT)
-CTRL_REGISTER(CTRL_SET_PLANE)
 CTRL_REGISTER(CTRL_CH_SELECT)
 CTRL_REGISTER(CTRL_DDC_INPUT)
 CTRL_REGISTER(CTRL_IQ_SCALE)
 CTRL_REGISTER(CTRL_BUNCH_SYNC)
+
+CTRL_PULSE(CTRL_ARM_DDR)
+CTRL_PULSE(CTRL_TRIG_DDR)
 
 /* Direct access to delay register fields. */
 DELAY_REGISTER(DELAY_DAC)
@@ -213,7 +235,6 @@ void read_FIR_coeffs(int coeffs[MAX_FIR_COEFFS])
 void write_FIR_coeffs(const int coeffs[MAX_FIR_COEFFS])
 {
     Lock();
-    WRITE_CTRL(SET_PLANE, 1);
     for (int i = 0; i < MAX_FIR_COEFFS; i ++)
         ConfigSpace->FIR_coeffs[i] = coeffs[i];
     Unlock();
@@ -439,8 +460,8 @@ static unsigned int OsPageMask;
 static bool MapTmbfMemory(void)
 {
     int mem;
-    char * map_config_base;
-    char * map_data_base;
+    void *map_config_base;
+    void *map_data_base;
     return
         TEST_IO(mem = open("/dev/mem", O_RDWR | O_SYNC))  &&
         TEST_IO(map_config_base = mmap(
@@ -450,10 +471,9 @@ static bool MapTmbfMemory(void)
             0, DATA_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
             mem, TMBF_DATA_ADDRESS & ~OsPageMask))  &&
         DO_(
-            ConfigSpace = (struct tmbf_config_space *) (void *)
+            ConfigSpace =
                 (map_config_base + (TMBF_CONFIG_ADDRESS & OsPageMask));
-            DataSpace = (int *) (void *)
-                (map_data_base + (TMBF_DATA_ADDRESS & OsPageMask)));
+            DataSpace = (map_data_base + (TMBF_DATA_ADDRESS & OsPageMask)));
 }
 
 

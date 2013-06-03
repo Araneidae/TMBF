@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 701
-y 68
+x 687
+y 227
 w 456
 h 519
 font "helvetica-medium-r-8.0"
@@ -1698,6 +1698,29 @@ numPvs 4
 numDsps 1
 displayFileName {
   0 "tmbf/dac_minmax.edl"
+}
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 80
+y 448
+w 72
+h 24
+fgColor index 43
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "DDR RAM"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/ddr_ram.edl"
 }
 endObjectProperties
 

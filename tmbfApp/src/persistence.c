@@ -213,8 +213,8 @@ static struct persistent_variable *lookup_persistence(const char *name)
 }
 
 
-bool read_persistent_waveform(const char *name, void *variable, size_t *length)
 /* Updates variable from value stored on disk. */
+bool read_persistent_waveform(const char *name, void *variable, size_t *length)
 {
     LOCK();
     struct persistent_variable *persistence = lookup_persistence(name);

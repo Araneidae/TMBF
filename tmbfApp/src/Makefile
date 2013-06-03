@@ -56,12 +56,16 @@ tmbf_SRCS += hardware.c
 tmbf_SRCS += tmbfMain.c
 tmbf_SRCS += pvlogging.c
 tmbf_SRCS += numeric.c
+tmbf_SRCS += ddr.c
+tmbf_SRCS += ddr_epics.c
 
 tmbf_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
 # The following sources have automatically generated PUBLISH statements.
-EPICS_EXPORTS = tune device
+EPICS_EXPORTS += device
+EPICS_EXPORTS += tune
+EPICS_EXPORTS += ddr_epics
 
 
 #===========================
