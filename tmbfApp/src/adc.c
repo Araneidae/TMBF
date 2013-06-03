@@ -70,8 +70,57 @@ PUBLISH_VARIABLE_READ(longin, "ADC:MAX", max_max)
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* ADC offset control. */
+/* DAC Min/Max Buffer */
+/* Currently a cut and paste copy of ADC above, but will be unified after rework
+ * of the EPICS interface. */
 
+static short int dac_min_buf[MAX_BUNCH_COUNT];
+static short int dac_max_buf[MAX_BUNCH_COUNT];
+static short int dac_diff_buf[MAX_BUNCH_COUNT];
+static float dac_mean_diff;
+static float dac_var_diff;
+static int dac_max_max;
+
+
+
+static void read_dac_minmax(void)
+{
+    read_DAC_MinMax(dac_min_buf, dac_max_buf);
+
+    int sum_diff = 0;
+    long long int sum_var = 0;
+    dac_max_max = 0;
+    for (unsigned int i = 0; i < MAX_BUNCH_COUNT; ++i)
+    {
+        short int diff = dac_max_buf[i] - dac_min_buf[i];
+        dac_diff_buf[i] = diff;
+        sum_diff += diff;
+        sum_var  += (int) diff*diff;
+        dac_max_max = MAX(dac_max_max, abs(dac_max_buf[i]));
+        dac_max_max = MAX(dac_max_max, abs(dac_min_buf[i]));
+    }
+
+    dac_mean_diff = sum_diff / (float) MAX_BUNCH_COUNT;
+    dac_var_diff =
+        sum_var / (float) MAX_BUNCH_COUNT - dac_mean_diff*dac_mean_diff;
+}
+
+
+PUBLISH_METHOD("DAC:SCAN", read_dac_minmax)
+
+PUBLISH_READ_WAVEFORM(
+    short, "DAC:MINBUF", MAX_BUNCH_COUNT, dac_min_buf)
+PUBLISH_READ_WAVEFORM(
+    short, "DAC:MAXBUF", MAX_BUNCH_COUNT, dac_max_buf)
+PUBLISH_READ_WAVEFORM(
+    short, "DAC:DIFFBUF", MAX_BUNCH_COUNT, dac_diff_buf)
+PUBLISH_VARIABLE_READ(ai, "DAC:MEAN", dac_mean_diff)
+PUBLISH_VARIABLE_READ(ai, "DAC:STD",  dac_var_diff)
+PUBLISH_VARIABLE_READ(longin, "DAC:MAX", dac_max_max)
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* ADC offset control. */
 
 static void set_offsets(const short *offsets)
 {
@@ -80,6 +129,13 @@ static void set_offsets(const short *offsets)
 }
 
 PUBLISH_SIMPLE_WAVEFORM(short, "ADC:OFFSET", 4, set_offsets, .persist = true)
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* DAC output control. */
+
+PUBLISH_REGISTER_P(mbbo, "DAC:ENABLE", CTRL_DAC_ENA)
+PUBLISH_REGISTER_P(longout, "DAC:DELAY",  DELAY_DAC)
 
 
 #ifndef __DEFINE_EPICS__

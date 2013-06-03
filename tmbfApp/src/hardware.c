@@ -267,46 +267,41 @@ union bunch_packed_data
 };
 
 
-void read_ADC_MinMax(
-    short ADC_min[MAX_BUNCH_COUNT], short ADC_max[MAX_BUNCH_COUNT])
+/* Reads packed array of min/max values using readout selector.  Used for ADC
+ * and DAC readouts. */
+static void read_minmax(
+    volatile int *minmax, volatile unsigned int *channel,
+    short *min_out, short *max_out)
 {
     Lock();
     for (int n = 0; n < 4; n++)
     {
         /* Channel select and read enable for ADC */
-        ConfigSpace->AdcChnSel = 2*n + 1;
+        *channel = 2*n + 1;
         for (int i = 0; i < MAX_BUNCH_COUNT/4; i++)
         {
             union packed_data packed;
-            packed.packed = ConfigSpace->BB_Adc_MinMax[i];
-            ADC_max[4*i + n] = packed.upper;
-            ADC_min[4*i + n] = packed.lower;
+            packed.packed = minmax[i];
+            min_out[4*i + n] = packed.lower;
+            max_out[4*i + n] = packed.upper;
         }
     }
-    ConfigSpace->AdcChnSel = 0;
+    *channel = 0;
     Unlock();
 }
 
-/* copy paste of ADC buffer below, with rename to DAC, surely there's a better
- * way...*/
+void read_ADC_MinMax(
+    short ADC_min[MAX_BUNCH_COUNT], short ADC_max[MAX_BUNCH_COUNT])
+{
+    read_minmax(
+        ConfigSpace->BB_Adc_MinMax, &ConfigSpace->AdcChnSel, ADC_min, ADC_max);
+}
+
 void read_DAC_MinMax(
     short DAC_min[MAX_BUNCH_COUNT], short DAC_max[MAX_BUNCH_COUNT])
 {
-    Lock();
-    for (int n = 0; n < 4; n++)
-    {
-        /* Channel select and read enable for DAC */
-        ConfigSpace->DacChnSel = 2*n + 1;
-        for (int i = 0; i < MAX_BUNCH_COUNT/4; i++)
-        {
-            union packed_data packed;
-            packed.packed = ConfigSpace->BB_Dac_MinMax[i];
-            DAC_max[4*i + n] = packed.upper;
-            DAC_min[4*i + n] = packed.lower;
-        }
-    }
-    ConfigSpace->DacChnSel = 0;
-    Unlock();
+    read_minmax(
+        ConfigSpace->BB_Dac_MinMax, &ConfigSpace->DacChnSel, DAC_min, DAC_max);
 }
 
 

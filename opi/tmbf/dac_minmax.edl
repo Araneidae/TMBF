@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 696
-y 39
+x 274
+y 527
 w 641
-h 464
+h 488
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -19,7 +19,7 @@ ctlBgColor1 index 0
 ctlBgColor2 index 14
 topShadowColor index 0
 botShadowColor index 14
-title "ADC data statistics"
+title "DAC data statistics"
 showGrid
 snapToGrid
 gridSize 8
@@ -34,7 +34,7 @@ minor 6
 release 0
 # Geometry
 x 8
-y 56
+y 40
 w 624
 h 184
 # Appearance
@@ -47,8 +47,9 @@ font "helvetica-medium-r-12.0"
 nPts 2
 # X axis properties
 showXAxis
-xAxisSrc "AutoScale"
-xMax 1
+xAxisSrc "fromUser"
+xMin 0
+xMax 1000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -59,8 +60,8 @@ y2Max 1
 # Trace Properties
 numTraces 2
 yPv {
-  0 "$(device):DAC_MAXBUF"
-  1 "$(device):DAC_MINBUF"
+  0 "$(device):DAC:MAXBUF"
+  1 "$(device):DAC:MINBUF"
 }
 plotUpdateMode {
   0 "y"
@@ -102,7 +103,7 @@ major 4
 minor 1
 release 0
 x 568
-y 432
+y 448
 w 64
 h 24
 fgColor index 25
@@ -132,7 +133,7 @@ font "helvetica-bold-r-14.0"
 buttonLabel "?"
 numCmds 1
 command {
-  0 "diagnostics-help TMBF_ADC"
+  0 "diagnostics-help TMBF_DAC"
 }
 includeHelpIcon
 endObjectProperties
@@ -145,7 +146,7 @@ minor 6
 release 0
 # Geometry
 x 8
-y 240
+y 224
 w 624
 h 184
 # Appearance
@@ -158,8 +159,9 @@ font "helvetica-medium-r-12.0"
 nPts 2
 # X axis properties
 showXAxis
-xAxisSrc "AutoScale"
-xMax 1
+xAxisSrc "fromUser"
+xMin 1
+xMax 1000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -171,7 +173,7 @@ y2Max 16600
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):DAC_DIFFBUF"
+  0 "$(device):DAC:DIFFBUF"
 }
 plotUpdateMode {
   0 "y"
@@ -190,8 +192,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 440
-y 432
+x 512
+y 416
 w 120
 h 24
 fgColor index 14
@@ -199,8 +201,7 @@ bgColor index 4
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):SCAN_DAC.SCAN"
-indicatorPv "$(device):SCAN_DAC.SCAN"
+controlPv "$(device):DAC:SCAN_S.SCAN"
 font "helvetica-medium-r-14.0"
 endObjectProperties
 
@@ -210,11 +211,11 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 64
+x 368
 y 440
-w 48
+w 64
 h 16
-controlPv "$(device):DACMEAN"
+controlPv "$(device):DAC:MEAN"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -237,11 +238,11 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 8
+x 304
 y 440
-w 40
+w 43
 h 16
-font "helvetica-medium-r-14.0"
+font "helvetica-bold-r-14.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
@@ -257,11 +258,11 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 152
-y 440
-w 27
+x 304
+y 456
+w 29
 h 16
-font "helvetica-medium-r-14.0"
+font "helvetica-bold-r-14.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
@@ -277,11 +278,11 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 200
-y 440
-w 88
+x 368
+y 456
+w 64
 h 16
-controlPv "$(device):DACSTD"
+controlPv "$(device):DAC:STD"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -296,5 +297,187 @@ showUnits
 newPos
 objType "monitors"
 noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 368
+y 416
+w 64
+h 16
+controlPv "$(device):DAC:MAX"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 5
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+useHexPrefix
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 304
+y 416
+w 69
+h 16
+font "helvetica-bold-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Max DAC:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 440
+y 416
+w 4
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "/"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 456
+y 416
+w 48
+h 16
+controlPv "$(device):DAC:MAX_PC"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 5
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+useHexPrefix
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 136
+y 416
+w 72
+h 24
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):DAC:ENABLE_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 136
+y 448
+w 48
+h 20
+controlPv "$(device):DAC:DELAY_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 416
+w 105
+h 16
+font "helvetica-bold-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Output Enable:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 448
+w 97
+h 16
+font "helvetica-bold-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Output Delay:"
+}
+autoSize
 endObjectProperties
 

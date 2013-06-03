@@ -47,9 +47,6 @@ hb_buf_lower = Waveform('HB_BUF_LOWER', 16384, 'SHORT',
     DESC = 'BRAM buffer lower 16-bits',
     PINI = 'YES',   FLNK = hb_buf_upper)
 
-mbbOut('DACENA', 'Off', 'On',
-    VAL  = 0,   FLNK = status,
-    DESC = 'DAC output enable')
 mbbOut('FIRGAIN',
     VAL  = 15,  FLNK = status,
     DESC = 'FIR gain select',
@@ -80,9 +77,6 @@ longOut('FIRLENGTH', 1, MAX_FIR_TAPS,
     DESC = 'Length of filter')
 aOut('FIRPHASE', -360, 360, VAL  = 0,
     DESC = 'FIR phase')
-
-dacdly_s = longOut('DACDLY', 4, 935,
-    VAL  = 620, DESC = 'DAC output delay')
 
 aOut('HOMFREQ', 0, 468, VAL  = 0.3, PREC = 4,
     DESC = 'NCO freq (tune)')
@@ -179,51 +173,60 @@ create_fanout('TUNESCAN', SCAN = '1 second', *tune_records)
 
 
 # ------------------------------------------------------------------------------
-# ADC
-
-def dB(db): return 10.**(db/20.)
-
+# ADC + DAC
+#
+# Both of these systems are very similar: all we have are min/max waveforms and
+# derived data (identical for both) and a couple of device specific controls.
 
 MAX_ADC = (1<<13) - 1     # Signed 14-bit ADC, range [-8192..8191]
 
-WaveformOut('ADC:OFFSET', 4, 'SHORT', PINI = 'YES',
-    DESC = 'ADC offsets')
+def dB(db): return 10.**(db/20.)
+
+def minmax_pvs(source):
+    # The following records are polled together at 200ms intervals
+    source_max = longIn('%s:MAX' % source, 0, MAX_ADC,
+        DESC = 'Maximum %s reading' % source,
+        HSV  = 'MINOR',  HIGH = int(MAX_ADC / dB(3)),    # 70.8 %
+        HHSV = 'MAJOR',  HIHI = int(MAX_ADC / dB(1.6)))  # 83.2 %
+    source_maxpc = records.calc('%s:MAX_PC' % source,
+        DESC = 'Maximum %s reading (%%)' % source,
+        CALC = 'A/B',
+        INPA = MS(source_max),
+        INPB = MAX_ADC / 100.,
+        LOPR = 0,   HOPR = 100,
+        PREC = 1,   EGU  = '%')
+    boolOut('%s:SCAN' % source,
+        DESC = 'Trigger %s scanning' % source, SCAN = '.2 second',
+        FLNK = create_fanout('%s:FAN' % source,
+            Waveform('%s:MINBUF' % source, SAMPLES_PER_TURN, 'SHORT',
+                DESC = '%s min value per bunch' % source),
+            Waveform('%s:MAXBUF' % source, SAMPLES_PER_TURN, 'SHORT',
+                DESC = '%s max value per bunch' % source),
+            Waveform('%s:DIFFBUF' % source, SAMPLES_PER_TURN, 'SHORT',
+                DESC = '%s max min diff per bunch' % source),
+            aIn('%s:MEAN' % source, PREC = 2,
+                DESC = 'Readback %s diff mean' % source),
+            aIn('%s:STD' % source, PREC = 2,
+                DESC = 'Readback %s diff variance' % source),
+            source_max, source_maxpc))
 
 
-# The following records are polled together at 200ms intervals
-adc_max = longIn('ADC:MAX', 0, MAX_ADC,
-    DESC = 'Maximum ADC reading',
-    HSV  = 'MINOR',  HIGH = int(MAX_ADC / dB(3)),    # 70.8 %
-    HHSV = 'MAJOR',  HIHI = int(MAX_ADC / dB(1.6)))  # 83.2 %
-adc_maxpc = records.calc('ADC:MAX_PC',
-    DESC = 'Maximum ADC reading (%)',
-    CALC = 'A/B',
-    INPA = MS(adc_max),
-    INPB = MAX_ADC / 100.,
-    LOPR = 0,   HOPR = 100,
-    PREC = 1,   EGU  = '%')
-boolOut('ADC:SCAN', DESC = 'Trigger ADC scanning', SCAN = '.2 second',
-    FLNK = create_fanout('ADC:FAN',
-        Waveform('ADC:MINBUF', SAMPLES_PER_TURN, 'SHORT',
-            DESC = 'ADC min value per bunch'),
-        Waveform('ADC:MAXBUF', SAMPLES_PER_TURN, 'SHORT',
-            DESC = 'ADC max value per bunch'),
-        Waveform('ADC:DIFFBUF', SAMPLES_PER_TURN, 'SHORT',
-            DESC = 'ADC max min diff per bunch'),
-        aIn('ADC:MEAN', PREC = 2,
-            DESC = 'Readback ADC diff mean'),
-        aIn('ADC:STD', PREC = 2,
-            DESC = 'Readback ADC diff variance'),
-        adc_max, adc_maxpc))
+minmax_pvs('ADC')
+WaveformOut('ADC:OFFSET', 4, 'SHORT', PINI = 'YES', DESC = 'ADC offsets')
+
+
+minmax_pvs('DAC')
+longOut('DAC:DELAY', 4, 935, DESC = 'DAC output delay')
+mbbOut('DAC:ENABLE', 'Off', 'On', DESC = 'DAC output enable')
+
+
 
 
 # ------------------------------------------------------------------------------
 # FIR
-# ------------------------------------------------------------------------------
-# DAC
 
 # ------------------------------------------------------------------------------
-# DDR access records
+# DDR
 
 
 SHORT_TURN_WF_COUNT = 8

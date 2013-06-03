@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 687
-y 227
+x 679
+y 39
 w 456
 h 519
 font "helvetica-medium-r-8.0"
@@ -132,7 +132,7 @@ bgColor index 3
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):DACENA_S"
+controlPv "$(device):DAC:ENABLE_S"
 font "helvetica-medium-r-12.0"
 endObjectProperties
 
@@ -927,7 +927,7 @@ x 168
 y 112
 w 48
 h 16
-controlPv "$(device):DACDLY_S"
+controlPv "$(device):DAC:DELAY_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
