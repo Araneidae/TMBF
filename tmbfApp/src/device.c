@@ -233,9 +233,9 @@ static void set_firphase(double new_phase)
 }
 
 
-PUBLISH_SIMPLE_WRITE(longout, "FIRCYCLES", set_fircycles)
-PUBLISH(longout, "FIRLENGTH", set_firlength)
-PUBLISH_SIMPLE_WRITE(ao,      "FIRPHASE",  set_firphase)
+PUBLISH_SIMPLE_WRITE(longout, "FIRCYCLES", set_fircycles, .persist = true)
+PUBLISH(longout, "FIRLENGTH", set_firlength, .persist = true)
+PUBLISH_SIMPLE_WRITE(ao,      "FIRPHASE",  set_firphase, .persist = true)
 
 /* Direct access to the FIR coefficients through register interface. */
 PUBLISH_SIMPLE_WAVEFORM_INIT(
@@ -254,13 +254,6 @@ PUBLISH_SIMPLE_WAVEFORM_INIT(
  * export. */
 
 
-
-
-#define PUBLISH_REGISTER_R(record, name, register) \
-    PUBLISH_SIMPLE_READ (record, name, read_##register)
-#define PUBLISH_REGISTER_W(record, name, register) \
-   PUBLISH_SIMPLE_WRITE_INIT(record, name, write_##register, read_##register)
-
 /* Persistent writable register.  All associated records must be marked with
  * PINI='YES' to ensure the initial loaded state is written back. */
 #define PUBLISH_REGISTER_P(record, name, register) \
@@ -268,35 +261,35 @@ PUBLISH_SIMPLE_WAVEFORM_INIT(
         record, name, write_##register, read_##register, .persist = true)
 
 
-PUBLISH_REGISTER_W(mbbo,    "DACOUT",         CTRL_DAC_OUT)
-PUBLISH_REGISTER_W(mbbo,    "FIRINVERT",      CTRL_FIR_INVERT)
-PUBLISH_REGISTER_W(mbbo,    "ARCHIVE",        CTRL_ARCHIVE)
-PUBLISH_REGISTER_W(mbbo,    "FIRGAIN",        CTRL_FIR_GAIN)
-PUBLISH_REGISTER_W(mbbo,    "HOMGAIN",        CTRL_HOM_GAIN)
-PUBLISH_REGISTER_W(mbbo,    "TRIGSEL",        CTRL_TRIG_SEL)
-PUBLISH_REGISTER_W(mbbo,    "ARMSEL",         CTRL_ARM_SEL)
-PUBLISH_REGISTER_W(mbbo,    "GROWDAMPMODE",   CTRL_GROW_DAMP)
-PUBLISH_REGISTER_W(mbbo,    "TEMPDACOUT",     CTRL_TEMP_DAC_OUT)
-PUBLISH_REGISTER_W(mbbo,    "DDRINPUT",       CTRL_DDR_INPUT)
-PUBLISH_REGISTER_W(mbbo,    "CHSELECT",       CTRL_CH_SELECT)
-PUBLISH_REGISTER_W(mbbo,    "DDCINPUT",       CTRL_DDC_INPUT)
-PUBLISH_REGISTER_W(mbbo,    "BUNCHMODE",      CTRL_BUNCH_MODE)
-PUBLISH_REGISTER_W(longout, "IQSCALE",        CTRL_IQ_SCALE)
-PUBLISH_REGISTER_W(mbbo,    "SOFTARM",        CTRL_SOFT_ARM)
+PUBLISH_REGISTER_P(mbbo,    "DACOUT",         CTRL_DAC_OUT)
+PUBLISH_REGISTER_P(mbbo,    "FIRINVERT",      CTRL_FIR_INVERT)
+PUBLISH_REGISTER_P(mbbo,    "ARCHIVE",        CTRL_ARCHIVE)
+PUBLISH_REGISTER_P(mbbo,    "FIRGAIN",        CTRL_FIR_GAIN)
+PUBLISH_REGISTER_P(mbbo,    "HOMGAIN",        CTRL_HOM_GAIN)
+PUBLISH_REGISTER_P(mbbo,    "TRIGSEL",        CTRL_TRIG_SEL)
+PUBLISH_REGISTER_P(mbbo,    "ARMSEL",         CTRL_ARM_SEL)
+PUBLISH_REGISTER_P(mbbo,    "GROWDAMPMODE",   CTRL_GROW_DAMP)
+PUBLISH_REGISTER_P(mbbo,    "TEMPDACOUT",     CTRL_TEMP_DAC_OUT)
+PUBLISH_REGISTER_P(mbbo,    "DDRINPUT",       CTRL_DDR_INPUT)
+PUBLISH_REGISTER_P(mbbo,    "CHSELECT",       CTRL_CH_SELECT)
+PUBLISH_REGISTER_P(mbbo,    "DDCINPUT",       CTRL_DDC_INPUT)
+PUBLISH_REGISTER_P(mbbo,    "BUNCHMODE",      CTRL_BUNCH_MODE)
+PUBLISH_REGISTER_P(longout, "IQSCALE",        CTRL_IQ_SCALE)
+PUBLISH_REGISTER_P(mbbo,    "SOFTARM",        CTRL_SOFT_ARM)
 
-PUBLISH_REGISTER_W(longout, "DACDLY",         DELAY_DAC)
-PUBLISH_REGISTER_W(longout, "GROWDAMPPERIOD", DELAY_GROW_DAMP)
-PUBLISH_REGISTER_W(mbbo,    "TUNESWEEPMODE",  DELAY_TUNE_SWEEP)
+PUBLISH_REGISTER_P(longout, "DACDLY",         DELAY_DAC)
+PUBLISH_REGISTER_P(longout, "GROWDAMPPERIOD", DELAY_GROW_DAMP)
+PUBLISH_REGISTER_P(mbbo,    "TUNESWEEPMODE",  DELAY_TUNE_SWEEP)
 
-PUBLISH_REGISTER_W(longout, "PROGCLKVAL",     DDC_dwellTime)
+PUBLISH_REGISTER_P(longout, "PROGCLKVAL",     DDC_dwellTime)
 
-PUBLISH_REGISTER_R(longin,  "STATUS",         FPGA_version)
+PUBLISH_REGISTER_P(longout, "BUNCH",          BunchSelect)
+PUBLISH_REGISTER_P(longout, "NCO",            NCO_frequency)
+PUBLISH_REGISTER_P(longout, "ADC_OFF_AB",     AdcOffAB)
+PUBLISH_REGISTER_P(longout, "ADC_OFF_CD",     AdcOffCD)
 
-PUBLISH_REGISTER_W(longout, "BUNCH",          BunchSelect)
-PUBLISH_REGISTER_W(longout, "NCO",            NCO_frequency)
-PUBLISH_REGISTER_W(longout, "ADC_OFF_AB",     AdcOffAB)
-PUBLISH_REGISTER_W(longout, "ADC_OFF_CD",     AdcOffCD)
 
+PUBLISH_SIMPLE_READ(longin, "STATUS", read_FPGA_version)
 
 static bool read_version(void *context, EPICS_STRING *result)
 {

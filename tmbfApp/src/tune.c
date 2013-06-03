@@ -116,14 +116,14 @@ static void update_ddc_skew(int new_skew)
 
 
 
-PUBLISH_SIMPLE_WRITE(ao, "HOMFREQ", set_homfreq)
+PUBLISH_SIMPLE_WRITE(ao, "HOMFREQ", set_homfreq, .persist = true)
 
-PUBLISH_SIMPLE_WRITE(ao, "SWPSTARTFREQ", set_sweepstartfreq)
-PUBLISH_SIMPLE_WRITE(ao, "SWPSTOPFREQ", set_sweepstopfreq)
-PUBLISH_SIMPLE_WRITE(ao, "SWPFREQSTEP", set_freq_step)
+PUBLISH_SIMPLE_WRITE(ao, "SWPSTARTFREQ", set_sweepstartfreq, .persist = true)
+PUBLISH_SIMPLE_WRITE(ao, "SWPSTOPFREQ", set_sweepstopfreq, .persist = true)
+PUBLISH_SIMPLE_WRITE(ao, "SWPFREQSTEP", set_freq_step, .persist = true)
 PUBLISH_SIMPLE_WAVEFORM(float, "TUNESCALE", TUNE_LENGTH, set_tune_scale)
 
-PUBLISH_SIMPLE_WRITE(longout, "DDCSKEW", update_ddc_skew)
+PUBLISH_SIMPLE_WRITE(longout, "DDCSKEW", update_ddc_skew, .persist = true)
 
 
 
