@@ -8,7 +8,7 @@ import re
 print '''/* Automatically generated file.
  * Do not edit or put under source control. */
 
-static const I_RECORD* EPICS_publish_data[] = {'''
+static const struct i_record *EPICS_publish_data[] = {'''
 
 pattern = re.compile(r'__PUBLISH_DATA__::<<<(.*?)>>>')
 for line in sys.stdin:

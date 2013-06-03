@@ -63,27 +63,27 @@ void CopyEpicsString(const EPICS_STRING in, EPICS_STRING *out)
 
 
 /****************************************************************************/
-/*                       I_RECORD publish and lookup                        */
+/*                   struct i_record publish and lookup                     */
 /****************************************************************************/
 
 static struct hash_table *hash_table = NULL;
 
 
 /* Common information about records: this is written to the dpvt field. */
-typedef struct RECORD_BASE
+struct record_base
 {
-    const I_RECORD * iRecord;
+    const struct i_record *iRecord;
     IOSCANPVT ioscanpvt;
     char WriteData[];
-} RECORD_BASE;
+};
 
 
-/* Returns the size of data to be reserved for the RECORD_BASE::WriteData
+/* Returns the size of data to be reserved for the record_base::WriteData
  * field.  This is only used for output records. */
 #define CASE_DATA_SIZE(record, VAL) \
     case RECORD_TYPE_##record: \
         return sizeof(((record##Record *)0)->VAL)
-static size_t WriteDataSize(RECORD_TYPE record_type)
+static size_t WriteDataSize(enum record_type record_type)
 {
     switch (record_type)
     {
@@ -100,8 +100,8 @@ static size_t WriteDataSize(RECORD_TYPE record_type)
 /* Returns record persistence flag from iRecord. */
 #define CASE_TAG(record) \
     case RECORD_TYPE_##record: \
-        return ((const I_##record *) iRecord)->persist
-static bool get_persistent(const I_RECORD *iRecord)
+        return ((const struct i_##record *) iRecord)->persist
+static bool get_persistent(const struct i_record *iRecord)
 {
     switch (iRecord->record_type)
     {
@@ -118,7 +118,7 @@ static bool get_persistent(const I_RECORD *iRecord)
 #define CASE_TYPE(record, type) \
     case RECORD_TYPE_##record: \
         return PERSISTENT_##type
-static enum PERSISTENCE_TYPES get_persistent_type(RECORD_TYPE record_type)
+static enum PERSISTENCE_TYPES get_persistent_type(enum record_type record_type)
 {
     switch (record_type)
     {
@@ -132,10 +132,10 @@ static enum PERSISTENCE_TYPES get_persistent_type(RECORD_TYPE record_type)
 }
 
 
-static RECORD_BASE * create_RECORD_BASE(const I_RECORD *iRecord)
+static struct record_base *create_record_base(const struct i_record *iRecord)
 {
     size_t WriteSize = WriteDataSize(iRecord->record_type);
-    RECORD_BASE * base = malloc(sizeof(RECORD_BASE) + WriteSize);
+    struct record_base *base = malloc(sizeof(struct record_base) + WriteSize);
     if (base != NULL)
     {
         base->iRecord = iRecord;
@@ -153,16 +153,16 @@ static RECORD_BASE * create_RECORD_BASE(const I_RECORD *iRecord)
 
 
 /* Looks up the given record by name. */
-RECORD_HANDLE LookupRecord(const char * Name)
+struct record_base *LookupRecord(const char *Name)
 {
-    RECORD_HANDLE handle = hash_table_lookup(hash_table, Name);
+    struct record_base *handle = hash_table_lookup(hash_table, Name);
     if (handle == NULL)
         printf("No record found for %s\n", Name);
     return handle;
 }
 
 
-RECORD_HANDLE PublishDynamic(const I_RECORD* iRecord)
+struct record_base *PublishDynamic(const struct i_record *iRecord)
 {
     if (hash_table == NULL)
         hash_table = hash_table_create(false);
@@ -174,13 +174,13 @@ RECORD_HANDLE PublishDynamic(const I_RECORD* iRecord)
         return NULL;
     }
 
-    RECORD_BASE * base = create_RECORD_BASE(iRecord);
+    struct record_base *base = create_record_base(iRecord);
     hash_table_insert(hash_table, iRecord->name, base);
     return base;
 }
 
 
-bool PublishEpicsData(const I_RECORD* publish_data[])
+bool PublishEpicsData(const struct i_record *publish_data[])
 {
     for (int i = 0; publish_data[i] != NULL; i ++)
     {
@@ -200,7 +200,7 @@ bool PublishEpicsData(const I_RECORD* publish_data[])
 
 
 
-static epicsAlarmSeverity get_alarm_status(const I_RECORD *iRecord)
+static epicsAlarmSeverity get_alarm_status(const struct i_record *iRecord)
 {
     if (iRecord->get_alarm_status)
         return iRecord->get_alarm_status(iRecord->context);
@@ -208,7 +208,7 @@ static epicsAlarmSeverity get_alarm_status(const I_RECORD *iRecord)
         return epicsSevNone;
 }
 
-static bool get_timestamp(const I_RECORD *iRecord, struct timespec *ts)
+static bool get_timestamp(const struct i_record *iRecord, struct timespec *ts)
 {
     if (iRecord->get_timestamp)
         return iRecord->get_timestamp(iRecord->context, ts);
@@ -219,7 +219,7 @@ static bool get_timestamp(const I_RECORD *iRecord, struct timespec *ts)
 
 /* Routine called (possibly in signal handler context, or in an arbitrary
  * thread) to notify that I/O Intr processing should occur. */
-bool SignalRecord(RECORD_HANDLE base)
+bool SignalRecord(struct record_base *base)
 {
     if (base == NULL)
         return false;
@@ -239,7 +239,7 @@ bool SignalRecord(RECORD_HANDLE base)
 
 static long get_ioint_(int cmd, dbCommon *pr, IOSCANPVT *pIoscanpvt)
 {
-    RECORD_BASE * base = (RECORD_BASE *) pr->dpvt;
+    struct record_base *base = pr->dpvt;
     if (base == NULL)
         return ERROR;
     else
@@ -307,12 +307,12 @@ static void SetTimestamp(dbCommon *pr, struct timespec *Timestamp)
 
 
 
-/* Helper code for extracting the appropriate I_record from the record. */
+/* Helper code for extracting the appropriate i_record from the record. */
 #define GET_RECORD(record, pr, base, var) \
-    RECORD_BASE * base = (RECORD_BASE *) pr->dpvt; \
+    struct record_base *base = pr->dpvt; \
     if (base == NULL) \
         return ERROR; \
-    const I_##record * var = (const I_##record *) base->iRecord
+    const struct i_##record *var = (const struct i_##record *) base->iRecord
 
 
 
@@ -324,9 +324,9 @@ static void SetTimestamp(dbCommon *pr, struct timespec *Timestamp)
 /* Common record initialisation.  Looks up and validates the record base. */
 
 static bool init_record_(
-    dbCommon *pr, const char * Name, RECORD_TYPE record_type)
+    dbCommon *pr, const char *Name, enum record_type record_type)
 {
-    RECORD_BASE * base = LookupRecord(Name);
+    struct record_base *base = LookupRecord(Name);
     if (base == NULL)
         return false;
     else if (base->iRecord->record_type != record_type)
@@ -349,7 +349,7 @@ static bool init_record_(
  * but we still need to set up the alarm state and give the data a sensible
  * initial timestamp. */
 
-static void post_init_record_out(dbCommon *pr, const I_RECORD *iRecord)
+static void post_init_record_out(dbCommon *pr, const struct i_record *iRecord)
 {
     (void) recGblSetSevr(pr, READ_ALARM, get_alarm_status(iRecord));
     recGblResetAlarms(pr);
@@ -377,7 +377,8 @@ static void post_init_record_out(dbCommon *pr, const I_RECORD *iRecord)
             (void) ACTION_read(record, pr, iRecord, init, field); \
         memcpy(base->WriteData, &field, sizeof(field)); \
         record##_MLST(pr->mlst = field); \
-        post_init_record_out((dbCommon*)pr, (const I_RECORD *) iRecord); \
+        post_init_record_out( \
+            (dbCommon*)pr, (const struct i_record *) iRecord); \
         return INIT_OK; \
     }
 /* The MLST field update is only for selected record types. */
@@ -411,7 +412,7 @@ static void post_init_record_out(dbCommon *pr, const I_RECORD *iRecord)
  * and checks if the timestamp should be written here. */
 
 static void post_process(
-    dbCommon *pr, epicsEnum16 nsta, const I_RECORD *iRecord)
+    dbCommon *pr, epicsEnum16 nsta, const struct i_record *iRecord)
 {
     (void) recGblSetSevr(pr, nsta, get_alarm_status(iRecord));
     struct timespec Timestamp;
@@ -426,13 +427,13 @@ static void post_process(
  * either read or written and the alarm state is set by interrogating the
  * record interface.  This processing is adequate for most record types. */
 #define DEFINE_DEFAULT_PROCESS(record, VAL, action, PROC_OK) \
-    static long action##_##record(record##Record * pr) \
+    static long action##_##record(record##Record *pr) \
     { \
         GET_RECORD(record, pr, base, iRecord); \
         bool ok = ACTION_##action( \
             record, pr, iRecord, action, pr->VAL); \
         post_process((dbCommon *)pr, action##_ALARM, \
-            (const I_RECORD *) iRecord); \
+            (const struct i_record *) iRecord); \
         return ok ? PROC_OK : ERROR; \
     }
 
@@ -511,7 +512,8 @@ DEFINE_DEFAULT_WRITE(mbbo,      rval,   OK,         OK)
 
 /* Routine to validate record type: ensure that we don't mismatch the record
  * declarations in the code and in the database. */
-static bool CheckWaveformType(waveformRecord * pr, const I_waveform * iRecord)
+static bool CheckWaveformType(
+    waveformRecord *pr, const struct i_waveform_void *iRecord)
 {
     epicsEnum16 expected = DBF_NOACCESS;
     switch (iRecord->field_type)
@@ -536,26 +538,28 @@ static bool CheckWaveformType(waveformRecord * pr, const I_waveform * iRecord)
 
 #define POST_INIT_waveform(record, pr, field, INIT_OK) \
     { \
-        GET_RECORD(record, pr, base, iRecord); \
+        GET_RECORD(waveform_void, pr, base, iRecord); \
         if (!CheckWaveformType(pr, iRecord)) \
             return ERROR; \
         if (iRecord->init != NULL) \
             pr->udf = iRecord->init( \
                 iRecord->context, pr->bptr, CAST(size_t*, &pr->nord)); \
-        post_init_record_out((dbCommon*) pr, (const I_RECORD *) iRecord); \
+        post_init_record_out( \
+            (dbCommon*) pr, (const struct i_record *) iRecord); \
         return INIT_OK; \
     }
 
 INIT_RECORD(waveform, (unused), inp, waveform, OK)
 
-static long process_waveform(waveformRecord * pr)
+static long process_waveform(waveformRecord *pr)
 {
-    GET_RECORD(waveform, pr, base, i_waveform);
+    GET_RECORD(waveform_void, pr, base, i_waveform);
     /* Naughty cast: I want to a reference to size_t, pr->nord is actually an
      * unsigned int.  Force the two to match! */
     bool Ok = i_waveform->process(
         i_waveform->context, pr->bptr, pr->nelm, CAST(size_t*, &pr->nord));
-    post_process((dbCommon *) pr, READ_ALARM, (const I_RECORD *) i_waveform);
+    post_process( \
+        (dbCommon *) pr, READ_ALARM, (const struct i_record *) i_waveform);
     /* Note, by the way, that the waveform record support carefully ignores
      * my return code! */
     return Ok ? OK : ERROR;

@@ -26,7 +26,7 @@ void CopyEpicsString(const EPICS_STRING in, EPICS_STRING *out);
 
 /* The following list of enumerations records the possible record types
  * supported by this library. */
-typedef enum
+enum record_type
 {
     RECORD_TYPE_longin,
     RECORD_TYPE_longout,
@@ -39,7 +39,7 @@ typedef enum
     RECORD_TYPE_mbbi,
     RECORD_TYPE_mbbo,
     RECORD_TYPE_waveform
-} RECORD_TYPE;
+};
 
 
 /* Helper macros for determining the underlying type for each supported
@@ -58,47 +58,40 @@ typedef enum
 #define TYPEOF_mbbo      unsigned int
 
 
-/* The I_<record> structures are used to define the complete interface to a
+/* The i_<record> structures are used to define the complete interface to a
  * record. */
-
-typedef bool GET_TIMESTAMP(void * context, struct timespec *time);
-typedef epicsAlarmSeverity GET_ALARM_STATUS(void * context);
 
 
 /* This is as close to subclassing as we can come.  Note that name needs to
  * go at the end of the list of fields so that the PUBLISH macros will work
  * properly. */
 #define I_COMMON_FIELDS \
-    RECORD_TYPE record_type; \
-    void * context; \
+    enum record_type record_type; \
+    void *context; \
     bool io_intr; \
-    GET_TIMESTAMP * get_timestamp; \
-    GET_ALARM_STATUS * get_alarm_status; \
-    const char * name
+    bool (*get_timestamp)(void *context, struct timespec *time); \
+    epicsAlarmSeverity (*get_alarm_status)(void *context); \
+    const char *name
 
 /* The base type common to all records. */
-typedef struct {
+struct i_record {
     I_COMMON_FIELDS;
-} I_RECORD;
+};
 
 
 #define DECLARE_I_READER(record) \
-    typedef bool READ_##record(void * context, TYPEOF(record)* result); \
-    typedef struct { \
+    struct i_##record { \
         I_COMMON_FIELDS; \
-        READ_##record * read; \
-    } I_##record
+        bool (*read)(void *context, TYPEOF(record) *result); \
+    }
 
 #define DECLARE_I_WRITER(record) \
-    typedef bool WRITE_##record (void * context, TYPEOF(record) value); \
-    typedef bool INIT_##record ( \
-        void * context, TYPEOF(record)* initial_value); \
-    typedef struct { \
+    struct i_##record { \
         I_COMMON_FIELDS; \
-        WRITE_##record * write; \
-        INIT_##record * init; \
+        bool (*write)(void *context, TYPEOF(record) value); \
+        bool (*init)(void *context, TYPEOF(record) *initial_value); \
         bool persist; \
-    } I_##record
+    }
 
 DECLARE_I_READER(longin);
 DECLARE_I_WRITER(longout);
@@ -119,38 +112,30 @@ DECLARE_I_WRITER(mbbo);
  * interface declarations for all useful types so that waveform declarations
  * can be type checked. */
 
-typedef enum {
+enum waveform_type {
     waveform_TYPE_void,
     waveform_TYPE_short,
     waveform_TYPE_int,
     waveform_TYPE_float,
     waveform_TYPE_double
-} waveform_TYPE;
+};
 
 #define DECLARE_I_WAVEFORM(type) \
-    typedef bool PROCESS_waveform_##type( \
-        void * context, \
-        type * array, size_t max_length, size_t* new_length); \
-    typedef bool INIT_waveform_##type( \
-        void * context, type * array, size_t* new_length); \
-    typedef struct { \
+    struct i_waveform_##type { \
         I_COMMON_FIELDS; \
-        waveform_TYPE field_type; \
-        PROCESS_waveform_##type * process; \
+        enum waveform_type field_type; \
+        bool (*process)( \
+            void *context, \
+            type *array, size_t max_length, size_t *new_length); \
         int length; \
-        INIT_waveform_##type * init; \
-    } I_waveform_##type
+        bool (*init)(void *context, type *array, size_t *new_length); \
+    }
 
 DECLARE_I_WAVEFORM(void);
 DECLARE_I_WAVEFORM(short);
 DECLARE_I_WAVEFORM(int);
 DECLARE_I_WAVEFORM(float);
 DECLARE_I_WAVEFORM(double);
-
-/* The canonical waveform interface is for void* arrays. */
-typedef PROCESS_waveform_void PROCESS_waveform;
-typedef INIT_waveform_void INIT_waveform;
-typedef I_waveform_void I_waveform;
 
 
 
@@ -160,13 +145,14 @@ typedef I_waveform_void I_waveform;
 /*                                                                           */
 /*****************************************************************************/
 
-typedef struct RECORD_BASE *RECORD_HANDLE;
+/* The private struct record_base is used as an interface to the record. */
+struct record_base;
 
 /* Calling this will mark the given record as signalled.  If it is configured
  * for I/O Intr processing then an I/O Intr event will be generated. */
-bool SignalRecord(RECORD_HANDLE Record);
+bool SignalRecord(struct record_base *Record);
 
-RECORD_HANDLE LookupRecord(const char *name);
+struct record_base *LookupRecord(const char *name);
 
 
 
@@ -182,7 +168,7 @@ RECORD_HANDLE LookupRecord(const char *name);
  * into a waveform process method. */
 #define WRAP_SIMPLE_WAVEFORM(type, true_length, process_waveform) \
     static bool wrap_##process_waveform( \
-        void * context, \
+        void *context, \
         type *array, size_t max_length, size_t *new_length) \
     { \
         if (max_length == true_length) \
@@ -203,7 +189,7 @@ RECORD_HANDLE LookupRecord(const char *name);
     static void read_##waveform(type *array) \
     { \
         COMPILE_ASSERT(sizeof(array[0]) == sizeof(type)); \
-        memcpy(array, waveform, sizeof(type) * (true_length)); \
+        memcpy(array, waveform, sizeof(type) *(true_length)); \
     } \
     WRAP_SIMPLE_WAVEFORM(type, true_length, read_##waveform)
 
@@ -211,7 +197,7 @@ RECORD_HANDLE LookupRecord(const char *name);
     static void write_##waveform(type *array) \
     { \
         COMPILE_ASSERT(sizeof(array[0]) == sizeof(type)); \
-        memcpy(waveform, array, sizeof(type) * (true_length)); \
+        memcpy(waveform, array, sizeof(type) *(true_length)); \
     } \
     WRAP_SIMPLE_WAVEFORM(type, true_length, write_##waveform)
 
@@ -220,40 +206,40 @@ RECORD_HANDLE LookupRecord(const char *name);
  *      type read()
  * into a record processing method. */
 #define WRAP_SIMPLE_READ(record, read) \
-    static bool wrap_##read(void * context, TYPEOF(record)* result) \
+    static bool wrap_##read(void *context, TYPEOF(record) *result) \
     { \
         *result = read(); \
         return true; \
     }
 
 #define WRAP_SIMPLE_WRITE(record, write) \
-    static bool wrap_##write(void * context, TYPEOF(record) value) \
+    static bool wrap_##write(void *context, TYPEOF(record) value) \
     { \
         write(value); \
         return true; \
     }
 
 #define WRAP_VARIABLE_READ(record, variable) \
-    static bool read_##variable(void * context, TYPEOF(record)* result) \
+    static bool read_##variable(void *context, TYPEOF(record) *result) \
     { \
         *result = variable; \
         return true; \
     }
 
 #define WRAP_VARIABLE_WRITE(record, variable) \
-    static bool write_##variable(void * context, TYPEOF(record) value) \
+    static bool write_##variable(void *context, TYPEOF(record) value) \
     { \
         variable = value; \
         return true; \
     } \
-    static bool init_##variable(void * context, TYPEOF(record)* result) \
+    static bool init_##variable(void *context, TYPEOF(record) *result) \
     { \
         *result = variable; \
         return true; \
     }
 
 #define WRAP_METHOD(action) \
-    static bool wrap_##action(void * context, bool ignored) \
+    static bool wrap_##action(void *context, bool ignored) \
     { \
         action(); \
         return true; \
@@ -304,12 +290,12 @@ RECORD_HANDLE LookupRecord(const char *name);
  * differently, as waveform records need special handling. */
 
 #define PUBLISH_WRAPPER(record, record_name, args...) \
-    (I_##record) { \
+    (struct i_##record) { \
         .record_type = RECORD_TYPE_##record, \
         .name = record_name, args }
 
 #define PUBLISH_WAVEFORM_WRAPPER(type, record_name, args...) \
-    (I_waveform_##type) { \
+    (struct i_waveform_##type) { \
         .record_type = RECORD_TYPE_waveform, \
         .name = record_name, .field_type = waveform_TYPE_##type, args }
 
@@ -320,7 +306,7 @@ RECORD_HANDLE LookupRecord(const char *name);
  * passed to PublishEpicsData(). */
 #ifdef __DEFINE_EPICS__
 #define PUBLISH_EXPORT_WRAPPER(publish_data) \
-    __PUBLISH_DATA__::<<<(I_RECORD *) &publish_data,>>>
+    __PUBLISH_DATA__::<<<(struct i_record *) &publish_data,>>>
 #else
 #define PUBLISH_EXPORT_WRAPPER(publish_data)
 #endif
@@ -348,21 +334,22 @@ RECORD_HANDLE LookupRecord(const char *name);
 
 #define PUBLISH_DYNAMIC(record, args...) \
     ( { \
-        I_##record * iRecord = malloc(sizeof(I_##record)); \
+        struct i_##record *iRecord = malloc(sizeof(struct i_##record)); \
         *iRecord = PUBLISH_WRAPPER(record, args); \
-        PublishDynamic((I_RECORD *) iRecord); \
+        PublishDynamic((struct i_record *) iRecord); \
     } )
 
 #define PUBLISH_WAVEFORM_DYNAMIC(type, args...) \
     ( { \
-        I_waveform_##type * iRecord = malloc(sizeof(I_waveform_##type)); \
+        struct i_waveform_##type *iRecord = \
+            malloc(sizeof(struct i_waveform_##type)); \
         *iRecord = PUBLISH_WAVEFORM_WRAPPER(type, args); \
-        PublishDynamic((I_RECORD *) iRecord); \
+        PublishDynamic((struct i_record *) iRecord); \
     } )
 
 
 
-RECORD_HANDLE PublishDynamic(const I_RECORD* iRecord);
-bool PublishEpicsData(const I_RECORD * publish_data[]);
+struct record_base *PublishDynamic(const struct i_record *iRecord);
+bool PublishEpicsData(const struct i_record *publish_data[]);
 #define PUBLISH_EPICS_DATA() \
     PublishEpicsData(EPICS_publish_data)
