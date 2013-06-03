@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1347
-y 1298
+x 272
+y 525
 w 641
-h 464
+h 504
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -30,11 +30,11 @@ endScreenProperties
 object xyGraphClass
 beginObjectProperties
 major 4
-minor 3
+minor 6
 release 0
 # Geometry
 x 8
-y 56
+y 40
 w 624
 h 184
 # Appearance
@@ -47,8 +47,9 @@ font "helvetica-medium-r-12.0"
 nPts 2
 # X axis properties
 showXAxis
-xAxisSrc "AutoScale"
-xMax 1
+xAxisSrc "fromUser"
+xMin 0
+xMax 1000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -59,8 +60,8 @@ y2Max 1
 # Trace Properties
 numTraces 2
 yPv {
-  0 "$(device):ADC_MAXBUF"
-  1 "$(device):ADC_MINBUF"
+  0 "$(device):ADC:MAXBUF"
+  1 "$(device):ADC:MINBUF"
 }
 plotUpdateMode {
   0 "y"
@@ -102,7 +103,7 @@ major 4
 minor 1
 release 0
 x 568
-y 432
+y 472
 w 64
 h 24
 fgColor index 25
@@ -141,11 +142,11 @@ endObjectProperties
 object xyGraphClass
 beginObjectProperties
 major 4
-minor 3
+minor 6
 release 0
 # Geometry
 x 8
-y 240
+y 224
 w 624
 h 184
 # Appearance
@@ -158,8 +159,9 @@ font "helvetica-medium-r-12.0"
 nPts 2
 # X axis properties
 showXAxis
-xAxisSrc "AutoScale"
-xMax 1
+xAxisSrc "fromUser"
+xMin 1
+xMax 1000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -171,7 +173,7 @@ y2Max 16600
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):ADC_DIFFBUF"
+  0 "$(device):ADC:DIFFBUF"
 }
 plotUpdateMode {
   0 "y"
@@ -190,8 +192,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 440
-y 432
+x 512
+y 416
 w 120
 h 24
 fgColor index 14
@@ -199,8 +201,7 @@ bgColor index 4
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):SCAN_ADC.SCAN"
-indicatorPv "$(device):SCAN_ADC.SCAN"
+controlPv "$(device):ADC:SCAN_S.SCAN"
 font "helvetica-medium-r-14.0"
 endObjectProperties
 
@@ -208,13 +209,13 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 1
+minor 5
 release 0
-x 64
-y 440
-w 48
+x 272
+y 448
+w 64
 h 16
-controlPv "$(device):ADCMEAN"
+controlPv "$(device):ADC:MEAN"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -228,6 +229,7 @@ useHexPrefix
 showUnits
 newPos
 objType "monitors"
+noExecuteClipMask
 endObjectProperties
 
 # (Static Text)
@@ -236,8 +238,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 8
-y 440
+x 208
+y 448
 w 40
 h 16
 font "helvetica-medium-r-14.0"
@@ -256,8 +258,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 152
-y 440
+x 208
+y 464
 w 27
 h 16
 font "helvetica-medium-r-14.0"
@@ -274,13 +276,13 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 1
+minor 5
 release 0
-x 200
-y 440
-w 88
+x 272
+y 464
+w 64
 h 16
-controlPv "$(device):ADCSTD"
+controlPv "$(device):ADC:STD"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -294,5 +296,157 @@ useHexPrefix
 showUnits
 newPos
 objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 272
+y 424
+w 64
+h 16
+controlPv "$(device):ADC:MAX"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 5
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+useHexPrefix
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 208
+y 424
+w 66
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Max ADC:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 344
+y 424
+w 4
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "/"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 360
+y 424
+w 48
+h 16
+controlPv "$(device):ADC:MAX_PC"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 5
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+useHexPrefix
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+# Geometry
+x 8
+y 416
+w 184
+h 80
+# Appearance
+graphTitle "ADC Offset"
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+xAxisSrc "fromUser"
+xMin -0.5
+xMax 3.5
+# Y axis properties
+showYAxis
+yAxisSrc "AutoScale"
+yMax 1
+yLabelIntervals 2
+yUserSpecScaleDiv 1
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Min 8300
+y2Max 16600
+# Trace Properties
+numTraces 1
+yPv {
+  0 "$(device):ADC:OFFSET_S"
+}
+plotStyle {
+  0 "needle"
+}
+plotUpdateMode {
+  0 "y"
+}
+plotSymbolType {
+  0 "circle"
+}
+ySigned {
+  0 1
+}
+plotColor {
+  0 index 27
+}
 endObjectProperties
 

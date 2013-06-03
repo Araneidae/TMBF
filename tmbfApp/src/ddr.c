@@ -131,7 +131,7 @@ static void start_buffer_transfer(ssize_t offset, size_t interval, size_t count)
 
 static inline int16_t extract_sample(uint32_t atom)
 {
-    return ((int16_t) atom - 8192) << 2;
+    return (int16_t) atom - 8192;
 }
 
 

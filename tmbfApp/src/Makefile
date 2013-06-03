@@ -58,6 +58,7 @@ tmbf_SRCS += pvlogging.c
 tmbf_SRCS += numeric.c
 tmbf_SRCS += ddr.c
 tmbf_SRCS += ddr_epics.c
+tmbf_SRCS += adc.c
 
 tmbf_LIBS += $(EPICS_BASE_IOC_LIBS)
 
@@ -66,6 +67,7 @@ tmbf_LIBS += $(EPICS_BASE_IOC_LIBS)
 EPICS_EXPORTS += device
 EPICS_EXPORTS += tune
 EPICS_EXPORTS += ddr_epics
+EPICS_EXPORTS += adc
 
 
 #===========================

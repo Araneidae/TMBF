@@ -155,11 +155,9 @@ PUBLISH_METHOD("DDR:SOFT_TRIG", pulse_CTRL_TRIG_DDR)
 
 
 
-
 #ifndef __DEFINE_EPICS__
 #include "ddr_epics.EPICS"
 #endif
-
 
 bool initialise_ddr_epics(void)
 {

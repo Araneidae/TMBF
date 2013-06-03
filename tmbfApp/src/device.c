@@ -79,46 +79,6 @@ PUBLISH_SIMPLE_WAVEFORM_INIT(
     write_BB_TEMPDACs, read_bunch_tempdacs, .persist = true)
 
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/*                            ADC Min/Max Buffer                             */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-static short int ADC_min_buf[MAX_BUNCH_COUNT];
-static short int ADC_max_buf[MAX_BUNCH_COUNT];
-static short int ADC_diff_buf[MAX_BUNCH_COUNT];
-static float ADC_mean_diff;
-static float ADC_var_diff;
-
-static void adc_minbuf_read(short *buffer)
-{
-    read_ADC_MinMax(ADC_min_buf, ADC_max_buf);
-
-    int sum_diff = 0;
-    long long int sum_var = 0;
-    for (unsigned int i = 0; i < MAX_BUNCH_COUNT; ++i)
-    {
-        short int diff = ADC_max_buf[i] - ADC_min_buf[i];
-        ADC_diff_buf[i] = diff;
-        sum_diff += diff;
-        sum_var  += (int) diff*diff;
-    }
-
-    ADC_mean_diff = sum_diff / (float) MAX_BUNCH_COUNT;
-    ADC_var_diff =
-        sum_var / (float) MAX_BUNCH_COUNT - ADC_mean_diff*ADC_mean_diff;
-
-    memcpy(buffer, ADC_min_buf, sizeof(ADC_min_buf));
-}
-
-PUBLISH_SIMPLE_WAVEFORM(
-    short, "ADC_MINBUF", MAX_BUNCH_COUNT, adc_minbuf_read)
-PUBLISH_READ_WAVEFORM(
-    short, "ADC_MAXBUF", MAX_BUNCH_COUNT, ADC_max_buf)
-PUBLISH_READ_WAVEFORM(
-    short, "ADC_DIFFBUF", MAX_BUNCH_COUNT, ADC_diff_buf)
-PUBLISH_VARIABLE_READ(ai, "ADCMEAN", ADC_mean_diff)
-PUBLISH_VARIABLE_READ(ai, "ADCSTD",  ADC_var_diff)
-
 
 /* copy paste of ADC buffer below, with rename to DAC, surely there's a better
  * way...*/
@@ -319,8 +279,6 @@ PUBLISH_REGISTER_P(longout, "PROGCLKVAL",     DDC_dwellTime)
 
 PUBLISH_REGISTER_P(longout, "BUNCH",          BunchSelect)
 PUBLISH_REGISTER_P(longout, "NCO",            NCO_frequency)
-PUBLISH_REGISTER_P(longout, "ADC_OFF_AB",     AdcOffAB)
-PUBLISH_REGISTER_P(longout, "ADC_OFF_CD",     AdcOffCD)
 
 
 PUBLISH_SIMPLE_READ(longin, "STATUS", read_FPGA_version)

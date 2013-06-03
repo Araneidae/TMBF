@@ -15,6 +15,7 @@
 
 #include "error.h"
 #include "hardware.h"
+#include "adc.h"
 #include "tune.h"
 #include "device.h"
 #include "ddr_epics.h"
@@ -219,6 +220,7 @@ int main(int argc,char *argv[])
         InitialiseSignals()  &&
         GenericInit()  &&
         initialise_ddr_epics()  &&
+        initialise_adc()  &&
         load_persistent_state();
     for (int i = 0; Ok && i < argc; i ++)
         Ok = TEST_EPICS(iocsh, argv[i]);

@@ -14,8 +14,6 @@ MAX_FIR_TAPS = 10
 # Bunch number
 longOut('BUNCH', 0, 1023, VAL = 1023)
 longOut('NCO')
-longOut('ADC_OFF_AB')
-longOut('ADC_OFF_CD')
 
 status = longIn('STATUS')
 
@@ -26,19 +24,6 @@ WaveformOut('BB_GAINS', SAMPLES_PER_TURN, 'FLOAT')
 WaveformOut('BB_DACS',  SAMPLES_PER_TURN, 'SHORT')
 WaveformOut('BB_TEMPDACS',  SAMPLES_PER_TURN, 'SHORT')
 
-# The following records are polled together at 200ms intervals
-create_fanout('SCAN_ADC',
-    Waveform('ADC_MINBUF', SAMPLES_PER_TURN, 'SHORT',
-        DESC = 'ADC min value per bunch'),
-    Waveform('ADC_MAXBUF', SAMPLES_PER_TURN, 'SHORT',
-        DESC = 'ADC max value per bunch'),
-    Waveform('ADC_DIFFBUF', SAMPLES_PER_TURN, 'SHORT',
-        DESC = 'ADC max min diff per bunch'),
-    aIn('ADCMEAN', PREC = 2,
-        DESC = 'Readback ADC diff mean'),
-    aIn('ADCSTD', PREC = 2,
-        DESC = 'Readback ADC diff variance'),
-    SCAN = '.2 second')
 
 create_fanout('SCAN_DAC',
     Waveform('DAC_MINBUF', SAMPLES_PER_TURN, 'SHORT',
@@ -193,8 +178,48 @@ tune_records = [
 create_fanout('TUNESCAN', SCAN = '1 second', *tune_records)
 
 
+# ------------------------------------------------------------------------------
 # ADC
+
+def dB(db): return 10.**(db/20.)
+
+
+MAX_ADC = (1<<13) - 1     # Signed 14-bit ADC, range [-8192..8191]
+
+WaveformOut('ADC:OFFSET', 4, 'SHORT', PINI = 'YES',
+    DESC = 'ADC offsets')
+
+
+# The following records are polled together at 200ms intervals
+adc_max = longIn('ADC:MAX', 0, MAX_ADC,
+    DESC = 'Maximum ADC reading',
+    HSV  = 'MINOR',  HIGH = int(MAX_ADC / dB(3)),    # 70.8 %
+    HHSV = 'MAJOR',  HIHI = int(MAX_ADC / dB(1.6)))  # 83.2 %
+adc_maxpc = records.calc('ADC:MAX_PC',
+    DESC = 'Maximum ADC reading (%)',
+    CALC = 'A/B',
+    INPA = MS(adc_max),
+    INPB = MAX_ADC / 100.,
+    LOPR = 0,   HOPR = 100,
+    PREC = 1,   EGU  = '%')
+boolOut('ADC:SCAN', DESC = 'Trigger ADC scanning', SCAN = '.2 second',
+    FLNK = create_fanout('ADC:FAN',
+        Waveform('ADC:MINBUF', SAMPLES_PER_TURN, 'SHORT',
+            DESC = 'ADC min value per bunch'),
+        Waveform('ADC:MAXBUF', SAMPLES_PER_TURN, 'SHORT',
+            DESC = 'ADC max value per bunch'),
+        Waveform('ADC:DIFFBUF', SAMPLES_PER_TURN, 'SHORT',
+            DESC = 'ADC max min diff per bunch'),
+        aIn('ADC:MEAN', PREC = 2,
+            DESC = 'Readback ADC diff mean'),
+        aIn('ADC:STD', PREC = 2,
+            DESC = 'Readback ADC diff variance'),
+        adc_max, adc_maxpc))
+
+
+# ------------------------------------------------------------------------------
 # FIR
+# ------------------------------------------------------------------------------
 # DAC
 
 # ------------------------------------------------------------------------------
