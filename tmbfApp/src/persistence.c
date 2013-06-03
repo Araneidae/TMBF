@@ -49,7 +49,8 @@ struct persistent_action {
 #define DEFINE_WRITE(type, name, format) \
     static size_t write_##name(char *out, const void *variable) \
     { \
-        type value = *(const type *) variable; \
+        type value; \
+        memcpy(&value, variable, sizeof(type)); \
         return sprintf(out, format, value); \
     }
 
@@ -59,12 +60,13 @@ static bool check_number(const char *start, const char *end)
 }
 
 #define DEFINE_READ_NUM(type, name, convert, extra...) \
-    static bool read_##name(const char **string, void *result) \
+    static bool read_##name(const char **string, void *variable) \
     { \
         errno = 0; \
         const char *start = *string; \
         char *end; \
-        *(type *) result = (type) convert(start, &end, ##extra); \
+        type result = (type) convert(start, &end, ##extra); \
+        memcpy(variable, &result, sizeof(type)); \
         *string = end; \
         return check_number(start, *string); \
     }
@@ -214,7 +216,7 @@ void write_persistent_variable(const char *name, const void *value)
         /* Don't force a write of the persistence file if nothing has actually
          * changed. */
         persistence_dirty =
-            !persistence->value_present  ||
+            persistence_dirty  ||  !persistence->value_present  ||
             memcmp(persistence->variable, value, persistence->action->size);
 
         persistence->value_present = true;
