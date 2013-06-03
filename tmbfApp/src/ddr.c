@@ -108,6 +108,8 @@ static void purge_read_buffer(void)
 
 #define MAX_FIFO_SIZE       512
 
+#define MAX_FIFO_WAITS      20      // How long to wait for FIFO ready
+
 static void start_buffer_transfer(ssize_t offset, size_t interval, size_t count)
 {
     history_buffer->post_filtering = 0;
@@ -119,8 +121,11 @@ static void start_buffer_transfer(ssize_t offset, size_t interval, size_t count)
     history_buffer->transfer_count = count;
 
     /* Wait for FIFO to become ready. */
-    while ((history_buffer->transfer_status & 0x7FF) == 0)
-        printf("waiting for fifo\n");
+    int waits = 0;
+    while (waits < MAX_FIFO_WAITS  &&
+           (history_buffer->transfer_status & 0x7FF) == 0)
+        waits += 1;
+    TEST_OK_(waits < MAX_FIFO_WAITS, "Gave up waiting for DDR FIFO");
 }
 
 
@@ -153,22 +158,25 @@ static size_t get_buffer_fifo(int16_t *buffer)
 }
 
 
+/* For loop helper to capture some of the repeated pattern below.  Reads block
+ * of atoms into the given buffer and tracks count to ensure that we don't
+ * overrun the buffer in error. */
+#define FOR_FIFO_ATOMS(atoms_read, count, buffer) \
+    for (size_t atoms_read; \
+        atoms_read = get_buffer_fifo(buffer), \
+            atoms_read > 0  &&  count >= atoms_read; \
+        count -= atoms_read) \
+
+
 /* Reads the given number of complete turns from the trigger point. */
 void read_ddr_turns(ssize_t start, size_t turns, int16_t *result)
 {
     size_t count = turns * ATOMS_PER_TURN;
     start_buffer_transfer(start * ATOMS_PER_TURN, 1, count);
 
-    size_t atoms_read;
-    while (
-        atoms_read = get_buffer_fifo(result),
-        atoms_read > 0)
-    {
-        ASSERT_OK(count >= atoms_read);     // If this fails we're dead
+    FOR_FIFO_ATOMS(atoms_read, count, result)
         result += atoms_read * SAMPLES_PER_ATOM;
-        count -= atoms_read;
-    }
-    ASSERT_OK(count == 0);
+    TEST_OK_(count == 0, "Incomplete DDR buffer read: %u", count);
 }
 
 
@@ -181,17 +189,10 @@ void read_ddr_bunch(ssize_t start, size_t bunch, size_t turns, int16_t *result)
 
     size_t offset = bunch % SAMPLES_PER_ATOM;
     int16_t buffer[MAX_FIFO_SIZE * SAMPLES_PER_ATOM];
-    size_t atoms_read;
-    while (
-        atoms_read = get_buffer_fifo(buffer),
-        atoms_read > 0)
-    {
-        ASSERT_OK(turns >= atoms_read);
+    FOR_FIFO_ATOMS(atoms_read, turns, buffer)
         for (size_t i = 0; i < atoms_read; i ++)
             *result++ = buffer[i * SAMPLES_PER_ATOM + offset];
-        turns -= atoms_read;
-    }
-    ASSERT_OK(turns == 0);
+    TEST_OK_(turns == 0, "Incomplete DDR buffer read: %u", turns);
 }
 
 

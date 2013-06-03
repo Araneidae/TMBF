@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 45
-y 518
+x 316
+y 64
 w 641
-h 469
+h 656
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -38,7 +38,7 @@ y 40
 w 624
 h 184
 # Appearance
-graphTitle "DAC Min/Max"
+graphTitle "Selected single bunch"
 fgColor index 14
 bgColor index 3
 gridColor index 14
@@ -49,7 +49,7 @@ nPts 2
 showXAxis
 xAxisSrc "fromUser"
 xMin 0
-xMax 18000
+xMax 9000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -99,7 +99,7 @@ major 4
 minor 1
 release 0
 x 568
-y 432
+y 624
 w 64
 h 24
 fgColor index 25
@@ -146,7 +146,7 @@ y 224
 w 624
 h 184
 # Appearance
-graphTitle "DAC Difference"
+graphTitle "Turn by turn"
 fgColor index 14
 bgColor index 3
 gridColor index 14
@@ -155,8 +155,9 @@ font "helvetica-medium-r-12.0"
 nPts 2
 # X axis properties
 showXAxis
-xAxisSrc "AutoScale"
-xMax 1
+xAxisSrc "fromUser"
+xMin 0
+xMax 8000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -168,7 +169,7 @@ y2Max 16600
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):DDR:TURNWF"
+  0 "$(device):DDR:SHORTWF"
 }
 plotUpdateMode {
   0 "y"
@@ -188,7 +189,7 @@ major 4
 minor 0
 release 0
 x 8
-y 416
+y 600
 w 96
 h 22
 fgColor index 14
@@ -211,7 +212,7 @@ major 4
 minor 0
 release 0
 x 8
-y 440
+y 624
 w 96
 h 22
 fgColor index 14
@@ -234,7 +235,7 @@ major 4
 minor 0
 release 0
 x 112
-y 416
+y 600
 w 96
 h 22
 fgColor index 14
@@ -253,7 +254,7 @@ major 4
 minor 0
 release 0
 x 216
-y 416
+y 600
 w 96
 h 22
 fgColor index 14
@@ -272,7 +273,7 @@ major 4
 minor 1
 release 0
 x 320
-y 424
+y 608
 w 81
 h 14
 font "helvetica-bold-r-12.0"
@@ -292,7 +293,7 @@ major 4
 minor 5
 release 0
 x 408
-y 420
+y 608
 w 72
 h 18
 controlPv "$(device):DDR:BUNCHSEL_S"
@@ -317,7 +318,7 @@ major 4
 minor 5
 release 0
 x 408
-y 440
+y 632
 w 72
 h 18
 controlPv "$(device):DDR:TURNSEL_S"
@@ -342,7 +343,7 @@ major 4
 minor 1
 release 0
 x 320
-y 440
+y 632
 w 71
 h 14
 font "helvetica-bold-r-12.0"
@@ -353,5 +354,101 @@ value {
   "Turn offset:"
 }
 autoSize
+endObjectProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+# Geometry
+x 8
+y 408
+w 624
+h 184
+# Appearance
+graphTitle "Turn by turn"
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+showXAxis
+xAxisSrc "fromUser"
+xMin 0
+xMax 240000
+# Y axis properties
+showYAxis
+yAxisSrc "AutoScale"
+yMax 1
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Min 8300
+y2Max 16600
+# Trace Properties
+numTraces 1
+yPv {
+  0 "$(device):DDR:LONGWF"
+}
+plotUpdateMode {
+  0 "y"
+}
+ySigned {
+  0 1
+}
+plotColor {
+  0 index 27
+}
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 488
+y 632
+w 40
+h 14
+controlPv "$(device):DDR:TURNSEL"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 112
+y 632
+w 64
+h 14
+controlPv "$(device):DDR:READY"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
 endObjectProperties
 
