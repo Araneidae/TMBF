@@ -39,8 +39,10 @@ static void bb_write_gain(float *gains)
 }
 
 
-PUBLISH_SIMPLE_WAVEFORM(float, "BB_GAINS", MAX_BUNCH_COUNT, bb_write_gain)
-PUBLISH_SIMPLE_WAVEFORM(short, "BB_DACS",  MAX_BUNCH_COUNT, write_BB_DACs)
+PUBLISH_SIMPLE_WAVEFORM(
+    float, "BB_GAINS", MAX_BUNCH_COUNT, bb_write_gain, .persist = true)
+PUBLISH_SIMPLE_WAVEFORM(
+    short, "BB_DACS",  MAX_BUNCH_COUNT, write_BB_DACs, .persist = true)
 
 
 

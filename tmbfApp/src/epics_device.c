@@ -33,6 +33,7 @@
 #include <mbboRecord.h>
 #include <waveformRecord.h>
 
+#include "error.h"
 #include "hashtable.h"
 #include "persistence.h"
 
@@ -95,6 +96,7 @@ static size_t WriteDataSize(enum record_type record_type)
         default: return 0;
     }
 }
+#undef CASE_DATA_SIZE
 
 
 /* Returns record persistence flag from iRecord. */
@@ -110,24 +112,53 @@ static bool get_persistent(const struct i_record *iRecord)
         CASE_TAG(bo);
         CASE_TAG(stringout);
         CASE_TAG(mbbo);
+        case RECORD_TYPE_waveform:
+            return ((const struct i_waveform_void *) iRecord)->persist;
         default: return NULL;
     }
 }
+#undef CASE_TAG
 
 /* Returns associated persistence type. */
 #define CASE_TYPE(record, type) \
     case RECORD_TYPE_##record: \
         return PERSISTENT_##type
-static enum PERSISTENCE_TYPES get_persistent_type(enum record_type record_type)
+#define CASE_WF_TYPE(type) \
+    case waveform_TYPE_##type: return PERSISTENT_##type
+static enum PERSISTENCE_TYPES get_persistent_type(
+    const struct i_record *iRecord)
 {
-    switch (record_type)
+    switch (iRecord->record_type)
     {
-        CASE_TYPE(longout, INT);
-        CASE_TYPE(ao, DOUBLE);
-        CASE_TYPE(bo, INT);
-        CASE_TYPE(stringout, STRING);
-        CASE_TYPE(mbbo, INT);
-        default: return PERSISTENT_INT;     // Safe, will not happen
+        CASE_TYPE(longout, int);
+        CASE_TYPE(ao, double);
+        CASE_TYPE(bo, int);
+        CASE_TYPE(stringout, string);
+        CASE_TYPE(mbbo, int);
+        case RECORD_TYPE_waveform:
+            switch (((const struct i_waveform_void *) iRecord)->field_type)
+            {
+                CASE_WF_TYPE(char);
+                CASE_WF_TYPE(short);
+                CASE_WF_TYPE(int);
+                CASE_WF_TYPE(float);
+                CASE_WF_TYPE(double);
+                default: return PERSISTENT_int;
+            }
+        default: return PERSISTENT_int;     // Safe, will not happen
+    }
+}
+#undef CASE_TYPE
+#undef CASE_WF_TYPE
+
+static size_t get_record_length(const struct i_record *iRecord)
+{
+    switch (iRecord->record_type)
+    {
+        case RECORD_TYPE_waveform:
+            return ((const struct i_waveform_void *) iRecord)->max_length;
+        default:
+            return 1;
     }
 }
 
@@ -145,8 +176,9 @@ static struct record_base *create_record_base(const struct i_record *iRecord)
             base->ioscanpvt = NULL;
 
         if (get_persistent(iRecord))
-            create_persistent_variable(
-                iRecord->name, get_persistent_type(iRecord->record_type));
+            create_persistent_waveform(
+                iRecord->name, get_persistent_type(iRecord),
+                get_record_length(iRecord));
     }
     return base;
 }
@@ -505,6 +537,11 @@ DEFINE_DEFAULT_WRITE(stringout, val,    OK,         OK)
 DEFINE_DEFAULT_READ (mbbi,      rval,   OK,         OK)
 DEFINE_DEFAULT_WRITE(mbbo,      rval,   OK,         OK)
 
+/* Also need dummy special_linconv routines for ai and ao. */
+static long linconv_ai(aiRecord *pr, int cmd) { return OK; }
+static long linconv_ao(aoRecord *pr, int cmd) { return OK; }
+
+
 
 
 /* Reading a waveform doesn't fit into the fairly uniform pattern established
@@ -519,20 +556,21 @@ static bool CheckWaveformType(
     switch (iRecord->field_type)
     {
         case waveform_TYPE_void:    break;
+        case waveform_TYPE_char:    expected = DBF_CHAR;    break;
         case waveform_TYPE_short:   expected = DBF_SHORT;   break;
         case waveform_TYPE_int:     expected = DBF_LONG;    break;
         case waveform_TYPE_float:   expected = DBF_FLOAT;   break;
         case waveform_TYPE_double:  expected = DBF_DOUBLE;  break;
     }
-    if (pr->ftvl == expected)
-        return true;
-    else
-    {
-        printf("Array %s.FTVL mismatch %d != %d (%d)\n",
-            iRecord->name, pr->ftvl, expected, iRecord->field_type);
+    bool ok =
+        TEST_OK_(pr->ftvl == expected,
+            "Array %s.FTVL mismatch %d != %d (%d)\n",
+            iRecord->name, pr->ftvl, expected, iRecord->field_type)  &&
+        TEST_OK_(pr->nelm <= iRecord->max_length,
+            "Array %s too long", iRecord->name);
+    if (!ok)
         pr->dpvt = NULL;
-        return false;
-    }
+    return ok;
 }
 
 
@@ -547,19 +585,29 @@ static bool waveform_action(
     return ok;
 }
 
-#define POST_INIT_waveform(record, pr, field, INIT_OK) \
-    { \
-        GET_RECORD(waveform_void, pr, base, iRecord); \
-        if (!CheckWaveformType(pr, iRecord)) \
-            return ERROR; \
-        if (iRecord->init != NULL) \
-            pr->udf = waveform_action(pr, iRecord, iRecord->init); \
-        post_init_record_out( \
-            (dbCommon*) pr, (const struct i_record *) iRecord); \
-        return INIT_OK; \
+static long init_record_waveform(waveformRecord *pr)
+{
+    if (init_record_(
+            (dbCommon *) pr, pr->inp.value.instio.string, RECORD_TYPE_waveform))
+    {
+        GET_RECORD(waveform_void, pr, base, iRecord);
+        if (!CheckWaveformType(pr, iRecord))
+            return ERROR;
+        if (iRecord->persist)
+        {
+            size_t nord;
+            pr->udf = !read_persistent_waveform(iRecord->name, pr->bptr, &nord);
+            pr->nord = nord;
+        }
+        if (iRecord->init != NULL  &&  pr->udf)
+            pr->udf = !waveform_action(pr, iRecord, iRecord->init);
+        post_init_record_out(
+            (dbCommon*) pr, (const struct i_record *) iRecord);
+        return OK;
     }
-
-INIT_RECORD(waveform, (unused), inp, waveform, OK)
+    else
+        return ERROR;
+}
 
 static long process_waveform(waveformRecord *pr)
 {
@@ -567,18 +615,14 @@ static long process_waveform(waveformRecord *pr)
     /* Naughty cast: I want to a reference to size_t, pr->nord is actually an
      * unsigned int.  Force the two to match! */
     bool Ok = waveform_action(pr, i_waveform, i_waveform->process);
+    if (i_waveform->persist)
+        write_persistent_waveform(i_waveform->name, pr->bptr, pr->nord);
     post_process(
         (dbCommon *) pr, READ_ALARM, (const struct i_record *) i_waveform);
     /* Note, by the way, that the waveform record support carefully ignores
      * my return code! */
     return Ok ? OK : ERROR;
 }
-
-
-/* Also need dummy special_linconv routines for ai and ao. */
-
-static long linconv_ai(aiRecord *pr, int cmd) { return OK; }
-static long linconv_ao(aoRecord *pr, int cmd) { return OK; }
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

@@ -114,6 +114,7 @@ DECLARE_I_WRITER(mbbo);
 
 enum waveform_type {
     waveform_TYPE_void,
+    waveform_TYPE_char,
     waveform_TYPE_short,
     waveform_TYPE_int,
     waveform_TYPE_float,
@@ -124,15 +125,18 @@ enum waveform_type {
     struct i_waveform_##type { \
         I_COMMON_FIELDS; \
         enum waveform_type field_type; \
+        size_t max_length; \
         bool (*process)( \
             void *context, \
             type *array, size_t max_length, size_t *new_length); \
         bool (*init)( \
             void *context, \
             type *array, size_t max_length, size_t *new_length); \
+        bool persist; \
     }
 
 DECLARE_I_WAVEFORM(void);
+DECLARE_I_WAVEFORM(char);
 DECLARE_I_WAVEFORM(short);
 DECLARE_I_WAVEFORM(int);
 DECLARE_I_WAVEFORM(float);
@@ -251,21 +255,26 @@ struct record_base *LookupRecord(const char *name);
  * course only the wrapped action is supported by the published record -- if
  * more functionality is required then the record should be published as
  * normal. */
-#define PUBLISH_SIMPLE_WAVEFORM(type, name, true_length, process_waveform) \
+#define PUBLISH_SIMPLE_WAVEFORM( \
+        type, name, true_length, process_waveform, extra...) \
     WRAP_SIMPLE_WAVEFORM(type, true_length, process_waveform) \
-    PUBLISH_WAVEFORM(type, name, wrap_##process_waveform)
+    PUBLISH_WAVEFORM(type, true_length, name, wrap_##process_waveform, ##extra)
 #define PUBLISH_SIMPLE_WAVEFORM_INIT( \
-        type, name, true_length, write_waveform, read_waveform) \
+        type, name, true_length, write_waveform, read_waveform, extra...) \
     WRAP_SIMPLE_WAVEFORM(type, true_length, write_waveform) \
     WRAP_SIMPLE_WAVEFORM(type, true_length, read_waveform) \
-    PUBLISH_WAVEFORM(type, name, wrap_##write_waveform, wrap_##read_waveform)
+    PUBLISH_WAVEFORM( \
+        type, true_length, name, \
+        wrap_##write_waveform, wrap_##read_waveform, ##extra)
 #define PUBLISH_READ_WAVEFORM(type, name, true_length, waveform) \
     WRAP_VARIABLE_READ_WAVEFORM(type, true_length, waveform) \
-    PUBLISH_WAVEFORM(type, name, wrap_read_##waveform)
-#define PUBLISH_WRITE_WAVEFORM(type, name, true_length, waveform) \
+    PUBLISH_WAVEFORM(type, true_length, name, wrap_read_##waveform)
+#define PUBLISH_WRITE_WAVEFORM(type, name, true_length, waveform, extra...) \
     WRAP_VARIABLE_WRITE_WAVEFORM(type, true_length, waveform) \
     WRAP_VARIABLE_READ_WAVEFORM(type, true_length, waveform) \
-    PUBLISH_WAVEFORM(type, name, wrap_write_##waveform, wrap_read_##waveform)
+    PUBLISH_WAVEFORM( \
+        type, true_length, name, \
+        wrap_write_##waveform, wrap_read_##waveform, ##extra)
 #define PUBLISH_SIMPLE_READ(record, name, read) \
     WRAP_SIMPLE_READ(record, read) \
     PUBLISH(record, name, wrap_##read)
@@ -301,10 +310,11 @@ struct record_base *LookupRecord(const char *name);
         .record_type = RECORD_TYPE_##record, \
         .name = record_name, args }
 
-#define PUBLISH_WAVEFORM_WRAPPER(type, record_name, args...) \
+#define PUBLISH_WAVEFORM_WRAPPER(type, length, record_name, args...) \
     (struct i_waveform_##type) { \
         .record_type = RECORD_TYPE_waveform, \
-        .name = record_name, .field_type = waveform_TYPE_##type, args }
+        .name = record_name, .field_type = waveform_TYPE_##type, \
+        .max_length = length, args }
 
 
 /* During normal compilation the wrapped definitions are simply discarded.  A

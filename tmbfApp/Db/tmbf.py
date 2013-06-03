@@ -196,7 +196,7 @@ tune_records = [
 
     # Finally trigger capture of the next round of data.
     softtrig]
-create_fanout('TUNESCAN', SCAN = 'Passive', *tune_records)
+create_fanout('TUNESCAN', SCAN = '1 second', *tune_records)
 
 stringIn('VERSION', PINI = 'YES', DESC = 'TMBF version')
 

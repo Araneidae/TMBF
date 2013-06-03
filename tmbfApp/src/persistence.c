@@ -21,7 +21,8 @@
 /* Used to store information about individual persistent variables. */
 struct persistent_variable {
     const struct persistent_action *action;
-    bool value_present;
+    size_t max_length;
+    size_t length;
     char variable[0];
 };
 
@@ -32,7 +33,7 @@ struct persistent_action {
     size_t size;
     /* Write value to output buffer (which must be long enough!), returns number
      * of characters written. */
-    size_t (*write)(char *out, const void *variable);
+    void (*write)(FILE *out, const void *variable);
     /* Reads value from given character buffer, advancing the character pointer
      * past the characters read, returns false and generates an error message if
      * there is a parsing error. */
@@ -46,21 +47,30 @@ struct persistent_action {
 
 #define EPICS_STRING_LENGTH     40
 
-#define DEFINE_WRITE(type, name, format) \
-    static size_t write_##name(char *out, const void *variable) \
+#define DEFINE_WRITE(type, format) \
+    static void write_##type(FILE *out, const void *variable) \
     { \
         type value; \
         memcpy(&value, variable, sizeof(type)); \
-        return sprintf(out, format, value); \
+        fprintf(out, format, value); \
     }
+
+DEFINE_WRITE(int8_t, "%d")
+DEFINE_WRITE(int16_t, "%d")
+DEFINE_WRITE(int32_t, "%d")
+DEFINE_WRITE(float, "%.8g")
+DEFINE_WRITE(double, "%.17g")
+
 
 static bool check_number(const char *start, const char *end)
 {
     return TEST_OK_(end > start  &&  errno == 0, "Error converting number");
 }
 
-#define DEFINE_READ_NUM(type, name, convert, extra...) \
-    static bool read_##name(const char **string, void *variable) \
+
+
+#define DEFINE_READ_NUM(type, convert, extra...) \
+    static bool read_##type(const char **string, void *variable) \
     { \
         errno = 0; \
         const char *start = *string; \
@@ -71,31 +81,30 @@ static bool check_number(const char *start, const char *end)
         return check_number(start, *string); \
     }
 
-DEFINE_WRITE(int32_t, int, "%d")
-DEFINE_WRITE(double, double, "%.16g")
-DEFINE_READ_NUM(int32_t, int, strtol, 10)
-DEFINE_READ_NUM(double, double, strtod)
+DEFINE_READ_NUM(int8_t, strtol, 10)
+DEFINE_READ_NUM(int16_t, strtol, 10)
+DEFINE_READ_NUM(int32_t, strtol, 10)
+DEFINE_READ_NUM(float, strtof)
+DEFINE_READ_NUM(double, strtod)
+
 
 /* We go for the simplest possible escaping: octal escape for everything.  Alas,
  * this can quadruple the size of the buffer to 160 chars. */
-static size_t write_string(char *out, const void *variable)
+static void write_string(FILE *out, const void *variable)
 {
-    const char *start = out;
     const char *string = variable;
-    *out++ = '"';
+    fputc('"', out);
     for (int i = 0; i < EPICS_STRING_LENGTH; i ++)
     {
         char ch = string[i];
         if (ch == '\0')
             break;
         else if (' ' <= ch  &&  ch <= '~'  &&  ch != '"'  &&  ch != '\\')
-            *out++ = ch;
+            fputc(ch, out);
         else
-            out += sprintf(out, "\\%03o", (unsigned char) ch);
+            fprintf(out, "\\%03o", (unsigned char) ch);
     }
-    *out++ = '"';
-    *out = '\0';
-    return out - start;
+    fputc('"', out);
 }
 
 /* Parses three octal digits as part of an escape sequence. */
@@ -137,9 +146,12 @@ static bool read_string(const char **in, void *variable)
 /* Note that this table is indexed by PERSISTENCE_TYPES, so any changes in one
  * must be reflected in the other. */
 static const struct persistent_action persistent_actions[] = {
-    { sizeof(int32_t),      write_int,      read_int },     // longout
-    { sizeof(double),       write_double,   read_double },  // ao
-    { EPICS_STRING_LENGTH,  write_string,   read_string },  // stringout
+    { sizeof(int8_t),       write_int8_t,   read_int8_t },
+    { sizeof(int16_t),      write_int16_t,  read_int16_t },
+    { sizeof(int32_t),      write_int32_t,  read_int32_t },
+    { sizeof(float),        write_float,    read_float },
+    { sizeof(double),       write_double,   read_double },
+    { EPICS_STRING_LENGTH,  write_string,   read_string },
 };
 
 
@@ -170,17 +182,25 @@ static pthread_t persistence_thread_id;
 
 
 /* Creates new persistent variable. */
-void create_persistent_variable(const char *name, enum PERSISTENCE_TYPES type)
+void create_persistent_waveform(
+    const char *name, enum PERSISTENCE_TYPES type, size_t max_length)
 {
-    LOCK();
     const struct persistent_action *action = &persistent_actions[type];
     struct persistent_variable *persistence =
-        malloc(sizeof(struct persistent_variable) + action->size);
+        malloc(sizeof(struct persistent_variable) + max_length * action->size);
     persistence->action = action;
-    persistence->value_present = false;
+    persistence->max_length = max_length;
+    persistence->length = 0;
 
+    LOCK();
     hash_table_insert(variable_table, name, persistence);
     UNLOCK();
+}
+
+
+void create_persistent_variable(const char *name, enum PERSISTENCE_TYPES type)
+{
+    create_persistent_waveform(name, type, 1);
 }
 
 
@@ -193,21 +213,32 @@ static struct persistent_variable *lookup_persistence(const char *name)
 }
 
 
+bool read_persistent_waveform(const char *name, void *variable, size_t *length)
 /* Updates variable from value stored on disk. */
-bool read_persistent_variable(const char *name, void *variable)
 {
     LOCK();
     struct persistent_variable *persistence = lookup_persistence(name);
-    bool ok = persistence != NULL  &&  persistence->value_present;
+    bool ok = persistence != NULL  &&  persistence->length > 0;
     if (ok)
-        memcpy(variable, persistence->variable, persistence->action->size);
+    {
+        memcpy(variable, persistence->variable,
+            persistence->length * persistence->action->size);
+        *length = persistence->length;
+    }
     UNLOCK();
     return ok;
 }
 
+bool read_persistent_variable(const char *name, void *variable)
+{
+    size_t length;
+    return read_persistent_waveform(name, variable, &length);
+}
+
 
 /* Writes value to persistent variable. */
-void write_persistent_variable(const char *name, const void *value)
+void write_persistent_waveform(
+    const char *name, const void *value, size_t length)
 {
     LOCK();
     struct persistent_variable *persistence = lookup_persistence(name);
@@ -215,14 +246,39 @@ void write_persistent_variable(const char *name, const void *value)
     {
         /* Don't force a write of the persistence file if nothing has actually
          * changed. */
+        size_t size = length * persistence->action->size;
         persistence_dirty =
-            persistence_dirty  ||  !persistence->value_present  ||
-            memcmp(persistence->variable, value, persistence->action->size);
+            persistence_dirty  ||
+            persistence->length != length  ||
+            memcmp(persistence->variable, value, size);
 
-        persistence->value_present = true;
-        memcpy(persistence->variable, value, persistence->action->size);
+        persistence->length = length;
+        memcpy(persistence->variable, value, size);
     }
     UNLOCK();
+}
+
+void write_persistent_variable(const char *name, const void *value)
+{
+    write_persistent_waveform(name, value, 1);
+}
+
+
+static bool parse_value(
+    const char **line, struct persistent_variable *persistence)
+{
+    void *variable = persistence->variable;
+    size_t size = persistence->action->size;
+    size_t length = 0;
+    bool ok = true;
+    for (; ok  &&  **line != '\0'  &&  length < persistence->max_length;
+         length ++)
+    {
+        ok = persistence->action->read(line, variable);
+        variable += size;
+    }
+    persistence->length = ok ? length : 0;
+    return ok  &&  TEST_OK_(**line == '\0', "Unexpected extra characters");
 }
 
 
@@ -231,18 +287,18 @@ void write_persistent_variable(const char *name, const void *value)
 static bool parse_line(char *line, int line_number)
 {
     char *equal;
-    const char *cequal;
+    const char *value;
     struct persistent_variable *persistence;
     bool ok =
         TEST_NULL_(equal = strchr(line, '='), "Missing =")  &&
-        DO_(*equal++ = '\0'; cequal = equal)  &&
+        DO_(*equal++ = '\0'; value = equal)  &&
         TEST_NULL_(persistence = hash_table_lookup(variable_table, line),
             "Persistence key \"%s\" not found", line)  &&
-        persistence->action->read(&cequal, persistence->variable)  &&
-        TEST_OK_(*cequal == '\0', "Unexpected extra characters")  &&
-        DO_(persistence->value_present = true);
-    TEST_OK_(ok, "Parse error on line %d of state file %s\n",
-        line_number, state_filename);
+        parse_value(&value, persistence);
+    /* Report location of error. */
+    if (!ok)
+        print_error("Parse error on line %d of state file %s",
+            line_number, state_filename);
     return ok;
 }
 
@@ -255,7 +311,7 @@ static bool parse_persistence_file(const char *filename)
          * actually fail -- this isn't an error. */
         return true;
 
-    char line[1024];
+    char line[10240];
     int line_number = 0;
 
     bool ok = true;
@@ -268,7 +324,8 @@ static bool parse_persistence_file(const char *filename)
         if (line[0] != '#')
         {
             int len = strlen(line);
-            if (line[len - 1] == '\n')
+            if (TEST_OK_(line[len - 1] == '\n',
+                    "Line %d truncated?", line_number))
                 line[len - 1] = '\0';
 
             if (*line != '\0')
@@ -296,6 +353,23 @@ bool load_persistent_state(void)
 }
 
 
+static void write_line(
+    FILE *out, const char *name, const struct persistent_variable *persistence)
+{
+    const void *variable = persistence->variable;
+    size_t size = persistence->action->size;
+    fprintf(out, "%s=", name);
+    for (size_t i = 0; i < persistence->length; i ++)
+    {
+        if (i != 0)
+            fputc(' ', out);
+        persistence->action->write(out, variable);
+        variable += size;
+    }
+    fputc('\n', out);
+}
+
+
 /* Writes persistent state to given file. */
 static bool write_persistent_state(const char *filename)
 {
@@ -304,7 +378,7 @@ static bool write_persistent_state(const char *filename)
         return false;
 
     /* Start with a timestamp log. */
-    char out_buffer[256];
+    char out_buffer[40];
     time_t now = time(NULL);
     bool ok =
         TEST_OK(fprintf(out, "# Written: %s", ctime_r(&now, out_buffer)) > 0);
@@ -316,11 +390,8 @@ static bool write_persistent_state(const char *filename)
     {
         const char *name = key;
         struct persistent_variable *persistence = value;
-        if (persistence->value_present)
-        {
-            persistence->action->write(out_buffer, persistence->variable);
-            ok = TEST_OK(fprintf(out, "%s=%s\n", name, out_buffer) > 0);
-        }
+        if (persistence->length > 0)
+            write_line(out, name, persistence);
     }
     fclose(out);
     return ok;
