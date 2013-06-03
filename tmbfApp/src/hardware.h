@@ -29,8 +29,7 @@
 /* Some of these will not be published longer term, others will change... */
 
 /* Registers corresponding to control register fields. */
-DECLARE_REGISTER(CTRL_DAC_OUT);     // DAC output selection
-DECLARE_REGISTER(CTRL_FIR_INVERT);  // Whether to invert the FIR output
+DECLARE_REGISTER(CTRL_DAC_ENA);     // DAC output selection
 DECLARE_REGISTER(CTRL_SOFT_TRIG);   // Writing this creates soft trigger event
 DECLARE_REGISTER(CTRL_ARCHIVE);     // Select signal to write to fast buffers
 DECLARE_REGISTER(CTRL_FIR_GAIN);    // Select gain of FIR output
@@ -39,7 +38,6 @@ DECLARE_REGISTER(CTRL_TRIG_SEL);    // Select soft or external trigger
 DECLARE_REGISTER(CTRL_ARM_SEL);     // Select soft or external arming
 DECLARE_REGISTER(CTRL_SOFT_ARM);    // Write to arm the soft trigger
 DECLARE_REGISTER(CTRL_GROW_DAMP);   // Set to enable grow damp test
-DECLARE_REGISTER(CTRL_TEMP_DAC_OUT); // Configures Temp DAC output
 DECLARE_REGISTER(CTRL_DDR_INPUT);   // Select data to write to fast DDR memory
 DECLARE_REGISTER(CTRL_SET_PLANE);   // Should be set to one
 DECLARE_REGISTER(CTRL_CH_SELECT);   // Channel readout selection
@@ -83,8 +81,14 @@ void read_DataSpace(
 
 /* The bunch-by-bunch gain and DAC settings share the same registers, but we
  * conceal this in the API below. */
+void read_bunch_configs(
+    short int bunch_gains[MAX_BUNCH_COUNT],
+    short int bunch_dacs[MAX_BUNCH_COUNT],
+    short int bunch_tempdacs[MAX_BUNCH_COUNT]);
+
 void write_BB_gains(short int gains[MAX_BUNCH_COUNT]);
 void write_BB_DACs(short int dacs[MAX_BUNCH_COUNT]);
+void write_BB_TEMPDACs(short int dacs[MAX_BUNCH_COUNT]);
 
 
 void set_softTrigger(void);

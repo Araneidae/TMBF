@@ -39,12 +39,44 @@ static void bb_write_gain(float *gains)
 }
 
 
-PUBLISH_SIMPLE_WAVEFORM(
-    float, "BB_GAINS", MAX_BUNCH_COUNT, bb_write_gain, .persist = true)
-PUBLISH_SIMPLE_WAVEFORM(
-    short, "BB_DACS",  MAX_BUNCH_COUNT, write_BB_DACs, .persist = true)
+static short int bunch_gains[MAX_BUNCH_COUNT];
+static short int bunch_dacs[MAX_BUNCH_COUNT];
+static short int bunch_tempdacs[MAX_BUNCH_COUNT];
+
+static void read_bunch_gains(float *buffer)
+{
+    float float_gains[MAX_BUNCH_COUNT];
+
+    read_bunch_configs(bunch_gains, bunch_dacs, bunch_tempdacs);
+
+    for (int i = 0; i < MAX_BUNCH_COUNT; i++)
+        float_gains[i] = bunch_gains[i] / 32767;
+
+    memcpy(buffer, float_gains, sizeof(float_gains));
+}
 
 
+static void read_bunch_dacs(short *buffer)
+{
+    read_bunch_configs(bunch_gains, bunch_dacs, bunch_tempdacs);
+    memcpy(buffer, bunch_dacs, sizeof(bunch_dacs));
+}
+
+static void read_bunch_tempdacs(short *buffer)
+{
+    read_bunch_configs(bunch_gains, bunch_dacs, bunch_tempdacs);
+    memcpy(buffer, bunch_dacs, sizeof(bunch_tempdacs));
+}
+
+PUBLISH_SIMPLE_WAVEFORM_INIT(
+    float, "BB_GAINS", MAX_BUNCH_COUNT,
+    bb_write_gain, read_bunch_gains, .persist = true)
+PUBLISH_SIMPLE_WAVEFORM_INIT(
+    short, "BB_DACS", MAX_BUNCH_COUNT,
+    write_BB_DACs, read_bunch_dacs, .persist = true)
+PUBLISH_SIMPLE_WAVEFORM_INIT(
+    short, "BB_TEMPDACS", MAX_BUNCH_COUNT,
+    write_BB_TEMPDACs, read_bunch_tempdacs, .persist = true)
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -74,7 +106,6 @@ static void adc_minbuf_read(short *buffer)
     ADC_mean_diff = sum_diff / (float) MAX_BUNCH_COUNT;
     ADC_var_diff =
         sum_var / (float) MAX_BUNCH_COUNT - ADC_mean_diff*ADC_mean_diff;
-
 
     memcpy(buffer, ADC_min_buf, sizeof(ADC_min_buf));
 }
@@ -120,7 +151,6 @@ static void dac_minbuf_read(short *buffer)
     DAC_var_diff =
         sum_var / (float) MAX_BUNCH_COUNT - DAC_mean_diff*DAC_mean_diff;
 
-
     memcpy(buffer, DAC_min_buf, sizeof(DAC_min_buf));
 }
 
@@ -132,6 +162,8 @@ PUBLISH_READ_WAVEFORM(
     short, "DAC_DIFFBUF", MAX_BUNCH_COUNT, DAC_diff_buf)
 PUBLISH_VARIABLE_READ(ai, "DACMEAN", DAC_mean_diff)
 PUBLISH_VARIABLE_READ(ai, "DACSTD",  DAC_var_diff)
+
+
 
 
 
@@ -263,15 +295,13 @@ PUBLISH_SIMPLE_WAVEFORM_INIT(
         record, name, write_##register, read_##register, .persist = true)
 
 
-PUBLISH_REGISTER_P(mbbo,    "DACOUT",         CTRL_DAC_OUT)
-PUBLISH_REGISTER_P(mbbo,    "FIRINVERT",      CTRL_FIR_INVERT)
+PUBLISH_REGISTER_P(mbbo,    "DACENA",         CTRL_DAC_ENA)
 PUBLISH_REGISTER_P(mbbo,    "ARCHIVE",        CTRL_ARCHIVE)
 PUBLISH_REGISTER_P(mbbo,    "FIRGAIN",        CTRL_FIR_GAIN)
 PUBLISH_REGISTER_P(mbbo,    "HOMGAIN",        CTRL_HOM_GAIN)
 PUBLISH_REGISTER_P(mbbo,    "TRIGSEL",        CTRL_TRIG_SEL)
 PUBLISH_REGISTER_P(mbbo,    "ARMSEL",         CTRL_ARM_SEL)
 PUBLISH_REGISTER_P(mbbo,    "GROWDAMPMODE",   CTRL_GROW_DAMP)
-PUBLISH_REGISTER_P(mbbo,    "TEMPDACOUT",     CTRL_TEMP_DAC_OUT)
 PUBLISH_REGISTER_P(mbbo,    "DDRINPUT",       CTRL_DDR_INPUT)
 PUBLISH_REGISTER_P(mbbo,    "CHSELECT",       CTRL_CH_SELECT)
 PUBLISH_REGISTER_P(mbbo,    "DDCINPUT",       CTRL_DDC_INPUT)

@@ -19,6 +19,7 @@ WaveformOut('COEFFS', 12)
 
 WaveformOut('BB_GAINS', 936, 'FLOAT')
 WaveformOut('BB_DACS',  936, 'SHORT')
+WaveformOut('BB_TEMPDACS',  936, 'SHORT')
 
 # The following records are polled together at 200ms intervals
 create_fanout('SCAN_ADC',
@@ -56,12 +57,9 @@ hb_buf_lower = Waveform('HB_BUF_LOWER', 16384, 'SHORT',
     DESC = 'BRAM buffer lower 16-bits',
     PINI = 'YES',   FLNK = hb_buf_upper)
 
-mbbOut('DACOUT', 'Off', 'FIR', 'HOM+FIR', 'HOM',
+mbbOut('DACENA', 'Off', 'On',
     VAL  = 0,   FLNK = status,
-    DESC = 'DAC output')
-mbbOut('TEMPDACOUT', 'Off', 'FIR', 'HOM+FIR', 'HOM',
-    VAL  = 0,   FLNK = status,
-    DESC = 'DAC output')
+    DESC = 'DAC output enable')
 mbbOut('FIRGAIN',
     VAL  = 15,  FLNK = status,
     DESC = 'FIR gain select',

@@ -524,7 +524,6 @@ static void post_process(
 #define mbbo_MLST       do_MLST
 
 
-
 /* Mostly we can use simple boilerplate for the process routines. */
 DEFINE_DEFAULT_READ (longin,    val,    OK,         OK)
 DEFINE_DEFAULT_WRITE(longout,   val,    OK,         OK)

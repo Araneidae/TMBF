@@ -66,8 +66,7 @@ static void Unlock(void)
  * designed to be used with the ReadBitField and WriteBitField routines
  * below. */
 
-#define CTRL_DAC_OUT_FIELD        0, 2
-#define CTRL_FIR_INVERT_FIELD     2, 1
+#define CTRL_DAC_ENA_FIELD        0, 1
 #define CTRL_SOFT_TRIG_FIELD      3, 1
 #define CTRL_ARCHIVE_FIELD        4, 2
 #define CTRL_FIR_GAIN_FIELD       6, 4
@@ -76,12 +75,10 @@ static void Unlock(void)
 #define CTRL_ARM_SEL_FIELD        15, 1
 #define CTRL_SOFT_ARM_FIELD       16, 1
 #define CTRL_GROW_DAMP_FIELD      17, 1
-#define CTRL_TEMP_DAC_OUT_FIELD   18, 3
 #define CTRL_DDR_INPUT_FIELD      21, 1
 #define CTRL_SET_PLANE_FIELD      22, 1
 #define CTRL_CH_SELECT_FIELD      23, 2
 #define CTRL_DDC_INPUT_FIELD      25, 1
-#define CTRL_BUNCH_MODE_FIELD     26, 1
 #define CTRL_IQ_SCALE_FIELD       27, 3
 #define CTRL_BUNCH_SYNC_FIELD     30, 1
 
@@ -139,8 +136,7 @@ static unsigned int ReadBitField(
 
 
 /* Direct access to control register fields. */
-CTRL_REGISTER(CTRL_DAC_OUT)
-CTRL_REGISTER(CTRL_FIR_INVERT)
+CTRL_REGISTER(CTRL_DAC_ENA)
 CTRL_REGISTER(CTRL_SOFT_TRIG)
 CTRL_REGISTER(CTRL_ARCHIVE)
 CTRL_REGISTER(CTRL_FIR_GAIN)
@@ -149,7 +145,6 @@ CTRL_REGISTER(CTRL_TRIG_SEL)
 CTRL_REGISTER(CTRL_ARM_SEL)
 CTRL_REGISTER(CTRL_SOFT_ARM)
 CTRL_REGISTER(CTRL_GROW_DAMP)
-CTRL_REGISTER(CTRL_TEMP_DAC_OUT)
 CTRL_REGISTER(CTRL_DDR_INPUT)
 CTRL_REGISTER(CTRL_SET_PLANE)
 CTRL_REGISTER(CTRL_CH_SELECT)
@@ -240,6 +235,18 @@ union packed_data
 };
 
 
+union bunch_packed_data
+{
+    struct
+    {
+        short int gain;
+        char      dac;
+        char      tempdac;
+    };
+    int packed;
+};
+
+
 void read_ADC_MinMax(
     short ADC_min[MAX_BUNCH_COUNT], short ADC_max[MAX_BUNCH_COUNT])
 {
@@ -301,6 +308,27 @@ void read_DataSpace(
     Unlock();
 }
 
+void read_bunch_configs(
+    short int bunch_gains[MAX_BUNCH_COUNT],
+    short int bunch_dacs[MAX_BUNCH_COUNT],
+    short int bunch_tempdacs[MAX_BUNCH_COUNT])
+{
+    Lock();
+    for (int n=0; n < 4; n++)
+    {
+        WRITE_CTRL(CH_SELECT, n);
+        for (int i=0; i < MAX_BUNCH_COUNT/4; i++)
+        {
+            union bunch_packed_data packed;
+            packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
+            bunch_gains[4*i + n] = packed.gain;
+            bunch_dacs[4*i + n] = packed.dac;
+            bunch_tempdacs[4*i + n] = packed.tempdac;
+        }
+    }
+    Unlock();
+}
+
 
 void write_BB_gains(short int gains[MAX_BUNCH_COUNT])
 {
@@ -310,9 +338,9 @@ void write_BB_gains(short int gains[MAX_BUNCH_COUNT])
         WRITE_CTRL(CH_SELECT, n);
         for (int i=0; i < MAX_BUNCH_COUNT/4; i++)
         {
-            union packed_data packed;
+            union bunch_packed_data packed;
             packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
-            packed.lower = gains[4*i + n];
+            packed.gain = gains[4*i + n];
             ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
         }
     }
@@ -327,15 +355,31 @@ void write_BB_DACs(short int dacs[MAX_BUNCH_COUNT])
         WRITE_CTRL(CH_SELECT, n);
         for (int i=0; i < MAX_BUNCH_COUNT/4; i++)
         {
-            union packed_data packed;
+            union bunch_packed_data packed;
             packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
-            packed.upper = dacs[4*i + n];
+            packed.dac = dacs[4*i + n];
             ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
         }
     }
     Unlock();
 }
 
+void write_BB_TEMPDACs(short int tempdacs[MAX_BUNCH_COUNT])
+{
+    Lock();
+    for (int n=0; n < 4; n++)
+    {
+        WRITE_CTRL(CH_SELECT, n);
+        for (int i=0; i < MAX_BUNCH_COUNT/4; i++)
+        {
+            union bunch_packed_data packed;
+            packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
+            packed.tempdac = tempdacs[4*i + n];
+            ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
+        }
+    }
+    Unlock();
+}
 
 
 /*****************************************************************************/
@@ -391,9 +435,8 @@ void dump_registers(void)
     }
 
     unsigned int ctrl = ConfigSpace->Ctrl;
-    printf("Ctrl: %d %d %d %d  %d %d %d %d  %d %d %d %d  %d %d %d %d  %d %d\n",
-        ReadBitField(ctrl, CTRL_DAC_OUT_FIELD),
-        ReadBitField(ctrl, CTRL_FIR_INVERT_FIELD),
+    printf("Ctrl: %d %d %d %d %d %d  %d %d %d %d  %d %d %d %d  %d %d\n",
+        ReadBitField(ctrl, CTRL_DAC_ENA_FIELD),
         ReadBitField(ctrl, CTRL_SOFT_TRIG_FIELD),
         ReadBitField(ctrl, CTRL_ARCHIVE_FIELD),
 
@@ -404,7 +447,6 @@ void dump_registers(void)
 
         ReadBitField(ctrl, CTRL_SOFT_ARM_FIELD),
         ReadBitField(ctrl, CTRL_GROW_DAMP_FIELD),
-        ReadBitField(ctrl, CTRL_TEMP_DAC_OUT_FIELD),
         ReadBitField(ctrl, CTRL_DDR_INPUT_FIELD),
 
         ReadBitField(ctrl, CTRL_SET_PLANE_FIELD),
