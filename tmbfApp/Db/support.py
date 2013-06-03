@@ -14,8 +14,8 @@ elif builder_version[0] == '/':
 else:
     from pkg_resources import require
     require('iocbuilder==%s' % builder_version)
+from iocbuilder import ModuleVersion, TemplateRecordNames, ConfigureTemplate
 
-from iocbuilder import TemplateRecordNames, ConfigureTemplate
 ConfigureTemplate(record_names = TemplateRecordNames())
 from iocbuilder import *
 
@@ -69,76 +69,61 @@ GenericDevice()
 #           Record Generation Support
 # ----------------------------------------------------------------------------
 
-# Functions for creating tmbf records
+# Functions for creating records
 
-def add_PINI(result):
-    # Not nice: there isn't a clean way of asking the builder whether a field
-    # is present!  So we have to try reading the value, and catching the key
-    # error that arises if it's not there!
-    try:
-        result.VAL.Value()
-    except KeyError:
-        # VAL field not defined, so don't add
-        pass
-    else:
-        result.PINI = 'YES'
-    return result
+# Helper for output records: turns out we want quite a uniform set of defaults.
+def set_out_defaults(fields, name):
+    fields.setdefault('address', name)
+    fields.setdefault('OMSL', 'supervisory')
+    fields.setdefault('PINI', 'YES')
 
 
 def aIn(name, **fields):
     return GenericDevice.ai(name, **fields)
 
 def aOut(name, DRVL=None, DRVH=None, **fields):
-    return add_PINI(GenericDevice.ao(name, address=name,
-        OMSL = 'supervisory',
-        DRVL = DRVL,  DRVH = DRVH,
-#        EGUL = DRVL,  EGUF = DRVH,
-        **fields))
+    set_out_defaults(fields, name)
+    return GenericDevice.ao(name + '_S', DRVL = DRVL, DRVH = DRVH, **fields)
 
 
 def boolIn(name, ZNAM=None, ONAM=None, **fields):
     return GenericDevice.bi(name, ZNAM = ZNAM, ONAM = ONAM, **fields)
 
 def boolOut(name, ZNAM=None, ONAM=None, **fields):
-    return add_PINI(GenericDevice.bo(name, address=name,
-        OMSL = 'supervisory',
-        ZNAM = ZNAM, ONAM = ONAM, **fields))
+    set_out_defaults(fields, name)
+    return GenericDevice.bo(name + '_S', ZNAM = ZNAM, ONAM = ONAM, **fields)
 
 
-def longIn(name, LOPR=None, HOPR=None, EGU=None, MDEL=-1, **fields):
-    return GenericDevice.longin(name,
-        MDEL = MDEL,  EGU  = EGU,
-        LOPR = LOPR,  HOPR = HOPR, **fields)
+def longIn(name, LOPR=None, HOPR=None, EGU=None, **fields):
+    fields.setdefault('MDEL', -1)
+    return GenericDevice.longin(
+        name, LOPR = LOPR, HOPR = HOPR, EGU = EGU, **fields)
 
 def longOut(name, DRVL=None, DRVH=None, **fields):
-    return add_PINI(GenericDevice.longout(name, address=name,
-        OMSL = 'supervisory',
-        DRVL = DRVL, DRVH = DRVH, **fields))
+    set_out_defaults(fields, name)
+    return GenericDevice.longout(
+        name + '_S', DRVL = DRVL, DRVH = DRVH, **fields)
 
-
-# Field name prefixes for mbbi/mbbo records.
-_mbbPrefixes = [
-    'ZR', 'ON', 'TW', 'TH', 'FR', 'FV', 'SX', 'SV',     # 0-7
-    'EI', 'NI', 'TE', 'EL', 'TV', 'TT', 'FT', 'FF']     # 8-15
 
 # Adds a list of (option, value [,severity]) tuples into field settings
 # suitable for mbbi and mbbo records.
 def process_mbb_values(fields, option_values):
-#     def process_value(fields, prefix, option, value, severity=None):
-#         fields[prefix + 'ST'] = option
-#         fields[prefix + 'VL'] = value
-#         if severity:
-#             fields[prefix + 'SV'] = severity
-#     for prefix, value in zip(_mbbPrefixes, option_values):
-#         process_value(fields, prefix, *value)
-    for prefix, (default, option_value) in \
-            zip(_mbbPrefixes, enumerate(option_values)):
-        if isinstance(option_value, tuple):
-            option, value = option_value
-        else:
-            option, value = option_value, default
+    def process_value(prefix, option, value, severity=None):
         fields[prefix + 'ST'] = option
         fields[prefix + 'VL'] = value
+        if severity:
+            fields[prefix + 'SV'] = severity
+
+    # Field name prefixes for mbbi/mbbo records.
+    mbbPrefixes = [
+        'ZR', 'ON', 'TW', 'TH', 'FR', 'FV', 'SX', 'SV',     # 0-7
+        'EI', 'NI', 'TE', 'EL', 'TV', 'TT', 'FT', 'FF']     # 8-15
+    for prefix, (default, option_value) in \
+            zip(mbbPrefixes, enumerate(option_values)):
+        if isinstance(option_value, tuple):
+            process_value(prefix, *option_value)
+        else:
+            process_value(prefix, option_value, default)
 
 def mbbIn(name, *option_values, **fields):
     process_mbb_values(fields, option_values)
@@ -146,51 +131,26 @@ def mbbIn(name, *option_values, **fields):
 
 def mbbOut(name, *option_values, **fields):
     process_mbb_values(fields, option_values)
-    return add_PINI(GenericDevice.mbbo(name, address=name,
-        OMSL = 'supervisory', **fields))
+    set_out_defaults(fields, name)
+    return GenericDevice.mbbo(name + '_S', **fields)
 
 
 def stringIn(name, **fields):
     return GenericDevice.stringin(name, **fields)
 
 def stringOut(name, **fields):
-    return add_PINI(GenericDevice.stringin(name, **fields))
+    set_out_defaults(fields, name)
+    return GenericDevice.stringout(name + '_S', **fields)
 
 
 def Waveform(name, length, FTVL='LONG', **fields):
-    return GenericDevice.waveform(name, name,
-        NELM = length,  FTVL = FTVL, **fields)
+    return GenericDevice.waveform(name, NELM = length, FTVL = FTVL, **fields)
 
-
-def aInOut(name, DRVL = None, DRVH = None, VAL = None):
-    input = aIn(name + '_R')
-    output = aOut(name + '_W', DRVL, DRVH, FLNK = input)
-    if VAL is None:
-        # No initial value given, so make input auto initialise
-        input.PINI = 'YES'
-    else:
-        # Initial value given, so write this on startup
-        output.VAL  = VAL
-        output.PINI = 'YES'
-
-def longInOut(name, DRVL = None, DRVH = None, VAL = None):
-    input = longIn(name + '_R')
-    output = longOut(name + '_W', DRVL, DRVH, FLNK = input)
-    if VAL is None:
-        # No initial value given, so make input auto initialise
-        input.PINI = 'YES'
-    else:
-        # Initial value given, so write this on startup
-        output.VAL  = VAL
-        output.PINI = 'YES'
-
-def wInOut(name, NELM):
-    input = Waveform(name + '_R', NELM, PINI = 'YES')
-    Waveform(name + '_W', NELM)
-
+def WaveformOut(name, *args, **fields):
+    return Waveform(name + '_S', address = name, *args, **fields)
 
 
 __all__ = [
     'aIn',      'aOut',     'boolIn',   'boolOut',  'longIn',   'longOut',
-    'mbbOut',   'mbbOut',   'stringIn', 'stringOut',    'Waveform',
-    'aInOut',   'longInOut',    'wInOut']
+    'mbbOut',   'mbbOut',   'stringIn', 'stringOut',
+    'Waveform', 'WaveformOut']
