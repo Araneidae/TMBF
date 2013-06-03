@@ -58,7 +58,7 @@ y2Max 1
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):HB_BUF_LOWER_R"
+  0 "$(device):HB_BUF_LOWER"
 }
 plotUpdateMode {
   0 "y"
@@ -165,7 +165,7 @@ y2Max 16600
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):HB_BUF_UPPER_R"
+  0 "$(device):HB_BUF_UPPER"
 }
 plotUpdateMode {
   0 "y"
@@ -193,8 +193,8 @@ bgColor index 4
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):HB_BUF_LOWER_R.SCAN"
-indicatorPv "$(device):HB_BUF_LOWER_R.SCAN"
+controlPv "$(device):HB_BUF_LOWER.SCAN"
+indicatorPv "$(device):HB_BUF_LOWER.SCAN"
 font "helvetica-medium-r-14.0"
 endObjectProperties
 

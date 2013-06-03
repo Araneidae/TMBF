@@ -346,7 +346,7 @@ y2Max 16600
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):ADC_DIFFBUF_R"
+  0 "$(device):ADC_DIFFBUF"
 }
 plotUpdateMode {
   0 "y"

@@ -61,7 +61,7 @@ y2Max 1
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):BB_GAINS_W"
+  0 "$(device):BB_GAINS_S"
 }
 plotStyle {
   0 "point"
@@ -177,7 +177,7 @@ y2Max 16600
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):BB_DACS_W"
+  0 "$(device):BB_DACS_S"
 }
 plotStyle {
   0 "point"
@@ -206,7 +206,7 @@ x 112
 y 416
 w 40
 h 16
-controlPv "$(device):BB_GAINS_W"
+controlPv "$(device):BB_GAINS_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -231,7 +231,7 @@ x 328
 y 416
 w 40
 h 16
-controlPv "$(device):BB_DACS_W"
+controlPv "$(device):BB_DACS_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14

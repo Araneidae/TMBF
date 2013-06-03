@@ -62,15 +62,15 @@ set_computed_tune()
     eval tune=\$$1_tune_$mode
     eval cycles=\$$1_cycles_$mode
     eval length=\$$1_length_$mode
-    
+
     if [ -z "$tune" -o -z "$cycles" -o -z "$length" ]; then
         echo >&2 "Don't recognise mode $mode"
-	echo >&2 "Check configuration in $CONFIG"
-	echo >&2 "Check PV SR-CS-RING-01:MODE"
+        echo >&2 "Check configuration in $CONFIG"
+        echo >&2 "Check PV SR-CS-RING-01:MODE"
     else
         set_tune $tune $sweep_range $alarm_range
-	put FIRCYCLES_S $cycles
-	put FIRLENGTH_S $length
+        put FIRCYCLES_S $cycles
+        put FIRLENGTH_S $length
     fi
 }
 
@@ -80,10 +80,10 @@ case $MODE in
     TUNE|SBFB)
         case $DEVICE in
             SR21C-DI-TMBF-01)
-	        set_computed_tune X
+                set_computed_tune X
                 ;;
             SR21C-DI-TMBF-02)
-	    	set_computed_tune Y
+                set_computed_tune Y
                 ;;
             TS-DI-TMBF-01)
                 HARMONIC=1
@@ -134,7 +134,7 @@ put DACOUT_S 'Off'
 put TUNESWEEPMODE_S 'On'
 put PROGCLKVAL_S 25000
 put TUNESCAN.SCAN '1 second'
-put HB_BUF_LOWER_R.SCAN 'Passive'
+put HB_BUF_LOWER.SCAN 'Passive'
 put ARCHIVE_S 'I+Q'
 put TRIGSEL_S 'Soft'
 put FIRGAIN_S '-24dB'
@@ -143,7 +143,7 @@ put HOMGAIN_S $HOMGAIN
 put SWPSTARTFREQ_S $HARMONIC$STARTFREQ
 put SWPSTOPFREQ_S $HARMONIC$STOPFREQ
 put IQSCALE_S $IQSCALE
-put BUNCH_W $BUNCH
+put BUNCH_S $BUNCH
 put TEMPDACOUT_S $TEMPDACOUT
 put DDCINPUT_S $DDCINPUT
 put TUNE.HIGH $HIGH
@@ -152,6 +152,6 @@ put TUNE.HSV MINOR
 put TUNE.LSV MINOR
 
 if [ $MODE = SBFB ]; then
-    caput -w 5 -a $DEVICE:BB_DACS_W $(bb_func 1 3 $((BUNCH-8)))
-    caput -w 5 -a $DEVICE:BB_GAINS_W $(bb_func 1 1 1)
+    caput -w 5 -a $DEVICE:BB_DACS_S $(bb_func 1 3 $((BUNCH-8)))
+    caput -w 5 -a $DEVICE:BB_GAINS_S $(bb_func 1 1 1)
 fi

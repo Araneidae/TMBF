@@ -39,10 +39,8 @@ static void bb_write_gain(float *gains)
 }
 
 
-// PUBLISH_SIMPLE_WAVEFORM(
-//     int,   "BB_GAIN_COE_ALL_W", MAX_BUNCH_COUNT, bb_gain_and_dac_write)
-PUBLISH_SIMPLE_WAVEFORM(float, "BB_GAINS_W", MAX_BUNCH_COUNT, bb_write_gain)
-PUBLISH_SIMPLE_WAVEFORM(short, "BB_DACS_W",  MAX_BUNCH_COUNT, write_BB_DACs)
+PUBLISH_SIMPLE_WAVEFORM(float, "BB_GAINS", MAX_BUNCH_COUNT, bb_write_gain)
+PUBLISH_SIMPLE_WAVEFORM(short, "BB_DACS",  MAX_BUNCH_COUNT, write_BB_DACs)
 
 
 
@@ -72,20 +70,21 @@ static void adc_minbuf_read(short *buffer)
     }
 
     ADC_mean_diff = sum_diff / (float) MAX_BUNCH_COUNT;
-    ADC_var_diff = sum_var / (float) MAX_BUNCH_COUNT - ADC_mean_diff*ADC_mean_diff;
+    ADC_var_diff =
+        sum_var / (float) MAX_BUNCH_COUNT - ADC_mean_diff*ADC_mean_diff;
 
 
     memcpy(buffer, ADC_min_buf, sizeof(ADC_min_buf));
 }
 
 PUBLISH_SIMPLE_WAVEFORM(
-    short, "ADC_MINBUF_R", MAX_BUNCH_COUNT, adc_minbuf_read)
+    short, "ADC_MINBUF", MAX_BUNCH_COUNT, adc_minbuf_read)
 PUBLISH_READ_WAVEFORM(
-    short, "ADC_MAXBUF_R", MAX_BUNCH_COUNT, ADC_max_buf)
+    short, "ADC_MAXBUF", MAX_BUNCH_COUNT, ADC_max_buf)
 PUBLISH_READ_WAVEFORM(
-    short, "ADC_DIFFBUF_R", MAX_BUNCH_COUNT, ADC_diff_buf)
-PUBLISH_VARIABLE_READ(ai, "ADCMEAN_R", ADC_mean_diff)
-PUBLISH_VARIABLE_READ(ai, "ADCSTD_R",  ADC_var_diff)
+    short, "ADC_DIFFBUF", MAX_BUNCH_COUNT, ADC_diff_buf)
+PUBLISH_VARIABLE_READ(ai, "ADCMEAN", ADC_mean_diff)
+PUBLISH_VARIABLE_READ(ai, "ADCSTD",  ADC_var_diff)
 
 
 /* copy paste of ADC buffer below, with rename to DAC, surely there's a better
@@ -116,20 +115,21 @@ static void dac_minbuf_read(short *buffer)
     }
 
     DAC_mean_diff = sum_diff / (float) MAX_BUNCH_COUNT;
-    DAC_var_diff = sum_var / (float) MAX_BUNCH_COUNT - DAC_mean_diff*DAC_mean_diff;
+    DAC_var_diff =
+        sum_var / (float) MAX_BUNCH_COUNT - DAC_mean_diff*DAC_mean_diff;
 
 
     memcpy(buffer, DAC_min_buf, sizeof(DAC_min_buf));
 }
 
 PUBLISH_SIMPLE_WAVEFORM(
-    short, "DAC_MINBUF_R", MAX_BUNCH_COUNT, dac_minbuf_read)
+    short, "DAC_MINBUF", MAX_BUNCH_COUNT, dac_minbuf_read)
 PUBLISH_READ_WAVEFORM(
-    short, "DAC_MAXBUF_R", MAX_BUNCH_COUNT, DAC_max_buf)
+    short, "DAC_MAXBUF", MAX_BUNCH_COUNT, DAC_max_buf)
 PUBLISH_READ_WAVEFORM(
-    short, "DAC_DIFFBUF_R", MAX_BUNCH_COUNT, DAC_diff_buf)
-PUBLISH_VARIABLE_READ(ai, "DACMEAN_R", DAC_mean_diff)
-PUBLISH_VARIABLE_READ(ai, "DACSTD_R",  DAC_var_diff)
+    short, "DAC_DIFFBUF", MAX_BUNCH_COUNT, DAC_diff_buf)
+PUBLISH_VARIABLE_READ(ai, "DACMEAN", DAC_mean_diff)
+PUBLISH_VARIABLE_READ(ai, "DACSTD",  DAC_var_diff)
 
 
 
@@ -151,12 +151,12 @@ static void hb_buf_lower_read(short *buffer)
 
 
 PUBLISH_SIMPLE_WAVEFORM(
-    short, "HB_BUF_LOWER_R", MAX_DATA_LENGTH, hb_buf_lower_read)
-PUBLISH_READ_WAVEFORM(short, "HB_BUF_UPPER_R", MAX_DATA_LENGTH, hb_buf_upper)
+    short, "HB_BUF_LOWER", MAX_DATA_LENGTH, hb_buf_lower_read)
+PUBLISH_READ_WAVEFORM(short, "HB_BUF_UPPER", MAX_DATA_LENGTH, hb_buf_upper)
 
 
-PUBLISH_METHOD("SOFTTRIG_S",  set_softTrigger)
-PUBLISH_METHOD("BUNCHSYNC_S", set_bunchSync)
+PUBLISH_METHOD("SOFTTRIG",  set_softTrigger)
+PUBLISH_METHOD("BUNCHSYNC", set_bunchSync)
 
 
 
@@ -233,13 +233,13 @@ static void set_firphase(double new_phase)
 }
 
 
-PUBLISH_SIMPLE_WRITE(longout, "FIRCYCLES_S", set_fircycles)
-PUBLISH(longout, "FIRLENGTH_S", set_firlength)
-PUBLISH_SIMPLE_WRITE(ao,      "FIRPHASE_S",  set_firphase)
+PUBLISH_SIMPLE_WRITE(longout, "FIRCYCLES", set_fircycles)
+PUBLISH(longout, "FIRLENGTH", set_firlength)
+PUBLISH_SIMPLE_WRITE(ao,      "FIRPHASE",  set_firphase)
 
 /* Direct access to the FIR coefficients through register interface. */
-PUBLISH_SIMPLE_WAVEFORM(int, "COEFFS_R", MAX_FIR_COEFFS, read_FIR_coeffs)
-PUBLISH_SIMPLE_WAVEFORM(int, "COEFFS_W", MAX_FIR_COEFFS, write_FIR_coeffs)
+PUBLISH_SIMPLE_WAVEFORM_INIT(
+    int, "COEFFS", MAX_FIR_COEFFS, write_FIR_coeffs, read_FIR_coeffs)
 
 
 
@@ -259,41 +259,43 @@ PUBLISH_SIMPLE_WAVEFORM(int, "COEFFS_W", MAX_FIR_COEFFS, write_FIR_coeffs)
 #define PUBLISH_REGISTER_R(record, name, register) \
     PUBLISH_SIMPLE_READ (record, name, read_##register)
 #define PUBLISH_REGISTER_W(record, name, register) \
-    PUBLISH_SIMPLE_WRITE(record, name, write_##register)
+   PUBLISH_SIMPLE_WRITE_INIT(record, name, write_##register, read_##register)
 
-/* Register access PVs have a very consistent style. */
-#define GENERIC_REGISTER(pv_name, field) \
-    PUBLISH_REGISTER_W(longout, pv_name "_W", field) \
-    PUBLISH_REGISTER_R(longin,  pv_name "_R", field)
+/* Persistent writable register.  All associated records must be marked with
+ * PINI='YES' to ensure the initial loaded state is written back. */
+#define PUBLISH_REGISTER_P(record, name, register) \
+    PUBLISH_SIMPLE_WRITE_INIT( \
+        record, name, write_##register, read_##register, .persist = true)
 
-PUBLISH_REGISTER_W(mbbo,    "DACOUT_S",         CTRL_DAC_OUT)
-PUBLISH_REGISTER_W(mbbo,    "FIRINVERT_S",      CTRL_FIR_INVERT)
-PUBLISH_REGISTER_W(mbbo,    "ARCHIVE_S",        CTRL_ARCHIVE)
-PUBLISH_REGISTER_W(mbbo,    "FIRGAIN_S",        CTRL_FIR_GAIN)
-PUBLISH_REGISTER_W(mbbo,    "HOMGAIN_S",        CTRL_HOM_GAIN)
-PUBLISH_REGISTER_W(mbbo,    "TRIGSEL_S",        CTRL_TRIG_SEL)
-PUBLISH_REGISTER_W(mbbo,    "ARMSEL_S",         CTRL_ARM_SEL)
-PUBLISH_REGISTER_W(mbbo,    "GROWDAMPMODE_S",   CTRL_GROW_DAMP)
-PUBLISH_REGISTER_W(mbbo,    "TEMPDACOUT_S",     CTRL_TEMP_DAC_OUT)
-PUBLISH_REGISTER_W(mbbo,    "DDRINPUT_S",       CTRL_DDR_INPUT)
-PUBLISH_REGISTER_W(mbbo,    "CHSELECT_S",       CTRL_CH_SELECT)
-PUBLISH_REGISTER_W(mbbo,    "DDCINPUT_S",       CTRL_DDC_INPUT)
-PUBLISH_REGISTER_W(mbbo,    "BUNCHMODE_S",      CTRL_BUNCH_MODE)
-PUBLISH_REGISTER_W(longout, "IQSCALE_S",        CTRL_IQ_SCALE)
-PUBLISH_REGISTER_W(mbbo,    "SOFTARM_S",        CTRL_SOFT_ARM)
 
-PUBLISH_REGISTER_W(longout, "DACDLY_S",         DELAY_DAC)
-PUBLISH_REGISTER_W(longout, "GROWDAMPPERIOD_S", DELAY_GROW_DAMP)
-PUBLISH_REGISTER_W(mbbo,    "TUNESWEEPMODE_S",  DELAY_TUNE_SWEEP)
+PUBLISH_REGISTER_W(mbbo,    "DACOUT",         CTRL_DAC_OUT)
+PUBLISH_REGISTER_W(mbbo,    "FIRINVERT",      CTRL_FIR_INVERT)
+PUBLISH_REGISTER_W(mbbo,    "ARCHIVE",        CTRL_ARCHIVE)
+PUBLISH_REGISTER_W(mbbo,    "FIRGAIN",        CTRL_FIR_GAIN)
+PUBLISH_REGISTER_W(mbbo,    "HOMGAIN",        CTRL_HOM_GAIN)
+PUBLISH_REGISTER_W(mbbo,    "TRIGSEL",        CTRL_TRIG_SEL)
+PUBLISH_REGISTER_W(mbbo,    "ARMSEL",         CTRL_ARM_SEL)
+PUBLISH_REGISTER_W(mbbo,    "GROWDAMPMODE",   CTRL_GROW_DAMP)
+PUBLISH_REGISTER_W(mbbo,    "TEMPDACOUT",     CTRL_TEMP_DAC_OUT)
+PUBLISH_REGISTER_W(mbbo,    "DDRINPUT",       CTRL_DDR_INPUT)
+PUBLISH_REGISTER_W(mbbo,    "CHSELECT",       CTRL_CH_SELECT)
+PUBLISH_REGISTER_W(mbbo,    "DDCINPUT",       CTRL_DDC_INPUT)
+PUBLISH_REGISTER_W(mbbo,    "BUNCHMODE",      CTRL_BUNCH_MODE)
+PUBLISH_REGISTER_W(longout, "IQSCALE",        CTRL_IQ_SCALE)
+PUBLISH_REGISTER_W(mbbo,    "SOFTARM",        CTRL_SOFT_ARM)
 
-PUBLISH_REGISTER_W(longout, "PROGCLKVAL_S",     DDC_dwellTime)
+PUBLISH_REGISTER_W(longout, "DACDLY",         DELAY_DAC)
+PUBLISH_REGISTER_W(longout, "GROWDAMPPERIOD", DELAY_GROW_DAMP)
+PUBLISH_REGISTER_W(mbbo,    "TUNESWEEPMODE",  DELAY_TUNE_SWEEP)
 
-PUBLISH_REGISTER_R(longin,  "STATUS_R",         FPGA_version)
+PUBLISH_REGISTER_W(longout, "PROGCLKVAL",     DDC_dwellTime)
 
-GENERIC_REGISTER("BUNCH",       BunchSelect)
-GENERIC_REGISTER("NCO",         NCO_frequency)
-GENERIC_REGISTER("ADC_OFF_AB",  AdcOffAB)
-GENERIC_REGISTER("ADC_OFF_CD",  AdcOffCD)
+PUBLISH_REGISTER_R(longin,  "STATUS",         FPGA_version)
+
+PUBLISH_REGISTER_W(longout, "BUNCH",          BunchSelect)
+PUBLISH_REGISTER_W(longout, "NCO",            NCO_frequency)
+PUBLISH_REGISTER_W(longout, "ADC_OFF_AB",     AdcOffAB)
+PUBLISH_REGISTER_W(longout, "ADC_OFF_CD",     AdcOffCD)
 
 
 static bool read_version(void *context, EPICS_STRING *result)

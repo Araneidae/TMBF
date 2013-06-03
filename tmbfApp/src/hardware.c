@@ -16,7 +16,7 @@
 #define TMBF_CONFIG_ADDRESS       0x1402C000
 #define TMBF_DATA_ADDRESS         0x14028000
 
-typedef struct
+struct tmbf_config_space
 {
     unsigned int Ctrl;                  // 000  Main control register
     unsigned int BunchSelect;           // 004  Bunch number selection
@@ -36,10 +36,10 @@ typedef struct
     int          BB_Gain_Coeffs[256];   // 400  Bunch gain control
     int          BB_Adc_MinMax[256];    // 800  ADC readout
     int          BB_Dac_MinMax[256];    // C00  DAC readout
-} TMBF_CONFIG_SPACE;
+};
 
 /* These three pointers directly overlay the FF memory. */
-static TMBF_CONFIG_SPACE * ConfigSpace;
+static struct tmbf_config_space * ConfigSpace;
 static int * DataSpace;
 
 
@@ -229,7 +229,7 @@ void write_FIR_coeffs(const int coeffs[MAX_FIR_COEFFS])
 /* Both ADC and data buffer memories are packed into alternating 16-bit
  * words, but have to be read as 32-bit words.  This structure is used for
  * unpacking. */
-typedef union
+union packed_data
 {
     struct
     {
@@ -237,7 +237,7 @@ typedef union
         short int upper;
     };
     int packed;
-} PACKED_DATA;
+};
 
 
 void read_ADC_MinMax(
@@ -250,7 +250,7 @@ void read_ADC_MinMax(
         ConfigSpace->AdcChnSel = 2*n + 1;
         for (int i = 0; i < MAX_BUNCH_COUNT/4; i++)
         {
-            PACKED_DATA packed;
+            union packed_data packed;
             packed.packed = ConfigSpace->BB_Adc_MinMax[i];
             ADC_max[4*i + n] = packed.upper;
             ADC_min[4*i + n] = packed.lower;
@@ -272,7 +272,7 @@ void read_DAC_MinMax(
         ConfigSpace->DacChnSel = 2*n + 1;
         for (int i = 0; i < MAX_BUNCH_COUNT/4; i++)
         {
-            PACKED_DATA packed;
+            union packed_data packed;
             packed.packed = ConfigSpace->BB_Dac_MinMax[i];
             DAC_max[4*i + n] = packed.upper;
             DAC_min[4*i + n] = packed.lower;
@@ -292,7 +292,7 @@ void read_DataSpace(
         WRITE_CTRL(CH_SELECT, n);
         for (int i = 0; i < MAX_DATA_LENGTH/4; i++)
         {
-            PACKED_DATA packed;
+            union packed_data packed;
             packed.packed = DataSpace[i];
             LowData [4*i + n] = packed.lower;
             HighData[4*i + n] = packed.upper;
@@ -310,7 +310,7 @@ void write_BB_gains(short int gains[MAX_BUNCH_COUNT])
         WRITE_CTRL(CH_SELECT, n);
         for (int i=0; i < MAX_BUNCH_COUNT/4; i++)
         {
-            PACKED_DATA packed;
+            union packed_data packed;
             packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
             packed.lower = gains[4*i + n];
             ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
@@ -327,7 +327,7 @@ void write_BB_DACs(short int dacs[MAX_BUNCH_COUNT])
         WRITE_CTRL(CH_SELECT, n);
         for (int i=0; i < MAX_BUNCH_COUNT/4; i++)
         {
-            PACKED_DATA packed;
+            union packed_data packed;
             packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
             packed.upper = dacs[4*i + n];
             ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
@@ -451,7 +451,7 @@ static bool MapTmbfMemory(void)
             0, DATA_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
             mem, TMBF_DATA_ADDRESS & ~OsPageMask))  &&
         DO_(
-            ConfigSpace = (TMBF_CONFIG_SPACE *) (void *)
+            ConfigSpace = (struct tmbf_config_space *) (void *)
                 (map_config_base + (TMBF_CONFIG_ADDRESS & OsPageMask));
             DataSpace = (int *) (void *)
                 (map_data_base + (TMBF_DATA_ADDRESS & OsPageMask)));

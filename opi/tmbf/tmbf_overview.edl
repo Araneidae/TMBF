@@ -1030,7 +1030,7 @@ x 384
 y 400
 w 56
 h 16
-controlPv "$(device):BUNCH_W"
+controlPv "$(device):BUNCH_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1641,7 +1641,7 @@ x 416
 y 40
 w 32
 h 14
-controlPv "$(device):STATUS_R"
+controlPv "$(device):STATUS"
 format "hex"
 font "helvetica-medium-r-12.0"
 fontAlign "right"
