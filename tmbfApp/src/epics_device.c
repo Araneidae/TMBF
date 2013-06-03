@@ -536,14 +536,24 @@ static bool CheckWaveformType(
 }
 
 
+static bool waveform_action(
+    waveformRecord *pr, const struct i_waveform_void *i_waveform,
+    bool (*action)(
+        void *context, void *array, size_t max_length, size_t *new_length))
+{
+    size_t nord = pr->nord;
+    bool ok = action(i_waveform->context, pr->bptr, pr->nelm, &nord);
+    pr->nord = nord;
+    return ok;
+}
+
 #define POST_INIT_waveform(record, pr, field, INIT_OK) \
     { \
         GET_RECORD(waveform_void, pr, base, iRecord); \
         if (!CheckWaveformType(pr, iRecord)) \
             return ERROR; \
         if (iRecord->init != NULL) \
-            pr->udf = iRecord->init( \
-                iRecord->context, pr->bptr, CAST(size_t*, &pr->nord)); \
+            pr->udf = waveform_action(pr, iRecord, iRecord->init); \
         post_init_record_out( \
             (dbCommon*) pr, (const struct i_record *) iRecord); \
         return INIT_OK; \
@@ -556,9 +566,8 @@ static long process_waveform(waveformRecord *pr)
     GET_RECORD(waveform_void, pr, base, i_waveform);
     /* Naughty cast: I want to a reference to size_t, pr->nord is actually an
      * unsigned int.  Force the two to match! */
-    bool Ok = i_waveform->process(
-        i_waveform->context, pr->bptr, pr->nelm, CAST(size_t*, &pr->nord));
-    post_process( \
+    bool Ok = waveform_action(pr, i_waveform, i_waveform->process);
+    post_process(
         (dbCommon *) pr, READ_ALARM, (const struct i_record *) i_waveform);
     /* Note, by the way, that the waveform record support carefully ignores
      * my return code! */

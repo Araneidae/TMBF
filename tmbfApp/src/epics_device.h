@@ -127,8 +127,9 @@ enum waveform_type {
         bool (*process)( \
             void *context, \
             type *array, size_t max_length, size_t *new_length); \
-        int length; \
-        bool (*init)(void *context, type *array, size_t *new_length); \
+        bool (*init)( \
+            void *context, \
+            type *array, size_t max_length, size_t *new_length); \
     }
 
 DECLARE_I_WAVEFORM(void);
@@ -253,12 +254,18 @@ struct record_base *LookupRecord(const char *name);
 #define PUBLISH_SIMPLE_WAVEFORM(type, name, true_length, process_waveform) \
     WRAP_SIMPLE_WAVEFORM(type, true_length, process_waveform) \
     PUBLISH_WAVEFORM(type, name, wrap_##process_waveform)
+#define PUBLISH_SIMPLE_WAVEFORM_INIT( \
+        type, name, true_length, write_waveform, read_waveform) \
+    WRAP_SIMPLE_WAVEFORM(type, true_length, write_waveform) \
+    WRAP_SIMPLE_WAVEFORM(type, true_length, read_waveform) \
+    PUBLISH_WAVEFORM(type, name, wrap_##write_waveform, wrap_##read_waveform)
 #define PUBLISH_READ_WAVEFORM(type, name, true_length, waveform) \
     WRAP_VARIABLE_READ_WAVEFORM(type, true_length, waveform) \
     PUBLISH_WAVEFORM(type, name, wrap_read_##waveform)
 #define PUBLISH_WRITE_WAVEFORM(type, name, true_length, waveform) \
     WRAP_VARIABLE_WRITE_WAVEFORM(type, true_length, waveform) \
-    PUBLISH_WAVEFORM(type, name, wrap_write_##waveform)
+    WRAP_VARIABLE_READ_WAVEFORM(type, true_length, waveform) \
+    PUBLISH_WAVEFORM(type, name, wrap_write_##waveform, wrap_read_##waveform)
 #define PUBLISH_SIMPLE_READ(record, name, read) \
     WRAP_SIMPLE_READ(record, read) \
     PUBLISH(record, name, wrap_##read)
