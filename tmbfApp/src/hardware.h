@@ -42,7 +42,6 @@ DECLARE_REGISTER(CTRL_DDR_INPUT);   // Select data to write to fast DDR memory
 DECLARE_REGISTER(CTRL_SET_PLANE);   // Should be set to one
 DECLARE_REGISTER(CTRL_CH_SELECT);   // Channel readout selection
 DECLARE_REGISTER(CTRL_DDC_INPUT);   // Select input to DDC
-DECLARE_REGISTER(CTRL_BUNCH_MODE);  // Enables single bunch mode operation
 DECLARE_REGISTER(CTRL_IQ_SCALE);    // DDC output gain
 DECLARE_REGISTER(CTRL_BUNCH_SYNC);  // Bunch synchronisation
 
@@ -94,10 +93,6 @@ void write_BB_TEMPDACs(short int dacs[MAX_BUNCH_COUNT]);
 void set_softTrigger(void);
 void set_bunchSync(void);
 
-
-
-/* Dump all control registers to the console. */
-void dump_registers(void);
 
 
 bool InitialiseHardware(void);

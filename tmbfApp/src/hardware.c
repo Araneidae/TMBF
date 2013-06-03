@@ -149,7 +149,6 @@ CTRL_REGISTER(CTRL_DDR_INPUT)
 CTRL_REGISTER(CTRL_SET_PLANE)
 CTRL_REGISTER(CTRL_CH_SELECT)
 CTRL_REGISTER(CTRL_DDC_INPUT)
-CTRL_REGISTER(CTRL_BUNCH_MODE)
 CTRL_REGISTER(CTRL_IQ_SCALE)
 CTRL_REGISTER(CTRL_BUNCH_SYNC)
 
@@ -419,48 +418,6 @@ void set_bunchSync(void)
     usleep(1000);
     WRITE_CTRL(BUNCH_SYNC,  0);
     Unlock();
-}
-
-
-
-void dump_registers(void)
-{
-    unsigned int * registers = (unsigned int *) ConfigSpace;
-    for (int i = 0; i < 4; i ++)
-    {
-        printf("%04x  ", 0x20 * i);
-        for (int j = 0; j < 8; j ++)
-            printf(" %08x", registers[8*i + j]);
-        printf("\n");
-    }
-
-    unsigned int ctrl = ConfigSpace->Ctrl;
-    printf("Ctrl: %d %d %d %d %d %d  %d %d %d %d  %d %d %d %d  %d %d\n",
-        ReadBitField(ctrl, CTRL_DAC_ENA_FIELD),
-        ReadBitField(ctrl, CTRL_SOFT_TRIG_FIELD),
-        ReadBitField(ctrl, CTRL_ARCHIVE_FIELD),
-
-        ReadBitField(ctrl, CTRL_FIR_GAIN_FIELD),
-        ReadBitField(ctrl, CTRL_HOM_GAIN_FIELD),
-        ReadBitField(ctrl, CTRL_TRIG_SEL_FIELD),
-        ReadBitField(ctrl, CTRL_ARM_SEL_FIELD),
-
-        ReadBitField(ctrl, CTRL_SOFT_ARM_FIELD),
-        ReadBitField(ctrl, CTRL_GROW_DAMP_FIELD),
-        ReadBitField(ctrl, CTRL_DDR_INPUT_FIELD),
-
-        ReadBitField(ctrl, CTRL_SET_PLANE_FIELD),
-        ReadBitField(ctrl, CTRL_CH_SELECT_FIELD),
-        ReadBitField(ctrl, CTRL_DDC_INPUT_FIELD),
-        ReadBitField(ctrl, CTRL_BUNCH_MODE_FIELD),
-
-        ReadBitField(ctrl, CTRL_IQ_SCALE_FIELD),
-        ReadBitField(ctrl, CTRL_BUNCH_SYNC_FIELD));
-    unsigned int delay = ConfigSpace->Delay;
-    printf("Delay: %d %d %d\n",
-        ReadBitField(delay, DELAY_DAC_FIELD),
-        ReadBitField(delay, DELAY_TUNE_SWEEP_FIELD),
-        ReadBitField(delay, DELAY_GROW_DAMP_FIELD));
 }
 
 

@@ -107,8 +107,6 @@ aOut('HOMFREQ', 0, 468, VAL  = 0.3, PREC = 4,
 mbbOut('GROWDAMPMODE',
     'Off', 'On',  VAL  = 0,   FLNK = status,
     DESC = 'Grow/Damp enable')
-mbbOut('BUNCHMODE',
-    'Off', 'On',  VAL  = 0,   FLNK = status)
 
 longOut('IQSCALE', 0, 7, VAL  = 0, FLNK = status,
     DESC = 'IQ output scaling')

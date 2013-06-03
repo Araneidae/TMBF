@@ -197,12 +197,6 @@ static void StartupMessage(void)
 }
 
 
-static const iocshFuncDef iocsh_dump_registers_def = { "d", 0, NULL };
-static void iocsh_dump_registers(const iocshArgBuf *args)
-{
-    dump_registers();
-}
-
 int main(int argc,char *argv[])
 {
     bool Ok =
@@ -220,7 +214,6 @@ int main(int argc,char *argv[])
         Ok = TEST_EPICS(iocsh, argv[i]);
     if (Ok)
     {
-        iocshRegister(&iocsh_dump_registers_def, iocsh_dump_registers);
         StartupMessage();
         if (Interactive)
             Ok = TEST_EPICS(iocsh, NULL);
