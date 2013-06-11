@@ -226,6 +226,10 @@ void panic_error(const char *filename, int line)
         __union.__cast; \
     } )
 
+/* Companion to the offsetof macro for returning a value at the given offset
+ * into a structure.  Returns correctly typed pointer. */
+#define USE_OFFSET(type, structure, offset) \
+    ((type *) ((void *) (structure) + (offset)))
 
 /* For ignoring return values even when warn_unused_result is in force. */
 #define IGNORE(e)       do if(e) {} while (0)

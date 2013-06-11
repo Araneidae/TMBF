@@ -16,8 +16,6 @@
 
 
 
-
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                       Bunch by Bunch Configuration                        */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -39,93 +37,16 @@ static void bb_write_gain(float *gains)
 }
 
 
-static short int bunch_gains[MAX_BUNCH_COUNT];
-static short int bunch_dacs[MAX_BUNCH_COUNT];
-static short int bunch_tempdacs[MAX_BUNCH_COUNT];
-
-static void read_bunch_gains(float *buffer)
+static void publish_bb_control(void)
 {
-    float float_gains[MAX_BUNCH_COUNT];
-
-    read_bunch_configs(bunch_gains, bunch_dacs, bunch_tempdacs);
-
-    for (int i = 0; i < MAX_BUNCH_COUNT; i++)
-        float_gains[i] = bunch_gains[i] / 32767;
-
-    memcpy(buffer, float_gains, sizeof(float_gains));
+    PUBLISH_WF_ACTION(
+        float, "BB_GAINS", MAX_BUNCH_COUNT, bb_write_gain, .persist = true);
+    PUBLISH_WF_ACTION(
+        short, "BB_DACS", MAX_BUNCH_COUNT, write_BB_DACs, .persist = true);
+    PUBLISH_WF_ACTION(
+        short, "BB_TEMPDACS", MAX_BUNCH_COUNT,
+        write_BB_TEMPDACs, .persist = true);
 }
-
-
-static void read_bunch_dacs(short *buffer)
-{
-    read_bunch_configs(bunch_gains, bunch_dacs, bunch_tempdacs);
-    memcpy(buffer, bunch_dacs, sizeof(bunch_dacs));
-}
-
-static void read_bunch_tempdacs(short *buffer)
-{
-    read_bunch_configs(bunch_gains, bunch_dacs, bunch_tempdacs);
-    memcpy(buffer, bunch_dacs, sizeof(bunch_tempdacs));
-}
-
-PUBLISH_SIMPLE_WAVEFORM_INIT(
-    float, "BB_GAINS", MAX_BUNCH_COUNT,
-    bb_write_gain, read_bunch_gains, .persist = true)
-PUBLISH_SIMPLE_WAVEFORM_INIT(
-    short, "BB_DACS", MAX_BUNCH_COUNT,
-    write_BB_DACs, read_bunch_dacs, .persist = true)
-PUBLISH_SIMPLE_WAVEFORM_INIT(
-    short, "BB_TEMPDACS", MAX_BUNCH_COUNT,
-    write_BB_TEMPDACs, read_bunch_tempdacs, .persist = true)
-
-
-
-/* copy paste of ADC buffer below, with rename to DAC, surely there's a better
- * way...*/
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/*                            DAC Min/Max Buffer                             */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-static short int DAC_min_buf[MAX_BUNCH_COUNT];
-static short int DAC_max_buf[MAX_BUNCH_COUNT];
-static short int DAC_diff_buf[MAX_BUNCH_COUNT];
-static float DAC_mean_diff;
-static float DAC_var_diff;
-
-static void dac_minbuf_read(short *buffer)
-{
-    read_DAC_MinMax(DAC_min_buf, DAC_max_buf);
-
-    int sum_diff = 0;
-    long long int sum_var = 0;
-    for (unsigned int i = 0; i < MAX_BUNCH_COUNT; ++i)
-    {
-        short int diff = DAC_max_buf[i] - DAC_min_buf[i];
-        DAC_diff_buf[i] = diff;
-        sum_diff += diff;
-        sum_var  += (int) diff*diff;
-    }
-
-    DAC_mean_diff = sum_diff / (float) MAX_BUNCH_COUNT;
-    DAC_var_diff =
-        sum_var / (float) MAX_BUNCH_COUNT - DAC_mean_diff*DAC_mean_diff;
-
-    memcpy(buffer, DAC_min_buf, sizeof(DAC_min_buf));
-}
-
-PUBLISH_SIMPLE_WAVEFORM(
-    short, "DAC_MINBUF", MAX_BUNCH_COUNT, dac_minbuf_read)
-PUBLISH_READ_WAVEFORM(
-    short, "DAC_MAXBUF", MAX_BUNCH_COUNT, DAC_max_buf)
-PUBLISH_READ_WAVEFORM(
-    short, "DAC_DIFFBUF", MAX_BUNCH_COUNT, DAC_diff_buf)
-PUBLISH_VARIABLE_READ(ai, "DACMEAN", DAC_mean_diff)
-PUBLISH_VARIABLE_READ(ai, "DACSTD",  DAC_var_diff)
-
-
-
-
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -144,13 +65,15 @@ static void hb_buf_lower_read(short *buffer)
 }
 
 
-PUBLISH_SIMPLE_WAVEFORM(
-    short, "HB_BUF_LOWER", MAX_DATA_LENGTH, hb_buf_lower_read)
-PUBLISH_READ_WAVEFORM(short, "HB_BUF_UPPER", MAX_DATA_LENGTH, hb_buf_upper)
+static void publish_buffer(void)
+{
+    PUBLISH_WF_ACTION(
+        short, "HB_BUF_LOWER", MAX_DATA_LENGTH, hb_buf_lower_read);
+    PUBLISH_WF_READ_VAR(short, "HB_BUF_UPPER", MAX_DATA_LENGTH, hb_buf_upper);
 
-
-PUBLISH_METHOD("SOFTTRIG",  set_softTrigger)
-PUBLISH_METHOD("BUNCHSYNC", set_bunchSync)
+    PUBLISH_ACTION("SOFTTRIG",  set_softTrigger);
+    PUBLISH_ACTION("BUNCHSYNC", set_bunchSync);
+}
 
 
 
@@ -204,18 +127,18 @@ static void set_fircycles(int cycles)
     set_fircoeffs();
 }
 
-static bool set_firlength(void *context, int new_length)
+static void set_firlength(int new_length)
 {
     if (new_length < 1  ||  MAX_FIR_COEFFS < new_length)
     {
         printf("Invalid FIR length %d\n", new_length);
-        return false;
+//         return false;
     }
     else
     {
         fir_length = new_length;
         set_fircoeffs();
-        return true;
+//         return true;
     }
 }
 
@@ -226,15 +149,16 @@ static void set_firphase(double new_phase)
 }
 
 
-PUBLISH_SIMPLE_WRITE(longout, "FIRCYCLES", set_fircycles, .persist = true)
-PUBLISH(longout, "FIRLENGTH", set_firlength, .persist = true)
-PUBLISH_SIMPLE_WRITE(ao,      "FIRPHASE",  set_firphase, .persist = true)
+static void publish_fir(void)
+{
+    PUBLISH_WRITER(longout, "FIRCYCLES", set_fircycles, .persist = true);
+    PUBLISH_WRITER(longout, "FIRLENGTH", set_firlength, .persist = true);
+    PUBLISH_WRITER(ao,      "FIRPHASE",  set_firphase,  .persist = true);
 
-/* Direct access to the FIR coefficients through register interface. */
-PUBLISH_SIMPLE_WAVEFORM_INIT(
-    int, "COEFFS", MAX_FIR_COEFFS, write_FIR_coeffs, read_FIR_coeffs)
-PUBLISH_WAVEFORM(
-    int, MAX_FIR_COEFFS, "COEFFSRB", wrap_read_FIR_coeffs)
+    /* Direct access to the FIR coefficients through register interface. */
+    PUBLISH_WF_ACTION(int, "COEFFS", MAX_FIR_COEFFS, write_FIR_coeffs);
+    PUBLISH_WF_ACTION(int, "COEFFSRB", MAX_FIR_COEFFS, read_FIR_coeffs);
+}
 
 
 
@@ -243,59 +167,53 @@ PUBLISH_WAVEFORM(
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
+// static void read_version(EPICS_STRING result)
+// {
+//     EPICS_STRING version = TMBF_VERSION;
+//     CopyEpicsString(version, result);
+// }
 
 
-/* Wrappers for hardware access functions to make them amenable to EPICS
- * export. */
 
 
 /* Persistent writable register.  All associated records must be marked with
  * PINI='YES' to ensure the initial loaded state is written back. */
 #define PUBLISH_REGISTER_P(record, name, register) \
-    PUBLISH_SIMPLE_WRITE_INIT( \
-        record, name, write_##register, read_##register, .persist = true)
-
-#define PUBLISH_PULSE(name, register) \
-    PUBLISH_METHOD(name, pulse_##register)
+    PUBLISH_WRITER(record, name, write_##register, .persist = true)
 
 
-PUBLISH_REGISTER_P(mbbo,    "ARCHIVE",        CTRL_ARCHIVE)
-PUBLISH_REGISTER_P(mbbo,    "FIRGAIN",        CTRL_FIR_GAIN)
-PUBLISH_REGISTER_P(mbbo,    "HOMGAIN",        CTRL_HOM_GAIN)
-PUBLISH_REGISTER_P(mbbo,    "TRIGSEL",        CTRL_TRIG_SEL)
-PUBLISH_REGISTER_P(mbbo,    "ARMSEL",         CTRL_ARM_SEL)
-PUBLISH_REGISTER_P(mbbo,    "GROWDAMPMODE",   CTRL_GROW_DAMP)
-PUBLISH_REGISTER_P(mbbo,    "CHSELECT",       CTRL_CH_SELECT)
-PUBLISH_REGISTER_P(mbbo,    "DDCINPUT",       CTRL_DDC_INPUT)
-PUBLISH_REGISTER_P(longout, "IQSCALE",        CTRL_IQ_SCALE)
-PUBLISH_REGISTER_P(mbbo,    "SOFTARM",        CTRL_SOFT_ARM)
-
-PUBLISH_REGISTER_P(longout, "GROWDAMPPERIOD", DELAY_GROW_DAMP)
-PUBLISH_REGISTER_P(mbbo,    "TUNESWEEPMODE",  DELAY_TUNE_SWEEP)
-
-PUBLISH_REGISTER_P(longout, "PROGCLKVAL",     DDC_dwellTime)
-
-PUBLISH_REGISTER_P(longout, "BUNCH",          BunchSelect)
-PUBLISH_REGISTER_P(longout, "NCO",            NCO_frequency)
-
-
-PUBLISH_SIMPLE_READ(longin, "STATUS", read_FPGA_version)
-
-static bool read_version(void *context, EPICS_STRING *result)
+static void publish_registers(void)
 {
-    EPICS_STRING version = TMBF_VERSION;
-    CopyEpicsString(version, result);
-    return true;
+    PUBLISH_REGISTER_P(mbbo,    "ARCHIVE",        CTRL_ARCHIVE);
+    PUBLISH_REGISTER_P(mbbo,    "FIRGAIN",        CTRL_FIR_GAIN);
+    PUBLISH_REGISTER_P(mbbo,    "HOMGAIN",        CTRL_HOM_GAIN);
+    PUBLISH_REGISTER_P(mbbo,    "TRIGSEL",        CTRL_TRIG_SEL);
+    PUBLISH_REGISTER_P(mbbo,    "ARMSEL",         CTRL_ARM_SEL);
+    PUBLISH_REGISTER_P(mbbo,    "GROWDAMPMODE",   CTRL_GROW_DAMP);
+    PUBLISH_REGISTER_P(mbbo,    "CHSELECT",       CTRL_CH_SELECT);
+    PUBLISH_REGISTER_P(mbbo,    "DDCINPUT",       CTRL_DDC_INPUT);
+    PUBLISH_REGISTER_P(ulongout, "IQSCALE",        CTRL_IQ_SCALE);
+    PUBLISH_REGISTER_P(mbbo,    "SOFTARM",        CTRL_SOFT_ARM);
+
+    PUBLISH_REGISTER_P(ulongout, "GROWDAMPPERIOD", DELAY_GROW_DAMP);
+    PUBLISH_REGISTER_P(mbbo,    "TUNESWEEPMODE",  DELAY_TUNE_SWEEP);
+
+    PUBLISH_REGISTER_P(ulongout, "PROGCLKVAL",     DDC_dwellTime);
+
+    PUBLISH_REGISTER_P(ulongout, "BUNCH",          BunchSelect);
+    PUBLISH_REGISTER_P(ulongout, "NCO",            NCO_frequency);
+
+    PUBLISH_READER(ulongin, "STATUS", read_FPGA_version);
+//     PUBLISH_READER(stringin, "VERSION", read_version);
 }
-PUBLISH(stringin, "VERSION", read_version)
 
 
-#ifndef __DEFINE_EPICS__
-#include "device.EPICS"
-#endif
 
-int GenericInit(void)
+bool GenericInit(void)
 {
-    printf("Registering Generic Device functions\n");
-    return PUBLISH_EPICS_DATA();
+    publish_bb_control();
+    publish_buffer();
+    publish_fir();
+    publish_registers();
+    return true;
 }

@@ -16,12 +16,6 @@
 #include "ddr_epics.h"
 
 
-/* Need to share these with device.c */
-#define PUBLISH_REGISTER_P(record, name, register) \
-    PUBLISH_SIMPLE_WRITE_INIT( \
-        record, name, write_##register, read_##register, .persist = true)
-
-
 
 /* Total number of turns in the DDR buffer following the trigger. */
 #define BUFFER_TURN_COUNT   (16 * 1024 * 1024 / SAMPLES_PER_TURN / 2)
@@ -37,6 +31,7 @@
 static int selected_bunch = 0;
 static int selected_turn = 0;
 
+static struct epics_record *long_waveform;
 
 
 static void read_ddr_bunch_waveform(short *waveform)
@@ -54,38 +49,41 @@ static void read_long_ddr_turn_waveform(short *waveform)
     read_ddr_turns(selected_turn, LONG_TURN_WF_COUNT, waveform);
 }
 
-PUBLISH_SIMPLE_WAVEFORM(short, "DDR:BUNCHWF",
-    BUFFER_TURN_COUNT, read_ddr_bunch_waveform)
-PUBLISH_SIMPLE_WAVEFORM(short, "DDR:SHORTWF",
-    SHORT_TURN_WF_COUNT * SAMPLES_PER_TURN, read_short_ddr_turn_waveform)
-PUBLISH_SIMPLE_WAVEFORM(short, "DDR:LONGWF",
-    LONG_TURN_WF_COUNT * SAMPLES_PER_TURN, read_long_ddr_turn_waveform,
-    .io_intr = true)
 
-PUBLISH_VARIABLE_WRITE(longout, "DDR:BUNCHSEL", selected_bunch)
+static void publish_waveforms(void)
+{
+    PUBLISH_WF_ACTION(short, "DDR:BUNCHWF",
+        BUFFER_TURN_COUNT, read_ddr_bunch_waveform);
+    PUBLISH_WF_ACTION(short, "DDR:SHORTWF",
+        SHORT_TURN_WF_COUNT * SAMPLES_PER_TURN, read_short_ddr_turn_waveform);
+    long_waveform = PUBLISH_WF_ACTION(short, "DDR:LONGWF",
+        LONG_TURN_WF_COUNT * SAMPLES_PER_TURN,
+        read_long_ddr_turn_waveform, .io_intr = true);
+
+    PUBLISH_WRITE_VAR(longout, "DDR:BUNCHSEL", selected_bunch);
+}
 
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Triggering and control. */
 
-static struct record_base *short_trigger;   // Triggers short waveform readout
-static struct record_base *long_trigger;    // Triggers long waveform readout
+static struct epics_record *short_trigger;   // Triggers short waveform readout
 
 enum trigger_mode { TRIG_ALL, TRIG_ONE_SHOT };
 static unsigned int trigger_mode = TRIG_ALL;
 
-static bool long_data_ready = false;        // Used to report long wf ready
-static struct record_base *long_ready;      // Updates ready flag
+static bool data_ready = false;
+static struct epics_record *long_ready;      // Updates ready flag
 
 
 /* Just writes value to DDR:READY flag. */
 static void set_long_data_ready(bool ready)
 {
-    if (ready != long_data_ready)
+    if (ready != data_ready)
     {
-        long_data_ready = ready;
-        SignalRecord(long_ready);
+        data_ready = ready;
+        trigger_record(long_ready, 0, NULL);
     }
 }
 
@@ -104,8 +102,8 @@ static void arm_trigger(void)
 static void ddr_trigger(void)
 {
     if (trigger_mode == TRIG_ONE_SHOT)
-        SignalRecord(long_trigger);
-    SignalRecord(short_trigger);
+        trigger_record(long_waveform, 0, NULL);
+    trigger_record(short_trigger, 0, NULL);
 }
 
 /* This is called at the completion of record processing.  In retriggering mode
@@ -119,8 +117,9 @@ static void trigger_done(void)
 }
 
 
-static void set_trigger_mode(void)
+static void set_trigger_mode(unsigned int value)
 {
+    trigger_mode = value;
     if (trigger_mode == TRIG_ALL)
     {
         set_long_data_ready(false);
@@ -129,42 +128,39 @@ static void set_trigger_mode(void)
 }
 
 
-static void set_selected_turn(void)
+static void set_selected_turn(int value)
 {
+    selected_turn = value;
     if (trigger_mode == TRIG_ONE_SHOT)
-        SignalRecord(long_trigger);
+        trigger_record(long_waveform, 0, NULL);
+}
+
+static void arm_callback(void)
+{
+    arm_trigger();
 }
 
 
-PUBLISH_VARIABLE_WRITE_ACTION(
-    mbbo, "DDR:TRIGMODE", trigger_mode, set_trigger_mode, .persist = true)
+static void publish_controls(void)
+{
+    PUBLISH_WRITER(mbbo, "DDR:TRIGMODE", set_trigger_mode, .persist = true);
+    PUBLISH_WRITER(longout, "DDR:TURNSEL", set_selected_turn);
 
-PUBLISH_VARIABLE_WRITE_ACTION(
-    longout, "DDR:TURNSEL", selected_turn, set_selected_turn)
-PUBLISH_VARIABLE_READ(longin, "DDR:TURNSEL",  selected_turn)
+    PUBLISH_READ_VAR(longin, "DDR:TURNSEL", selected_turn);
+    long_ready = PUBLISH_READ_VAR(bi, "DDR:READY", data_ready, .io_intr = true);
+    short_trigger = PUBLISH_TRIGGER("DDR:TRIG");
 
-PUBLISH_VARIABLE_READ(bi, "DDR:READY", long_data_ready, .io_intr = true)
+    PUBLISH_ACTION("DDR:TRIGDONE", trigger_done);
+    PUBLISH_ACTION("DDR:ARM", arm_callback);
+    PUBLISH_ACTION("DDR:SOFT_TRIG", pulse_CTRL_TRIG_DDR);
 
-PUBLISH_TRIGGER("DDR:TRIG")
-PUBLISH_METHOD("DDR:TRIGDONE", trigger_done)
+    PUBLISH_WRITER(mbbo, "DDR:INPUT", write_CTRL_DDR_INPUT);
+}
 
-PUBLISH_METHOD("DDR:ARM", arm_trigger)
-
-PUBLISH_REGISTER_P(mbbo, "DDR:INPUT", CTRL_DDR_INPUT)
-PUBLISH_METHOD("DDR:SOFT_TRIG", pulse_CTRL_TRIG_DDR)
-
-
-
-#ifndef __DEFINE_EPICS__
-#include "ddr_epics.EPICS"
-#endif
 
 bool initialise_ddr_epics(void)
 {
-    return
-        initialise_ddr(ddr_trigger)  &&
-        PUBLISH_EPICS_DATA()  &&
-        TEST_NULL(short_trigger = LOOKUP_RECORD(bi, "DDR:TRIG"))  &&
-        TEST_NULL(long_ready    = LOOKUP_RECORD(bi, "DDR:READY"))  &&
-        TEST_NULL(long_trigger  = LOOKUP_RECORD(waveform, "DDR:LONGWF"));
+    publish_waveforms();
+    publish_controls();
+    return initialise_ddr(ddr_trigger);
 }

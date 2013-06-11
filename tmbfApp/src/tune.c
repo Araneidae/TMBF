@@ -57,19 +57,19 @@ static unsigned int tune_to_freq(double tune)
 }
 
 /* Set NCO */
-static void set_homfreq (double new_freq)
+static void set_homfreq(double new_freq)
 {
     write_NCO_frequency(tune_to_freq(new_freq));
 }
 
 /* Set Sweep Start Freq */
-static void set_sweepstartfreq (double new_freq)
+static void set_sweepstartfreq(double new_freq)
 {
     write_SweepStartFreq(tune_to_freq(new_freq));
 }
 
 /* Set Sweep Stop Freq */
-static void set_sweepstopfreq (double new_freq)
+static void set_sweepstopfreq(double new_freq)
 {
     write_SweepStopFreq(tune_to_freq(new_freq));
 }
@@ -102,28 +102,32 @@ static void update_tune_scale(void)
     }
 }
 
-static void set_tune_scale(float * buffer)
-{
-    update_tune_scale();
-    memcpy(buffer, ScaleWaveform, sizeof(ScaleWaveform));
-}
-
 static void update_ddc_skew(int new_skew)
 {
     DDC_skew = new_skew;
     update_tune_scale();
 }
 
+static void set_tune_scale(void *context, float *buffer, size_t *length)
+{
+    update_tune_scale();
+    memcpy(buffer, ScaleWaveform, sizeof(ScaleWaveform));
+}
 
 
-PUBLISH_SIMPLE_WRITE(ao, "HOMFREQ", set_homfreq, .persist = true)
+static void publish_frequencies(void)
+{
+    PUBLISH_WRITER(ao, "HOMFREQ", set_homfreq, .persist = true);
 
-PUBLISH_SIMPLE_WRITE(ao, "SWPSTARTFREQ", set_sweepstartfreq, .persist = true)
-PUBLISH_SIMPLE_WRITE(ao, "SWPSTOPFREQ", set_sweepstopfreq, .persist = true)
-PUBLISH_SIMPLE_WRITE(ao, "SWPFREQSTEP", set_freq_step, .persist = true)
-PUBLISH_SIMPLE_WAVEFORM(float, "TUNESCALE", TUNE_LENGTH, set_tune_scale)
+    PUBLISH_WRITER(ao, "SWPSTARTFREQ", set_sweepstartfreq, .persist = true);
+    PUBLISH_WRITER(ao, "SWPSTOPFREQ", set_sweepstopfreq, .persist = true);
+    PUBLISH_WRITER(ao, "SWPFREQSTEP", set_freq_step, .persist = true);
 
-PUBLISH_SIMPLE_WRITE(longout, "DDCSKEW", update_ddc_skew, .persist = true)
+    PUBLISH_WRITER(longout, "DDCSKEW", update_ddc_skew, .persist = true);
+
+    PUBLISH_WAVEFORM(float, "TUNESCALE", TUNE_LENGTH,
+        .process = set_tune_scale);
+}
 
 
 
@@ -285,32 +289,29 @@ static void process_tune(void)
 
 
 
-
 /* The following records are all updated as part of the tune scan. */
+static void publish_tune_scan(void)
+{
+    PUBLISH_ACTION("PROCESS_TUNE", process_tune);
 
-PUBLISH_METHOD("PROCESS_TUNE", process_tune)
+    PUBLISH_WF_READ_VAR(int, "DDC_I", TUNE_LENGTH, buffer_I);
+    PUBLISH_WF_READ_VAR(int, "DDC_Q", TUNE_LENGTH, buffer_Q);
+    PUBLISH_WF_READ_VAR(int, "TUNEPOWER", TUNE_LENGTH, tune_power);
+    PUBLISH_READ_VAR(ai, "TUNE", peak_power_tune);
+    PUBLISH_READ_VAR(ai, "TUNEPHASE", peak_power_phase);
 
-PUBLISH_READ_WAVEFORM(int, "DDC_I", TUNE_LENGTH, buffer_I)
-PUBLISH_READ_WAVEFORM(int, "DDC_Q", TUNE_LENGTH, buffer_Q)
-PUBLISH_READ_WAVEFORM(int, "TUNEPOWER", TUNE_LENGTH, tune_power)
-PUBLISH_VARIABLE_READ(ai, "TUNE", peak_power_tune)
-PUBLISH_VARIABLE_READ(ai, "TUNEPHASE", peak_power_phase)
+    PUBLISH_WF_READ_VAR(int, "RAWCUMSUM_I", TUNE_LENGTH, raw_cumsum_I);
+    PUBLISH_WF_READ_VAR(int, "RAWCUMSUM_Q", TUNE_LENGTH, raw_cumsum_Q);
+    PUBLISH_WF_READ_VAR(int, "CUMSUM_I", TUNE_LENGTH, cumsum_I);
+    PUBLISH_WF_READ_VAR(int, "CUMSUM_Q", TUNE_LENGTH, cumsum_Q);
+    PUBLISH_READ_VAR(ai, "CUMSUMTUNE", cumsum_tune);
+    PUBLISH_READ_VAR(ai, "CUMSUMPHASE", cumsum_phase);
+}
 
-PUBLISH_READ_WAVEFORM(int, "RAWCUMSUM_I", TUNE_LENGTH, raw_cumsum_I)
-PUBLISH_READ_WAVEFORM(int, "RAWCUMSUM_Q", TUNE_LENGTH, raw_cumsum_Q)
-PUBLISH_READ_WAVEFORM(int, "CUMSUM_I", TUNE_LENGTH, cumsum_I)
-PUBLISH_READ_WAVEFORM(int, "CUMSUM_Q", TUNE_LENGTH, cumsum_Q)
-PUBLISH_VARIABLE_READ(ai, "CUMSUMTUNE", cumsum_tune)
-PUBLISH_VARIABLE_READ(ai, "CUMSUMPHASE", cumsum_phase)
-
-
-
-
-#ifndef __DEFINE_EPICS__
-#include "tune.EPICS"
-#endif
 
 bool InitialiseTune(void)
 {
-    return PUBLISH_EPICS_DATA();
+    publish_frequencies();
+    publish_tune_scan();
+    return true;
 }

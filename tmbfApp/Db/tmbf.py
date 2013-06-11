@@ -25,20 +25,6 @@ WaveformOut('BB_DACS',  SAMPLES_PER_TURN, 'SHORT')
 WaveformOut('BB_TEMPDACS',  SAMPLES_PER_TURN, 'SHORT')
 
 
-create_fanout('SCAN_DAC',
-    Waveform('DAC_MINBUF', SAMPLES_PER_TURN, 'SHORT',
-        DESC = 'DAC min value per bunch'),
-    Waveform('DAC_MAXBUF', SAMPLES_PER_TURN, 'SHORT',
-        DESC = 'DAC max value per bunch'),
-    Waveform('DAC_DIFFBUF', SAMPLES_PER_TURN, 'SHORT',
-        DESC = 'DAC max min diff per bunch'),
-    aIn('DACMEAN', PREC = 2,
-        DESC = 'Readback DAC diff mean'),
-    aIn('DACSTD', PREC = 2,
-        DESC = 'Readback DAC diff variance'),
-    SCAN = 'Passive')
-
-
 
 hb_buf_upper = Waveform('HB_BUF_UPPER', 16384, 'SHORT',
     FLNK = status,
@@ -212,7 +198,7 @@ def minmax_pvs(source):
 
 
 minmax_pvs('ADC')
-WaveformOut('ADC:OFFSET', 4, 'SHORT', PINI = 'YES', DESC = 'ADC offsets')
+WaveformOut('ADC:OFFSET', 4, 'SHORT', DESC = 'ADC offsets')
 
 
 minmax_pvs('DAC')

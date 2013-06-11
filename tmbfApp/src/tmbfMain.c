@@ -15,7 +15,7 @@
 
 #include "error.h"
 #include "hardware.h"
-#include "adc.h"
+#include "adc_dac.h"
 #include "tune.h"
 #include "device.h"
 #include "ddr_epics.h"
@@ -91,7 +91,7 @@ void print_error(const char * Message, ...)
 
 void panic_error(const char *filename, int line)
 {
-    print_error("Panic at %s, line %d", filename, line);
+    print_error("Unrecoverable error at %s, line %d", filename, line);
     fflush(stderr);
     fflush(stdout);
     _exit(255);
@@ -220,8 +220,8 @@ int main(int argc,char *argv[])
         InitialiseSignals()  &&
         GenericInit()  &&
         initialise_ddr_epics()  &&
-        initialise_adc()  &&
-        load_persistent_state();
+        initialise_adc_dac()  &&
+        DO_(load_persistent_state());
     for (int i = 0; Ok && i < argc; i ++)
         Ok = TEST_EPICS(iocsh, argv[i]);
     if (Ok)

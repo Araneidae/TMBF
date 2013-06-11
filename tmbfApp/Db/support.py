@@ -147,6 +147,7 @@ def Waveform(name, length, FTVL='LONG', **fields):
     return GenericDevice.waveform(name, NELM = length, FTVL = FTVL, **fields)
 
 def WaveformOut(name, *args, **fields):
+    fields.setdefault('PINI', 'YES')
     return Waveform(name + '_S', address = name, *args, **fields)
 
 

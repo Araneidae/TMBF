@@ -70,7 +70,7 @@ DECLARE_REGISTER(AdcOffCD);         // --- really needs to be wrapped!
 
 /* Routines to read and write the FIR coefficients. */
 void read_FIR_coeffs(int coeffs[MAX_FIR_COEFFS]);
-void write_FIR_coeffs(const int coeffs[MAX_FIR_COEFFS]);
+void write_FIR_coeffs(int coeffs[MAX_FIR_COEFFS]);
 
 /* Read ADC minimum and maximum values. */
 void read_ADC_MinMax(

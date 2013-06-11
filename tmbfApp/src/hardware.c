@@ -232,7 +232,7 @@ void read_FIR_coeffs(int coeffs[MAX_FIR_COEFFS])
     Unlock();
 }
 
-void write_FIR_coeffs(const int coeffs[MAX_FIR_COEFFS])
+void write_FIR_coeffs(int coeffs[MAX_FIR_COEFFS])
 {
     Lock();
     for (int i = 0; i < MAX_FIR_COEFFS; i ++)
@@ -314,8 +314,7 @@ void read_DataSpace(
         WRITE_CTRL(CH_SELECT, n);
         for (int i = 0; i < MAX_DATA_LENGTH/4; i++)
         {
-            union packed_data packed;
-            packed.packed = DataSpace[i];
+            union packed_data packed = { .packed = DataSpace[i] };
             LowData [4*i + n] = packed.lower;
             HighData[4*i + n] = packed.upper;
         }

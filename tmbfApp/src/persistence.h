@@ -2,6 +2,7 @@
 
 /* The following persistence types are supported. */
 enum PERSISTENCE_TYPES {
+    PERSISTENT_bool,
     PERSISTENT_char,
     PERSISTENT_short,
     PERSISTENT_int,

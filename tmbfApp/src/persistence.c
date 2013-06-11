@@ -88,6 +88,20 @@ DEFINE_READ_NUM(float, strtof)
 DEFINE_READ_NUM(double, strtod)
 
 
+static void write_bool(FILE *out, const void *variable)
+{
+    bool value = *(const bool *) variable;
+    fputc(value ? 'Y' : 'N', out);
+}
+
+static bool read_bool(const char **in, void *variable)
+{
+    char ch = *(*in)++;
+    *(bool *) variable = ch == 'Y';
+    return TEST_OK_(ch == 'Y'  ||  ch == 'N', "Invalid boolean value");
+}
+
+
 /* We go for the simplest possible escaping: octal escape for everything.  Alas,
  * this can quadruple the size of the buffer to 160 chars. */
 static void write_string(FILE *out, const void *variable)
@@ -146,6 +160,7 @@ static bool read_string(const char **in, void *variable)
 /* Note that this table is indexed by PERSISTENCE_TYPES, so any changes in one
  * must be reflected in the other. */
 static const struct persistent_action persistent_actions[] = {
+    { sizeof(bool),         write_bool,     read_bool },
     { sizeof(int8_t),       write_int8_t,   read_int8_t },
     { sizeof(int16_t),      write_int16_t,  read_int16_t },
     { sizeof(int32_t),      write_int32_t,  read_int32_t },
