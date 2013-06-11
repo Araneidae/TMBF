@@ -290,9 +290,9 @@ void trigger_record(
 }
 
 
-void copy_epics_string(const EPICS_STRING in, EPICS_STRING out)
+void copy_epics_string(EPICS_STRING *out, const char *in)
 {
-    strncpy(out, in, sizeof(EPICS_STRING));
+    strncpy(out->s, in, sizeof(EPICS_STRING));
 }
 
 
@@ -465,6 +465,9 @@ static long get_ioint_common(int cmd, dbCommon *pr, IOSCANPVT *ioscanpvt)
         __ok; \
     } )
 
+#define STRING_ADAPTER(call, type, value, args...) \
+    call(args, (EPICS_STRING *) *(char*[]) { value })
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                          Input record processing.                         */
@@ -625,7 +628,7 @@ static bool process_out_record(dbCommon *pr, size_t value_size, void *result)
 DEFINE_IN_OUT(longin,   longout,   val,  EPICS_OK,   SIMPLE_ADAPTER, do_MLST)
 DEFINE_IN_OUT(ai,       ao,        val,  NO_CONVERT, SIMPLE_ADAPTER, do_MLST)
 DEFINE_IN_OUT(bi,       bo,        rval, EPICS_OK,   COPY_ADAPTER,   do_MLST)
-DEFINE_IN_OUT(stringin, stringout, val,  EPICS_OK,   SIMPLE_ADAPTER, no_MLST)
+DEFINE_IN_OUT(stringin, stringout, val,  EPICS_OK,   STRING_ADAPTER, no_MLST)
 DEFINE_IN_OUT(mbbi,     mbbo,      rval, EPICS_OK,   SIMPLE_ADAPTER, do_MLST)
 
 /* Also need dummy special_linconv routines for ai and ao. */

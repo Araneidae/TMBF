@@ -164,12 +164,7 @@ static void publish_fir(void)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
-// static void read_version(EPICS_STRING result)
-// {
-//     EPICS_STRING version = TMBF_VERSION;
-//     copy_epics_string(version, result);
-// }
-
+static EPICS_STRING version_string;
 
 
 
@@ -201,13 +196,15 @@ static void publish_registers(void)
     PUBLISH_REGISTER_P(ulongout, "NCO",            NCO_frequency);
 
     PUBLISH_READER(ulongin, "STATUS", read_FPGA_version);
-//     PUBLISH_READER(stringin, "VERSION", read_version);
+    PUBLISH_READ_VAR(stringin, "VERSION", version_string);
 }
 
 
 
 bool GenericInit(void)
 {
+    copy_epics_string(&version_string, TMBF_VERSION);
+
     publish_bb_control();
     publish_buffer();
     publish_fir();

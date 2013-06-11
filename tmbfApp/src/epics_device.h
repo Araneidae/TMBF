@@ -284,7 +284,7 @@ enum waveform_type {
 
 
 /* Epics strings are rather limited: a massive 39 characters are available! */
-typedef char EPICS_STRING[40];
+typedef struct epics_string { char s[40]; } EPICS_STRING;
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -309,7 +309,7 @@ void trigger_record(
     struct timespec *timestamp);
 
 /* Simple helper for EPICS_STRING type. */
-void copy_epics_string(const EPICS_STRING in, EPICS_STRING out);
+void copy_epics_string(EPICS_STRING *out, const char *in);
 
 
 /* Core PUBLISH and PUBLISH_WAVEFORM macros.  Wrappers for publish_epics_record
@@ -374,26 +374,24 @@ void copy_epics_string(const EPICS_STRING in, EPICS_STRING out);
 
 
 /* These two macros help us to repeat definitions and declarations for groups of
- * records.  Unfortunately string{in,out} is different enough to need separate
- * treatment in general. */
+ * records. */
 #define _FOR_IN_RECORDS(ACTION, sep) \
     ACTION(longin) sep \
     ACTION(ulongin) sep \
     ACTION(ai) sep \
     ACTION(bi) sep \
-    ACTION(mbbi) sep
+    ACTION(mbbi) sep \
+    ACTION(stringin) sep
 #define _FOR_OUT_RECORDS(ACTION, sep) \
     ACTION(longout) sep \
     ACTION(ulongout) sep \
     ACTION(ao) sep \
     ACTION(bo) sep \
-    ACTION(mbbo) sep
+    ACTION(mbbo) sep \
+    ACTION(stringout) sep
 
 _FOR_IN_RECORDS(_DECLARE_IN_ARGS, ;)
-_DECLARE_IN_ARGS(stringin);
-
 _FOR_OUT_RECORDS(_DECLARE_OUT_ARGS, ;)
-_DECLARE_OUT_ARGS(stringout);
 
 _DECLARE_WAVEFORM_ARGS(void);
 _DECLARE_WAVEFORM_ARGS(char);
