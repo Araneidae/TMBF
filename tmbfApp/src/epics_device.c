@@ -337,11 +337,19 @@ void trigger_record(
         return true; \
     }
 
+#define DEFINE_WRITER_B(record) \
+    DECLARE_WRITER_B(record) \
+    { \
+        bool (*writer)(TYPEOF(record)) = context; \
+        return writer(*value); \
+    }
+
 FOR_IN_RECORDS(DEFINE_READ_VAR,)
 FOR_OUT_RECORDS(DEFINE_WRITE_VAR,)
 FOR_OUT_RECORDS(DEFINE_READ_VAR,)
 FOR_IN_RECORDS(DEFINE_READER,)
 FOR_OUT_RECORDS(DEFINE_WRITER,)
+FOR_OUT_RECORDS(DEFINE_WRITER_B,)
 
 bool publish_trigger_bi(void *context, bool *value)
 {

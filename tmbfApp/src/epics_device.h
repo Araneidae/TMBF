@@ -81,7 +81,7 @@ enum waveform_type {
  *      Record types: [u]longout, ao, bo, stringout, mbbo
  *      PUBLISH(record, name, .write, .init, .context, .persist)
  *      PUBLISH_WRITE_VAR(record, name, variable, .persist)
- *      PUBLISH_WRITER(record, name, writer, .persist)
+ *      PUBLISH_WRITER[_B](record, name, writer, .persist)
  *      PUBLISH_ACTION(name, action)
  *
  *  WAVEFORM records
@@ -296,6 +296,11 @@ void trigger_record(
         .write = publish_writer_##record, \
         .context = *(void (*[])(TYPEOF(record))) { writer }, ##args)
 
+#define PUBLISH_WRITER_B(record, name, writer, args...) \
+    PUBLISH(record, name, \
+        .write = publish_writer_b_##record, \
+        .context = *(bool (*[])(TYPEOF(record))) { writer }, ##args)
+
 #define PUBLISH_ACTION(name, action) \
     PUBLISH(bo, name, .write = publish_action_bo, \
         .context = *(void (*[])(void)) { action })
@@ -331,12 +336,15 @@ void trigger_record(
     bool publish_reader_##record(void *context, TYPEOF(record) *value)
 #define DECLARE_WRITER(record) \
     bool publish_writer_##record(void *context, const TYPEOF(record) *value)
+#define DECLARE_WRITER_B(record) \
+    bool publish_writer_b_##record(void *context, const TYPEOF(record) *value)
 
 FOR_IN_RECORDS(DECLARE_READ_VAR, ;)
 FOR_OUT_RECORDS(DECLARE_WRITE_VAR, ;)
 FOR_OUT_RECORDS(DECLARE_READ_VAR, ;)
 FOR_IN_RECORDS(DECLARE_READER, ;)
 FOR_OUT_RECORDS(DECLARE_WRITER, ;)
+FOR_OUT_RECORDS(DECLARE_WRITER_B, ;)
 
 bool publish_trigger_bi(void *context, bool *value);
 bool publish_action_bo(void *context, const bool *value);

@@ -127,18 +127,18 @@ static void set_fircycles(int cycles)
     set_fircoeffs();
 }
 
-static void set_firlength(int new_length)
+static bool set_firlength(int new_length)
 {
     if (new_length < 1  ||  MAX_FIR_COEFFS < new_length)
     {
         printf("Invalid FIR length %d\n", new_length);
-//         return false;
+        return false;
     }
     else
     {
         fir_length = new_length;
         set_fircoeffs();
-//         return true;
+        return true;
     }
 }
 
@@ -152,7 +152,7 @@ static void set_firphase(double new_phase)
 static void publish_fir(void)
 {
     PUBLISH_WRITER(longout, "FIRCYCLES", set_fircycles, .persist = true);
-    PUBLISH_WRITER(longout, "FIRLENGTH", set_firlength, .persist = true);
+    PUBLISH_WRITER_B(longout, "FIRLENGTH", set_firlength, .persist = true);
     PUBLISH_WRITER(ao,      "FIRPHASE",  set_firphase,  .persist = true);
 
     /* Direct access to the FIR coefficients through register interface. */
