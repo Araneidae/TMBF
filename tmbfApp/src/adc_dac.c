@@ -104,11 +104,11 @@ bool initialise_adc_dac(void)
     publish_minmax("DAC", &dac_min_max);
 
     /* Offset control for ADC. */
-    PUBLISH_WF_ACTION(short, "ADC:OFFSET", 4, set_offsets, .persist = true);
+    PUBLISH_WF_ACTION_P(short, "ADC:OFFSET", 4, set_offsets);
 
     /* Direct register control for DAC. */
-    PUBLISH_WRITER(mbbo, "DAC:ENABLE", write_CTRL_DAC_ENA, .persist = true);
-    PUBLISH_WRITER(ulongout, "DAC:DELAY", write_DELAY_DAC, .persist = true);
+    PUBLISH_WRITER_P(mbbo, "DAC:ENABLE", write_CTRL_DAC_ENA);
+    PUBLISH_WRITER_P(ulongout, "DAC:DELAY", write_DELAY_DAC);
 
     return true;
 }

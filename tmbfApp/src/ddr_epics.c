@@ -56,9 +56,8 @@ static void publish_waveforms(void)
         BUFFER_TURN_COUNT, read_ddr_bunch_waveform);
     PUBLISH_WF_ACTION(short, "DDR:SHORTWF",
         SHORT_TURN_WF_COUNT * SAMPLES_PER_TURN, read_short_ddr_turn_waveform);
-    long_waveform = PUBLISH_WF_ACTION(short, "DDR:LONGWF",
-        LONG_TURN_WF_COUNT * SAMPLES_PER_TURN,
-        read_long_ddr_turn_waveform, .io_intr = true);
+    long_waveform = PUBLISH_WF_ACTION_I(short, "DDR:LONGWF",
+        LONG_TURN_WF_COUNT * SAMPLES_PER_TURN, read_long_ddr_turn_waveform);
 
     PUBLISH_WRITE_VAR(longout, "DDR:BUNCHSEL", selected_bunch);
 }
@@ -143,11 +142,11 @@ static void arm_callback(void)
 
 static void publish_controls(void)
 {
-    PUBLISH_WRITER(mbbo, "DDR:TRIGMODE", set_trigger_mode, .persist = true);
+    PUBLISH_WRITER_P(mbbo, "DDR:TRIGMODE", set_trigger_mode);
     PUBLISH_WRITER(longout, "DDR:TURNSEL", set_selected_turn);
 
     PUBLISH_READ_VAR(longin, "DDR:TURNSEL", selected_turn);
-    long_ready = PUBLISH_READ_VAR(bi, "DDR:READY", data_ready, .io_intr = true);
+    long_ready = PUBLISH_READ_VAR_I(bi, "DDR:READY", data_ready);
     short_trigger = PUBLISH_TRIGGER("DDR:TRIG");
 
     PUBLISH_ACTION("DDR:TRIGDONE", trigger_done);

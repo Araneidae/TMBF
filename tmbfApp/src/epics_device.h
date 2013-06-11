@@ -1,18 +1,238 @@
 /* Common interface to epics records. */
 
+/* EPICS records are published with the use of a variety of PUBLISH...() macros,
+ * defined below.  Three classes of record are supported with slightly different
+ * macros and arguments:
+ *
+ *  IN records
+ *  ----------
+ *      Record types: [u]longin, ai, bi, stringin, mbbi
+ *      PUBLISH(record, name, read, .context, .io_intr, .set_time)
+ *      PUBLISH_READ_VAR[_I](record, name, variable)
+ *      PUBLISH_READER[_I](record, name, reader)
+ *      PUBLISH_TRIGGER[_T](name)
+ *
+ *  OUT records
+ *  -----------
+ *      Record types: [u]longout, ao, bo, stringout, mbbo
+ *      PUBLISH(record, name, write, .init, .context, .persist)
+ *      PUBLISH_WRITE_VAR[_P](record, name, variable)
+ *      PUBLISH_WRITER[_B][_P](record, name, writer)
+ *      PUBLISH_ACTION(name, action)
+ *
+ *  WAVEFORM records
+ *  ----------------
+ *      Record type: waveform
+ *      PUBLISH_WAVEFORM(field_type, name, length, process,
+ *          .init, .context, .persist, .io_intr)
+ *      PUBLISH_WF_READ_VAR[_I](field_type, name, length, waveform)
+ *      PUBLISH_WF_WRITE_VAR[_P](field_type, name, length, waveform)
+ *      PUBLISH_WF_ACTION{,_I,_P}(field_type, name, length, action)
+ *
+ * Suffixes:
+ *      _I  Sets .io_intr to enable "I/O Intr" scanning
+ *      _P  Sets .persist to enable persistent storage
+ *      _T  Sets .set_time to enable timestamp override
+ *      _B  Enables writer to return bool result
+ *
+ *
+ * In the examples above the dotted arguments are optional and should be
+ * specified using C99 named initialiser syntax, eg:
+ *
+ *      PUBLISH(longin, "RECORD", on_read, .context = read_context).
+ *
+ *
+ * The following two macros define the core interface.
+ *
+ *  PUBLISH(in_record, name, read, .context, .io_intr, .set_time)
+ *  PUBLISH(out_record, name, write, .init, .context, .persist)
+ *
+ *      The PUBLISH macro is used to create a software binding for the
+ *      appropriate record type to the given name.  The corresponding read or
+ *      write method will be called when the record processes, and the macro
+ *      ensures proper type checking.  Note that IN records and OUT records
+ *      support different arguments.
+ *
+ *      The following macros provide support for more specialised variants of
+ *      these records with hard-wired implementations of the read and write
+ *      methods.
+ *
+ *      For IN records the returned value is a struct epics_record* which can be
+ *      passed to trigger_record().
+ *
+ *      bool read(void *context, TYPEOF(in_record) *value)
+ *          For IN records this method will be called when the record is
+ *          processed.  If possible a valid value should be assigned to *value
+ *          and true returned, otherwise false can be returned to indicate no
+ *          value available.
+ *
+ *      bool write(void *context, const TYPEOF(out_record) *value)
+ *          For OUT records this will be called on record processing with the
+ *          value written to the record passed by reference.  If the value is
+ *          accepted then true should be return, otherwise if false is returned
+ *          then value is treated as being rejected.
+ *
+ *      bool init(void *context, TYPEOF(out_record) *value)
+ *          For OUT records this may be called during record initialisation to
+ *          assign an initial value to the record.  False can be returned to
+ *          indicate failure.  If .persist is set and a value is successfully
+ *          read from storage then this method will be ignored.
+ *
+ *  PUBLISH_WAVEFORM(field_type, name, max_length, process,
+ *      .init, .context, .persist, .io_intr)
+ *
+ *      The PUBLISH_WAVEFORM creates the software binding for waveform records
+ *      with data of the specified type.  The process method will be called each
+ *      time the record processes -- the process method can choose whether to
+ *      implement reading or writing as the primitive operation.
+ *
+ *      void process(void *context, field_type *array, size_t *length)
+ *          This is called during record processing with *length initialised
+ *          with the current waveform length.  The array can be read or written
+ *          as required and *length can be updated as appropriate if the data
+ *          length changes (though of course max_length must not be exceeded).
+ *
+ *      void init(void *context, field_type *array, size_t *length)
+ *          This may be called during initialisation to read an initial value.
+ *
+ *
+ *  The following arguments are common between both of these macros:
+ *
+ *      void *context
+ *          For the top level publish macros PUBLISH and PUBLISH_WAVEFORM the
+ *          context argument is passed through to each of the given callbacks to
+ *          create a closure binding.
+ *
+ *      bool io_intr
+ *          For IN and WAVEFORM records it is possible to set SCAN="I/O Intr"
+ *          and trigger processing internally (by calling trigger_record()).
+ *          For this to work this flag must also be set.  The _I macro variants
+ *          automatically set this flag.
+ *
+ *      bool set_time
+ *          For IN records it is also possible to specify the timestamp when
+ *          triggering the record.  In this case the TSE field must be set to -2
+ *          and trigger_record() must be used to explicitly set the timestamp.
+ *          This is most conveniently combined with io_intr.  The _T macro
+ *          variant automatically sets this flag.
+ *
+ *      bool persist
+ *          For OUT and WAVEFORM records this flag can be set to ensure that all
+ *          successful writes are mirrored to persistent storage, and the record
+ *          will be initialised from persistent storage if possible.
+ *
+ *
+ * The following macros provide specialisation for specific types of record.
+ *
+ *  PUBLISH_READ_VAR(record, name, variable)
+ *  PUBLISH_READ_VAR_I(record, name, variable)
+ *
+ *      The given variable will be read each time the record is processed.
+ *
+ *  PUBLISH_READER(record, name, reader)
+ *  PUBLISH_READER_I(record, name, reader)
+ *
+ *      TYPEOF(record) reader(void)
+ *          This will be called each time the record processes and should return
+ *          the value to be reported.
+ *
+ *  PUBLISH_TRIGGER(name)
+ *  PUBLISH_TRIGGER_T(name)
+ *
+ *      This record is useful for generating triggers into the database.  The
+ *      record type is set to bi and the io_intr flag is set.  Call
+ *      trigger_record() to make this record process, use FLNK in the database
+ *      to build a useful processing chain.
+ *
+ *  PUBLISH_WRITE_VAR(record, name, variable)
+ *  PUBLISH_WRITE_VAR_P(record, name, variable)
+ *
+ *      The variable is written each time the record is processed and is read on
+ *      startup to initialise the associated EPICS record.
+ *
+ *  PUBLISH_WRITER(record, name, writer)
+ *  PUBLISH_WRITER_P(record, name, writer)
+ *  PUBLISH_WRITER_B(record, name, writer)
+ *  PUBLISH_WRITER_B_P(record, name, writer)
+ *
+ *      void writer(TYPEOF(record)) value)
+ *      bool writer(TYPEOF(record)) value)
+ *          This method will be called each time the record processes.  For the
+ *          _B variants the writer can return a boolean to optionally reject the
+ *          write, otherwise void is returned and the write is unconditional.
+ *
+ *  PUBLISH_ACTION(name, action)
+ *
+ *      void action(void)
+ *          This method is called when the record processes.
+ *
+ *  PUBLISH_WF_READ_VAR(field_type, name, max_length, waveform)
+ *  PUBLISH_WF_READ_VAR_I(field_type, name, max_length, waveform)
+ *
+ *      The waveform will be read each time the record processes.
+ *
+ *  PUBLISH_WF_WRITE_VAR(field_type, name, max_length, waveform)
+ *  PUBLISH_WF_WRITE_VAR_P(field_type, name, max_length, waveform)
+ *
+ *      The waveform will be written each time the record processes.
+ *
+ *  PUBLISH_WF_ACTION(field_type, name, max_length, action)
+ *  PUBLISH_WF_ACTION_I(field_type, name, max_length, action)
+ *  PUBLISH_WF_ACTION_P(field_type, name, max_length, action)
+ *
+ *      void action(field_type value[max_length)
+ *          This is called each time the record processes.  It is up to the
+ *          implementation of action() to determine whether this is a read or a
+ *          write action.
+ *
+ * The following arguments are common to most or several of the macros above:
+ *
+ *      record
+ *          The first argument to most of the publishing macros defines the
+ *          associated record type, and the possible record types for each macro
+ *          are listed above.  Possible values for record are:
+ *
+ *              longin, ulongin, ai, bi, stringin, mbbi (all IN records)
+ *              longout, ulongout, ao, bo, stringout, mbbo (all OUT records)
+ *
+ *         Note that the record types ulongin and ulongout are aliases for
+ *         longin and longout respectively with unsigned types.  The underlying
+ *         EPICS type remains signed, this is just a convenience for interfacing
+ *         to unsigned data.
+ *
+ *      const char *name
+ *          The name field present in all publication macros and determines the
+ *          name that will be used to bind the published record to the record
+ *          definition in the EPICS database.  The corresponding name should
+ *          also occur in the INP or OUT field of the appropriate database
+ *          entry.
+ *
+ *      TYPEOF(record) variable
+ *          A variable is passed to the _VAR macros.  Its address is stored and
+ *          the variable is read or written as appropriate when the record is
+ *          processed.
+ *
+ *      field_type waveform[max_length]
+ *          A waveform is passed to the _WF_VAR macros, and is read or written
+ *          as approprate when the record is processed.
+ *
+ * The following arguments are common to all WAVEFORM macros:
+ *
+ *      field_type
+ *          Specifies the data type for the waveform, can be one of: char,
+ *          short, int, float, double.
+ *
+ *      size_t max_length
+ *          Intrinsic size of the waveform.  This will be checked against the
+ *          database when binding the record.
+ */
+
 #include <alarm.h>
 
 
 
-/* Epics strings are rather limited: a massive 39 characters are available! */
-typedef char EPICS_STRING[40];
-
-void CopyEpicsString(const EPICS_STRING in, EPICS_STRING out);
-
-
 /*****************************************************************************/
-/* Core EPICS publishing interface. */
-
+/* Basic types. */
 
 /* The following list of enumerations records the possible record types
  * supported by this library. */
@@ -63,141 +283,85 @@ enum waveform_type {
 };
 
 
+/* Epics strings are rather limited: a massive 39 characters are available! */
+typedef char EPICS_STRING[40];
 
-/* EPICS records are published with the use of a variety of PUBLISH...() macros,
- * defined below.  Three classes of record are supported with slightly different
- * macros and arguments:
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Core record publishing interface. */
+
+/* This is the abstract interface returned by all core publish methods.  At
+ * present only trigger_record() is supported. */
+struct epics_record;
+
+/* Makes the named record of the given type available for binding.  The
+ * particular structure passed to args is determined by the record type, this
+ * function should only ever be called via the PUBLISH() or PUBLISH_WAVEFORM()
+ * macros below. */
+struct epics_record *publish_epics_record(
+    enum record_type record_type, const char *name, const void *args);
+
+/* This updates the recorded record severity and optionally, if .set_time was
+ * specified, the record timestamp.  If .io_intr was set then record processing
+ * will be triggered.  This can only be called for IN and WAVEFORM records. */
+void trigger_record(
+    struct epics_record *record, epicsAlarmSeverity severity,
+    struct timespec *timestamp);
+
+/* Simple helper for EPICS_STRING type. */
+void copy_epics_string(const EPICS_STRING in, EPICS_STRING out);
+
+
+/* Core PUBLISH and PUBLISH_WAVEFORM macros.  Wrappers for publish_epics_record
+ * above, possible argument structures defined below. */
+
+#define PUBLISH(record, name, args...) \
+    publish_epics_record(RECORD_TYPE_##record, name, \
+        &(const struct record_args_##record) { args })
+
+#define PUBLISH_WAVEFORM(type, record_name, length, args...) \
+    publish_epics_record(RECORD_TYPE_waveform, record_name, \
+        &(const struct waveform_args_##type) { \
+            .field_type = waveform_TYPE_##type, .max_length = length, ##args })
+
+
+
+/******************************************************************************/
+/* Detailed macro based definitions.
  *
- *  IN records
- *  ----------
- *      Record types: [u]longin, ai, bi, stringin, mbbi
- *      PUBLISH(record, name, .read, .context, .io_intr, .set_time)
- *      PUBLISH_READ_VAR(record, name, variable, .io_intr, .set_time)
- *      PUBLISH_READER(record, name, reader)
- *      PUBLISH_TRIGGER(name)
+ * Because of the uniform but polymorphic character of the EPICS record
+ * interface defined here it is necessary to make extensive use of macros to
+ * ensure that we can get as much strict type checking as possible.
  *
- *  OUT records
- *  -----------
- *      Record types: [u]longout, ao, bo, stringout, mbbo
- *      PUBLISH(record, name, .write, .init, .context, .persist)
- *      PUBLISH_WRITE_VAR(record, name, variable, .persist)
- *      PUBLISH_WRITER[_B](record, name, writer, .persist)
- *      PUBLISH_ACTION(name, action)
- *
- *  WAVEFORM records
- *  ----------------
- *      Record type: waveform
- *      PUBLISH_WAVEFORM(field_type, name, length,
- *          .process, .init, .context, .persist, .io_intr)
- *      PUBLISH_WF_READ_VAR(field_type, name, length, waveform, .io_intr)
- *      PUBLISH_WF_WRITE_VAR(field_type, name, length, waveform, .persist)
- *      PUBLISH_WF_ACTION(field_type, name, length, action, .io_intr, .persist)
- *
- * In all the named macros above the dotted arguments are optional and should be
- * given using named initialiser syntax, eg:
- *
- *      PUBLISH(longin, "RECORD", .read = on_read, .context = some_context).
- *
- * A detailed description of each form of these macros follows below.
- *
- *
- *  PUBLISH(in_record, name, .read, .context, .io_intr, .set_time)
- *
- *      bool read(void *context, TYPEOF(in_record) *value)
- *          This method will be called when the record is processed.  If
- *          possible a valid value should be assigned to *value and true
- *          returned, otherwise false can be returned to indicate no value
- *          available.
- *
- *      void *context
- *          This will be passed to the read method.
- *
- *      bool io_intr
- *          If this is set then SCAN can usefully be set to "I/O Intr" and
- *          record processing can be triggered using trigger_record().
- *
- *      bool set_time
- *          If this is set then the TSE field must be set to -2 and the
- *          timestamp must be explicitly set using trigger_record().  Generally
- *          this is most conveniently used with io_intr.
- *
- *
- *  PUBLISH(out_record, name, .write, .init, .context, .persist)
- *
- *      bool write(void *context, const TYPEOF(out_record) *value)
- *          This will be called on record processing with the value written to
- *          the record passed by reference.  If the value is accepted then true
- *          should be return, otherwise if false is returned then value is
- *          treated as being rejected.
- *
- *      bool init(void *context, TYPEOF(out_record) *value)
- *          This may be called during record initialisation to assign an initial
- *          value to the record.  False can be returned to indicate failure.
- *
- *      void *context
- *          Passed to the write and init methods.
- *
- *      bool persist
- *          If this is set then all successful writes will be mirrored to
- *          persistent storage and the record will be initialised from
- *          persistent storage if possible (in which case init will not be
- *          called).
- *
- *
- *  PUBLISH_WAVEFORM(field_type, name, max_length,
- *          .process, .init, .context, .persist, .io_intr)
- *
- *      size_t max_length
- *          Intrinsic size of the waveform.  This will be checked against the
- *          database when binding the record.
- *
- *      void process(void *context, type *array, size_t *length)
- *          This is called during record processing with *length initialised
- *          with the current waveform length.  The array can be read or written
- *          as required and *length can be updated as appropriate if the data
- *          length changes (though of course max_length must not be exceeded).
- *
- *      void init(void *context, type *array, size_t *length)
- *          This may be called during initialisation to read an initial value.
- *
- *      void *context
- *          Passed to the process and init methods.
- *
- *      bool persist
- *          If set then all updates to the waveform will be mirrored to
- *          persistent storage (after calling process) and initialised from
- *          persistent storage.
- *
- *      bool io_intr
- *          If this is set then SCAN can usefully be set to "I/O Intr" and
- *          record processing can be triggered using trigger_record().
- */
+ * All identifiers starting with _ should be treated as internal and should not
+ * be used outside the implementation of this library. */
+
 
 /* Structures defining the possible arguments that can be passed when publishing
- * the corresponding record types.  See detailed comments on PUBLISH() macro for
- * the specific parameters. */
+ * the corresponding record types.  See detailed comments above for the specific
+ * parameters. */
 
-#define DECLARE_IN_ARGS_(record, type) \
+#define _DECLARE_IN_ARGS_(record, type) \
     struct record_args_##record { \
         bool (*read)(void *context, type *value); \
         void *context; \
         bool io_intr; \
         bool set_time; \
     }
-#define DECLARE_IN_ARGS(record) \
-    DECLARE_IN_ARGS_(record, TYPEOF(record))
+#define _DECLARE_IN_ARGS(record) \
+    _DECLARE_IN_ARGS_(record, TYPEOF(record))
 
-#define DECLARE_OUT_ARGS_(record, type) \
+#define _DECLARE_OUT_ARGS_(record, type) \
     struct record_args_##record { \
         bool (*write)(void *context, const type *value); \
         bool (*init)(void *context, type *value); \
         void *context; \
         bool persist; \
     }
-#define DECLARE_OUT_ARGS(record) \
-    DECLARE_OUT_ARGS_(record, TYPEOF(record))
+#define _DECLARE_OUT_ARGS(record) \
+    _DECLARE_OUT_ARGS_(record, TYPEOF(record))
 
-#define DECLARE_WAVEFORM_ARGS(type) \
+#define _DECLARE_WAVEFORM_ARGS(type) \
     struct waveform_args_##type { \
         enum waveform_type field_type; \
         size_t max_length; \
@@ -212,59 +376,31 @@ enum waveform_type {
 /* These two macros help us to repeat definitions and declarations for groups of
  * records.  Unfortunately string{in,out} is different enough to need separate
  * treatment in general. */
-#define FOR_IN_RECORDS(ACTION, sep) \
+#define _FOR_IN_RECORDS(ACTION, sep) \
     ACTION(longin) sep \
     ACTION(ulongin) sep \
     ACTION(ai) sep \
     ACTION(bi) sep \
     ACTION(mbbi) sep
-#define FOR_OUT_RECORDS(ACTION, sep) \
+#define _FOR_OUT_RECORDS(ACTION, sep) \
     ACTION(longout) sep \
     ACTION(ulongout) sep \
     ACTION(ao) sep \
     ACTION(bo) sep \
     ACTION(mbbo) sep
 
-FOR_IN_RECORDS(DECLARE_IN_ARGS, ;)
-DECLARE_IN_ARGS(stringin);
+_FOR_IN_RECORDS(_DECLARE_IN_ARGS, ;)
+_DECLARE_IN_ARGS(stringin);
 
-FOR_OUT_RECORDS(DECLARE_OUT_ARGS, ;)
-DECLARE_OUT_ARGS(stringout);
+_FOR_OUT_RECORDS(_DECLARE_OUT_ARGS, ;)
+_DECLARE_OUT_ARGS(stringout);
 
-DECLARE_WAVEFORM_ARGS(void);
-DECLARE_WAVEFORM_ARGS(char);
-DECLARE_WAVEFORM_ARGS(short);
-DECLARE_WAVEFORM_ARGS(int);
-DECLARE_WAVEFORM_ARGS(float);
-DECLARE_WAVEFORM_ARGS(double);
-
-
-/* This is the abstract interface returned by all core publish methods.  Only a
- * handful of operations are supported. */
-struct epics_record;
-
-/* Makes the named record of the given type available for binding.  The
- * particular structure passed to args is determined by the record type, this
- * function should only ever be called via the PUBLISH() macro below. */
-struct epics_record *publish_epics_record(
-    enum record_type record_type, const char *name, const void *args);
-
-#define PUBLISH(record, name, args...) \
-    publish_epics_record(RECORD_TYPE_##record, name, \
-        &(const struct record_args_##record) { args })
-
-#define PUBLISH_WAVEFORM(type, record_name, length, args...) \
-    publish_epics_record(RECORD_TYPE_waveform, record_name, \
-        &(const struct waveform_args_##type) { \
-            .field_type = waveform_TYPE_##type, .max_length = length, ##args })
-
-
-/* This updates the recorded record severity and optionally, if .set_time was
- * specified, the record timestamp.  If .io_intr was set then record processing
- * will be triggered.  This can only be called for IN and WAVEFORM records. */
-void trigger_record(
-    struct epics_record *record, epicsAlarmSeverity severity,
-    struct timespec *timestamp);
+_DECLARE_WAVEFORM_ARGS(void);
+_DECLARE_WAVEFORM_ARGS(char);
+_DECLARE_WAVEFORM_ARGS(short);
+_DECLARE_WAVEFORM_ARGS(int);
+_DECLARE_WAVEFORM_ARGS(float);
+_DECLARE_WAVEFORM_ARGS(double);
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -272,84 +408,125 @@ void trigger_record(
  * of common structures including variables and simple actions without any extra
  * context. */
 
-#define PUBLISH_READ_VAR(record, name, variable, args...) \
+#define PUBLISH_READ_VAR_(record, name, variable, args...) \
     PUBLISH(record, name, \
-        .read = publish_var_read_##record, \
+        .read = _publish_var_read_##record, \
         .context = *(TYPEOF(record)*[]) { &(variable) }, ##args)
+#define PUBLISH_READ_VAR(record, name, variable) \
+    PUBLISH_READ_VAR_(record, name, variable)
+#define PUBLISH_READ_VAR_I(record, name, variable) \
+    PUBLISH_READ_VAR_(record, name, variable, .io_intr = true)
 
+#define PUBLISH_READER_(record, name, reader, args...) \
+    PUBLISH(record, name, \
+        .read = _publish_reader_##record, \
+        .context = *(TYPEOF(record) (*[])(void)) { reader }, ##args)
 #define PUBLISH_READER(record, name, reader) \
-    PUBLISH(record, name, \
-        .read = publish_reader_##record, \
-        .context = *(TYPEOF(record) (*[])(void)) { reader })
+    PUBLISH_READER_(record, name, reader)
+#define PUBLISH_READER_I(record, name, reader) \
+    PUBLISH_READER_(record, name, reader, .io_intr = true)
 
+#define PUBLISH_TRIGGER_(name, args...) \
+    PUBLISH(bi, name, .read = _publish_trigger_bi, .io_intr = true, ##args)
 #define PUBLISH_TRIGGER(name) \
-    PUBLISH(bi, name, .read = publish_trigger_bi, .io_intr = true)
+    PUBLISH_TRIGGER_(name)
+#define PUBLISH_TRIGGER_T(name) \
+    PUBLISH_TRIGGER_(name, .set_time = true)
 
-#define PUBLISH_WRITE_VAR(record, name, variable, args...) \
+#define PUBLISH_WRITE_VAR_(record, name, variable, args...) \
     PUBLISH(record, name, \
-        .write = publish_var_write_##record, \
-        .init = publish_var_read_##record, \
+        .write = _publish_var_write_##record, \
+        .init = _publish_var_read_##record, \
         .context = *(TYPEOF(record)*[]) { &(variable) }, ##args)
+#define PUBLISH_WRITE_VAR(record, name, variable) \
+    PUBLISH_WRITE_VAR_(record, name, variable)
+#define PUBLISH_WRITE_VAR_P(record, name, variable) \
+    PUBLISH_WRITE_VAR_(record, name, variable, .persist = true)
 
-#define PUBLISH_WRITER(record, name, writer, args...) \
+#define PUBLISH_WRITER_(record, name, writer, args...) \
     PUBLISH(record, name, \
-        .write = publish_writer_##record, \
+        .write = _publish_writer_##record, \
         .context = *(void (*[])(TYPEOF(record))) { writer }, ##args)
+#define PUBLISH_WRITER(record, name, writer) \
+    PUBLISH_WRITER_(record, name, writer)
+#define PUBLISH_WRITER_P(record, name, writer) \
+    PUBLISH_WRITER_(record, name, writer, .persist = true)
 
-#define PUBLISH_WRITER_B(record, name, writer, args...) \
+#define PUBLISH_WRITER_B_(record, name, writer, args...) \
     PUBLISH(record, name, \
-        .write = publish_writer_b_##record, \
+        .write = _publish_writer_b_##record, \
         .context = *(bool (*[])(TYPEOF(record))) { writer }, ##args)
+#define PUBLISH_WRITER_B(record, name, writer) \
+    PUBLISH_WRITER_B_(record, name, writer)
+#define PUBLISH_WRITER_B_P(record, name, writer) \
+    PUBLISH_WRITER_B_(record, name, writer, .persist = true)
 
 #define PUBLISH_ACTION(name, action) \
-    PUBLISH(bo, name, .write = publish_action_bo, \
+    PUBLISH(bo, name, .write = _publish_action_bo, \
         .context = *(void (*[])(void)) { action })
+
 
 #define PROC_WAVEFORM_T(type) \
     void (*)(void * context, type *array, size_t *length)
-#define PUBLISH_WF_READ_VAR(type, name, length, waveform, args...) \
-    PUBLISH_WAVEFORM(type, name, length, \
-        .process = (PROC_WAVEFORM_T(type)) publish_waveform_read_var, \
-        .init    = (PROC_WAVEFORM_T(type)) publish_waveform_read_var, \
-        .context = make_waveform_context( \
-            sizeof(type), length, *(type *[]) { waveform }), ##args)
-#define PUBLISH_WF_WRITE_VAR(type, name, length, waveform, args...) \
-    PUBLISH_WAVEFORM(type, name, length, \
-        .process = (PROC_WAVEFORM_T(type)) publish_waveform_write_var, \
-        .init    = (PROC_WAVEFORM_T(type)) publish_waveform_read_var, \
-        .context = make_waveform_context( \
-            sizeof(type), length, *(type *[]) { waveform }), ##args)
 
-#define PUBLISH_WF_ACTION(type, name, length, action, args...) \
+#define PUBLISH_WF_READ_VAR_(type, name, length, waveform, args...) \
     PUBLISH_WAVEFORM(type, name, length, \
-        .process = (PROC_WAVEFORM_T(type)) publish_waveform_action, \
-        .context = make_waveform_context( \
+        .process = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
+        .init    = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
+        .context = _make_waveform_context( \
+            sizeof(type), length, *(type *[]) { waveform }), ##args)
+#define PUBLISH_WF_READ_VAR(type, name, length, waveform) \
+    PUBLISH_WF_READ_VAR_(type, name, length, waveform)
+#define PUBLISH_WF_READ_VAR_I(type, name, length, waveform) \
+    PUBLISH_WF_READ_VAR_(type, name, length, waveform, .io_intr = true)
+
+#define PUBLISH_WF_WRITE_VAR_(type, name, length, waveform, args...) \
+    PUBLISH_WAVEFORM(type, name, length, \
+        .process = (PROC_WAVEFORM_T(type)) _publish_waveform_write_var, \
+        .init    = (PROC_WAVEFORM_T(type)) _publish_waveform_read_var, \
+        .context = _make_waveform_context( \
+            sizeof(type), length, *(type *[]) { waveform }), ##args)
+#define PUBLISH_WF_WRITE_VAR(type, name, length, waveform) \
+    PUBLISH_WF_WRITE_VAR_(type, name, length, waveform)
+#define PUBLISH_WF_WRITE_VAR_P(type, name, length, waveform) \
+    PUBLISH_WF_WRITE_VAR_(type, name, length, waveform, .persist = true)
+
+#define PUBLISH_WF_ACTION_(type, name, length, action, args...) \
+    PUBLISH_WAVEFORM(type, name, length, \
+        .process = (PROC_WAVEFORM_T(type)) _publish_waveform_action, \
+        .context = _make_waveform_context( \
             sizeof(type), length, *(void (*[])(type *)) { action }), ##args)
+#define PUBLISH_WF_ACTION(type, name, length, action) \
+    PUBLISH_WF_ACTION_(type, name, length, action)
+#define PUBLISH_WF_ACTION_I(type, name, length, action) \
+    PUBLISH_WF_ACTION_(type, name, length, action, .io_intr = true)
+#define PUBLISH_WF_ACTION_P(type, name, length, action) \
+    PUBLISH_WF_ACTION_(type, name, length, action, .persist = true)
 
 
 /* Declarations for the support methods referenced above. */
-#define DECLARE_READ_VAR(record) \
-    bool publish_var_read_##record(void *context, TYPEOF(record) *value)
-#define DECLARE_WRITE_VAR(record) \
-    bool publish_var_write_##record(void *context, const TYPEOF(record) *value)
-#define DECLARE_READER(record) \
-    bool publish_reader_##record(void *context, TYPEOF(record) *value)
-#define DECLARE_WRITER(record) \
-    bool publish_writer_##record(void *context, const TYPEOF(record) *value)
-#define DECLARE_WRITER_B(record) \
-    bool publish_writer_b_##record(void *context, const TYPEOF(record) *value)
+#define _DECLARE_READ_VAR(record) \
+    bool _publish_var_read_##record(void *context, TYPEOF(record) *value)
+#define _DECLARE_WRITE_VAR(record) \
+    bool _publish_var_write_##record(void *context, const TYPEOF(record) *value)
+#define _DECLARE_READER(record) \
+    bool _publish_reader_##record(void *context, TYPEOF(record) *value)
+#define _DECLARE_WRITER(record) \
+    bool _publish_writer_##record(void *context, const TYPEOF(record) *value)
+#define _DECLARE_WRITER_B(record) \
+    bool _publish_writer_b_##record(void *context, const TYPEOF(record) *value)
 
-FOR_IN_RECORDS(DECLARE_READ_VAR, ;)
-FOR_OUT_RECORDS(DECLARE_WRITE_VAR, ;)
-FOR_OUT_RECORDS(DECLARE_READ_VAR, ;)
-FOR_IN_RECORDS(DECLARE_READER, ;)
-FOR_OUT_RECORDS(DECLARE_WRITER, ;)
-FOR_OUT_RECORDS(DECLARE_WRITER_B, ;)
+_FOR_IN_RECORDS(_DECLARE_READ_VAR, ;)
+_FOR_OUT_RECORDS(_DECLARE_WRITE_VAR, ;)
+_FOR_OUT_RECORDS(_DECLARE_READ_VAR, ;)
+_FOR_IN_RECORDS(_DECLARE_READER, ;)
+_FOR_OUT_RECORDS(_DECLARE_WRITER, ;)
+_FOR_OUT_RECORDS(_DECLARE_WRITER_B, ;)
 
-bool publish_trigger_bi(void *context, bool *value);
-bool publish_action_bo(void *context, const bool *value);
+bool _publish_trigger_bi(void *context, bool *value);
+bool _publish_action_bo(void *context, const bool *value);
 
-void publish_waveform_action(void *context, void *array, size_t *length);
-void publish_waveform_write_var(void *context, void *array, size_t *length);
-void publish_waveform_read_var(void *context, void *array, size_t *length);
-void *make_waveform_context(size_t size, size_t length, void *context);
+void _publish_waveform_action(void *context, void *array, size_t *length);
+void _publish_waveform_write_var(void *context, void *array, size_t *length);
+void _publish_waveform_read_var(void *context, void *array, size_t *length);
+void *_make_waveform_context(size_t size, size_t length, void *context);

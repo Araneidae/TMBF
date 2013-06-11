@@ -47,13 +47,6 @@
 
 
 
-void CopyEpicsString(const EPICS_STRING in, EPICS_STRING out)
-{
-    memcpy(out, in, sizeof(EPICS_STRING));
-}
-
-
-
 /****************************************************************************/
 /*                   Core Record Publishing and Lookup                      */
 /****************************************************************************/
@@ -101,8 +94,8 @@ struct epics_record {
 
 
 /* Generic argument types. */
-DECLARE_IN_ARGS_(in, void);
-DECLARE_OUT_ARGS_(out, void);
+_DECLARE_IN_ARGS_(in, void);
+_DECLARE_OUT_ARGS_(out, void);
 
 
 /* Returns the size of data to be reserved for the record_base::WriteData
@@ -261,6 +254,8 @@ struct epics_record *publish_epics_record(
 }
 
 
+/* Checks whether the given record is an IN record for validating the trigger
+ * method. */
 static bool is_in_record(enum record_type record_type)
 {
     switch (record_type)
@@ -295,6 +290,12 @@ void trigger_record(
 }
 
 
+void copy_epics_string(const EPICS_STRING in, EPICS_STRING out)
+{
+    strncpy(out, in, sizeof(EPICS_STRING));
+}
+
+
 
 /*****************************************************************************/
 /*                                                                           */
@@ -306,7 +307,7 @@ void trigger_record(
  * access on top of the rather more general framework developed here. */
 
 #define DEFINE_READ_VAR(record) \
-    DECLARE_READ_VAR(record) \
+    _DECLARE_READ_VAR(record) \
     { \
         const TYPEOF(record) *variable = context; \
         *value = *variable; \
@@ -314,7 +315,7 @@ void trigger_record(
     }
 
 #define DEFINE_WRITE_VAR(record) \
-    DECLARE_WRITE_VAR(record) \
+    _DECLARE_WRITE_VAR(record) \
     { \
         TYPEOF(record) *variable = context; \
         *variable = *value; \
@@ -322,7 +323,7 @@ void trigger_record(
     }
 
 #define DEFINE_READER(record) \
-    DECLARE_READER(record) \
+    _DECLARE_READER(record) \
     { \
         TYPEOF(record) (*reader)(void) = context; \
         *value = reader(); \
@@ -330,7 +331,7 @@ void trigger_record(
     }
 
 #define DEFINE_WRITER(record) \
-    DECLARE_WRITER(record) \
+    _DECLARE_WRITER(record) \
     { \
         void (*writer)(TYPEOF(record)) = context; \
         writer(*value); \
@@ -338,26 +339,26 @@ void trigger_record(
     }
 
 #define DEFINE_WRITER_B(record) \
-    DECLARE_WRITER_B(record) \
+    _DECLARE_WRITER_B(record) \
     { \
         bool (*writer)(TYPEOF(record)) = context; \
         return writer(*value); \
     }
 
-FOR_IN_RECORDS(DEFINE_READ_VAR,)
-FOR_OUT_RECORDS(DEFINE_WRITE_VAR,)
-FOR_OUT_RECORDS(DEFINE_READ_VAR,)
-FOR_IN_RECORDS(DEFINE_READER,)
-FOR_OUT_RECORDS(DEFINE_WRITER,)
-FOR_OUT_RECORDS(DEFINE_WRITER_B,)
+_FOR_IN_RECORDS(DEFINE_READ_VAR,)
+_FOR_OUT_RECORDS(DEFINE_READ_VAR,)
+_FOR_OUT_RECORDS(DEFINE_WRITE_VAR,)
+_FOR_IN_RECORDS(DEFINE_READER,)
+_FOR_OUT_RECORDS(DEFINE_WRITER,)
+_FOR_OUT_RECORDS(DEFINE_WRITER_B,)
 
-bool publish_trigger_bi(void *context, bool *value)
+bool _publish_trigger_bi(void *context, bool *value)
 {
     *value = true;
     return true;
 }
 
-bool publish_action_bo(void *context, const bool *value)
+bool _publish_action_bo(void *context, const bool *value)
 {
     void (*action)(void) = context;
     action();
@@ -381,7 +382,7 @@ struct waveform_context {
     void *context;
 };
 
-void *make_waveform_context(size_t size, size_t length, void *context)
+void *_make_waveform_context(size_t size, size_t length, void *context)
 {
     struct waveform_context *info = malloc(sizeof(struct waveform_context));
     info->size = size;
@@ -390,21 +391,21 @@ void *make_waveform_context(size_t size, size_t length, void *context)
     return info;
 }
 
-void publish_waveform_write_var(void *context, void *array, size_t *length)
+void _publish_waveform_write_var(void *context, void *array, size_t *length)
 {
     struct waveform_context *info = context;
     memcpy(info->context, array, info->length * info->size);
     *length = info->length;
 }
 
-void publish_waveform_read_var(void *context, void *array, size_t *length)
+void _publish_waveform_read_var(void *context, void *array, size_t *length)
 {
     struct waveform_context *info = context;
     memcpy(array, info->context, info->length * info->size);
     *length = info->length;
 }
 
-void publish_waveform_action(void *context, void *array, size_t *length)
+void _publish_waveform_action(void *context, void *array, size_t *length)
 {
     struct waveform_context *info = context;
     void (*action)(void *) = info->context;
@@ -466,7 +467,8 @@ static long get_ioint_common(int cmd, dbCommon *pr, IOSCANPVT *ioscanpvt)
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Input record processing. */
+/*                          Input record processing.                         */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 static bool init_in_record(dbCommon *pr)
 {
@@ -517,7 +519,8 @@ static bool process_in_record(dbCommon *pr, void *result)
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Output record processing. */
+/*                        Output record processing.                          */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* Perform a simulation of record processing event, including a synthetic
  * initial timestamp.  This is useful after initialising an output record with
@@ -540,10 +543,11 @@ static bool init_out_record(dbCommon *pr, size_t value_size, void *result)
     bool read_ok =
         (base->persist   &&  read_persistent_variable(base->key, result))  ||
         (base->out.init  &&  base->out.init(base->context, result));
-    memcpy(base->out.save_value, result, value_size);
-
     if (read_ok)
         post_init_process(pr);
+    else
+        memset(result, 0, value_size);
+    memcpy(base->out.save_value, result, value_size);
 
     return true;
 }

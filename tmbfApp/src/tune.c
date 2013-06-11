@@ -108,7 +108,7 @@ static void update_ddc_skew(int new_skew)
     update_tune_scale();
 }
 
-static void set_tune_scale(void *context, float *buffer, size_t *length)
+static void set_tune_scale(float *buffer)
 {
     update_tune_scale();
     memcpy(buffer, ScaleWaveform, sizeof(ScaleWaveform));
@@ -117,16 +117,15 @@ static void set_tune_scale(void *context, float *buffer, size_t *length)
 
 static void publish_frequencies(void)
 {
-    PUBLISH_WRITER(ao, "HOMFREQ", set_homfreq, .persist = true);
+    PUBLISH_WRITER_P(ao, "HOMFREQ", set_homfreq);
 
-    PUBLISH_WRITER(ao, "SWPSTARTFREQ", set_sweepstartfreq, .persist = true);
-    PUBLISH_WRITER(ao, "SWPSTOPFREQ", set_sweepstopfreq, .persist = true);
-    PUBLISH_WRITER(ao, "SWPFREQSTEP", set_freq_step, .persist = true);
+    PUBLISH_WRITER_P(ao, "SWPSTARTFREQ", set_sweepstartfreq);
+    PUBLISH_WRITER_P(ao, "SWPSTOPFREQ", set_sweepstopfreq);
+    PUBLISH_WRITER_P(ao, "SWPFREQSTEP", set_freq_step);
 
-    PUBLISH_WRITER(longout, "DDCSKEW", update_ddc_skew, .persist = true);
+    PUBLISH_WRITER_P(longout, "DDCSKEW", update_ddc_skew);
 
-    PUBLISH_WAVEFORM(float, "TUNESCALE", TUNE_LENGTH,
-        .process = set_tune_scale);
+    PUBLISH_WF_ACTION(float, "TUNESCALE", TUNE_LENGTH, set_tune_scale);
 }
 
 

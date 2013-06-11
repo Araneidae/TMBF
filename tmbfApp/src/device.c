@@ -39,13 +39,10 @@ static void bb_write_gain(float *gains)
 
 static void publish_bb_control(void)
 {
-    PUBLISH_WF_ACTION(
-        float, "BB_GAINS", MAX_BUNCH_COUNT, bb_write_gain, .persist = true);
-    PUBLISH_WF_ACTION(
-        short, "BB_DACS", MAX_BUNCH_COUNT, write_BB_DACs, .persist = true);
-    PUBLISH_WF_ACTION(
-        short, "BB_TEMPDACS", MAX_BUNCH_COUNT,
-        write_BB_TEMPDACs, .persist = true);
+    PUBLISH_WF_ACTION_P(float, "BB_GAINS", MAX_BUNCH_COUNT, bb_write_gain);
+    PUBLISH_WF_ACTION_P(short, "BB_DACS", MAX_BUNCH_COUNT, write_BB_DACs);
+    PUBLISH_WF_ACTION_P(
+        short, "BB_TEMPDACS", MAX_BUNCH_COUNT, write_BB_TEMPDACs);
 }
 
 
@@ -151,9 +148,9 @@ static void set_firphase(double new_phase)
 
 static void publish_fir(void)
 {
-    PUBLISH_WRITER(longout, "FIRCYCLES", set_fircycles, .persist = true);
-    PUBLISH_WRITER_B(longout, "FIRLENGTH", set_firlength, .persist = true);
-    PUBLISH_WRITER(ao,      "FIRPHASE",  set_firphase,  .persist = true);
+    PUBLISH_WRITER_P(longout, "FIRCYCLES", set_fircycles);
+    PUBLISH_WRITER_B_P(longout, "FIRLENGTH", set_firlength);
+    PUBLISH_WRITER_P(ao,      "FIRPHASE",  set_firphase);
 
     /* Direct access to the FIR coefficients through register interface. */
     PUBLISH_WF_ACTION(int, "COEFFS", MAX_FIR_COEFFS, write_FIR_coeffs);
@@ -170,7 +167,7 @@ static void publish_fir(void)
 // static void read_version(EPICS_STRING result)
 // {
 //     EPICS_STRING version = TMBF_VERSION;
-//     CopyEpicsString(version, result);
+//     copy_epics_string(version, result);
 // }
 
 
@@ -179,7 +176,7 @@ static void publish_fir(void)
 /* Persistent writable register.  All associated records must be marked with
  * PINI='YES' to ensure the initial loaded state is written back. */
 #define PUBLISH_REGISTER_P(record, name, register) \
-    PUBLISH_WRITER(record, name, write_##register, .persist = true)
+    PUBLISH_WRITER_P(record, name, write_##register)
 
 
 static void publish_registers(void)
