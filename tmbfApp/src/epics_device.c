@@ -16,6 +16,7 @@
 #include <recSup.h>
 #include <dbScan.h>
 #include <epicsExport.h>
+#include <initHooks.h>
 
 #include <alarm.h>
 #include <dbFldTypes.h>
@@ -64,6 +65,7 @@ struct epics_record {
 
     /* The following fields are shared between pairs of record classes. */
     IOSCANPVT ioscanpvt;            // Used for I/O intr enabled records
+    bool ioscan_pending;            // Set for early record triggering
     bool persist;                   // Set for persistently written data
     epicsAlarmSeverity severity;    // Reported record status
     void *context;                  // Context for all user callbacks
@@ -225,6 +227,7 @@ struct epics_record *publish_epics_record(
 
     base->bound = false;
     base->ioscanpvt = NULL;
+    base->ioscan_pending = false;
     base->persist = false;
     base->severity = epicsSevNone;
 
@@ -245,8 +248,6 @@ struct epics_record *publish_epics_record(
             break;
     }
 
-    if (hash_table == NULL)
-        hash_table = hash_table_create(false);
     if (!TEST_OK_(hash_table_insert(hash_table, base->key, base) == NULL,
             "Record \"%s\" already exists!", key))
         ASSERT_FAIL();      // Don't allow caller to carry on
@@ -271,22 +272,25 @@ static bool is_in_record(enum record_type record_type)
 
 
 void trigger_record(
-    struct epics_record *record, epicsAlarmSeverity severity,
+    struct epics_record *base, epicsAlarmSeverity severity,
     struct timespec *timestamp)
 {
-    bool in_record = is_in_record(record->record_type);
-    bool wf_record = record->record_type == RECORD_TYPE_waveform;
+    bool in_record = is_in_record(base->record_type);
+    bool wf_record = base->record_type == RECORD_TYPE_waveform;
     ASSERT_OK(in_record  ||  wf_record);
 
-    record->severity = severity;
+    base->severity = severity;
     if (timestamp)
     {
-        ASSERT_OK(in_record  &&  record->in.set_time);
-        record->in.timestamp = *timestamp;
+        ASSERT_OK(in_record  &&  base->in.set_time);
+        base->in.timestamp = *timestamp;
     }
 
-    if (record->ioscanpvt)
-        scanIoRequest(record->ioscanpvt);
+    if (base->ioscanpvt)
+    {
+        scanIoRequest(base->ioscanpvt);
+        base->ioscan_pending = true;
+    }
 }
 
 
@@ -295,6 +299,31 @@ void copy_epics_string(EPICS_STRING *out, const char *in)
     strncpy(out->s, in, sizeof(EPICS_STRING));
 }
 
+
+static void init_hook(initHookState state)
+{
+    if (state == initHookAfterInterruptAccept)
+    {
+        /* Now we have to do something rather dirty.  It turns out that any
+         * trigger_record events signalled before this point have simply been
+         * ignored.  We'll walk the complete record database and retrigger them
+         * now.  Fortunately we'll only ever get this event the once. */
+        const void *key;
+        void *value;
+        for (int ix = 0; hash_table_walk(hash_table, &ix, &key, &value); )
+        {
+            const struct epics_record *base = value;
+            if (base->ioscan_pending  &&  base->ioscanpvt)
+                scanIoRequest(base->ioscanpvt);
+        }
+    }
+}
+
+void initialise_epics_device(void)
+{
+    hash_table = hash_table_create(false);
+    initHookRegister(init_hook);
+}
 
 
 /*****************************************************************************/

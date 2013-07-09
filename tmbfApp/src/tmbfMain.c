@@ -15,6 +15,7 @@
 
 #include "error.h"
 #include "hardware.h"
+#include "epics_device.h"
 #include "adc_dac.h"
 #include "tune.h"
 #include "device.h"
@@ -215,9 +216,10 @@ int main(int argc,char *argv[])
             persistence_state_file, persistence_interval)  &&
         InitialiseHardware()  &&
         StartCaRepeater()  &&
-        InitialiseTune()  &&
         HookLogging()  &&
         InitialiseSignals()  &&
+        DO_(initialise_epics_device())  &&
+        InitialiseTune()  &&
         GenericInit()  &&
         initialise_ddr_epics()  &&
         initialise_adc_dac()  &&

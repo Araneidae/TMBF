@@ -155,8 +155,8 @@
  *  PUBLISH_WRITER_B(record, name, writer)
  *  PUBLISH_WRITER_B_P(record, name, writer)
  *
- *      void writer(TYPEOF(record)) value)
- *      bool writer(TYPEOF(record)) value)
+ *      void writer(TYPEOF(record) value)
+ *      bool writer(TYPEOF(record) value)
  *          This method will be called each time the record processes.  For the
  *          _B variants the writer can return a boolean to optionally reject the
  *          write, otherwise void is returned and the write is unconditional.
@@ -229,6 +229,9 @@
 
 #include <alarm.h>
 
+
+/* This must be called once before publishing any PVs. */
+void initialise_epics_device(void);
 
 
 /*****************************************************************************/
