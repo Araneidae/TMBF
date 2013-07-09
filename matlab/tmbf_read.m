@@ -5,9 +5,10 @@
 % call tmbf_trigger first if necessary.
 %
 % turns defaults to all available turns if not specified, start defaults to the
-% trigger point.  An offset of up to 8962 turns can be specified.
+% trigger point.  A starting offset of up to +-35846 turns can be specified
+% and the length can be up to 2*35846 depending on the starting offset.
 function data = tmbf_read(tmbf, turns, start)
-    max_turns = 8962;
+    max_turns = 35846;
     if nargin < 2; turns = 8962; end
     if nargin < 3; start = 0; end
     assert(-max_turns <= start  &&  start < max_turns, 'Invalid start');

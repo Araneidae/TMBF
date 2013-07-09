@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 316
-y 64
+x 317
+y 65
 w 641
 h 656
 font "helvetica-medium-r-18.0"
@@ -49,7 +49,7 @@ nPts 2
 showXAxis
 xAxisSrc "fromUser"
 xMin 0
-xMax 9000
+xMax 36000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"

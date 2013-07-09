@@ -17,8 +17,9 @@
 
 
 
-/* Total number of turns in the DDR buffer following the trigger. */
-#define BUFFER_TURN_COUNT   (16 * 1024 * 1024 / SAMPLES_PER_TURN / 2)
+/* Total number of turns in the DDR buffer following the trigger.  We have to
+ * subtract a couple of turns because of some jitter in the trigger. */
+#define BUFFER_TURN_COUNT   (64 * 1024 * 1024 / SAMPLES_PER_TURN / 2 - 2)
 
 /* Size of turn readout waveform. */
 #define SHORT_TURN_WF_COUNT       8
