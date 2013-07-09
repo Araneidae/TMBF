@@ -10,6 +10,7 @@
  *      PUBLISH(record, name, read, .context, .io_intr, .set_time)
  *      PUBLISH_READ_VAR[_I](record, name, variable)
  *      PUBLISH_READER[_I](record, name, reader)
+ *      PUBLISH_READER_C[_I](record, name, reader_c, context)
  *      PUBLISH_TRIGGER[_T](name)
  *
  *  OUT records
@@ -18,7 +19,9 @@
  *      PUBLISH(record, name, write, .init, .context, .persist)
  *      PUBLISH_WRITE_VAR[_P](record, name, variable)
  *      PUBLISH_WRITER[_B][_P](record, name, writer)
+ *      PUBLISH_WRITER_C[_B][_P](record, name, writer_c, context)
  *      PUBLISH_ACTION(name, action)
+ *      PUBLISH_ACTION_C(name, action_c, context)
  *
  *  WAVEFORM records
  *  ----------------
@@ -28,12 +31,14 @@
  *      PUBLISH_WF_READ_VAR[_I](field_type, name, length, waveform)
  *      PUBLISH_WF_WRITE_VAR[_P](field_type, name, length, waveform)
  *      PUBLISH_WF_ACTION{,_I,_P}(field_type, name, length, action)
+ *      PUBLISH_WF_ACTION_C{,_I,_P}(field_type, name, length, action_c, context)
  *
  * Suffixes:
  *      _I  Sets .io_intr to enable "I/O Intr" scanning
  *      _P  Sets .persist to enable persistent storage
  *      _T  Sets .set_time to enable timestamp override
  *      _B  Enables writer to return bool result
+ *      _C  Type checked context passed to function
  *
  *
  * In the examples above the dotted arguments are optional and should be
@@ -131,10 +136,15 @@
  *
  *  PUBLISH_READER(record, name, reader)
  *  PUBLISH_READER_I(record, name, reader)
+ *  PUBLISH_READER_C[_I](record, name, reader_c, context)
  *
  *      TYPEOF(record) reader(void)
+ *      TYPEOF(record) reader_c(typeof(context) context)
  *          This will be called each time the record processes and should return
  *          the value to be reported.
+ *
+ *          In the _C variant the context argument passed to PUBLISH_... is
+ *          passed through to the callback.
  *
  *  PUBLISH_TRIGGER(name)
  *  PUBLISH_TRIGGER_T(name)
@@ -154,17 +164,25 @@
  *  PUBLISH_WRITER_P(record, name, writer)
  *  PUBLISH_WRITER_B(record, name, writer)
  *  PUBLISH_WRITER_B_P(record, name, writer)
+ *  PUBLISH_WRITER_C[_B][_P](record, name, writer_c, context)
  *
  *      void writer(TYPEOF(record) value)
  *      bool writer(TYPEOF(record) value)
+ *      void writer_c(typeof(context) context, TYPEOF(record) value)
+ *      bool writer_c(typeof(context) context, TYPEOF(record) value)
  *          This method will be called each time the record processes.  For the
  *          _B variants the writer can return a boolean to optionally reject the
  *          write, otherwise void is returned and the write is unconditional.
  *
+ *          For the _C variants the writer callback is passed a context pointer.
+ *
  *  PUBLISH_ACTION(name, action)
+ *  PUBLISH_ACTION_C(name, action_c)
  *
  *      void action(void)
- *          This method is called when the record processes.
+ *      void action_c(typeof(context) context)
+ *          This method is called when the record processes.  The _C variant
+ *          receives the context argument.
  *
  *  PUBLISH_WF_READ_VAR(field_type, name, max_length, waveform)
  *  PUBLISH_WF_READ_VAR_I(field_type, name, max_length, waveform)
@@ -179,11 +197,14 @@
  *  PUBLISH_WF_ACTION(field_type, name, max_length, action)
  *  PUBLISH_WF_ACTION_I(field_type, name, max_length, action)
  *  PUBLISH_WF_ACTION_P(field_type, name, max_length, action)
+ *  PUBLISH_WF_ACTION_C{,_I,_P}(field_type, name, length, action_c, context)
  *
  *      void action(field_type value[max_length])
+ *      void action_c(typeof(context) context, field_type value[max_length])
  *          This is called each time the record processes.  It is up to the
  *          implementation of action() to determine whether this is a read or a
  *          write action.
+ *
  *
  * The following arguments are common to most or several of the macros above:
  *
@@ -409,6 +430,11 @@ _DECLARE_WAVEFORM_ARGS(double);
  * of common structures including variables and simple actions without any extra
  * context. */
 
+#define _MAKE_C_CONTEXT(action, c_context, return_type, args...) \
+    _make_publish_c_context( \
+        (void (*)(void)) *(return_type (*[])( \
+            typeof(*(c_context))*, ##args)) { action }, c_context)
+
 #define PUBLISH_READ_VAR_(record, name, variable, args...) \
     PUBLISH(record, name, \
         .read = _publish_var_read_##record, \
@@ -426,6 +452,15 @@ _DECLARE_WAVEFORM_ARGS(double);
     PUBLISH_READER_(record, name, reader)
 #define PUBLISH_READER_I(record, name, reader) \
     PUBLISH_READER_(record, name, reader, .io_intr = true)
+
+#define PUBLISH_READER_C_(record, name, reader, c_context, args...) \
+    PUBLISH(record, name, \
+        .read = _publish_reader_c_##record, \
+        .context = _MAKE_C_CONTEXT(reader, c_context, TYPEOF(record)), ##args)
+#define PUBLISH_READER_C(record, name, reader, context) \
+    PUBLISH_READER_C_(record, name, reader, context)
+#define PUBLISH_READER_C_I(record, name, reader, context) \
+    PUBLISH_READER_C_(record, name, reader, context, .io_intr = true)
 
 #define PUBLISH_TRIGGER_(name, args...) \
     PUBLISH(bi, name, .read = _publish_trigger_bi, .io_intr = true, ##args)
@@ -453,6 +488,16 @@ _DECLARE_WAVEFORM_ARGS(double);
 #define PUBLISH_WRITER_P(record, name, writer) \
     PUBLISH_WRITER_(record, name, writer, .persist = true)
 
+#define PUBLISH_WRITER_C_(record, name, writer, c_context, args...) \
+    PUBLISH(record, name, \
+        .writer = _publish_writer_c_##record, \
+        .context = _MAKE_C_CONTEXT( \
+            writer, c_context, void, TYPEOF(record)), ##args)
+#define PUBLISH_WRITER_C(record, name, writer, context) \
+    PUBLISH_WRITER_C_(record, name, writer, context)
+#define PUBLISH_WRITER_C_I(record, name, writer, context) \
+    PUBLISH_WRITER_C_(record, name, writer, context, .io_intr = true)
+
 #define PUBLISH_WRITER_B_(record, name, writer, args...) \
     PUBLISH(record, name, \
         .write = _publish_writer_b_##record, \
@@ -465,6 +510,9 @@ _DECLARE_WAVEFORM_ARGS(double);
 #define PUBLISH_ACTION(name, action) \
     PUBLISH(bo, name, .write = _publish_action_bo, \
         .context = *(void (*[])(void)) { action })
+#define PUBLISH_ACTION_C(name, action, c_context) \
+    PUBLISH(bo, name, .write = _publish_action_c_bo, \
+        .context = _MAKE_C_CONTEXT(action, c_context, void))
 
 
 #define PROC_WAVEFORM_T(type) \
@@ -512,8 +560,12 @@ _DECLARE_WAVEFORM_ARGS(double);
     bool _publish_var_write_##record(void *context, const TYPEOF(record) *value)
 #define _DECLARE_READER(record) \
     bool _publish_reader_##record(void *context, TYPEOF(record) *value)
+#define _DECLARE_READER_C(record) \
+    bool _publish_reader_c_##record(void *context, TYPEOF(record) *value)
 #define _DECLARE_WRITER(record) \
     bool _publish_writer_##record(void *context, const TYPEOF(record) *value)
+#define _DECLARE_WRITER_C(record) \
+    bool _publish_writer_c_##record(void *context, const TYPEOF(record) *value)
 #define _DECLARE_WRITER_B(record) \
     bool _publish_writer_b_##record(void *context, const TYPEOF(record) *value)
 
@@ -521,11 +573,14 @@ _FOR_IN_RECORDS(_DECLARE_READ_VAR, ;)
 _FOR_OUT_RECORDS(_DECLARE_WRITE_VAR, ;)
 _FOR_OUT_RECORDS(_DECLARE_READ_VAR, ;)
 _FOR_IN_RECORDS(_DECLARE_READER, ;)
+_FOR_IN_RECORDS(_DECLARE_READER_C, ;)
 _FOR_OUT_RECORDS(_DECLARE_WRITER, ;)
+_FOR_OUT_RECORDS(_DECLARE_WRITER_C, ;)
 _FOR_OUT_RECORDS(_DECLARE_WRITER_B, ;)
 
 bool _publish_trigger_bi(void *context, bool *value);
 bool _publish_action_bo(void *context, const bool *value);
+void *_make_publish_c_context(void (*callback)(void), void *context);
 
 void _publish_waveform_action(void *context, void *array, size_t *length);
 void _publish_waveform_write_var(void *context, void *array, size_t *length);
