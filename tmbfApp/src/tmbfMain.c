@@ -16,11 +16,13 @@
 #include "error.h"
 #include "hardware.h"
 #include "epics_device.h"
+#include "epics_extra.h"
 #include "adc_dac.h"
 #include "tune.h"
 #include "device.h"
 #include "ddr_epics.h"
 #include "fir.h"
+#include "sensors.h"
 #include "pvlogging.h"
 #include "persistence.h"
 
@@ -197,14 +199,7 @@ static bool ProcessOptions(int *argc, char ** *argv)
 
 static void StartupMessage(void)
 {
-    printf(
-"\n"
-"EPICS TMBF Driver, Version %s.  Built: %s.\n"
-"Copyright (c) 2007-2013\n"
-"Isa Uzun, James Rowland, Michael Abbott, Diamond Light Source.\n"
-"This program comes with ABSOLUTELY NO WARRANTY.  This is free software,\n"
-"and you are welcome to redistribute it under certain conditions.\n"
-"For details see the GPL or the attached file COPYING.\n",
+    printf("EPICS TMBF Driver, Version %s.  Built: %s.\n",
         TMBF_VERSION, BUILD_DATE_TIME);
 }
 
@@ -219,13 +214,16 @@ int main(int argc,char *argv[])
         StartCaRepeater()  &&
         HookLogging()  &&
         InitialiseSignals()  &&
-        DO_(initialise_epics_device())  &&
+        initialise_epics_device()  &&
+        initialise_epics_extra()  &&
         InitialiseTune()  &&
         GenericInit()  &&
         initialise_ddr_epics()  &&
         initialise_adc_dac()  &&
         initialise_fir()  &&
+        initialise_sensors()  &&
         DO_(load_persistent_state());
+
     for (int i = 0; Ok && i < argc; i ++)
         Ok = TEST_EPICS(iocsh, argv[i]);
     if (Ok)

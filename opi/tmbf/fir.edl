@@ -1,0 +1,462 @@
+4 0 1
+beginScreenProperties
+major 4
+minor 0
+release 1
+x 478
+y 588
+w 641
+h 504
+font "helvetica-medium-r-18.0"
+ctlFont "helvetica-medium-r-18.0"
+btnFont "helvetica-medium-r-18.0"
+fgColor index 14
+bgColor index 3
+textColor index 14
+ctlFgColor1 index 14
+ctlFgColor2 index 0
+ctlBgColor1 index 0
+ctlBgColor2 index 14
+topShadowColor index 0
+botShadowColor index 14
+title "ADC data statistics"
+showGrid
+snapToGrid
+gridSize 8
+disableScroll
+endScreenProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+# Geometry
+x 8
+y 40
+w 624
+h 184
+# Appearance
+graphTitle "Current Filter Taps"
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+showXAxis
+xAxisSrc "fromUser"
+xMin 0
+xMax 10
+# Y axis properties
+showYAxis
+yAxisSrc "AutoScale"
+yMax 1
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 1
+yPv {
+  0 "$(device):FIR:$(bank):TAPS"
+}
+plotUpdateMode {
+  0 "y"
+}
+ySigned {
+  0 1
+}
+plotColor {
+  0 index 27
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 0
+y 0
+w 648
+h 32
+font "helvetica-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 73
+value {
+  "$(device) Filter Settings"
+}
+endObjectProperties
+
+# (Exit Button)
+object activeExitButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 568
+y 472
+w 64
+h 24
+fgColor index 25
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+label "EXIT"
+font "helvetica-medium-r-12.0"
+3d
+endObjectProperties
+
+# (Shell Command)
+object shellCmdClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 4
+y 4
+w 24
+h 24
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-14.0"
+buttonLabel "?"
+numCmds 1
+command {
+  0 "diagnostics-help TMBF_FIR"
+}
+includeHelpIcon
+endObjectProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+# Geometry
+x 8
+y 224
+w 624
+h 184
+# Appearance
+graphTitle "Set Filter Taps"
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+showXAxis
+xAxisSrc "fromUser"
+xMin 0
+xMax 10
+# Y axis properties
+showYAxis
+yAxisSrc "AutoScale"
+yMax 1
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 1
+yPv {
+  0 "$(device):FIR:$(bank):TAPS_S"
+}
+plotUpdateMode {
+  0 "y"
+}
+ySigned {
+  0 1
+}
+plotColor {
+  0 index 27
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 424
+w 63
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "FIR phase:"
+}
+autoSize
+endObjectProperties
+
+# (Motif Slider)
+object activeMotifSliderClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 88
+y 416
+w 128
+h 24
+fgColor index 6
+bgColor index 2
+2ndBgColor index 3
+topShadowColor index 0
+botShadowColor index 14
+increment 10
+controlPv "$(device):FIR:$(bank):PHASE_S"
+controlLabel "$(device):FIRPHASE_S"
+controlLabelType "pvName"
+font "helvetica-medium-r-8.0"
+scaleMin 0
+scaleMax 360
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 448
+w 52
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "FIR freq:"
+}
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 88
+y 448
+w 32
+h 24
+controlPv "$(device):FIR:$(bank):CYCLES_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 144
+y 448
+w 32
+h 24
+controlPv "$(device):FIR:$(bank):LENGTH_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 128
+y 448
+w 16
+h 16
+font "helvetica-bold-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "/"
+}
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 224
+y 416
+w 40
+h 24
+controlPv "$(device):FIR:$(bank):PHASE_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 360
+y 416
+w 96
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):FIR:$(bank):USEWF_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 296
+y 424
+w 54
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "FIR taps:"
+}
+autoSize
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 360
+y 472
+w 96
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):FIR:GAIN_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 296
+y 472
+w 52
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "FIR gain:"
+}
+autoSize
+endObjectProperties
+
+# (Menu Mux)
+object menuMuxClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 544
+y 416
+w 88
+h 24
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-medium-r-12.0"
+numItems 4
+symbolTag {
+  0 "Bank 1"
+  1 "Bank 2"
+  2 "Bank 3"
+  3 "Bank 4"
+}
+symbol0 {
+  0 "bank"
+  1 "bank"
+  2 "bank"
+  3 "bank"
+}
+value0 {
+  0 "1"
+  1 "2"
+  2 "3"
+  3 "4"
+}
+endObjectProperties
+

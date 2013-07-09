@@ -78,8 +78,11 @@ def set_out_defaults(fields, name):
     fields.setdefault('PINI', 'YES')
 
 
-def aIn(name, **fields):
-    return GenericDevice.ai(name, **fields)
+def aIn(name, LOPR, HOPR, EGU=None, PREC=None, MDEL=-1, **fields):
+    return GenericDevice.ai(name,
+        MDEL = MDEL,
+        LOPR = LOPR, HOPR = HOPR,  EGUL = LOPR,  EGUF = HOPR,
+        EGU  = EGU,  PREC = PREC, **fields)
 
 def aOut(name, DRVL=None, DRVH=None, **fields):
     set_out_defaults(fields, name)
@@ -160,5 +163,5 @@ def WaveformOut(address, *args, **fields):
 
 __all__ = [
     'aIn',      'aOut',     'boolIn',   'boolOut',  'longIn',   'longOut',
-    'mbbOut',   'mbbOut',   'stringIn', 'stringOut',
+    'mbbIn',    'mbbOut',   'stringIn', 'stringOut',
     'Waveform', 'WaveformOut']

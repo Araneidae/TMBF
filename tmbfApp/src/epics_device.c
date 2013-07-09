@@ -319,10 +319,11 @@ static void init_hook(initHookState state)
     }
 }
 
-void initialise_epics_device(void)
+bool initialise_epics_device(void)
 {
     hash_table = hash_table_create(false);
     initHookRegister(init_hook);
+    return true;
 }
 
 
@@ -666,7 +667,6 @@ static long linconv_ao(aoRecord *pr, int cmd) { return EPICS_OK; }
 
 
 
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                       Waveform Record Implementation                      */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -693,8 +693,9 @@ static bool check_waveform_type(waveformRecord *pr, struct epics_record *base)
         TEST_OK_(pr->ftvl == expected,
             "Array %s.FTVL mismatch %d != %d (%d)",
             base->key, pr->ftvl, expected, base->waveform.field_type)  &&
-        TEST_OK_(pr->nelm <= base->waveform.max_length,
-            "Array %s too long", base->key);
+        TEST_OK_(pr->nelm == base->waveform.max_length,
+            "Array %s wrong length, %d != %d",
+            base->key, pr->nelm, base->waveform.max_length);
 }
 
 

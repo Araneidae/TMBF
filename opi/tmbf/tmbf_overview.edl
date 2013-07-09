@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 680
-y 40
+x 2406
+y 12
 w 456
-h 519
+h 575
 font "helvetica-medium-r-8.0"
 ctlFont "helvetica-medium-r-8.0"
 btnFont "helvetica-medium-r-8.0"
@@ -1046,7 +1046,7 @@ major 4
 minor 2
 release 0
 x 8
-y 488
+y 536
 w 136
 h 24
 fgColor index 25
@@ -1068,7 +1068,7 @@ major 4
 minor 2
 release 0
 x 312
-y 488
+y 536
 w 136
 h 24
 fgColor index 25
@@ -1122,7 +1122,7 @@ major 4
 minor 2
 release 0
 x 160
-y 488
+y 536
 w 136
 h 24
 fgColor index 25
@@ -1744,6 +1744,29 @@ numPvs 4
 numDsps 1
 displayFileName {
   0 "tmbf/fir.edl"
+}
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 80
+y 480
+w 72
+h 24
+fgColor index 43
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "Health"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/sensors.edl"
 }
 endObjectProperties
 

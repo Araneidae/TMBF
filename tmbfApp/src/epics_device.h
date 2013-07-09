@@ -1,6 +1,6 @@
-/* Common interface to epics records. */
-
-/* EPICS records are published with the use of a variety of PUBLISH...() macros,
+/* Common interface to EPICS records.
+ *
+ * EPICS records are published with the use of a variety of PUBLISH...() macros,
  * defined below.  Three classes of record are supported with slightly different
  * macros and arguments:
  *
@@ -231,7 +231,7 @@
 
 
 /* This must be called once before publishing any PVs. */
-void initialise_epics_device(void);
+bool initialise_epics_device(void);
 
 
 /*****************************************************************************/
@@ -468,7 +468,7 @@ _DECLARE_WAVEFORM_ARGS(double);
 
 
 #define PROC_WAVEFORM_T(type) \
-    void (*)(void * context, type *array, size_t *length)
+    void (*)(void *context, type *array, size_t *length)
 
 #define PUBLISH_WF_READ_VAR_(type, name, length, waveform, args...) \
     PUBLISH_WAVEFORM(type, name, length, \

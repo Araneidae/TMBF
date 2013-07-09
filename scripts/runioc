@@ -49,6 +49,11 @@ shift $((OPTIND - 1))
 export EPICS_CA_MAX_ARRAY_BYTES=1000000
 export DB_PARAMETERS="DEVICE=$HOSTNAME"
 
+# Discover the list of temporary filesystems we need to keep an eye on.  We
+# use echo to create a space separated list.
+export TEMP_FS_LIST="$(echo -n $(
+    mount |
+    sed -rn '/.* on ([^ ]*) type (tmpfs|ramfs) .*/{s//\1/;p;}'))"
 
 IocParameter -p "$PIDFILE"
 IocParameter -s "$STATE_FILE"
