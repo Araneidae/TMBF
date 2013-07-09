@@ -50,20 +50,22 @@ DBD += generic.dbd
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 tmbf_SRCS += tmbf_registerRecordDeviceDriver.c
-tmbf_SRCS += tune.c
-tmbf_SRCS += device.c
+tmbf_SRCS += tmbfMain.c
 tmbf_SRCS += epics_device.c
 tmbf_SRCS += epics_extra.c
 tmbf_SRCS += hashtable.c
 tmbf_SRCS += persistence.c
 tmbf_SRCS += hardware.c
-tmbf_SRCS += tmbfMain.c
+# tmbf_SRCS += tune.c
+# tmbf_SRCS += device.c
 tmbf_SRCS += pvlogging.c
 tmbf_SRCS += numeric.c
 tmbf_SRCS += ddr.c
 tmbf_SRCS += ddr_epics.c
 tmbf_SRCS += adc_dac.c
+tmbf_SRCS += buffer.c
 tmbf_SRCS += fir.c
+tmbf_SRCS += bunch_select.c
 tmbf_SRCS += sensors.c
 
 tmbf_LIBS += $(EPICS_BASE_IOC_LIBS)

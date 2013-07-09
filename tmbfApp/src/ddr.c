@@ -15,6 +15,8 @@
 #include <pthread.h>
 
 #include "error.h"
+#include "hardware.h"
+
 #include "ddr.h"
 
 
@@ -267,8 +269,8 @@ static void *event_thread(void *context)
         {
             /* After seeing a trigger we need to wait for capture to complete
              * before trying to read the buffer (there doesn't seem to be an
-             * event for this, surprisingly enough).  We have to wait for 8M
-             * samples at 500MHz, or around 62ms. */
+             * event for this, surprisingly enough).  We have to wait for 32M
+             * samples at 500MHz, or around 64ms. */
             usleep(64000);
             ddr_trigger_callback();
         }

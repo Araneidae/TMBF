@@ -98,7 +98,7 @@ static void arm_trigger(void)
     {
         armed = true;
         set_long_data_ready(false);
-        pulse_CTRL_ARM_DDR();
+        hw_write_ddr_arm();
     }
 }
 
@@ -153,6 +153,7 @@ static void arm_callback(void)
 static void publish_controls(void)
 {
     PUBLISH_WRITER_P(mbbo, "DDR:TRIGMODE", set_trigger_mode);
+    PUBLISH_WRITER_P(mbbo, "DDR:TRIGSEL", hw_write_ddr_trigger_select);
     PUBLISH_WRITER(longout, "DDR:TURNSEL", set_selected_turn);
 
     PUBLISH_READ_VAR(longin, "DDR:TURNSEL", selected_turn);
@@ -161,9 +162,9 @@ static void publish_controls(void)
 
     PUBLISH_ACTION("DDR:DONE", trigger_done);
     PUBLISH_ACTION("DDR:ARM", arm_callback);
-    PUBLISH_ACTION("DDR:SOFT_TRIG", pulse_CTRL_TRIG_DDR);
+    PUBLISH_ACTION("DDR:SOFT_TRIG", hw_write_ddr_soft_trigger);
 
-    PUBLISH_WRITER(mbbo, "DDR:INPUT", write_CTRL_DDR_INPUT);
+    PUBLISH_WRITER(mbbo, "DDR:INPUT", hw_write_ddr_select);
 }
 
 

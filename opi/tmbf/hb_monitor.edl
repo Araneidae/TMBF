@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 12
-y 1666
+x 79
+y 35
 w 641
 h 647
 font "helvetica-medium-r-18.0"
@@ -30,11 +30,11 @@ endScreenProperties
 object xyGraphClass
 beginObjectProperties
 major 4
-minor 3
+minor 6
 release 0
 # Geometry
 x 8
-y 56
+y 40
 w 624
 h 184
 # Appearance
@@ -46,8 +46,9 @@ font "helvetica-medium-r-12.0"
 nPts 2
 # X axis properties
 showXAxis
-xAxisSrc "AutoScale"
-xMax 1
+xAxisSrc "fromUser"
+xMin 0
+xMax 17000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -58,7 +59,7 @@ y2Max 1
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):HB_BUF_LOWER"
+  0 "$(device):BUF:WFA"
 }
 plotUpdateMode {
   0 "y"
@@ -136,11 +137,11 @@ endObjectProperties
 object xyGraphClass
 beginObjectProperties
 major 4
-minor 3
+minor 6
 release 0
 # Geometry
 x 8
-y 240
+y 224
 w 624
 h 184
 # Appearance
@@ -152,8 +153,9 @@ font "helvetica-medium-r-12.0"
 nPts 2
 # X axis properties
 showXAxis
-xAxisSrc "AutoScale"
-xMax 1
+xAxisSrc "fromUser"
+xMin 0
+xMax 17000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -165,7 +167,7 @@ y2Max 16600
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):HB_BUF_UPPER"
+  0 "$(device):BUF:WFB"
 }
 plotUpdateMode {
   0 "y"
@@ -193,81 +195,72 @@ bgColor index 4
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):HB_BUF_LOWER.SCAN"
-indicatorPv "$(device):HB_BUF_LOWER.SCAN"
+controlPv "$(device):BUF:SELECT_S"
 font "helvetica-medium-r-14.0"
 endObjectProperties
 
-# (X-Y Graph)
-object xyGraphClass
+# (Menu Button)
+object activeMenuButtonClass
 beginObjectProperties
 major 4
-minor 3
+minor 0
 release 0
-# Geometry
-x 8
-y 424
-w 624
-h 184
-# Appearance
+x 448
+y 464
+w 136
+h 24
 fgColor index 14
-bgColor index 3
-gridColor index 14
+bgColor index 4
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):BUF:TRIGSEL_S"
+font "helvetica-medium-r-14.0"
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 224
+y 528
+w 96
+h 22
+fgColor index 14
+onColor index 4
+offColor index 3
+topShadowColor index 1
+botShadowColor index 14
+controlPv "$(device):BUF:ARM_S.PROC"
+pressValue "0"
+onLabel "Armed"
+offLabel "Arm"
+3d
 font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-showXAxis
-xAxisSrc "AutoScale"
-xMax 1
-# Y axis properties
-showYAxis
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Min 8300
-y2Max 16600
-# Trace Properties
-numTraces 1
-yPv {
-  0 "$(device):TUNEPOWER"
-}
-plotUpdateMode {
-  0 "y"
-}
-xSigned {
-  0 1633771873
-}
-ySigned {
-  0 1633771873
-}
-plotColor {
-  0 index 14
-}
 endObjectProperties
 
-# (Text Monitor)
-object activeXTextDspClass:noedit
+# (Message Button)
+object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 1
+minor 0
 release 0
-x 264
-y 32
-w 128
-h 16
-controlPv "SR21C-DI-TMBF-01:ARCHIVE_S"
-font "helvetica-medium-r-14.0"
-fontAlign "center"
+x 224
+y 552
+w 96
+h 22
 fgColor index 14
-bgColor index 0
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "monitors"
+onColor index 4
+offColor index 3
+topShadowColor index 1
+botShadowColor index 14
+controlPv "$(device):BUF:SOFT_TRIG_S.PROC"
+pressValue "0"
+onLabel "Triggering"
+offLabel "Trigger"
+3d
+font "helvetica-medium-r-12.0"
 endObjectProperties
 

@@ -6,102 +6,158 @@
 
 
 /* Some standard array size definitions. */
-#define MAX_FIR_COEFFS      10
-#define MAX_BUNCH_COUNT     936
-#define MAX_DATA_LENGTH     16384
+#define MAX_FIR_COEFFS      9       // Length of feedback filter in taps
+#define MAX_BUNCH_COUNT     936     // Bunches in a single turn
+#define BUF_DATA_LENGTH     16384   // Points in internal fast buffer
+#define MAX_SEQUENCER_COUNT 8       // Steps in sequencer
+#define FIR_BANKS           4
+#define BUNCH_BANKS         4
+
+#define SAMPLES_PER_TURN    MAX_BUNCH_COUNT  //!!!!???? Duplicate to eliminate
 
 
-
-/* Register read access. */
-#define DECLARE_REGISTER_R(name) \
-    unsigned int read_##name(void)
-
-/* Register write access. */
-#define DECLARE_REGISTER_W(name) \
-    void write_##name(unsigned int value)
-
-/* Each configuration DECLARE_REGISTER has read and write access routines. */
-#define DECLARE_REGISTER(name) \
-    DECLARE_REGISTER_R(name); \
-    DECLARE_REGISTER_W(name)
-
-/* Pulses a control bit. */
-#define DECLARE_PULSE(name) \
-    void pulse_##name(void)
+/* To be called once at startup. */
+bool initialise_hardware(void);
 
 
-/* Some of these will not be published longer term, others will change... */
-
-/* Registers corresponding to control register fields. */
-DECLARE_REGISTER(CTRL_DAC_ENA);     // DAC output selection
-DECLARE_REGISTER(CTRL_SOFT_TRIG);   // Writing this creates soft trigger event
-DECLARE_REGISTER(CTRL_ARCHIVE);     // Select signal to write to fast buffers
-DECLARE_REGISTER(CTRL_FIR_GAIN);    // Select gain of FIR output
-DECLARE_REGISTER(CTRL_HOM_GAIN);    // Select gain for HOM oscillator output
-DECLARE_REGISTER(CTRL_TRIG_SEL);    // Select soft or external trigger
-DECLARE_REGISTER(CTRL_ARM_SEL);     // Select soft or external arming
-DECLARE_REGISTER(CTRL_SOFT_ARM);    // Write to arm the soft trigger
-DECLARE_REGISTER(CTRL_GROW_DAMP);   // Set to enable grow damp test
-DECLARE_REGISTER(CTRL_DDR_INPUT);   // Select data to write to fast DDR memory
-DECLARE_REGISTER(CTRL_CH_SELECT);   // Channel readout selection
-DECLARE_REGISTER(CTRL_DDC_INPUT);   // Select input to DDC
-DECLARE_REGISTER(CTRL_IQ_SCALE);    // DDC output gain
-DECLARE_REGISTER(CTRL_BUNCH_SYNC);  // Bunch synchronisation
-
-DECLARE_PULSE(CTRL_ARM_DDR);
-DECLARE_PULSE(CTRL_TRIG_DDR);
-
-/* Delay register fields. */
-DECLARE_REGISTER(DELAY_DAC);        // DAC output delay (in 2ns intervals)
-DECLARE_REGISTER(DELAY_TUNE_SWEEP); // Enable tune sweep
-DECLARE_REGISTER(DELAY_GROW_DAMP);  // Configure delay for grow damp test
-
-/* Other registers. */
-DECLARE_REGISTER(BunchSelect);      // Bunch number in single bunch mode
-DECLARE_REGISTER(DDC_dwellTime);    // DDC dwell time in 8ns units
-DECLARE_REGISTER(NCO_frequency);    // Fixed frequency when HOM not scanning
-DECLARE_REGISTER_R(FPGA_version);   // FPGA version number
-DECLARE_REGISTER(SweepStartFreq);   // Sweep start frequency
-DECLARE_REGISTER(SweepStopFreq);    // Sweep stop frequency
-DECLARE_REGISTER(SweepStep);        // Sweep frequency advance
-DECLARE_REGISTER(AdcOffAB);         // Hideous direct access to registers that
-DECLARE_REGISTER(AdcOffCD);         // --- really needs to be wrapped!
+/* Returns version number. */
+int hw_read_version(void);
 
 
-/* Routines to read and write the FIR coefficients. */
-void read_FIR_coeffs(int coeffs[MAX_FIR_COEFFS]);
-void write_FIR_coeffs(int coeffs[MAX_FIR_COEFFS]);
+/* * * * * * * * * * * * */
+/* ADC: Data Input Stage */
 
-/* Read ADC minimum and maximum values. */
-void read_ADC_MinMax(
-    short int ADC_min[MAX_BUNCH_COUNT], short int ADC_max[MAX_BUNCH_COUNT]);
+/* Writes ADC offset corrections, one for each ADC channel. */
+void hw_write_adc_offsets(short offsets[4]);
 
-/* Read DAC minimum and maximum values. */
-void read_DAC_MinMax(
-    short int DAC_min[MAX_BUNCH_COUNT], short int DAC_max[MAX_BUNCH_COUNT]);
+/* Reads ADC minimum and maximum values since last reading. */
+void hw_read_adc_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT]);
 
 
-void read_DataSpace(
-    short int HighData[MAX_DATA_LENGTH], short int LowData[MAX_DATA_LENGTH]);
+/* * * * * * * * * * * * * * * */
+/* FIR: Filtering for Feedback */
 
-/* The bunch-by-bunch gain and DAC settings share the same registers, but we
- * conceal this in the API below. */
-void read_bunch_configs(
-    short int bunch_gains[MAX_BUNCH_COUNT],
-    short int bunch_dacs[MAX_BUNCH_COUNT],
-    short int bunch_tempdacs[MAX_BUNCH_COUNT]);
+/* Fixed gain of FIR output stage in 3dB steps. */
+void hw_write_fir_gain(unsigned int gain);
 
-void write_BB_gains(short int gains[MAX_BUNCH_COUNT]);
-void write_BB_DACs(short int dacs[MAX_BUNCH_COUNT]);
-void write_BB_TEMPDACs(short int dacs[MAX_BUNCH_COUNT]);
+/* FIR tap coefficients for selected bank.  Taps are signed 18-bit integers. */
+void hw_write_fir_taps(int bank, int taps[MAX_FIR_COEFFS]);
+
+/* Returns the number of coefficients in the FIR filters. */
+int hw_read_fir_length(void);
 
 
-void set_softTrigger(void);
-void set_bunchSync(void);
+/* * * * * * * * * * * * * */
+/* DAC: Data Output Stage */
+
+/* Reads DAC minimum and maximum values since last reading. */
+void hw_read_dac_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT]);
+
+/* Output enable. */
+void hw_write_dac_enable(unsigned int enable);
+
+/* Output delay in 2ns steps up to 1023 steps. */
+void hw_write_dac_delay(unsigned int delay);
 
 
+/* * * * * * * * * * * * * * * * * * * * * * */
+/* DDR: High Speed High Volume Data Capture */
 
-bool InitialiseHardware(void);
+/* Selects data to capture to DDR RAM, either DAC or unprocessed ADC. */
+void hw_write_ddr_select(unsigned int select);
+
+/* Arms DDR for data capture. */
+void hw_write_ddr_arm(void);
+
+/* Selects software or hardware trigger. */
+void hw_write_ddr_trigger_select(unsigned int selection);
+
+/* If software triggering selected then triggers DDR capture. */
+void hw_write_ddr_soft_trigger(void);
 
 
-#undef DECLARE_REGISTER
+/* * * * * * * * * * * * * * * * * * * * */
+/* BUN: Bunch by Bunch Banked Selection */
+
+struct bunch_entry {
+    unsigned int bunch_gain;        // FIR gain for this bunch
+    unsigned int output_select;     // Output selection for this bunch
+    unsigned int fir_select;        // Filter selection
+};
+
+/* Writes the selected bunch entries to the selected bank. */
+void hw_write_bun_entry(int bank, struct bunch_entry entries[MAX_BUNCH_COUNT]);
+
+/* Enables bunch counter synchronsation. */
+void hw_write_bun_sync(void);
+
+
+/* * * * * * * * * * * * * * * * * */
+/* BUF: High Speed Internal Buffer */
+
+/* Selects data for capture to buffer. */
+void hw_write_buf_select(unsigned int selection);
+
+/* Enables capture starting on next trigger. */
+void hw_write_buf_arm(void);
+
+/* Selects internal or external triggering.  This trigger can also be used for
+ * triggering the sequencer. */
+void hw_write_buf_trigger_select(unsigned int selection);
+
+/* If internal triggering selected triggers buffer data capture.  Also triggers
+ * sequencer operation if armed. */
+void hw_write_buf_soft_trigger(void);
+
+/* Returns current buffer status: true if waiting for data, false if idle. */
+bool hw_read_buf_status(void);
+
+/* Reads buffer into two separate 16-bit arrays. */
+void hw_read_buf_data(short low[BUF_DATA_LENGTH], short high[BUF_DATA_LENGTH]);
+
+
+/* * * * * * * * * * * * * * * * * * * * * * */
+/* NCO: Fixed Frequency Numerical Oscillator */
+
+/* Sets fixed NCO generator frequency. */
+void hw_write_nco_freq(uint32_t freq);
+
+/* Sets fixed NCO generator output gain. */
+void hw_write_nco_gain(unsigned int gain);
+
+
+/* * * * * * * * * * * * * */
+/* DET: Frequency Detector */
+
+/* Switches detector between all bunch detection or individual bunch mode. */
+void hw_write_det_mode(bool bunch_mode);
+
+/* If bunch mode enabled selects which bunch will be detected in each of the
+ * four concurrent channels. */
+void hw_write_det_bunches(unsigned int bunch[4]);
+
+/* Configures detector gain. */
+void hw_write_det_gain(unsigned int gain);
+
+
+/* * * * * * * * * * * * * * * * * * * * * */
+/* SEQ: Programmed Bunch and Sweep Control */
+
+struct seq_entry {
+    unsigned int start_freq;        // NCO start frequency
+    unsigned int delta_freq;        // Frequency step for sweep
+    unsigned int dwell_time;        // Dwell time at each step
+    unsigned int capture_count;     // Number of sweep points to capture
+    unsigned int bunch_bank;        // Bunch bank selection
+    unsigned int hom_gain;          // HOM output gain
+    unsigned int wait_time;         // Extra wait time
+};
+
+/* Rewrites the sequencer table.  All entries must be present. */
+void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT]);
+
+/* Returns current sequencer state. */
+unsigned int hw_read_seq_state(void);
+
+/* Resets sequencer. */
+void hw_write_seq_reset(void);

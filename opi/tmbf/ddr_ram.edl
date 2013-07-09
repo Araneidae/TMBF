@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 317
-y 65
+x 319
+y 67
 w 641
 h 656
 font "helvetica-medium-r-18.0"
@@ -211,7 +211,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
+x 240
 y 624
 w 96
 h 22
@@ -253,7 +253,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
+x 240
 y 600
 w 96
 h 22
@@ -272,7 +272,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 320
+x 344
 y 608
 w 81
 h 14
@@ -292,7 +292,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 408
+x 432
 y 608
 w 72
 h 18
@@ -317,7 +317,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 408
+x 432
 y 632
 w 72
 h 18
@@ -342,7 +342,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 320
+x 344
 y 632
 w 71
 h 14
@@ -410,7 +410,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 488
+x 512
 y 632
 w 40
 h 14
@@ -433,7 +433,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 112
+x 8
 y 632
 w 64
 h 14
@@ -450,5 +450,24 @@ fastUpdate
 useHexPrefix
 newPos
 objType "monitors"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 112
+y 624
+w 120
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):DDR:TRIGSEL_S"
+font "helvetica-medium-r-12.0"
 endObjectProperties
 

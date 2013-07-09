@@ -1,8 +1,6 @@
 /* Interface to large fast memory buffer. */
 
 
-#define SAMPLES_PER_TURN    936
-
 /* Initialises resources for access to DDR data. */
 bool initialise_ddr(void (*ddr_trigger)(void));
 

@@ -16,8 +16,6 @@
 #include "fir.h"
 
 
-#define FIR_BANKS   4
-
 /* Represents the internal state of a single FIR bank. */
 struct fir_bank {
     int index;
@@ -34,20 +32,6 @@ struct fir_bank {
 static struct fir_bank banks[FIR_BANKS];
 
 
-static void write_fir_taps(int bank, int *taps)
-{
-    printf("Setting taps for bank %d:", bank+1);
-    for (int i = 0; i < MAX_FIR_COEFFS; i ++)
-        printf(" %d", taps[i]);
-    printf("\n");
-}
-
-static void write_fir_gain(unsigned int gain)
-{
-    printf("Seting gain to %u\n", gain);
-}
-
-
 /* Given a ratio cycles:length and a phase compute the appropriate filter. */
 static void compute_fir_taps(struct fir_bank *bank)
 {
@@ -62,7 +46,7 @@ static void compute_fir_taps(struct fir_bank *bank)
 
     /* Calculate FIR coeffs and the mean value. */
     int sum = 0;
-    double max_int = pow(2, 31) - 1;
+    double max_int = (1 << 17) - 1;
     for (int i = 0; i < bank->length; i++)
     {
         int tap = (int) round(max_int *
@@ -83,7 +67,7 @@ static void compute_fir_taps(struct fir_bank *bank)
  * record are in step. */
 static void update_taps(struct fir_bank *bank)
 {
-    write_fir_taps(bank->index, bank->current_taps);
+    hw_write_fir_taps(bank->index, bank->current_taps);
     trigger_record(bank->taps_waveform, 0, NULL);
 }
 
@@ -114,6 +98,7 @@ static void set_fir_taps(void *context, int *taps, size_t *length)
         memcpy(bank->current_taps, bank->set_taps, sizeof(bank->set_taps));
         update_taps(bank);
     }
+    *length = MAX_FIR_COEFFS;
 }
 
 
@@ -166,7 +151,7 @@ static void publish_bank(int ix, struct fir_bank *bank)
 
 bool initialise_fir(void)
 {
-    PUBLISH_WRITER_P(mbbo, "FIR:GAIN", write_fir_gain);
+    PUBLISH_WRITER_P(mbbo, "FIR:GAIN", hw_write_fir_gain);
     for (int i = 0; i < FIR_BANKS; i ++)
         publish_bank(i, &banks[i]);
     return true;

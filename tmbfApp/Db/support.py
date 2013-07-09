@@ -84,9 +84,10 @@ def aIn(name, LOPR, HOPR, EGU=None, PREC=None, MDEL=-1, **fields):
         LOPR = LOPR, HOPR = HOPR,  EGUL = LOPR,  EGUF = HOPR,
         EGU  = EGU,  PREC = PREC, **fields)
 
-def aOut(name, DRVL=None, DRVH=None, **fields):
+def aOut(name, DRVL, DRVH, EGU=None, PREC=None, **fields):
     set_out_defaults(fields, name)
-    return GenericDevice.ao(name + '_S', DRVL = DRVL, DRVH = DRVH, **fields)
+    return GenericDevice.ao(name + '_S',
+        DRVL = DRVL, DRVH = DRVH, EGU = EGU, PREC = PREC, **fields)
 
 
 def boolIn(name, ZNAM=None, ONAM=None, **fields):

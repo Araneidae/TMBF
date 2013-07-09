@@ -14,468 +14,383 @@
 
 
 
-#define TMBF_CONFIG_ADDRESS       0x1402C000
-#define TMBF_DATA_ADDRESS         0x14028000
+#define TMBF_DATA_ADDRESS       0x14028000
+#define TMBF_CONFIG_ADDRESS     0x1402C000
+
+#define DATA_AREA_SIZE          (1 << 14)
+#define CONTROL_AREA_SIZE       (1 << 12)
+
+#define ADC_MINMAX_OFFSET       (4 * 512)
+#define DAC_MINMAX_OFFSET       (4 * 768)
+
+
 
 struct tmbf_config_space
 {
-    unsigned int Ctrl;                  // 000  Main control register
-    unsigned int BunchSelect;           // 004  Bunch number selection
-    unsigned int DDC_dwellTime;         // 008  DDC dwell time (in 8ns clocks)
-    unsigned int NCO_frequency;         // 00C  Fixed NCO output frequency
-    unsigned int FPGA_version;          // 010  FPGA version number
-    unsigned int Delay;                 // 014  DAC output delay (in 2ns steps)
-    unsigned int SweepStartFreq;        // 018  Sweep start
-    unsigned int SweepStopFreq;         // 01C  --- and stop frequecies
-    int          FIR_coeffs[12];        // 020  FIR coefficents
-    unsigned int AdcOffAB;              // 050  Used to correct DC offsets
-    unsigned int AdcOffCD;              // 054  --- between four ADC channels.
-    unsigned int AdcChnSel;             // 058  Select ADC readout channel
-    unsigned int DacChnSel;             // 05C  Select DAC readout channel
-    unsigned int SweepStep;             // 060  Sweep frequency step
-    unsigned int DummyArry[231];        // 064  (padding)
-    int          BB_Gain_Coeffs[256];   // 400  Bunch gain control
-    int          BB_Adc_MinMax[256];    // 800  ADC readout
-    int          BB_Dac_MinMax[256];    // C00  DAC readout
+    uint32_t fpga_version;          //  0  Version and FIR count
+    //  15:0    Version code
+    //  19:16   Number of taps in FIR
+
+    uint32_t control;               //  1  System control register
+    //  0       Global DAC output enable (1 => enabled)
+    //  1       DDR trigger source select (0 => soft, 1 => external)
+    //  2       Buffer & seq trigger source select (0 => soft, 1 => external)
+    //  3       (unused)
+    //  4       Arm DDR (must be pulsed, works on rising edge)
+    //  5       Soft trigger DDR (pulsed)
+    //  6       Arm buffer and sequencer
+    //  7       Soft trigger buffer and sequencer (pulsed)
+    //  8       Arm bunch counter sync (pulsed)
+    //  9       DDR input select (0 => ADC, 1 => DAC)
+    //  11:10   Buffer data select (FIR+ADC/IQ/FIR+DAC/ADC+DAC)
+    //  13:12   Buffer readback channel select
+    //  14      Detector bunch mode enable
+    //  15      Detector input select
+    //  19:16   HOM gain select (in 3dB steps)
+    //  23:20   FIR gain select (in 3dB steps)
+    //  26:24   Detector gain select (in 6dB steps)
+    //  31:27   (unused)
+
+    uint32_t nco_frequency;         //  2  Fixed NCO generator frequency
+    uint32_t dac_delay;             //  3  DAC output delay (2ns steps)
+    uint32_t bunch_select;          //  4  Detector bunch selections
+    uint32_t adc_offset_ab;         //  5  ADC channel offsets (channels A/B)
+    uint32_t adc_offset_cd;         //  6  ADC channel offsets (channels C/D)
+    uint32_t system_status;         //  7  Status register
+    uint32_t fir_bank;              //  8  Select FIR bank
+    uint32_t fir_write;             //  9  Write FIR coefficients
+    uint32_t bunch_bank;            // 10  Select bunch config bank
+    uint32_t bunch_write;           // 11  Write bunch configuration
+    uint32_t sequencer_abort;       // 12  Abort sequencer operation
+    uint32_t sequencer_arm;         // 13  Arm sequencer
+    uint32_t sequencer_start_write; // 14  Starts write sequence
+    uint32_t sequencer_write;       // 15  Write sequencer data
+    uint32_t adc_minmax_channel;    // 16  Select ADC min/max readout channel
+    uint32_t dac_minmax_channel;    // 17  Select DAC min/max readout channel
 };
 
 /* These three pointers directly overlay the FF memory. */
-static struct tmbf_config_space *ConfigSpace;
-static int *DataSpace;
+static volatile struct tmbf_config_space *config_space;
+static volatile uint32_t *adc_minmax;       // ADC min/max readout area
+static volatile uint32_t *dac_minmax;       // DAC min/max readout area
+static volatile uint32_t *buffer_data;      // Fast buffer readout area
 
 
+
+/******************************************************************************/
+/* Helper routines and definitions. */
 
 static pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static void Lock(void)
-{
-    pthread_mutex_lock(&global_lock);
-}
-
-static void Unlock(void)
-{
-    pthread_mutex_unlock(&global_lock);
-}
-
-
-
-/*****************************************************************************/
-/*                      Direct register access definitions                   */
-/*****************************************************************************/
-
-/* Hardware field definitions.  These are offset, length pairs specifically
- * designed to be used with the ReadBitField and WriteBitField routines
- * below. */
-
-#define CTRL_DAC_ENA_FIELD        0, 1
-#define CTRL_ARM_DDR_FIELD        1
-#define CTRL_TRIG_DDR_FIELD       2
-#define CTRL_SOFT_TRIG_FIELD      3, 1
-#define CTRL_ARCHIVE_FIELD        4, 2
-#define CTRL_FIR_GAIN_FIELD       6, 4
-#define CTRL_HOM_GAIN_FIELD       10, 4
-#define CTRL_TRIG_SEL_FIELD       14, 1
-#define CTRL_ARM_SEL_FIELD        15, 1
-#define CTRL_SOFT_ARM_FIELD       16, 1
-#define CTRL_GROW_DAMP_FIELD      17, 1
-#define CTRL_DDR_INPUT_FIELD      21, 1
-#define CTRL_CH_SELECT_FIELD      23, 2
-#define CTRL_DDC_INPUT_FIELD      25, 1
-#define CTRL_IQ_SCALE_FIELD       27, 3
-#define CTRL_BUNCH_SYNC_FIELD     30, 1
-
-#define DELAY_DAC_FIELD           0, 10
-#define DELAY_TUNE_SWEEP_FIELD    18, 1
-#define DELAY_GROW_DAMP_FIELD     24, 8
-
-
-
-/* Writes to a sub field of a register by reading the register and writing
- * the appropriately masked value. */
-static void WriteBitField(
-    volatile unsigned int *Register, unsigned int startbit,
-    unsigned int numbits, unsigned int value)
-{
-    unsigned int mask = ((1 << numbits) - 1) << startbit;
-    *Register = (*Register & ~mask) | ((value << startbit) & mask);
-}
-
-
-/* Reads a bit field from a register. */
-static unsigned int ReadBitField(
-    unsigned int Register, unsigned int startbit, unsigned int numbits)
-{
-    return (Register >> startbit) & ((1 << numbits) - 1);
-}
-
-
-static void PulseBit(unsigned int *Register, unsigned int startbit)
-{
-    Lock();
-    WriteBitField(Register, startbit, 1, 0);    // Shouldn't be necessary
-    WriteBitField(Register, startbit, 1, 1);
-    WriteBitField(Register, startbit, 1, 0);
-    Unlock();
-}
-
-
-#define DEFINE_BIT_FIELD_R(name, register, start, count) \
-    DECLARE_REGISTER_R(name) \
-    { \
-        Lock(); \
-        unsigned int result = ReadBitField(register, start, count); \
-        Unlock(); \
-        return result; \
-    }
-
-#define DEFINE_BIT_FIELD_W(name, register, start, count) \
-    DECLARE_REGISTER_W(name) \
-    { \
-        Lock(); \
-        WriteBitField(&register, start, count, value); \
-        Unlock(); \
-    }
-
-#define DEFINE_PULSE(name, register, start) \
-    DECLARE_PULSE(name) \
-    { \
-        PulseBit(&register, start); \
-    }
-
-#define DEFINE_BIT_FIELD(name, register, start_count) \
-    DEFINE_BIT_FIELD_R(name, register, start_count) \
-    DEFINE_BIT_FIELD_W(name, register, start_count)
-
-#define CTRL_REGISTER(name) \
-    DEFINE_BIT_FIELD(name, ConfigSpace->Ctrl, name##_FIELD)
-
-#define CTRL_PULSE(name) \
-    DEFINE_PULSE(name, ConfigSpace->Ctrl, name##_FIELD)
-
-#define DELAY_REGISTER(name) \
-    DEFINE_BIT_FIELD(name, ConfigSpace->Delay, name##_FIELD)
-
-
-/* Direct access to control register fields. */
-CTRL_REGISTER(CTRL_DAC_ENA)
-CTRL_REGISTER(CTRL_SOFT_TRIG)
-CTRL_REGISTER(CTRL_ARCHIVE)
-CTRL_REGISTER(CTRL_FIR_GAIN)
-CTRL_REGISTER(CTRL_HOM_GAIN)
-CTRL_REGISTER(CTRL_TRIG_SEL)
-CTRL_REGISTER(CTRL_ARM_SEL)
-CTRL_REGISTER(CTRL_SOFT_ARM)
-CTRL_REGISTER(CTRL_GROW_DAMP)
-CTRL_REGISTER(CTRL_DDR_INPUT)
-CTRL_REGISTER(CTRL_CH_SELECT)
-CTRL_REGISTER(CTRL_DDC_INPUT)
-CTRL_REGISTER(CTRL_IQ_SCALE)
-CTRL_REGISTER(CTRL_BUNCH_SYNC)
-
-CTRL_PULSE(CTRL_ARM_DDR)
-CTRL_PULSE(CTRL_TRIG_DDR)
-
-/* Direct access to delay register fields. */
-DELAY_REGISTER(DELAY_DAC)
-DELAY_REGISTER(DELAY_TUNE_SWEEP)
-DELAY_REGISTER(DELAY_GROW_DAMP)
-
-
-#define DIRECT_REGISTER_R(name) \
-    DECLARE_REGISTER_R(name) \
-    { \
-        Lock(); \
-        unsigned int result = ConfigSpace->name; \
-        Unlock(); \
-        return result; \
-    }
-
-#define DIRECT_REGISTER_W(name) \
-    DECLARE_REGISTER_W(name) \
-    { \
-        Lock(); \
-        ConfigSpace->name = value; \
-        Unlock(); \
-    }
-
-#define DIRECT_REGISTER(name) \
-    DIRECT_REGISTER_R(name) \
-    DIRECT_REGISTER_W(name)
-
-DIRECT_REGISTER(BunchSelect)
-DIRECT_REGISTER(DDC_dwellTime)
-DIRECT_REGISTER(NCO_frequency)
-DIRECT_REGISTER_R(FPGA_version)
-DIRECT_REGISTER(SweepStartFreq)
-DIRECT_REGISTER(SweepStopFreq)
-DIRECT_REGISTER(SweepStep)
-DIRECT_REGISTER(AdcOffAB)
-DIRECT_REGISTER(AdcOffCD)
-
-
-/* Helper routine for control register bit access, as this is a particularly
- * common form. */
-#define WRITE_CTRL(field, value) \
-    WriteBitField(&ConfigSpace->Ctrl, CTRL_##field##_FIELD, value)
-
-
-
-/*****************************************************************************/
-/*                          Waveform Memory Access                           */
-/*****************************************************************************/
-
-
-void read_FIR_coeffs(int coeffs[MAX_FIR_COEFFS])
-{
-    Lock();
-    for (int i = 0; i < MAX_FIR_COEFFS; i ++)
-        coeffs[i] = ConfigSpace->FIR_coeffs[i];
-    Unlock();
-}
-
-void write_FIR_coeffs(int coeffs[MAX_FIR_COEFFS])
-{
-    Lock();
-    for (int i = 0; i < MAX_FIR_COEFFS; i ++)
-        ConfigSpace->FIR_coeffs[i] = coeffs[i];
-    Unlock();
-}
-
-
-/* Both ADC and data buffer memories are packed into alternating 16-bit
- * words, but have to be read as 32-bit words.  This structure is used for
- * unpacking. */
-union packed_data
-{
-    struct
-    {
-        short int lower;
-        short int upper;
-    };
-    int packed;
-};
-
-
-union bunch_packed_data
-{
-    struct
-    {
-        short int gain;
-        char      dac;
-        char      tempdac;
-    };
-    int packed;
-};
+#define LOCK()      pthread_mutex_lock(&global_lock);
+#define UNLOCK()    pthread_mutex_unlock(&global_lock);
 
 
 /* Reads packed array of min/max values using readout selector.  Used for ADC
  * and DAC readouts. */
 static void read_minmax(
-    volatile int *minmax, volatile unsigned int *channel,
+    volatile uint32_t *minmax, volatile uint32_t *channel,
     short *min_out, short *max_out)
 {
-    Lock();
+    LOCK();
     for (int n = 0; n < 4; n++)
     {
-        /* Channel select and read enable for ADC */
+        /* Channel select and read enable for buffer. */
         *channel = 2*n + 1;
         for (int i = 0; i < MAX_BUNCH_COUNT/4; i++)
         {
-            union packed_data packed;
-            packed.packed = minmax[i];
-            min_out[4*i + n] = packed.lower;
-            max_out[4*i + n] = packed.upper;
+            uint32_t data = minmax[i];
+            min_out[4*i + n] = (short) (data & 0xFFFF);
+            max_out[4*i + n] = (short) (data >> 16);
         }
     }
     *channel = 0;
-    Unlock();
+    UNLOCK();
 }
 
-void read_ADC_MinMax(
-    short ADC_min[MAX_BUNCH_COUNT], short ADC_max[MAX_BUNCH_COUNT])
+
+/* Writes to a sub field of a register by reading the register and writing
+ * the appropriately masked value.  The register *must* be locked. */
+static void write_bit_field(
+    volatile uint32_t *reg, unsigned int start,
+    unsigned int bits, uint32_t value)
 {
-    read_minmax(
-        ConfigSpace->BB_Adc_MinMax, &ConfigSpace->AdcChnSel, ADC_min, ADC_max);
+    uint32_t mask = ((1 << bits) - 1) << start;
+    *reg = (*reg & ~mask) | ((value << start) & mask);
 }
 
-void read_DAC_MinMax(
-    short DAC_min[MAX_BUNCH_COUNT], short DAC_max[MAX_BUNCH_COUNT])
+/* Sets the selected bit and resets it back to zero. */
+static void pulse_bit_field(volatile uint32_t *reg, unsigned int bit)
 {
-    read_minmax(
-        ConfigSpace->BB_Dac_MinMax, &ConfigSpace->DacChnSel, DAC_min, DAC_max);
+    write_bit_field(reg, bit, 1, 1);
+    write_bit_field(reg, bit, 1, 0);
 }
 
 
-void read_DataSpace(
-    short int HighData[MAX_DATA_LENGTH], short int LowData[MAX_DATA_LENGTH])
-{
-    Lock();
-    for (int n = 0; n < 4; n++)
-    {
-        WRITE_CTRL(CH_SELECT, n);
-        for (int i = 0; i < MAX_DATA_LENGTH/4; i++)
-        {
-            union packed_data packed = { .packed = DataSpace[i] };
-            LowData [4*i + n] = packed.lower;
-            HighData[4*i + n] = packed.upper;
-        }
-    }
-    Unlock();
-}
+#define WRITE_CONTROL_BITS(start, length, value) \
+    LOCK(); \
+    write_bit_field(&config_space->control, start, length, value); \
+    UNLOCK()
 
-void read_bunch_configs(
-    short int bunch_gains[MAX_BUNCH_COUNT],
-    short int bunch_dacs[MAX_BUNCH_COUNT],
-    short int bunch_tempdacs[MAX_BUNCH_COUNT])
-{
-    Lock();
-    for (int n=0; n < 4; n++)
-    {
-        WRITE_CTRL(CH_SELECT, n);
-        for (int i=0; i < MAX_BUNCH_COUNT/4; i++)
-        {
-            union bunch_packed_data packed;
-            packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
-            bunch_gains[4*i + n] = packed.gain;
-            bunch_dacs[4*i + n] = packed.dac;
-            bunch_tempdacs[4*i + n] = packed.tempdac;
-        }
-    }
-    Unlock();
-}
+#define PULSE_CONTROL_BIT(bit) \
+    LOCK(); \
+    pulse_bit_field(&config_space->control, bit); \
+    UNLOCK()
 
 
-void write_BB_gains(short int gains[MAX_BUNCH_COUNT])
-{
-    Lock();
-    for (int n=0; n < 4; n++)
-    {
-        WRITE_CTRL(CH_SELECT, n);
-        for (int i=0; i < MAX_BUNCH_COUNT/4; i++)
-        {
-            union bunch_packed_data packed;
-            packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
-            packed.gain = gains[4*i + n];
-            ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
-        }
-    }
-    Unlock();
-}
-
-void write_BB_DACs(short int dacs[MAX_BUNCH_COUNT])
-{
-    Lock();
-    for (int n=0; n < 4; n++)
-    {
-        WRITE_CTRL(CH_SELECT, n);
-        for (int i=0; i < MAX_BUNCH_COUNT/4; i++)
-        {
-            union bunch_packed_data packed;
-            packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
-            packed.dac = dacs[4*i + n];
-            ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
-        }
-    }
-    Unlock();
-}
-
-void write_BB_TEMPDACs(short int tempdacs[MAX_BUNCH_COUNT])
-{
-    Lock();
-    for (int n=0; n < 4; n++)
-    {
-        WRITE_CTRL(CH_SELECT, n);
-        for (int i=0; i < MAX_BUNCH_COUNT/4; i++)
-        {
-            union bunch_packed_data packed;
-            packed.packed = ConfigSpace->BB_Gain_Coeffs[i];
-            packed.tempdac = tempdacs[4*i + n];
-            ConfigSpace->BB_Gain_Coeffs[i] = packed.packed;
-        }
-    }
-    Unlock();
-}
-
-
-/*****************************************************************************/
-/*                          Other Interface Routines                         */
-/*****************************************************************************/
-
-
-void set_softTrigger(void)
-{
-    Lock();
-    /* The sequence is as follows:
-     *  1. Select soft trigger
-     *  2. Select soft arming
-     *  3. Arm (by writing 1 then 0)
-     *  4. Trigger (ditto) */
-    WRITE_CTRL(SOFT_ARM,  0);
-    usleep(1000);
-    WRITE_CTRL(SOFT_ARM,  1);
-    usleep(1000);
-    WRITE_CTRL(SOFT_ARM,  0);
-    usleep(1000);
-
-    WRITE_CTRL(SOFT_TRIG, 0);
-    usleep(1000);
-    WRITE_CTRL(SOFT_TRIG, 1);
-    usleep(1000);
-    WRITE_CTRL(SOFT_TRIG, 0);
-    Unlock();
-}
-
-void set_bunchSync(void)
-{
-    Lock();
-    WRITE_CTRL(BUNCH_SYNC,  0);
-    usleep(1000);
-    WRITE_CTRL(BUNCH_SYNC,  1);
-    usleep(1000);
-    WRITE_CTRL(BUNCH_SYNC,  0);
-    Unlock();
-}
-
-
-
-/*****************************************************************************/
-/*                          Component Initialisation                         */
-/*****************************************************************************/
-
-
-/* Paging information. */
-static unsigned int OsPageSize;
-static unsigned int OsPageMask;
-
-
-/* Mapped area sizes. */
-#define CONTROL_AREA_SIZE   (1 << 12)
-#define DATA_AREA_SIZE      (1 << 14)
-
-static bool MapTmbfMemory(void)
+bool initialise_hardware(void)
 {
     int mem;
-    void *map_config_base;
-    void *map_data_base;
     return
         TEST_IO(mem = open("/dev/mem", O_RDWR | O_SYNC))  &&
-        TEST_IO(map_config_base = mmap(
+        TEST_IO(config_space = mmap(
             0, CONTROL_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-            mem, TMBF_CONFIG_ADDRESS & ~OsPageMask))  &&
-        TEST_IO(map_data_base = mmap(
+            mem, TMBF_CONFIG_ADDRESS))  &&
+        TEST_IO(buffer_data = mmap(
             0, DATA_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-            mem, TMBF_DATA_ADDRESS & ~OsPageMask))  &&
+            mem, TMBF_DATA_ADDRESS))  &&
         DO_(
-            ConfigSpace =
-                (map_config_base + (TMBF_CONFIG_ADDRESS & OsPageMask));
-            DataSpace = (map_data_base + (TMBF_DATA_ADDRESS & OsPageMask)));
+            adc_minmax = (volatile void *) config_space + ADC_MINMAX_OFFSET;
+            dac_minmax = (volatile void *) config_space + DAC_MINMAX_OFFSET);
 }
 
 
-bool InitialiseHardware(void)
-{
-    OsPageSize = getpagesize();
-    OsPageMask = OsPageSize - 1;
+/******************************************************************************/
 
-    return MapTmbfMemory();
+
+
+int hw_read_version(void)
+{
+    return config_space->fpga_version & 0xFFFF;
+}
+
+
+/* * * * * * * * * * * * */
+/* ADC: Data Input Stage */
+
+static uint32_t combine_offsets(short offset_a, short offset_b)
+{
+    return ((uint32_t) offset_a & 0xFFFF) + ((uint32_t) offset_b << 16);
+}
+
+void hw_write_adc_offsets(short offsets[4])
+{
+    config_space->adc_offset_ab = combine_offsets(offsets[0], offsets[1]);
+    config_space->adc_offset_cd = combine_offsets(offsets[2], offsets[3]);
+}
+
+
+void hw_read_adc_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT])
+{
+    read_minmax(adc_minmax, &config_space->adc_minmax_channel, min, max);
+}
+
+
+/* * * * * * * * * * * * * * * */
+/* FIR: Filtering for Feedback */
+
+void hw_write_fir_gain(unsigned int gain)
+{
+    WRITE_CONTROL_BITS(20, 4, gain);
+}
+
+void hw_write_fir_taps(int bank, int taps[MAX_FIR_COEFFS])
+{
+    LOCK();
+    config_space->fir_bank = (uint32_t) bank;
+    for (int i = 0; i < MAX_FIR_COEFFS; i++)
+        config_space->fir_write = taps[i];
+    UNLOCK();
+}
+
+int hw_read_fir_length(void)
+{
+    return MAX_FIR_COEFFS;      // Will interrogate FPGA for this
+}
+
+
+/* * * * * * * * * * * * * */
+/* DAC: Data Output Stage */
+
+void hw_read_dac_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT])
+{
+    read_minmax(dac_minmax, &config_space->dac_minmax_channel, min, max);
+}
+
+void hw_write_dac_enable(unsigned int enable)
+{
+    WRITE_CONTROL_BITS(0, 1, enable);
+}
+
+void hw_write_dac_delay(unsigned int delay)
+{
+    config_space->dac_delay = delay;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * */
+/* DDR: High Speed High Volume Data Capture */
+
+void hw_write_ddr_select(unsigned int selection)
+{
+    WRITE_CONTROL_BITS(9, 1, selection);
+}
+
+void hw_write_ddr_arm(void)
+{
+    PULSE_CONTROL_BIT(4);
+}
+
+void hw_write_ddr_trigger_select(unsigned int selection)
+{
+    WRITE_CONTROL_BITS(1, 1, selection);
+}
+
+void hw_write_ddr_soft_trigger(void)
+{
+    PULSE_CONTROL_BIT(5);
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * */
+/* BUN: Bunch by Bunch Banked Selection */
+
+void hw_write_bun_entry(int bank, struct bunch_entry entries[MAX_BUNCH_COUNT])
+{
+    LOCK();
+    config_space->bunch_bank = (uint32_t) bank;
+    for (int i = 0; i < MAX_BUNCH_COUNT; i ++)
+    {
+        struct bunch_entry *entry = &entries[i];
+        config_space->bunch_write =
+            (entry->bunch_gain & 0x7FF) |
+            ((entry->output_select & 0x7) << 11) |
+            ((entry->fir_select & 0x3) << 14);
+    }
+    UNLOCK();
+}
+
+void hw_write_bun_sync(void)
+{
+    PULSE_CONTROL_BIT(8);
+}
+
+
+/* * * * * * * * * * * * * * * * * */
+/* BUF: High Speed Internal Buffer */
+
+void hw_write_buf_select(unsigned int selection)
+{
+    WRITE_CONTROL_BITS(10, 2, selection);
+}
+
+void hw_write_buf_arm(void)
+{
+    PULSE_CONTROL_BIT(6);
+}
+
+void hw_write_buf_trigger_select(unsigned int selection)
+{
+    WRITE_CONTROL_BITS(2, 1, selection);
+}
+
+void hw_write_buf_soft_trigger(void)
+{
+    PULSE_CONTROL_BIT(7);
+}
+
+bool hw_read_buf_status(void)
+{
+    config_space->system_status = 0;    // Temporary FPGA workaround!!
+    bool result = (config_space->system_status >> 3) & 1;
+    return result;
+}
+
+/* Annoyingly close to identical to min/max readout, but different channel
+ * control. */
+void hw_read_buf_data(short low[BUF_DATA_LENGTH], short high[BUF_DATA_LENGTH])
+{
+    LOCK();
+    for (int n = 0; n < 4; n++)
+    {
+        /* Channel select and read enable for buffer. */
+        write_bit_field(&config_space->control, 12, 2, n);
+        for (int i = 0; i < BUF_DATA_LENGTH/4; i++)
+        {
+            uint32_t data = buffer_data[i];
+            low [4*i + n] = (short) (data & 0xFFFF);
+            high[4*i + n] = (short) (data >> 16);
+        }
+    }
+    UNLOCK();
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * */
+/* NCO: Fixed Frequency Numerical Oscillator */
+
+void hw_write_nco_freq(uint32_t freq)
+{
+    config_space->nco_frequency = freq;
+}
+
+void hw_write_nco_gain(unsigned int gain)
+{
+    WRITE_CONTROL_BITS(16, 4, gain);
+}
+
+
+/* * * * * * * * * * * * * */
+/* DET: Frequency Detector */
+
+void hw_write_det_mode(bool bunch_mode)
+{
+    WRITE_CONTROL_BITS(14, 1, bunch_mode);
+}
+
+void hw_write_det_bunches(unsigned int bunch[4])
+{
+    config_space->bunch_select =
+        (bunch[0] & 0xFF) |
+        ((bunch[1] & 0xFF) << 8) |
+        ((bunch[2] & 0xFF) << 16) |
+        ((bunch[3] & 0xFF) << 24);
+}
+
+void hw_write_det_gain(unsigned int gain)
+{
+    WRITE_CONTROL_BITS(24, 3, gain);
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * */
+/* SEQ: Programmed Bunch and Sweep Control */
+
+void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT])
+{
+    LOCK();
+    config_space->sequencer_start_write = 1;
+    for (int i = 0; i < MAX_SEQUENCER_COUNT; i ++)
+    {
+        struct seq_entry *entry = &entries[i];
+        config_space->sequencer_write = entry->start_freq;
+        config_space->sequencer_write = entry->delta_freq;
+        config_space->sequencer_write = entry->dwell_time;
+        config_space->sequencer_write =
+            (entry->capture_count & 0xFFF) |        // bits 11:0
+            ((entry->bunch_bank & 0x3) << 12) |     //      13:12
+            ((entry->hom_gain & 0xF) << 14) |       //      17:14
+            ((entry->wait_time & 0x3FFF) << 18);    //      31:18
+    }
+    UNLOCK();
+}
+
+unsigned int hw_read_seq_state(void)
+{
+    return config_space->system_status & 0x7;
+}
+
+void hw_write_seq_reset(void)
+{
+    config_space->sequencer_abort = 1;
 }

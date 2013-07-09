@@ -84,17 +84,9 @@ static void publish_minmax(const char *name, struct min_max *min_max)
 }
 
 
-static struct min_max adc_min_max = { .read = read_ADC_MinMax };
-static struct min_max dac_min_max = { .read = read_DAC_MinMax };
+static struct min_max adc_min_max = { .read = hw_read_adc_minmax };
+static struct min_max dac_min_max = { .read = hw_read_dac_minmax };
 
-
-
-/* ADC offset control. */
-static void set_offsets(short *offsets)
-{
-    write_AdcOffAB((offsets[1] << 16) + (offsets[0] & 0xFFFF));
-    write_AdcOffCD((offsets[3] << 16) + (offsets[2] & 0xFFFF));
-}
 
 
 bool initialise_adc_dac(void)
@@ -104,11 +96,11 @@ bool initialise_adc_dac(void)
     publish_minmax("DAC", &dac_min_max);
 
     /* Offset control for ADC. */
-    PUBLISH_WF_ACTION_P(short, "ADC:OFFSET", 4, set_offsets);
+    PUBLISH_WF_ACTION_P(short, "ADC:OFFSET", 4, hw_write_adc_offsets);
 
     /* Direct register control for DAC. */
-    PUBLISH_WRITER_P(mbbo, "DAC:ENABLE", write_CTRL_DAC_ENA);
-    PUBLISH_WRITER_P(ulongout, "DAC:DELAY", write_DELAY_DAC);
+    PUBLISH_WRITER_P(mbbo, "DAC:ENABLE", hw_write_dac_enable);
+    PUBLISH_WRITER_P(ulongout, "DAC:DELAY", hw_write_dac_delay);
 
     return true;
 }

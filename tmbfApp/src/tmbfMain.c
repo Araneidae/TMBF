@@ -22,6 +22,8 @@
 #include "device.h"
 #include "ddr_epics.h"
 #include "fir.h"
+#include "buffer.h"
+#include "bunch_select.h"
 #include "sensors.h"
 #include "pvlogging.h"
 #include "persistence.h"
@@ -210,17 +212,19 @@ int main(int argc,char *argv[])
         ProcessOptions(&argc, &argv) &&
         initialise_persistent_state(
             persistence_state_file, persistence_interval)  &&
-        InitialiseHardware()  &&
+        initialise_hardware()  &&
         StartCaRepeater()  &&
         HookLogging()  &&
         InitialiseSignals()  &&
         initialise_epics_device()  &&
         initialise_epics_extra()  &&
-        InitialiseTune()  &&
-        GenericInit()  &&
+//         InitialiseTune()  &&
+//         GenericInit()  &&
         initialise_ddr_epics()  &&
         initialise_adc_dac()  &&
         initialise_fir()  &&
+        initialise_bunch_select()  &&
+        initialise_buffer()  &&
         initialise_sensors()  &&
         DO_(load_persistent_state());
 
