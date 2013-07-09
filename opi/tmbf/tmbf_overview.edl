@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2410
-y 16
+x 2411
+y 17
 w 456
 h 575
 font "helvetica-medium-r-8.0"
@@ -1149,29 +1149,6 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 160
-y 448
-w 64
-h 24
-fgColor index 43
-bgColor index 4
-topShadowColor index 1
-botShadowColor index 11
-font "helvetica-bold-r-12.0"
-buttonLabel "FIR"
-numPvs 4
-numDsps 1
-displayFileName {
-  0 "tmbf/fir.edl"
-}
-endObjectProperties
-
-# (Related Display)
-object relatedDisplayClass
-beginObjectProperties
-major 4
-minor 2
-release 0
 x 152
 y 40
 w 72
@@ -1218,20 +1195,20 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 272
-y 496
-w 96
+x 152
+y 216
+w 64
 h 24
 fgColor index 43
 bgColor index 4
 topShadowColor index 1
 botShadowColor index 11
 font "helvetica-bold-r-12.0"
-buttonLabel "Sequencer"
+buttonLabel "Triggers"
 numPvs 4
 numDsps 1
 displayFileName {
-  0 "tmbf/sequencer.edl"
+  0 "tmbf/triggers.edl"
 }
 endObjectProperties
 

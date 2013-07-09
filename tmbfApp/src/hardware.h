@@ -65,14 +65,8 @@ void hw_write_dac_delay(unsigned int delay);
 /* Selects data to capture to DDR RAM, either DAC or unprocessed ADC. */
 void hw_write_ddr_select(unsigned int select);
 
-/* Arms DDR for data capture. */
-void hw_write_ddr_arm(void);
-
 /* Selects software or hardware trigger. */
-void hw_write_ddr_trigger_select(unsigned int selection);
-
-/* If software triggering selected then triggers DDR capture. */
-void hw_write_ddr_soft_trigger(void);
+void hw_write_ddr_trigger_select(bool external);
 
 
 /* * * * * * * * * * * * * * * * * * * * */
@@ -97,18 +91,12 @@ void hw_write_bun_sync(void);
 /* Selects data for capture to buffer. */
 void hw_write_buf_select(unsigned int selection);
 
-/* Enables capture starting on next trigger. */
-void hw_write_buf_arm(void);
-
 /* Selects internal or external triggering.  This trigger can also be used for
  * triggering the sequencer. */
-void hw_write_buf_trigger_select(unsigned int selection);
+void hw_write_buf_trigger_select(bool external);
 
-/* If internal triggering selected triggers buffer data capture.  Also triggers
- * sequencer operation if armed. */
-void hw_write_buf_soft_trigger(void);
-
-/* Returns current buffer status: true if waiting for data, false if idle. */
+/* Returns current buffer status: true if waiting for data or trigger, false if
+ * idle. */
 bool hw_read_buf_status(void);
 
 /* Reads buffer into two separate 16-bit arrays. */
@@ -162,5 +150,18 @@ void hw_write_seq_count(unsigned int sequencer_pc);
 /* Returns current sequencer state. */
 unsigned int hw_read_seq_state(void);
 
+/* Returns true if sequencer busy, either waiting for trigger or running. */
+bool hw_read_seq_status(void);
+
 /* Resets sequencer. */
 void hw_write_seq_reset(void);
+
+
+/* * * * * * * * * * * * */
+/* TRG: Trigger control. */
+
+/* Simultaneously arm one or both of DDR and BUF. */
+void hw_write_trg_arm(bool ddr, bool buf);
+
+/* Simultaneously soft trigger one or both of DDR and BUF. */
+void hw_write_trg_soft_trigger(bool ddr, bool buf);

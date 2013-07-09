@@ -12,7 +12,6 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <pthread.h>
 
 #include "error.h"
 #include "hardware.h"
@@ -74,9 +73,6 @@ static volatile struct history_buffer_fifo *fifo;
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* DDR buffer readout. */
 
-
-/* Callback function to report successful triggering. */
-static void (*ddr_trigger_callback)(void);
 
 /* Record of current trigger state. */
 static uint32_t arm_timestamp;
@@ -217,9 +213,21 @@ static void purge_fifo(void)
 }
 
 
+static void initialise_ddr_events(void)
+{
+    /* Enable the history buffer enable and trigger events, ensure all other
+     * events are disabled. */
+    clk_interface->lmt_event_control_lsb = 0x60000000;
+    clk_interface->lmt_event_control_msb = 0;
+
+    /* Consume all events in buffer. */
+    purge_fifo();
+}
+
+
 /* Consumes all events in the FIFO and updates timestamps as appropriate.
  * Returns true if a trigger has been seen. */
-static bool consume_events(void)
+bool poll_ddr_trigger(void)
 {
     bool triggered = false;
     uint32_t lsb0;
@@ -247,50 +255,23 @@ static bool consume_events(void)
             triggered = true;
         }
     }
+
+    if (triggered)
+        /* After seeing a trigger we need to wait for capture to complete before
+         * trying to read the buffer (there doesn't seem to be an event for
+         * this, surprisingly enough).  We have to wait for 32M samples at
+         * 500MHz, or around 64ms. */
+        usleep(64000);
     return triggered;
-}
-
-
-static void *event_thread(void *context)
-{
-    /* Enable the history buffer enable and trigger events, ensure all other
-     * events are disabled. */
-    clk_interface->lmt_event_control_lsb = 0x60000000;
-    clk_interface->lmt_event_control_msb = 0;
-
-    /* Consume all events in buffer. */
-    purge_fifo();
-
-    /* Periodically wake up and dispatch events. */
-    while (true)
-    {
-        /* Consume FIFO and report a trigger if seen. */
-        if (consume_events())
-        {
-            /* After seeing a trigger we need to wait for capture to complete
-             * before trying to read the buffer (there doesn't seem to be an
-             * event for this, surprisingly enough).  We have to wait for 32M
-             * samples at 500MHz, or around 64ms. */
-            usleep(64000);
-            ddr_trigger_callback();
-        }
-
-        /* Now sleep for a bit; 50ms seems responsive enough (20Hz). */
-        usleep(50000);
-    }
-    return NULL;
 }
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* DDR buffer initialisation. */
 
-bool initialise_ddr(void (*ddr_trigger)(void))
+bool initialise_ddr(void)
 {
-    ddr_trigger_callback = ddr_trigger;
-
     int mem;
-    pthread_t thread_id;
     return
         TEST_IO(mem = open("/dev/mem", O_RDWR | O_SYNC))  &&
         TEST_IO(clk_interface = mmap(
@@ -303,5 +284,5 @@ bool initialise_ddr(void (*ddr_trigger)(void))
             0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
             mem, HISTORY_FIFO_IOBASE))  &&
         DO_(purge_read_buffer())  &&
-        TEST_0(pthread_create(&thread_id, NULL, event_thread, NULL));
+        DO_(initialise_ddr_events());
 }

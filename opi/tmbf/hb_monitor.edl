@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2505
-y 115
+x 2465
+y 234
 w 641
-h 647
+h 448
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -98,7 +98,7 @@ major 4
 minor 1
 release 0
 x 568
-y 616
+y 416
 w 64
 h 24
 fgColor index 25
@@ -187,7 +187,7 @@ major 4
 minor 0
 release 0
 x 440
-y 616
+y 416
 w 120
 h 24
 fgColor index 14
@@ -199,68 +199,23 @@ controlPv "$(device):BUF:SELECT_S"
 font "helvetica-medium-r-14.0"
 endObjectProperties
 
-# (Menu Button)
-object activeMenuButtonClass
+# (Static Text)
+object activeXTextClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
-x 448
-y 464
-w 136
-h 24
+x 336
+y 416
+w 78
+h 14
+font "helvetica-bold-r-12.0"
 fgColor index 14
-bgColor index 4
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):BUF:TRIGSEL_S"
-font "helvetica-medium-r-14.0"
-endObjectProperties
-
-# (Message Button)
-object activeMessageButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 224
-y 528
-w 96
-h 22
-fgColor index 14
-onColor index 4
-offColor index 3
-topShadowColor index 1
-botShadowColor index 14
-controlPv "$(device):BUF:ARM_S.PROC"
-pressValue "0"
-onLabel "Armed"
-offLabel "Arm"
-3d
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Message Button)
-object activeMessageButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 224
-y 552
-w 96
-h 22
-fgColor index 14
-onColor index 4
-offColor index 3
-topShadowColor index 1
-botShadowColor index 14
-controlPv "$(device):BUF:SOFT_TRIG_S.PROC"
-pressValue "0"
-onLabel "Triggering"
-offLabel "Trigger"
-3d
-font "helvetica-medium-r-12.0"
+bgColor index 0
+useDisplayBg
+value {
+  "Data Source:"
+}
+autoSize
 endObjectProperties
 

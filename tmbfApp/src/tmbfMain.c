@@ -25,9 +25,9 @@
 #include "device.h"
 #include "ddr_epics.h"
 #include "fir.h"
-#include "buffer.h"
 #include "bunch_select.h"
 #include "sequencer.h"
+#include "triggers.h"
 #include "sensors.h"
 #include "pvlogging.h"
 #include "persistence.h"
@@ -264,7 +264,7 @@ int main(int argc,char *argv[])
         initialise_fir()  &&
         initialise_bunch_select()  &&
         initialise_sequencer()  &&
-        initialise_buffer()  &&
+        initialise_triggers()  &&
         initialise_sensors()  &&
         DO_(load_persistent_state())  &&
         initialise_epics();

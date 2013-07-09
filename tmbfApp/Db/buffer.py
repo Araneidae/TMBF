@@ -11,8 +11,3 @@ Trigger('BUF',
 
 mbbOut('BUF:SELECT', 'FIR+ADC', 'IQ', 'FIR+DAC', 'ADC+DAC',
     DESC = 'Select buffer capture source')
-mbbOut('BUF:TRIGSEL', 'Soft trigger', 'External trigger',
-    DESC = 'Select buffer trigger source')
-
-Action('BUF:ARM', DESC = 'Arm buffer trigger')
-Action('BUF:SOFT_TRIG', DESC = 'Buffer soft trigger')

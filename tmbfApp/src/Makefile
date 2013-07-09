@@ -63,10 +63,10 @@ tmbf_SRCS += numeric.c
 tmbf_SRCS += ddr.c
 tmbf_SRCS += ddr_epics.c
 tmbf_SRCS += adc_dac.c
-tmbf_SRCS += buffer.c
 tmbf_SRCS += fir.c
 tmbf_SRCS += bunch_select.c
 tmbf_SRCS += sequencer.c
+tmbf_SRCS += triggers.c
 tmbf_SRCS += sensors.c
 
 tmbf_LIBS += $(EPICS_BASE_IOC_LIBS)

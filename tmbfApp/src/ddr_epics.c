@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 
 #include "error.h"
 #include "ddr.h"
@@ -26,58 +27,49 @@
 #define LONG_TURN_WF_COUNT        256
 
 
+/* Need to serialise some of our operations. */
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+#define LOCK()      pthread_mutex_lock(&lock);
+#define UNLOCK()    pthread_mutex_unlock(&lock);
+
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* DDR waveform readout records. */
 
 static int selected_bunch = 0;
 static int selected_turn = 0;
 
-static struct epics_record *long_waveform;
+/* Triggers for long and short waveform readout. */
+static struct epics_record *long_trigger;
+static struct epics_record *short_trigger;
+
+static bool data_ready = false;
+static struct epics_record *long_ready;      // Updates ready flag
+
+static bool ddr_one_shot = false;
+
+/* Used for waiting for record processing completion callbacks. */
+static pthread_cond_t done_cond = PTHREAD_COND_INITIALIZER;
+static bool short_done, long_done;
 
 
-static void read_ddr_bunch_waveform(short *waveform)
+/* Waveform readout methods. */
+
+static void read_bunch_waveform(short *waveform)
 {
     read_ddr_bunch(0, selected_bunch, BUFFER_TURN_COUNT, waveform);
 }
 
-static void read_short_ddr_turn_waveform(short *waveform)
+static void read_short_turn_waveform(short *waveform)
 {
     read_ddr_turns(0, SHORT_TURN_WF_COUNT, waveform);
 }
 
-static void read_long_ddr_turn_waveform(short *waveform)
+static void read_long_turn_waveform(short *waveform)
 {
     read_ddr_turns(selected_turn, LONG_TURN_WF_COUNT, waveform);
 }
-
-
-static void publish_waveforms(void)
-{
-    PUBLISH_WF_ACTION(short, "DDR:BUNCHWF",
-        BUFFER_TURN_COUNT, read_ddr_bunch_waveform);
-    PUBLISH_WF_ACTION(short, "DDR:SHORTWF",
-        SHORT_TURN_WF_COUNT * SAMPLES_PER_TURN, read_short_ddr_turn_waveform);
-    long_waveform = PUBLISH_WF_ACTION_I(short, "DDR:LONGWF",
-        LONG_TURN_WF_COUNT * SAMPLES_PER_TURN, read_long_ddr_turn_waveform);
-
-    PUBLISH_WRITE_VAR(longout, "DDR:BUNCHSEL", selected_bunch);
-}
-
-
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Triggering and control. */
-
-static struct epics_record *short_trigger;   // Triggers short waveform readout
-
-enum trigger_mode { TRIG_ALL, TRIG_ONE_SHOT };
-static unsigned int trigger_mode = TRIG_ALL;
-/* Don't allow rearming while already armed.  This prevents retriggering until
- * all trigger processing is complete. */
-static bool armed = false;
-
-static bool data_ready = false;
-static struct epics_record *long_ready;      // Updates ready flag
 
 
 /* Just writes value to DDR:READY flag. */
@@ -91,86 +83,100 @@ static void set_long_data_ready(bool ready)
 }
 
 
-/* Enables capture of data to DDR until a trigger is received. */
-static void arm_trigger(void)
-{
-    if (!armed)
-    {
-        armed = true;
-        set_long_data_ready(false);
-        hw_write_ddr_arm();
-    }
-}
-
-
 /* This is called each time the DDR buffer successfully triggers.  The short
  * waveforms are always triggered, but the long waveform is only triggered when
  * we're in one-shot mode. */
-static void ddr_trigger(void)
+void process_ddr_buffer(bool one_shot)
 {
-    if (trigger_mode == TRIG_ONE_SHOT)
-        trigger_record(long_waveform, 0, NULL);
+    LOCK();
+    ddr_one_shot = one_shot;
+    if (one_shot)
+        trigger_record(long_trigger, 0, NULL);
     trigger_record(short_trigger, 0, NULL);
-}
 
-/* This is called at the completion of record processing as a direct consequence
- * of triggering short_trigger.  In retriggering mode we rearm, otherwise just
- * report that long data is now ready and enable further triggering. */
-static void trigger_done(void)
-{
-    armed = false;
-    if (trigger_mode == TRIG_ALL)
-        arm_trigger();
-    else
-        set_long_data_ready(true);
+    /* Now wait for the completion callbacks from both records (if necessary)
+     * have reported completion. */
+    short_done = false;
+    long_done = !one_shot;
+    while (!short_done  ||  !long_done)
+        pthread_cond_wait(&done_cond, &lock);
+    UNLOCK();
 }
 
 
-static void set_trigger_mode(unsigned int value)
+/* Called each time the DDR buffer is armed.  In response we have to invalidate
+ * the long term data. */
+void arming_ddr_buffer(void)
 {
-    trigger_mode = value;
-    if (trigger_mode == TRIG_ALL)
-    {
-        set_long_data_ready(false);
-        arm_trigger();
-    }
+    LOCK();
+    set_long_data_ready(false);
+    UNLOCK();
+}
+
+
+/* Called on completion of short buffer processing.  Report completion to
+ * waiting process_ddr_buffer call. */
+static void short_trigger_done(void)
+{
+    LOCK();
+    short_done = true;
+    pthread_cond_signal(&done_cond);
+    UNLOCK();
+}
+
+
+/* Called on completion of long buffer processing.  Update ready status. */
+static void long_trigger_done(void)
+{
+    LOCK();
+    long_done = true;
+    pthread_cond_signal(&done_cond);
+    set_long_data_ready(true);
+    UNLOCK();
 }
 
 
 static void set_selected_turn(int value)
 {
     selected_turn = value;
-    if (trigger_mode == TRIG_ONE_SHOT)
-        trigger_record(long_waveform, 0, NULL);
+    LOCK();
+    if (ddr_one_shot)
+        trigger_record(long_trigger, 0, NULL);
+    UNLOCK();
 }
 
-static void arm_callback(void)
-{
-    arm_trigger();
-}
-
-
-static void publish_controls(void)
-{
-    PUBLISH_WRITER_P(mbbo, "DDR:TRIGMODE", set_trigger_mode);
-    PUBLISH_WRITER_P(mbbo, "DDR:TRIGSEL", hw_write_ddr_trigger_select);
-    PUBLISH_WRITER(longout, "DDR:TURNSEL", set_selected_turn);
-
-    PUBLISH_READ_VAR(longin, "DDR:TURNSEL", selected_turn);
-    long_ready = PUBLISH_READ_VAR_I(bi, "DDR:READY", data_ready);
-    short_trigger = PUBLISH_TRIGGER("DDR:TRIG");
-
-    PUBLISH_ACTION("DDR:DONE", trigger_done);
-    PUBLISH_ACTION("DDR:ARM", arm_callback);
-    PUBLISH_ACTION("DDR:SOFT_TRIG", hw_write_ddr_soft_trigger);
-
-    PUBLISH_WRITER(mbbo, "DDR:INPUT", hw_write_ddr_select);
-}
 
 
 bool initialise_ddr_epics(void)
 {
-    publish_waveforms();
-    publish_controls();
-    return initialise_ddr(ddr_trigger);
+    /* The three waveforms.  Each of these reads its value directly from the
+     * buffer when processed. */
+    PUBLISH_WF_ACTION(short, "DDR:BUNCHWF",
+        BUFFER_TURN_COUNT, read_bunch_waveform);
+    PUBLISH_WF_ACTION(short, "DDR:SHORTWF",
+        SHORT_TURN_WF_COUNT * SAMPLES_PER_TURN, read_short_turn_waveform);
+    PUBLISH_WF_ACTION(short, "DDR:LONGWF",
+        LONG_TURN_WF_COUNT * SAMPLES_PER_TURN, read_long_turn_waveform);
+
+    /* These two interlock chains are used to process the waveforms. */
+    short_trigger = PUBLISH_TRIGGER("DDR:SHORT:TRIG");
+    long_trigger  = PUBLISH_TRIGGER("DDR:LONG:TRIG");
+    PUBLISH_ACTION("DDR:SHORT:DONE", short_trigger_done);
+    PUBLISH_ACTION("DDR:LONG:DONE",  long_trigger_done);
+
+    /* Used to report completion of long record updates. */
+    long_ready = PUBLISH_READ_VAR_I(bi, "DDR:READY", data_ready);
+
+    /* Select bunch for single bunch waveform. */
+    PUBLISH_WRITE_VAR(longout, "DDR:BUNCHSEL", selected_bunch);
+
+    /* Turn selection and readback.  Readback is triggered after completion of
+     * long record processing. */
+    PUBLISH_WRITER(longout, "DDR:TURNSEL", set_selected_turn);
+    PUBLISH_READ_VAR(longin, "DDR:TURNSEL", selected_turn);
+
+    /* Data source. */
+    PUBLISH_WRITER_P(mbbo, "DDR:INPUT", hw_write_ddr_select);
+
+    return initialise_ddr();
 }

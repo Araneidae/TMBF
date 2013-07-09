@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 184
-y 128
+x 246
+y 126
 w 599
 h 26
 font "helvetica-medium-r-18.0"
@@ -35,7 +35,7 @@ release 0
 x 24
 y 0
 w 72
-h 24
+h 20
 controlPv "$(device):SEQ:$(state):START_FREQ_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -47,9 +47,11 @@ autoHeight
 motifWidget
 limitsFromDb
 nullColor index 0
+changeValOnLoseFocus
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -62,7 +64,7 @@ release 0
 x 104
 y 0
 w 72
-h 24
+h 20
 controlPv "$(device):SEQ:$(state):STEP_FREQ_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -74,9 +76,11 @@ autoHeight
 motifWidget
 limitsFromDb
 nullColor index 0
+changeValOnLoseFocus
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -89,7 +93,7 @@ release 0
 x 184
 y 0
 w 88
-h 24
+h 20
 controlPv "$(device):SEQ:$(state):DWELL_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -101,6 +105,7 @@ autoHeight
 motifWidget
 limitsFromDb
 nullColor index 0
+changeValOnLoseFocus
 useHexPrefix
 newPos
 objType "controls"
@@ -129,6 +134,7 @@ autoHeight
 motifWidget
 limitsFromDb
 nullColor index 0
+changeValOnLoseFocus
 useHexPrefix
 newPos
 objType "controls"

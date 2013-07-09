@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 364
-y 350
+x 71
+y 239
 w 544
-h 748
+h 712
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -62,7 +62,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 352
+x 8
 y 632
 w 184
 h 72
@@ -97,7 +97,7 @@ major 4
 minor 1
 release 0
 x 472
-y 712
+y 680
 w 64
 h 24
 fgColor index 46
@@ -132,45 +132,22 @@ command {
 includeHelpIcon
 endObjectProperties
 
-# (Message Button)
-object activeMessageButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 240
-y 712
-w 88
-h 24
-fgColor index 14
-onColor index 4
-offColor index 3
-topShadowColor index 1
-botShadowColor index 14
-controlPv "$(device):BUN:SYNC_S.PROC"
-pressValue "0"
-onLabel "Synced"
-offLabel "Sync"
-3d
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
 release 0
-x 48
+x 64
 y 224
-w 52
+w 20
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "FIR bank"
+  "FIR"
 }
 autoSize
 endObjectProperties
@@ -221,27 +198,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 144
-y 720
-w 88
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Sync bunches:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 360
+x 16
 y 648
 w 59
 h 14
@@ -261,7 +218,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 360
+x 16
 y 672
 w 59
 h 14
@@ -281,7 +238,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 432
+x 88
 y 648
 w 96
 h 20
@@ -308,7 +265,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 432
+x 88
 y 672
 w 96
 h 22
@@ -327,7 +284,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 352
+x 8
 y 624
 w 120
 h 16
@@ -346,7 +303,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 352
+x 8
 y 624
 w 120
 h 16
@@ -472,7 +429,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 416
+x 360
 y 224
 w 35
 h 14
@@ -716,7 +673,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 352
+x 360
 y 72
 w 35
 h 14
@@ -1014,7 +971,7 @@ major 4
 minor 0
 release 0
 x 448
-y 384
+y 576
 w 80
 h 22
 fgColor index 14
@@ -1137,7 +1094,7 @@ major 4
 minor 1
 release 0
 x 448
-y 368
+y 384
 w 69
 h 14
 font "helvetica-bold-r-12.0"
@@ -1220,7 +1177,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 432
+x 280
 y 584
 w 16
 h 16
@@ -1244,7 +1201,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 400
+x 248
 y 584
 w 24
 h 24
@@ -1272,7 +1229,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 360
+x 208
 y 584
 w 35
 h 14
@@ -1292,7 +1249,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 456
+x 304
 y 584
 w 72
 h 24
@@ -1307,5 +1264,25 @@ onLabel "Reset"
 offLabel "Reset"
 3d
 font "helvetica-bold-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 432
+y 580
+w 8
+h 16
+font "helvetica-bold-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "0"
+}
+autoSize
 endObjectProperties
 

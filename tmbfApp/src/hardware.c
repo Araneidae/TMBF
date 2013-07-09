@@ -13,10 +13,6 @@
 #include "hardware.h"
 
 
-/* This will be read from the FPGA on startup. */
-#define MAX_FIR_COEFFS      10       // Length of feedback filter in taps
-
-
 #define TMBF_DATA_ADDRESS       0x14028000
 #define TMBF_CONFIG_ADDRESS     0x1402C000
 
@@ -118,30 +114,33 @@ static void read_minmax(
 
 /* Writes to a sub field of a register by reading the register and writing
  * the appropriately masked value.  The register *must* be locked. */
-static void write_bit_field(
-    volatile uint32_t *reg, unsigned int start,
-    unsigned int bits, uint32_t value)
+static void write_control_bit_field(
+    unsigned int start, unsigned int bits, uint32_t value)
 {
     uint32_t mask = ((1 << bits) - 1) << start;
-    *reg = (*reg & ~mask) | ((value << start) & mask);
+    config_space->control =
+        (config_space->control & ~mask) | ((value << start) & mask);
+}
+
+/* Sets and the clears all the bits in the given mask. */
+static void pulse_mask(uint32_t mask)
+{
+    LOCK();
+    uint32_t state = config_space->control;
+    config_space->control = state | mask;
+    config_space->control = state & ~mask;
+    UNLOCK();
 }
 
 /* Sets the selected bit and resets it back to zero. */
-static void pulse_bit_field(volatile uint32_t *reg, unsigned int bit)
+static void pulse_control_bit(unsigned int bit)
 {
-    write_bit_field(reg, bit, 1, 1);
-    write_bit_field(reg, bit, 1, 0);
+    pulse_mask(1 << bit);
 }
-
 
 #define WRITE_CONTROL_BITS(start, length, value) \
     LOCK(); \
-    write_bit_field(&config_space->control, start, length, value); \
-    UNLOCK()
-
-#define PULSE_CONTROL_BIT(bit) \
-    LOCK(); \
-    pulse_bit_field(&config_space->control, bit); \
+    write_control_bit_field(start, length, value); \
     UNLOCK()
 
 
@@ -228,19 +227,9 @@ void hw_write_ddr_select(unsigned int selection)
     WRITE_CONTROL_BITS(9, 1, selection);
 }
 
-void hw_write_ddr_arm(void)
+void hw_write_ddr_trigger_select(bool external)
 {
-    PULSE_CONTROL_BIT(4);
-}
-
-void hw_write_ddr_trigger_select(unsigned int selection)
-{
-    WRITE_CONTROL_BITS(1, 1, selection);
-}
-
-void hw_write_ddr_soft_trigger(void)
-{
-    PULSE_CONTROL_BIT(5);
+    WRITE_CONTROL_BITS(1, 1, external);
 }
 
 
@@ -264,7 +253,7 @@ void hw_write_bun_entry(int bank, struct bunch_entry entries[MAX_BUNCH_COUNT])
 
 void hw_write_bun_sync(void)
 {
-    PULSE_CONTROL_BIT(8);
+    pulse_control_bit(8);
 }
 
 
@@ -276,26 +265,15 @@ void hw_write_buf_select(unsigned int selection)
     WRITE_CONTROL_BITS(10, 2, selection);
 }
 
-void hw_write_buf_arm(void)
+void hw_write_buf_trigger_select(bool external)
 {
-    PULSE_CONTROL_BIT(6);
+    WRITE_CONTROL_BITS(2, 1, external);
 }
 
-void hw_write_buf_trigger_select(unsigned int selection)
-{
-    WRITE_CONTROL_BITS(2, 1, selection);
-}
-
-void hw_write_buf_soft_trigger(void)
-{
-    PULSE_CONTROL_BIT(7);
-}
 
 bool hw_read_buf_status(void)
 {
-    config_space->system_status = 0;    // Temporary FPGA workaround!!
-    bool result = (config_space->system_status >> 3) & 1;
-    return result;
+    return (config_space->system_status >> 3) & 1;
 }
 
 /* Annoyingly close to identical to min/max readout, but different channel
@@ -306,7 +284,7 @@ void hw_read_buf_data(short low[BUF_DATA_LENGTH], short high[BUF_DATA_LENGTH])
     for (int n = 0; n < 4; n++)
     {
         /* Channel select and read enable for buffer. */
-        write_bit_field(&config_space->control, 12, 2, n);
+        write_control_bit_field(12, 2, n);
         for (int i = 0; i < BUF_DATA_LENGTH/4; i++)
         {
             uint32_t data = buffer_data[i];
@@ -387,9 +365,36 @@ unsigned int hw_read_seq_state(void)
     return config_space->system_status & 0x7;
 }
 
+bool hw_read_seq_status(void)
+{
+    return (config_space->system_status >> 4) & 1;
+}
+
 void hw_write_seq_reset(void)
 {
     config_space->sequencer_abort = 1;
+}
+
+
+/* * * * * * * * * * * * */
+/* TRG: Trigger control. */
+
+static uint32_t make_mask2(int ddr_bit, int buf_bit, bool ddr, bool buf)
+{
+    uint32_t mask = 0;
+    if (ddr) mask |= 1 << ddr_bit;
+    if (buf) mask |= 1 << buf_bit;
+    return mask;
+}
+
+void hw_write_trg_arm(bool ddr, bool buf)
+{
+    pulse_mask(make_mask2(4, 6, ddr, buf));
+}
+
+void hw_write_trg_soft_trigger(bool ddr, bool buf)
+{
+    pulse_mask(make_mask2(5, 7, ddr, buf));
 }
 
 
@@ -410,8 +415,7 @@ bool initialise_hardware(void)
     {
         adc_minmax = (volatile void *) config_space + ADC_MINMAX_OFFSET;
         dac_minmax = (volatile void *) config_space + DAC_MINMAX_OFFSET;
-        fir_filter_length = MAX_FIR_COEFFS;    // Will interrogate FPGA for this
-//         fir_filter_length = (config_space->fpga_version >> 16) & 0xF;
+        fir_filter_length = (config_space->fpga_version >> 16) & 0xF;
     }
     return ok;
 }

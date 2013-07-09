@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 319
-y 67
+x 208
+y 7
 w 641
 h 656
 font "helvetica-medium-r-18.0"
@@ -182,71 +182,6 @@ plotColor {
 }
 endObjectProperties
 
-# (Message Button)
-object activeMessageButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 600
-w 96
-h 22
-fgColor index 14
-onColor index 4
-offColor index 3
-topShadowColor index 1
-botShadowColor index 14
-controlPv "$(device):DDR:ARM_S.PROC"
-pressValue "0"
-onLabel "Armed"
-offLabel "Arm"
-3d
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Message Button)
-object activeMessageButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 240
-y 624
-w 96
-h 22
-fgColor index 14
-onColor index 4
-offColor index 3
-topShadowColor index 1
-botShadowColor index 14
-controlPv "$(device):DDR:SOFT_TRIG_S.PROC"
-pressValue "0"
-onLabel "Triggering"
-offLabel "Trigger"
-3d
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 112
-y 600
-w 96
-h 22
-fgColor index 14
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):DDR:TRIGMODE_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
 # (Menu Button)
 object activeMenuButtonClass
 beginObjectProperties
@@ -309,6 +244,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 endObjectProperties
 
 # (Text Control)
@@ -334,6 +270,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 endObjectProperties
 
 # (Static Text)
@@ -433,7 +370,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 8
+x 240
 y 632
 w 64
 h 14
@@ -450,24 +387,5 @@ fastUpdate
 useHexPrefix
 newPos
 objType "monitors"
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 112
-y 624
-w 120
-h 22
-fgColor index 14
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):DDR:TRIGSEL_S"
-font "helvetica-medium-r-12.0"
 endObjectProperties
 

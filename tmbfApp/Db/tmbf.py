@@ -9,6 +9,7 @@ import ddr          # DDR
 import fir          # FIR
 import sensors      # SE
 import sequencer    # SEQ
+import triggers     # TRG
 import tune         # TUNE
 
 
