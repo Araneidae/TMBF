@@ -33,7 +33,7 @@ struct persistent_action {
     size_t size;
     /* Write value to output buffer (which must be long enough!), returns number
      * of characters written. */
-    void (*write)(FILE *out, const void *variable);
+    size_t (*write)(FILE *out, const void *variable);
     /* Reads value from given character buffer, advancing the character pointer
      * past the characters read, returns false and generates an error message if
      * there is a parsing error. */
@@ -48,11 +48,11 @@ struct persistent_action {
 #define EPICS_STRING_LENGTH     40
 
 #define DEFINE_WRITE(type, format) \
-    static void write_##type(FILE *out, const void *variable) \
+    static size_t write_##type(FILE *out, const void *variable) \
     { \
         type value; \
         memcpy(&value, variable, sizeof(type)); \
-        fprintf(out, format, value); \
+        return fprintf(out, format, value); \
     }
 
 DEFINE_WRITE(int8_t, "%d")
@@ -88,24 +88,27 @@ DEFINE_READ_NUM(float, strtof)
 DEFINE_READ_NUM(double, strtod)
 
 
-static void write_bool(FILE *out, const void *variable)
+static size_t write_bool(FILE *out, const void *variable)
 {
     bool value = *(const bool *) variable;
     fputc(value ? 'Y' : 'N', out);
+    return 1;
 }
 
+/* Allow Y or 1 for true, N or 0 for false, though we only write Y/N. */
 static bool read_bool(const char **in, void *variable)
 {
     char ch = *(*in)++;
-    *(bool *) variable = ch == 'Y';
-    return TEST_OK_(ch == 'Y'  ||  ch == 'N', "Invalid boolean value");
+    *(bool *) variable = ch == 'Y'  ||  ch == '1';
+    return TEST_NULL_(strchr("YN10", ch), "Invalid boolean value");
 }
 
 
 /* We go for the simplest possible escaping: octal escape for everything.  Alas,
- * this can quadruple the size of the buffer to 160 chars. */
-static void write_string(FILE *out, const void *variable)
+ * this can quadruple the size of the output to 160 chars. */
+static size_t write_string(FILE *out, const void *variable)
 {
+    size_t length = 2;      // Account for enclosing quotes
     const char *string = variable;
     fputc('"', out);
     for (int i = 0; i < EPICS_STRING_LENGTH; i ++)
@@ -114,11 +117,18 @@ static void write_string(FILE *out, const void *variable)
         if (ch == '\0')
             break;
         else if (' ' <= ch  &&  ch <= '~'  &&  ch != '"'  &&  ch != '\\')
+        {
             fputc(ch, out);
+            length += 1;
+        }
         else
+        {
             fprintf(out, "\\%03o", (unsigned char) ch);
+            length += 4;
+        }
     }
     fputc('"', out);
+    return length;
 }
 
 /* Parses three octal digits as part of an escape sequence. */
@@ -151,7 +161,10 @@ static bool read_string(const char **in, void *variable)
         else if (ch == '\\')
             ok = parse_octal(in, &string[i]);
         else
+        {
             string[i] = ch;
+            ok = TEST_OK_(' ' <= ch  &&  ch <= '~', "Invalid string character");
+        }
     }
     return ok  &&  TEST_OK_(*(*in)++ == '"', "Missing closing quote");
 }
@@ -279,78 +292,128 @@ void write_persistent_variable(const char *name, const void *value)
 }
 
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Reading state file. */
+
+#define READ_BUFFER_SIZE    1024
+
+struct line_buffer {
+    FILE *file;
+    int line_number;
+    char line[READ_BUFFER_SIZE];
+};
+
+
+/* Reads one line into the line buffer, returning false if an error is detected
+ * and setting *eof accordingly.  Also ensures that we've read a complete
+ * newline terminated line.  This will also fail if the input file doesn't end
+ * with a newline.  The terminating newline character is then deleted. */
+static bool read_line(struct line_buffer *line, bool *eof)
+{
+    errno = 0;
+    *eof = fgets(line->line, READ_BUFFER_SIZE, line->file) == NULL;
+    if (*eof)
+        return TEST_OK_(errno == 0, "Error reading state file");
+    else
+    {
+        size_t len = strlen(line->line);
+        line->line_number += 1;
+        return
+            TEST_OK_(len > 0  &&  line->line[len - 1] == '\n',
+                "Line %d truncated?", line->line_number)  &&
+            DO_(line->line[len - 1] = '\0');
+    }
+}
+
+
+/* Skips leading whitespace and refills the line buffer if a line continuation
+ * character is encountered. */
+static bool fill_line_buffer(struct line_buffer *line, const char **cursor)
+{
+    while (**cursor == ' ')
+        *cursor += 1;
+    bool ok = true;
+    if (**cursor == '\\')
+    {
+        bool eof;
+        ok = read_line(line, &eof)  &&
+            TEST_OK_(!eof, "End of file after line continuation");
+        if (ok)
+        {
+            *cursor = line->line;
+            while (**cursor == ' ')
+                *cursor += 1;
+        }
+    }
+    return ok;
+}
+
+
+/* Parses the right hand side of a <key>=<value> assignment, taking into account
+ * the possibility that the value can extend over multiple lines.  A final \ is
+ * used to flag line continuation. */
 static bool parse_value(
-    const char **line, struct persistent_variable *persistence)
+    struct line_buffer *line, const char *cursor,
+    struct persistent_variable *persistence)
 {
     void *variable = persistence->variable;
     size_t size = persistence->action->size;
     size_t length = 0;
     bool ok = true;
-    for (; ok  &&  **line != '\0'  &&  length < persistence->max_length;
+    for (; ok  &&  *cursor != '\0'  &&  length < persistence->max_length;
          length ++)
     {
-        ok = persistence->action->read(line, variable);
+        ok = fill_line_buffer(line, &cursor)  &&
+            persistence->action->read(&cursor, variable);
         variable += size;
     }
     persistence->length = ok ? length : 0;
-    return ok  &&  TEST_OK_(**line == '\0', "Unexpected extra characters");
+    return ok  &&  TEST_OK_(*cursor == '\0', "Unexpected extra characters");
 }
 
 
-/* Parse a line of the form <key>=<value> using the parsing method associated
- * with <key>, or fail if <key> not known. */
-static bool parse_line(char *line, int line_number)
+/* Parse variable assignment of the form <key>=<value> using the parsing method
+ * associated with <key>, or fail if <key> not known. */
+static bool parse_assignment(struct line_buffer *line)
 {
     char *equal;
-    const char *value;
     struct persistent_variable *persistence;
     bool ok =
-        TEST_NULL_(equal = strchr(line, '='), "Missing =")  &&
-        DO_(*equal++ = '\0'; value = equal)  &&
-        TEST_NULL_(persistence = hash_table_lookup(variable_table, line),
-            "Persistence key \"%s\" not found", line)  &&
-        parse_value(&value, persistence);
+        TEST_NULL_(equal = strchr(line->line, '='), "Missing =")  &&
+        DO_(*equal++ = '\0')  &&
+        TEST_NULL_(persistence = hash_table_lookup(variable_table, line->line),
+            "Persistence key \"%s\" not found", line->line)  &&
+        parse_value(line, equal, persistence);
     /* Report location of error. */
     if (!ok)
         print_error("Parse error on line %d of state file %s",
-            line_number, state_filename);
+            line->line_number, state_filename);
     return ok;
 }
 
+
 static bool parse_persistence_file(const char *filename)
 {
-    FILE *in;
-    if (!TEST_NULL_(in = fopen(filename, "r"),
-            "Unable to open state file %s", filename))
+    struct line_buffer line = {
+        .file = fopen(filename, "r"),
+        .line_number = 0 };
+    if (!TEST_NULL_(line.file, "Unable to open state file %s", filename))
         /* If persistence file isn't found we report open failure but don't
-         * actually fail -- this isn't an error. */
+         * fail -- this isn't really an error. */
         return true;
 
-    char line[10240];
-    int line_number = 0;
-
-    bool ok = true;
-    while (fgets(line, sizeof(line), in))
+    bool ok = true, eof = false;
+    while (read_line(&line, &eof)  &&  !eof)
     {
-        line_number += 1;
-
-        /* Skip lines beginning with # and ignore blank lines.  All other lines
-         * are processed. */
-        if (line[0] != '#')
-        {
-            int len = strlen(line);
-            if (TEST_OK_(line[len - 1] == '\n',
-                    "Line %d truncated?", line_number))
-                line[len - 1] = '\0';
-
-            if (*line != '\0')
-                /* Allow parsing of individual lines to fail, but accumulate
-                 * overall error code.  This shouldn't actually ever happen, of
-                 * course. */
-                ok = parse_line(line, line_number)  &&  ok;
-        }
+        /* Skip lines beginning with # and blank lines. */
+        if (line.line[0] != '#'  &&  line.line[0] != '\n')
+            /* A little odd: we allow individual line parsing to fail, but an
+             * overall error code is accumulated and reported.  This means that
+             * we will complete the loading of a broken state file (for example,
+             * if keys have changed), but an error will be returned. */
+            ok = parse_assignment(&line)  &&  ok;
     }
-    fclose(in);
+    fclose(line.file);
     return ok;
 }
 
@@ -368,17 +431,28 @@ bool load_persistent_state(void)
 }
 
 
-static void write_line(
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Writing state file. */
+
+static void write_lines(
     FILE *out, const char *name, const struct persistent_variable *persistence)
 {
     const void *variable = persistence->variable;
     size_t size = persistence->action->size;
-    fprintf(out, "%s=", name);
+    size_t line_length = fprintf(out, "%s=", name);
     for (size_t i = 0; i < persistence->length; i ++)
     {
-        if (i != 0)
+        if (line_length > 72)
+        {
+            fputs(" \\\n ", out);
+            line_length = 0;
+        }
+        else if (i != 0)
+        {
             fputc(' ', out);
-        persistence->action->write(out, variable);
+            line_length += 1;
+        }
+        line_length += persistence->action->write(out, variable);
         variable += size;
     }
     fputc('\n', out);
@@ -406,7 +480,7 @@ static bool write_persistent_state(const char *filename)
         const char *name = key;
         struct persistent_variable *persistence = value;
         if (persistence->length > 0)
-            write_line(out, name, persistence);
+            write_lines(out, name, persistence);
     }
     fclose(out);
     return ok;
