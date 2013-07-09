@@ -23,8 +23,8 @@
 #define DATA_AREA_SIZE          (1 << 14)
 #define CONTROL_AREA_SIZE       (1 << 12)
 
-#define ADC_MINMAX_OFFSET       (4 * 512)
-#define DAC_MINMAX_OFFSET       (4 * 768)
+#define ADC_MINMAX_OFFSET       (4 * 256)
+#define DAC_MINMAX_OFFSET       (4 * 512)
 
 
 
@@ -34,7 +34,12 @@ struct tmbf_config_space
     //  15:0    Version code
     //  19:16   Number of taps in FIR
 
-    uint32_t control;               //  1  System control register
+    uint32_t system_status;         //  1  Status register
+    //  2:0     Current sequencer state ("program counter")
+    //  3       Set if buffer busy
+    //  4       Set if sequencer busy
+
+    uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
     //  1       DDR trigger source select (0 => soft, 1 => external)
     //  2       Buffer & seq trigger source select (0 => soft, 1 => external)
@@ -54,12 +59,11 @@ struct tmbf_config_space
     //  26:24   Detector gain select (in 6dB steps)
     //  31:27   (unused)
 
-    uint32_t nco_frequency;         //  2  Fixed NCO generator frequency
-    uint32_t dac_delay;             //  3  DAC output delay (2ns steps)
-    uint32_t bunch_select;          //  4  Detector bunch selections
-    uint32_t adc_offset_ab;         //  5  ADC channel offsets (channels A/B)
-    uint32_t adc_offset_cd;         //  6  ADC channel offsets (channels C/D)
-    uint32_t system_status;         //  7  Status register
+    uint32_t nco_frequency;         //  3  Fixed NCO generator frequency
+    uint32_t dac_delay;             //  4  DAC output delay (2ns steps)
+    uint32_t bunch_select;          //  5  Detector bunch selections
+    uint32_t adc_offset_ab;         //  6  ADC channel offsets (channels A/B)
+    uint32_t adc_offset_cd;         //  7  ADC channel offsets (channels C/D)
     uint32_t fir_bank;              //  8  Select FIR bank
     uint32_t fir_write;             //  9  Write FIR coefficients
     uint32_t bunch_bank;            // 10  Select bunch config bank
