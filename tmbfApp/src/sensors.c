@@ -47,7 +47,6 @@ static double RamfsUsage;  // Number of MB allocated in RAM filesystems
 
 static int MbTemperature;
 static int FanSpeeds[2];
-static int FanSetSpeeds[2];
 
 
 /* Hard-wired paths to temperature and fan sensors. */
@@ -57,6 +56,8 @@ static const char *proc_fan0     = I2C_DEVICE "0-004b/fan1_input";
 static const char *proc_fan1     = I2C_DEVICE "0-0048/fan1_input";
 static const char *proc_fan0_set = I2C_DEVICE "0-004b/fan1_target";
 static const char *proc_fan1_set = I2C_DEVICE "0-0048/fan1_target";
+static const char *proc_fan0_pwm = I2C_DEVICE "0-004b/pwm1_enable";
+static const char *proc_fan1_pwm = I2C_DEVICE "0-0048/pwm1_enable";
 
 static char **RamFileSystems;      // List of file systems to scan for files
 
@@ -224,15 +225,12 @@ static void ReadHealth(void)
     /* In case any of our reads fail, start by setting everything to zero,
      * which is generally an alarm condition. */
     memset(FanSpeeds, 0, sizeof(FanSpeeds));
-    memset(FanSetSpeeds, 0, sizeof(FanSetSpeeds));
     MbTemperature = 0;
 
     parse_file(proc_temp_mb,  1, "%d", &MbTemperature);
     MbTemperature /= 1000;
     parse_file(proc_fan0,     1, "%d", &FanSpeeds[0]);
     parse_file(proc_fan1,     1, "%d", &FanSpeeds[1]);
-    parse_file(proc_fan0_set, 1, "%d", &FanSetSpeeds[0]);
-    parse_file(proc_fan1_set, 1, "%d", &FanSetSpeeds[1]);
 }
 
 
@@ -485,7 +483,102 @@ static void ProcessNtpHealth(void)
 
 /*****************************************************************************/
 /*                                                                           */
-/*                           Sensors Initialisation                          */
+/*                               Fan Control                                 */
+/*                                                                           */
+/*****************************************************************************/
+
+/* This code makes a half hearted attempt to regulate the temperature by
+ * controlling the fans.  Unfortunately we have very tight limits on the speeds
+ * we're able to select. */
+
+/* Limits on controlled fan speeds: the controller won't attempt to push beyond
+ * these limits. */
+#define MAX_FAN_SPEED   5700
+/* This minimum speed of 4,300 RPM is specified by Instrumentation Technologies.
+ * If the fans are driven at lower speeds then their drive transistors can be
+ * overloaded!  This constraint was reported in an e-mail from Matjaz Znidarcic
+ * dated 1st July 2009.  A minimum set speed of 4,100 appears to be acceptable,
+ * according to i-Tech. */
+#define MIN_FAN_SPEED   4100
+
+/* It really doesn't matter hugely how we start, so to simplify things we assume
+ * an initial fan speed of 4,500 RPM.  The controller will settle quickly enough
+ * anyhow.
+ *    The one disadvantage of not reading the fan speed at startup is that
+ * restarting the health daemon will force the controller to hunt for the right
+ * speed again.  Not a big deal. */
+#define INITIAL_FAN_SPEED   4500
+
+/* Default controller parameters when using motherboard sensor. */
+#define TARGET_TEMP_MB          42
+#define CONTROLLER_KP_MB        40
+#define CONTROLLER_KI_MB        40
+
+
+static int target_temperature = TARGET_TEMP_MB;
+static int fan_control_integral = 0;
+static int controller_KP = CONTROLLER_KP_MB;
+static int controller_KI = CONTROLLER_KI_MB;
+static int fan_set_speed;
+
+
+static void write_device(const char *device, int value)
+{
+    FILE *output = fopen(device, "w");
+    if (TEST_NULL(output))
+    {
+        TEST_OK(fprintf(output, "%d", value) > 0);
+        fclose(output);
+    }
+}
+
+
+/* We run a very simple PI control loop, setting the fan speeds to regulate
+ * the selected temperature sensor. */
+static void step_fan_control(void)
+{
+    int error = MbTemperature - target_temperature;
+    fan_control_integral += error;
+    fan_set_speed = INITIAL_FAN_SPEED +
+        error * controller_KP + fan_control_integral * controller_KI;
+
+    /* Prevent integrator windup when speed reaches its limits. */
+    if (fan_set_speed > MAX_FAN_SPEED)
+    {
+        fan_set_speed = MAX_FAN_SPEED;
+        fan_control_integral -= error;
+    }
+    else if (fan_set_speed < MIN_FAN_SPEED)
+    {
+        fan_set_speed = MIN_FAN_SPEED;
+        fan_control_integral -= error;
+    }
+
+    /* Write the new target fan speed. */
+    write_device(proc_fan0_set, fan_set_speed);
+    write_device(proc_fan1_set, fan_set_speed);
+}
+
+
+static void initialise_fan_control(void)
+{
+    PUBLISH_READ_VAR(longin, "SE:FAN_SET", fan_set_speed);
+    PUBLISH_WRITE_VAR_P(longout, "SE:TEMP", target_temperature);
+
+    /* For debugging. */
+    PUBLISH_WRITE_VAR_P(longout, "SE:TEMP:KP", controller_KP);
+    PUBLISH_WRITE_VAR_P(longout, "SE:TEMP:KI", controller_KI);
+
+    /* Initialise fan speed control. */
+    write_device(proc_fan0_pwm, 2);
+    write_device(proc_fan1_pwm, 2);
+}
+
+
+
+/*****************************************************************************/
+/*                                                                           */
+/*                     Sensors Initialisation and Control                     */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -497,7 +590,10 @@ static void ProcessSensors(void)
     ProcessUptimeAndIdle();
     ProcessFreeMemory();
     ProcessNetworkStats();
+
     ReadHealth();
+    step_fan_control();
+
     ProcessNtpHealth();
 }
 
@@ -524,8 +620,6 @@ bool initialise_sensors(void)
     PUBLISH_READ_VAR(longin, "SE:TEMP", MbTemperature);
     PUBLISH_READ_VAR(longin, "SE:FAN1", FanSpeeds[0]);
     PUBLISH_READ_VAR(longin, "SE:FAN2", FanSpeeds[1]);
-    PUBLISH_READ_VAR(longin, "SE:FAN1_SET", FanSetSpeeds[0]);
-    PUBLISH_READ_VAR(longin, "SE:FAN2_SET", FanSetSpeeds[1]);
 
     PUBLISH_READ_VAR(ai, "SE:FREE",    MemoryFree);
     PUBLISH_READ_VAR(ai, "SE:RAMFS",   RamfsUsage);
@@ -539,6 +633,7 @@ bool initialise_sensors(void)
     PUBLISH_READ_VAR(stringin, "SE:SERVER",  NTP_server);
 
     InitialiseUptime();
+    initialise_fan_control();
 
     pthread_t thread_id;
     return

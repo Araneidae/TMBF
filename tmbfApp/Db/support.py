@@ -102,10 +102,10 @@ def longIn(name, LOPR=None, HOPR=None, EGU=None, **fields):
     return GenericDevice.longin(
         name, LOPR = LOPR, HOPR = HOPR, EGU = EGU, **fields)
 
-def longOut(name, DRVL=None, DRVH=None, **fields):
+def longOut(name, DRVL=None, DRVH=None, EGU=None, **fields):
     set_out_defaults(fields, name)
     return GenericDevice.longout(
-        name + '_S', DRVL = DRVL, DRVH = DRVH, **fields)
+        name + '_S', DRVL = DRVL, DRVH = DRVH, EGU = EGU, **fields)
 
 
 # Adds a list of (option, value [,severity]) tuples into field settings

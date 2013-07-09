@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 643
-y 397
+x 1184
+y 91
 w 320
-h 497
+h 584
 font "helvetica-medium-r-14.0"
 ctlFont "helvetica-medium-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -33,7 +33,7 @@ major 4
 minor 1
 release 0
 x 224
-y 464
+y 552
 w 88
 h 24
 fgColor index 46
@@ -96,7 +96,7 @@ release 0
 x 8
 y 48
 w 304
-h 224
+h 152
 lineColor index 14
 fill
 fillColor index 4
@@ -149,7 +149,7 @@ lineColor index 14
 fill
 fillColor index 16
 fillAlarm
-alarmPv "$(device):SE:HEALTH"
+alarmPv "$(device):SE:SYS:OK"
 endObjectProperties
 
 # (Text Monitor)
@@ -159,304 +159,7 @@ major 4
 minor 5
 release 0
 x 104
-y 104
-w 80
-h 16
-controlPv "$(device):SE:FAN1"
-font "helvetica-medium-r-14.0"
-fgColor index 14
-fgAlarm
-bgColor index 4
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 112
 y 64
-w 72
-h 16
-controlPv "$(device):SE:TEMP"
-font "helvetica-medium-r-14.0"
-fgColor index 14
-fgAlarm
-bgColor index 4
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 104
-y 120
-w 80
-h 16
-controlPv "$(device):SE:FAN1_SET"
-font "helvetica-medium-r-14.0"
-fgColor index 14
-fgAlarm
-bgColor index 4
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 104
-y 136
-w 80
-h 16
-controlPv "$(device):SE:FAN1_ERR"
-font "helvetica-medium-r-14.0"
-fgColor index 14
-fgAlarm
-bgColor index 4
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 200
-y 104
-w 80
-h 16
-controlPv "$(device):SE:FAN2"
-font "helvetica-medium-r-14.0"
-fgColor index 14
-fgAlarm
-bgColor index 4
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 200
-y 120
-w 80
-h 16
-controlPv "$(device):SE:FAN2_SET"
-font "helvetica-medium-r-14.0"
-fgColor index 14
-fgAlarm
-bgColor index 4
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 200
-y 136
-w 80
-h 16
-controlPv "$(device):SE:FAN2_ERR"
-font "helvetica-medium-r-14.0"
-fgColor index 14
-fgAlarm
-bgColor index 4
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 64
-w 86
-h 16
-font "helvetica-medium-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Motherboard:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 104
-y 88
-w 40
-h 16
-font "helvetica-medium-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Fan 1:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 104
-w 72
-h 16
-font "helvetica-medium-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Fan speed:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 120
-w 68
-h 16
-font "helvetica-medium-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Set speed:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 136
-w 79
-h 16
-font "helvetica-medium-r-14.0"
-fgColor index 14
-fgAlarm
-bgColor index 0
-useDisplayBg
-alarmPv "$(device):SE:FAN:OK"
-value {
-  "Speed error:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 200
-y 88
-w 40
-h 16
-font "helvetica-medium-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Fan 2:"
-}
-autoSize
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 104
-y 160
 w 160
 h 16
 controlPv "$(device):SE:NTPSTAT"
@@ -480,7 +183,7 @@ major 4
 minor 5
 release 0
 x 104
-y 176
+y 80
 w 152
 h 16
 controlPv "$(device):SE:STRATUM"
@@ -505,7 +208,7 @@ major 4
 minor 5
 release 0
 x 104
-y 192
+y 96
 w 152
 h 16
 controlPv "$(device):SE:SERVER"
@@ -529,7 +232,7 @@ major 4
 minor 1
 release 0
 x 16
-y 160
+y 64
 w 31
 h 16
 font "helvetica-medium-r-14.0"
@@ -549,7 +252,7 @@ major 4
 minor 1
 release 0
 x 16
-y 176
+y 80
 w 52
 h 16
 font "helvetica-medium-r-14.0"
@@ -569,15 +272,13 @@ major 4
 minor 1
 release 0
 x 16
-y 192
+y 96
 w 46
 h 16
 font "helvetica-medium-r-14.0"
 fgColor index 14
-fgAlarm
 bgColor index 0
 useDisplayBg
-alarmPv "$(device):SE:FAN:OK"
 value {
   "Server:"
 }
@@ -591,7 +292,7 @@ major 4
 minor 0
 release 0
 x 8
-y 288
+y 376
 w 304
 h 168
 lineColor index 14
@@ -606,7 +307,7 @@ major 4
 minor 1
 release 0
 x 8
-y 280
+y 368
 w 176
 h 16
 font "helvetica-medium-r-12.0"
@@ -625,7 +326,7 @@ major 4
 minor 0
 release 0
 x 8
-y 280
+y 368
 w 176
 h 16
 lineColor index 14
@@ -639,7 +340,7 @@ major 4
 minor 5
 release 0
 x 224
-y 304
+y 392
 w 72
 h 16
 controlPv "$(device):SE:CAPVS"
@@ -664,7 +365,7 @@ major 4
 minor 5
 release 0
 x 16
-y 304
+y 392
 w 192
 h 16
 controlPv "$(device):SE:CAPVS.DESC"
@@ -687,7 +388,7 @@ major 4
 minor 5
 release 0
 x 224
-y 320
+y 408
 w 72
 h 16
 controlPv "$(device):SE:CACLNT"
@@ -712,7 +413,7 @@ major 4
 minor 5
 release 0
 x 16
-y 320
+y 408
 w 192
 h 16
 controlPv "$(device):SE:CACLNT.DESC"
@@ -735,7 +436,7 @@ major 4
 minor 5
 release 0
 x 224
-y 344
+y 432
 w 72
 h 16
 controlPv "$(device):SE:NWBRX"
@@ -760,7 +461,7 @@ major 4
 minor 5
 release 0
 x 16
-y 344
+y 432
 w 192
 h 16
 controlPv "$(device):SE:NWBRX.DESC"
@@ -783,7 +484,7 @@ major 4
 minor 5
 release 0
 x 224
-y 360
+y 448
 w 72
 h 16
 controlPv "$(device):SE:NWPRX"
@@ -808,7 +509,7 @@ major 4
 minor 5
 release 0
 x 16
-y 360
+y 448
 w 192
 h 16
 controlPv "$(device):SE:NWPRX.DESC"
@@ -831,7 +532,7 @@ major 4
 minor 5
 release 0
 x 224
-y 376
+y 464
 w 72
 h 16
 controlPv "$(device):SE:NWMRX"
@@ -856,7 +557,7 @@ major 4
 minor 5
 release 0
 x 16
-y 376
+y 464
 w 192
 h 16
 controlPv "$(device):SE:NWMRX.DESC"
@@ -879,7 +580,7 @@ major 4
 minor 5
 release 0
 x 224
-y 400
+y 488
 w 72
 h 16
 controlPv "$(device):SE:NWBTX"
@@ -904,7 +605,7 @@ major 4
 minor 5
 release 0
 x 16
-y 400
+y 488
 w 192
 h 16
 controlPv "$(device):SE:NWBTX.DESC"
@@ -927,7 +628,7 @@ major 4
 minor 5
 release 0
 x 224
-y 416
+y 504
 w 72
 h 16
 controlPv "$(device):SE:NWPTX"
@@ -952,7 +653,7 @@ major 4
 minor 5
 release 0
 x 16
-y 416
+y 504
 w 192
 h 16
 controlPv "$(device):SE:NWPTX.DESC"
@@ -975,7 +676,7 @@ major 4
 minor 5
 release 0
 x 224
-y 432
+y 520
 w 72
 h 16
 controlPv "$(device):SE:NWMTX"
@@ -1000,7 +701,7 @@ major 4
 minor 5
 release 0
 x 16
-y 432
+y 520
 w 192
 h 16
 controlPv "$(device):SE:NWMTX.DESC"
@@ -1023,7 +724,7 @@ major 4
 minor 1
 release 0
 x 16
-y 216
+y 120
 w 70
 h 16
 font "helvetica-medium-r-14.0"
@@ -1043,7 +744,7 @@ major 4
 minor 5
 release 0
 x 104
-y 216
+y 120
 w 72
 h 16
 controlPv "$(device):SE:FREE"
@@ -1068,7 +769,7 @@ major 4
 minor 1
 release 0
 x 16
-y 232
+y 136
 w 68
 h 16
 font "helvetica-medium-r-14.0"
@@ -1088,7 +789,7 @@ major 4
 minor 5
 release 0
 x 104
-y 232
+y 136
 w 72
 h 16
 controlPv "$(device):SE:RAMFS"
@@ -1113,7 +814,7 @@ major 4
 minor 1
 release 0
 x 16
-y 248
+y 152
 w 32
 h 16
 font "helvetica-medium-r-14.0"
@@ -1133,7 +834,7 @@ major 4
 minor 5
 release 0
 x 104
-y 248
+y 152
 w 72
 h 16
 controlPv "$(device):SE:CPU"
@@ -1158,8 +859,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 64
-y 464
+x 72
+y 176
 w 64
 h 16
 controlPv "$(device):SE:UPTIME"
@@ -1184,8 +885,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 8
-y 464
+x 16
+y 176
 w 47
 h 16
 font "helvetica-medium-r-14.0"
@@ -1204,8 +905,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 144
-y 464
+x 152
+y 176
 w 56
 h 16
 controlPv "$(device):SE:EPICSUP"
@@ -1230,8 +931,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 136
-y 464
+x 144
+y 176
 w 4
 h 16
 font "helvetica-medium-r-14.0"
@@ -1242,5 +943,473 @@ value {
   "/"
 }
 autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 216
+w 304
+h 144
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 24
+y 208
+w 160
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Fans and Temperatures"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 24
+y 208
+w 160
+h 16
+lineColor index 14
+fillColor index 3
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 208
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):SE:FAN:OK"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 112
+y 272
+w 80
+h 16
+controlPv "$(device):SE:FAN1"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 112
+y 232
+w 80
+h 16
+controlPv "$(device):SE:TEMP"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 160
+y 304
+w 80
+h 16
+controlPv "$(device):SE:FAN_SET"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 112
+y 288
+w 80
+h 16
+controlPv "$(device):SE:FAN1_ERR"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 208
+y 272
+w 80
+h 16
+controlPv "$(device):SE:FAN2"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 208
+y 288
+w 80
+h 16
+controlPv "$(device):SE:FAN2_ERR"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 232
+w 85
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Temperature:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 112
+y 256
+w 40
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Fan 1:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 272
+w 72
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Fan speed:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 304
+w 68
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Set speed:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 288
+w 79
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+value {
+  "Speed error:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 208
+y 256
+w 40
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Fan 2:"
+}
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 104
+y 328
+w 40
+h 24
+controlPv "$(device):SE:TEMP_S"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 232
+y 328
+w 32
+h 24
+controlPv "$(device):SE:TEMP:KP_S"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 272
+y 328
+w 32
+h 24
+controlPv "$(device):SE:TEMP:KI_S"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 328
+w 80
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Target temp:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 160
+y 328
+w 64
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Controller:"
+}
+autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 552
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):SE:HEALTH"
 endObjectProperties
 
