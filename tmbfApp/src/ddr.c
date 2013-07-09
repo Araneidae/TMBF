@@ -137,11 +137,14 @@ static inline int16_t extract_sample(uint32_t atom)
 
 /* Fills buffer (which should be MAX_FIFO_SIZE atoms long) from the DDR fifo,
  * returns the number of atoms read. */
-static size_t get_buffer_fifo(int16_t *buffer)
+static size_t get_buffer_fifo(int16_t *buffer, size_t count)
 {
     unsigned int fifo_size = history_buffer->transfer_status & 0x7FF;
     if (fifo_size > MAX_FIFO_SIZE)
         fifo_size = MAX_FIFO_SIZE;
+    if (!TEST_OK_(fifo_size <= count,
+            "DDR FIFO overrun: %u/%u", fifo_size, count))
+        fifo_size = count;
     for (unsigned int i = 0; i < fifo_size; i ++)
     {
         /* Take two words at a time from the fifo (one "atom") and convert
@@ -163,7 +166,7 @@ static size_t get_buffer_fifo(int16_t *buffer)
  * overrun the buffer in error. */
 #define FOR_FIFO_ATOMS(atoms_read, count, buffer) \
     for (size_t atoms_read; \
-        atoms_read = get_buffer_fifo(buffer), \
+        atoms_read = get_buffer_fifo(buffer, count), \
             atoms_read > 0  &&  count >= atoms_read; \
         count -= atoms_read) \
 
