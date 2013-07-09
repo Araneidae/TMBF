@@ -20,6 +20,7 @@
 #include "tune.h"
 #include "device.h"
 #include "ddr_epics.h"
+#include "fir.h"
 #include "pvlogging.h"
 #include "persistence.h"
 
@@ -223,6 +224,7 @@ int main(int argc,char *argv[])
         GenericInit()  &&
         initialise_ddr_epics()  &&
         initialise_adc_dac()  &&
+        initialise_fir()  &&
         DO_(load_persistent_state());
     for (int i = 0; Ok && i < argc; i ++)
         Ok = TEST_EPICS(iocsh, argv[i]);

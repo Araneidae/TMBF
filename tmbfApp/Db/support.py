@@ -146,9 +146,16 @@ def stringOut(name, **fields):
 def Waveform(name, length, FTVL='LONG', **fields):
     return GenericDevice.waveform(name, NELM = length, FTVL = FTVL, **fields)
 
-def WaveformOut(name, *args, **fields):
+def WaveformOut(address, *args, **fields):
     fields.setdefault('PINI', 'YES')
-    return Waveform(name + '_S', address = name, *args, **fields)
+    # A hacky trick: if the given name ends with _S then use that for both the
+    # PV name and its address, otherwise add _S to the PV name.  This allows an
+    # easy choice of two options for the address.
+    if address[-2:] == '_S':
+        name = address
+    else:
+        name = address + '_S'
+    return Waveform(name, address = address, *args, **fields)
 
 
 __all__ = [
