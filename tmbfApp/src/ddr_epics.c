@@ -71,6 +71,9 @@ static struct epics_record *short_trigger;   // Triggers short waveform readout
 
 enum trigger_mode { TRIG_ALL, TRIG_ONE_SHOT };
 static unsigned int trigger_mode = TRIG_ALL;
+/* Don't allow rearming while already armed.  This prevents retriggering until
+ * all trigger processing is complete. */
+static bool armed = false;
 
 static bool data_ready = false;
 static struct epics_record *long_ready;      // Updates ready flag
@@ -90,8 +93,12 @@ static void set_long_data_ready(bool ready)
 /* Enables capture of data to DDR until a trigger is received. */
 static void arm_trigger(void)
 {
-    set_long_data_ready(false);
-    pulse_CTRL_ARM_DDR();
+    if (!armed)
+    {
+        armed = true;
+        set_long_data_ready(false);
+        pulse_CTRL_ARM_DDR();
+    }
 }
 
 
@@ -105,10 +112,12 @@ static void ddr_trigger(void)
     trigger_record(short_trigger, 0, NULL);
 }
 
-/* This is called at the completion of record processing.  In retriggering mode
- * we rearm, otherwise just report that long data is now ready. */
+/* This is called at the completion of record processing as a direct consequence
+ * of triggering short_trigger.  In retriggering mode we rearm, otherwise just
+ * report that long data is now ready and enable further triggering. */
 static void trigger_done(void)
 {
+    armed = false;
     if (trigger_mode == TRIG_ALL)
         arm_trigger();
     else
@@ -149,7 +158,7 @@ static void publish_controls(void)
     long_ready = PUBLISH_READ_VAR_I(bi, "DDR:READY", data_ready);
     short_trigger = PUBLISH_TRIGGER("DDR:TRIG");
 
-    PUBLISH_ACTION("DDR:TRIGDONE", trigger_done);
+    PUBLISH_ACTION("DDR:DONE", trigger_done);
     PUBLISH_ACTION("DDR:ARM", arm_callback);
     PUBLISH_ACTION("DDR:SOFT_TRIG", pulse_CTRL_TRIG_DDR);
 

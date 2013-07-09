@@ -49,7 +49,8 @@ void interlock_signal(struct epics_interlock *interlock, struct timespec *ts)
     trigger_record(interlock->trigger, 0, ts);
 }
 
-/* Completion of EPICS processing chain, allow waiting thread to proceed. */
+/* Completion of EPICS processing chain, allow waiting thread to proceed.
+ * To be called by EPICS database at end of triggered processing chain. */
 static bool interlock_done(void *context, const bool *value)
 {
     struct epics_interlock *interlock = context;

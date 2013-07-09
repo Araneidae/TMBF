@@ -14,12 +14,12 @@ KB = 1024
 MB = KB * KB
 
 
-def Trigger(prefix, pvs):
+def Trigger(prefix, *pvs):
     done = boolOut('%s:DONE' % prefix,
         PINI = 'NO', DESC = '%s processing done' % prefix)
     return boolIn('%s:TRIG' % prefix,
         SCAN = 'I/O Intr', DESC = '%s processing trigger' % prefix,
-        FLNK = create_fanout('%s:TRIG:FAN' % prefix, *pvs + [done]))
+        FLNK = create_fanout('%s:TRIG:FAN' % prefix, *pvs + (done,)))
 
 
 # Bunch number
@@ -270,13 +270,10 @@ longOut('DDR:BUNCHSEL', 0, 935,
     FLNK = ddr_bunch_buffer,
     DESC = 'Select bunch for DDR readout')
 
-boolIn('DDR:TRIG', SCAN = 'I/O Intr',
-    FLNK = create_fanout('DDR:FAN',
-        ddr_bunch_buffer,
-        Waveform('DDR:SHORTWF', SHORT_TURN_WF_LENGTH, 'SHORT',
-            DESC = 'Short turn by turn waveform'),
-        boolOut('DDR:TRIGDONE', DESC = 'DDR trigger done')),
-    DESC = 'DDR trigger event')
+Trigger('DDR',
+    ddr_bunch_buffer,
+    Waveform('DDR:SHORTWF', SHORT_TURN_WF_LENGTH, 'SHORT',
+        DESC = 'Short turn by turn waveform'))
 
 
 # The long waveform and its records are only processed in single shot mode.
@@ -403,7 +400,7 @@ trigger_pvs.extend(health_pvs)
 trigger_pvs.append(
     AggregateSeverity('SE:HEALTH', 'Aggregated health', health_pvs))
 
-Trigger('SE', trigger_pvs)
+Trigger('SE', *trigger_pvs)
 
 longOut('SE:TEMP', 30, 60, 'deg', DESC = 'Target temperature')
 longOut('SE:TEMP:KP', DESC = 'Fan controller KP')
