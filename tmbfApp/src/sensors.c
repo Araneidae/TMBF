@@ -244,8 +244,8 @@ static void ReadHealth(void)
 static unsigned int CasChannelCount;     // Number of connected PVs
 static unsigned int CasClientCount;      //  connected channel access clients
 
-static uint64_t NetBytesRxLast, NetPacketsRxLast, NetMultiRxLast;
-static uint64_t NetBytesTxLast, NetPacketsTxLast, NetMultiTxLast;
+static uint32_t NetBytesRxLast, NetPacketsRxLast, NetMultiRxLast;
+static uint32_t NetBytesTxLast, NetPacketsTxLast, NetMultiTxLast;
 
 /* The following are the statistics we report, scaled to k bytes per second for
  * NetBytes{Rx,Tx} and packets per second for Net{Packets,Multi}{Rx,Tx}. */
@@ -254,8 +254,8 @@ static double NetBytesTxDelta, NetPacketsTxDelta, NetMultiTxDelta;
 
 
 static bool ReadNetworkStats(
-    uint64_t *NetBytesRx, uint64_t *NetPacketsRx, uint64_t *NetMultiRx,
-    uint64_t *NetBytesTx, uint64_t *NetPacketsTx, uint64_t *NetMultiTx)
+    uint32_t *NetBytesRx, uint32_t *NetPacketsRx, uint32_t *NetMultiRx,
+    uint32_t *NetBytesTx, uint32_t *NetPacketsTx, uint32_t *NetMultiTx)
 {
     FILE *input;
     bool ok = TEST_NULL(input = fopen("/proc/net/dev", "r"));
@@ -267,8 +267,8 @@ static bool ReadNetworkStats(
             if (strncmp(line, "  eth0", 6) == 0)
             {
                 ok = TEST_OK(sscanf(line,
-                    "  eth0:%llu %llu %*d %*d %*d %*d %*d %llu "
-                           "%llu %llu %*d %*d %*d %*d %*d %llu",
+                    "  eth0:%u %u %*d %*d %*d %*d %*d %u "
+                           "%u %u %*d %*d %*d %*d %*d %u",
                     NetBytesRx, NetPacketsRx, NetMultiRx,
                     NetBytesTx, NetPacketsTx, NetMultiTx) == 6);
                 break;
@@ -284,8 +284,8 @@ static void ProcessNetworkStats(void)
     /* Channel access statistics. */
     casStatsFetch(&CasChannelCount, &CasClientCount);
 
-    uint64_t NetBytesRx, NetPacketsRx, NetMultiRx;
-    uint64_t NetBytesTx, NetPacketsTx, NetMultiTx;
+    uint32_t NetBytesRx, NetPacketsRx, NetMultiRx;
+    uint32_t NetBytesTx, NetPacketsTx, NetMultiTx;
     if (ReadNetworkStats(
             &NetBytesRx, &NetPacketsRx, &NetMultiRx,
             &NetBytesTx, &NetPacketsTx, &NetMultiTx))
