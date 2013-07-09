@@ -22,14 +22,18 @@ struct fir_bank {
     int cycles;
     int length;
     double phase;
-    int current_taps[MAX_FIR_COEFFS];
-    int set_taps[MAX_FIR_COEFFS];
+    int *current_taps;
+    int *set_taps;
     struct epics_record *taps_waveform;
     bool use_waveform;
     bool waveform_set;
 };
 
+static int fir_filter_length;
 static struct fir_bank banks[FIR_BANKS];
+
+/* Number of bytes in a filter: we use this count quite a bit. */
+#define FILTER_SIZE     (fir_filter_length * sizeof(int))
 
 
 /* Given a ratio cycles:length and a phase compute the appropriate filter. */
@@ -41,8 +45,8 @@ static void compute_fir_taps(struct fir_bank *bank)
      * filter padded with zeros.  This ensures zero extra delay from the filter
      * if the length is shorter than the filter length. */
     int *taps = bank->current_taps;
-    int start = MAX_FIR_COEFFS - bank->length;
-    memset(taps, 0, MAX_FIR_COEFFS * sizeof(int));
+    int start = fir_filter_length - bank->length;
+    memset(taps, 0, FILTER_SIZE);
 
     /* Calculate FIR coeffs and the mean value. */
     int sum = 0;
@@ -92,13 +96,13 @@ static bool reload_fir(void *context, const bool *value)
 static void set_fir_taps(void *context, int *taps, size_t *length)
 {
     struct fir_bank *bank = context;
-    memcpy(bank->set_taps, taps, sizeof(bank->set_taps));
+    memcpy(bank->set_taps, taps, FILTER_SIZE);
     if (bank->use_waveform)
     {
-        memcpy(bank->current_taps, bank->set_taps, sizeof(bank->set_taps));
+        memcpy(bank->current_taps, bank->set_taps, FILTER_SIZE);
         update_taps(bank);
     }
-    *length = MAX_FIR_COEFFS;
+    *length = fir_filter_length;
 }
 
 
@@ -110,7 +114,7 @@ static bool set_use_waveform(void *context, const bool *use_waveform)
     {
         bank->use_waveform = *use_waveform;
         if (bank->use_waveform)
-            memcpy(bank->current_taps, bank->set_taps, sizeof(bank->set_taps));
+            memcpy(bank->current_taps, bank->set_taps, FILTER_SIZE);
         else
             compute_fir_taps(bank);
         update_taps(bank);
@@ -122,6 +126,8 @@ static bool set_use_waveform(void *context, const bool *use_waveform)
 static void publish_bank(int ix, struct fir_bank *bank)
 {
     bank->index = ix;
+    bank->current_taps = malloc(FILTER_SIZE);
+    bank->set_taps     = malloc(FILTER_SIZE);
 
     char buffer[20];
 #define FORMAT(name) \
@@ -140,10 +146,10 @@ static void publish_bank(int ix, struct fir_bank *bank)
     PUBLISH_WRITE_VAR_P(ao, FORMAT("PHASE"), bank->phase);
 
     PUBLISH_WAVEFORM(
-        int, FORMAT("TAPS_S"), MAX_FIR_COEFFS, set_fir_taps,
+        int, FORMAT("TAPS_S"), fir_filter_length, set_fir_taps,
         .context = bank, .persist = true);
     bank->taps_waveform = PUBLISH_WF_READ_VAR_I(
-        int, FORMAT("TAPS"), MAX_FIR_COEFFS, bank->current_taps);
+        int, FORMAT("TAPS"), fir_filter_length, bank->current_taps);
 #undef FORMAT
 };
 
@@ -151,6 +157,7 @@ static void publish_bank(int ix, struct fir_bank *bank)
 
 bool initialise_fir(void)
 {
+    fir_filter_length = hw_read_fir_length();
     PUBLISH_WRITER_P(mbbo, "FIR:GAIN", hw_write_fir_gain);
     for (int i = 0; i < FIR_BANKS; i ++)
         publish_bank(i, &banks[i]);

@@ -1,7 +1,7 @@
 from common import *
 
 
-MAX_FIR_TAPS = 9
+FIR_LENGTH = Parameter('FIR_LENGTH', 'Max taps in FIR')
 
 # FIR
 
@@ -13,18 +13,18 @@ for bank in range(4):
 
     # Direct settings of FIR parameters
     reload = Action('FIR:%d:RELOAD' % bank, DESC = 'Reload filter')
-    longOut('FIR:%d:LENGTH' % bank, 2, MAX_FIR_TAPS,
+    longOut('FIR:%d:LENGTH' % bank, 2, FIR_LENGTH,
         FLNK = reload, DESC = 'Length of filter')
-    longOut('FIR:%d:CYCLES' % bank, 1, MAX_FIR_TAPS,
+    longOut('FIR:%d:CYCLES' % bank, 1, FIR_LENGTH,
         FLNK = reload, DESC = 'Cycles in filter')
     aOut('FIR:%d:PHASE' % bank, -360, 360,
         FLNK = reload, DESC = 'FIR phase')
 
     # Waveform taps in two forms: TAPS_S is what is set directly as a waveform
     # write, TAPS is what is current loaded.
-    WaveformOut('FIR:%d:TAPS_S' % bank, MAX_FIR_TAPS,
+    WaveformOut('FIR:%d:TAPS_S' % bank, FIR_LENGTH,
         DESC = 'Set waveform taps')
-    Waveform('FIR:%d:TAPS' % bank, MAX_FIR_TAPS,
+    Waveform('FIR:%d:TAPS' % bank, FIR_LENGTH,
         SCAN = 'I/O Intr', DESC = 'Current waveform taps')
 
 

@@ -13,6 +13,9 @@
 #include "hardware.h"
 
 
+/* This will be read from the FPGA on startup. */
+#define MAX_FIR_COEFFS      10       // Length of feedback filter in taps
+
 
 #define TMBF_DATA_ADDRESS       0x14028000
 #define TMBF_CONFIG_ADDRESS     0x1402C000
@@ -138,23 +141,6 @@ static void pulse_bit_field(volatile uint32_t *reg, unsigned int bit)
     UNLOCK()
 
 
-bool initialise_hardware(void)
-{
-    int mem;
-    return
-        TEST_IO(mem = open("/dev/mem", O_RDWR | O_SYNC))  &&
-        TEST_IO(config_space = mmap(
-            0, CONTROL_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-            mem, TMBF_CONFIG_ADDRESS))  &&
-        TEST_IO(buffer_data = mmap(
-            0, DATA_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-            mem, TMBF_DATA_ADDRESS))  &&
-        DO_(
-            adc_minmax = (volatile void *) config_space + ADC_MINMAX_OFFSET;
-            dac_minmax = (volatile void *) config_space + DAC_MINMAX_OFFSET);
-}
-
-
 /******************************************************************************/
 
 
@@ -189,23 +175,25 @@ void hw_read_adc_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT])
 /* * * * * * * * * * * * * * * */
 /* FIR: Filtering for Feedback */
 
+static int fir_filter_length;      // Initialised at startup
+
 void hw_write_fir_gain(unsigned int gain)
 {
     WRITE_CONTROL_BITS(20, 4, gain);
 }
 
-void hw_write_fir_taps(int bank, int taps[MAX_FIR_COEFFS])
+void hw_write_fir_taps(int bank, int taps[])
 {
     LOCK();
     config_space->fir_bank = (uint32_t) bank;
-    for (int i = 0; i < MAX_FIR_COEFFS; i++)
+    for (int i = 0; i < fir_filter_length; i++)
         config_space->fir_write = taps[i];
     UNLOCK();
 }
 
 int hw_read_fir_length(void)
 {
-    return MAX_FIR_COEFFS;      // Will interrogate FPGA for this
+    return fir_filter_length;
 }
 
 
@@ -398,4 +386,28 @@ unsigned int hw_read_seq_state(void)
 void hw_write_seq_reset(void)
 {
     config_space->sequencer_abort = 1;
+}
+
+
+/******************************************************************************/
+
+bool initialise_hardware(void)
+{
+    int mem;
+    bool ok =
+        TEST_IO(mem = open("/dev/mem", O_RDWR | O_SYNC))  &&
+        TEST_IO(config_space = mmap(
+            0, CONTROL_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
+            mem, TMBF_CONFIG_ADDRESS))  &&
+        TEST_IO(buffer_data = mmap(
+            0, DATA_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
+            mem, TMBF_DATA_ADDRESS));
+    if (ok)
+    {
+        adc_minmax = (volatile void *) config_space + ADC_MINMAX_OFFSET;
+        dac_minmax = (volatile void *) config_space + DAC_MINMAX_OFFSET;
+        fir_filter_length = MAX_FIR_COEFFS;    // Will interrogate FPGA for this
+//         fir_filter_length = (config_space->fpga_version >> 16) & 0xF;
+    }
+    return ok;
 }

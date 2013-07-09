@@ -6,7 +6,6 @@
 
 
 /* Some standard array size definitions. */
-#define MAX_FIR_COEFFS      9       // Length of feedback filter in taps
 #define MAX_BUNCH_COUNT     936     // Bunches in a single turn
 #define BUF_DATA_LENGTH     16384   // Points in internal fast buffer
 #define MAX_SEQUENCER_COUNT 8       // Steps in sequencer
@@ -41,7 +40,7 @@ void hw_read_adc_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT]);
 void hw_write_fir_gain(unsigned int gain);
 
 /* FIR tap coefficients for selected bank.  Taps are signed 18-bit integers. */
-void hw_write_fir_taps(int bank, int taps[MAX_FIR_COEFFS]);
+void hw_write_fir_taps(int bank, int taps[]);
 
 /* Returns the number of coefficients in the FIR filters. */
 int hw_read_fir_length(void);

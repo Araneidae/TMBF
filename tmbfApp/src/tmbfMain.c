@@ -12,6 +12,9 @@
 #include <epicsThread.h>
 #include <iocsh.h>
 #include <caerr.h>
+#include <envDefs.h>
+#include <dbAccess.h>
+#include <iocInit.h>
 
 #include "error.h"
 #include "hardware.h"
@@ -30,10 +33,12 @@
 #include "persistence.h"
 
 
-/* External declaration of caRepeater thread.  This should really be
- * published by a standard EPICS header file, but for the time being we pick
- * it up like this. */
+/* External declaration of caRepeater thread.  This should really be published
+ * by a standard EPICS header file. */
 extern void caRepeaterThread(void *);
+/* External declaration of DBD binding. */
+extern int tmbf_registerRecordDeviceDriver(struct dbBase *pdbbase);
+
 
 /* If the IOC shell is not running then this semaphore is used to request IOC
  * shutdown. */
@@ -43,12 +48,15 @@ static sem_t ShutdownSemaphore;
 static const char *persistence_state_file = NULL;
 static int persistence_interval = 1200;             // 20 minute update interval
 
+/* Device name configured on startup. */
+const char *device_name = "(unknown)";
 
-#define TEST_EPICS(command, args...) \
+
+#define TEST_EPICS(command) \
     ( { \
-        int __status__ = (command)(args); \
+        int __status__ = (command); \
         if (__status__ != 0) \
-            printf(#command "(" #args ") (%s, %d): %s (%d)\n", \
+            printf(#command " (%s, %d): %s (%d)\n", \
                 __FILE__, __LINE__, ca_message(__status__), __status__); \
         __status__ == 0; \
     } )
@@ -108,18 +116,14 @@ void panic_error(const char *filename, int line)
 
 /* This routine spawns a caRepeater thread, as recommended by Andrew Johnson
  * (private communication, 2006/12/04).  This means that this IOC has no
- * external EPICS dependencies (otherwise the caRepeater application needs to
- * be run). */
-
+ * external EPICS dependencies (otherwise the caRepeater application needs to be
+ * run). */
 static bool StartCaRepeater(void)
 {
-    epicsThreadId caRepeaterId = epicsThreadCreate(
+    return TEST_NULL(epicsThreadCreate(
         "CAC-repeater", epicsThreadPriorityLow,
         epicsThreadGetStackSize(epicsThreadStackMedium),
-        caRepeaterThread, 0);
-    if (caRepeaterId == 0)
-        perror("Error starting caRepeater thread");
-    return caRepeaterId != 0;
+        caRepeaterThread, 0));
 }
 
 
@@ -177,12 +181,13 @@ static bool ProcessOptions(int *argc, char ** *argv)
     bool Ok = true;
     while (Ok)
     {
-        switch (getopt(*argc, *argv, "+np:s:i:"))
+        switch (getopt(*argc, *argv, "+np:s:i:d:"))
         {
             case 'n':   Interactive = false;                    break;
             case 'p':   Ok = WritePid(optarg);                  break;
             case 's':   persistence_state_file = optarg;        break;
             case 'i':   persistence_interval = atoi(optarg);    break;
+            case 'd':   device_name = optarg;                   break;
             default:
                 printf("Sorry, didn't understand\n");
                 return false;
@@ -207,10 +212,43 @@ static void StartupMessage(void)
 }
 
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Core EPICS startup (st.cmd equivalent processing). */
+
+/* Configures the IOC prompt to show the EPICS device name. */
+static void set_prompt(void)
+{
+    char prompt[256];
+    snprintf(prompt, sizeof(prompt), "%s> ", device_name);
+    epicsEnvSet("IOCSH_PS1", prompt);
+}
+
+static bool load_database(const char *database)
+{
+    char macros[1024];
+    snprintf(macros, sizeof(macros), "DEVICE=%s,FIR_LENGTH=%d",
+        device_name, hw_read_fir_length());
+    return TEST_EPICS(dbLoadRecords(database, macros));
+}
+
+static bool initialise_epics(void)
+{
+    set_prompt();
+    return
+        TEST_EPICS(dbLoadDatabase("dbd/tmbf.dbd", NULL, NULL))  &&
+        TEST_EPICS(tmbf_registerRecordDeviceDriver(pdbbase))  &&
+        load_database("db/tmbf.db")  &&
+        TEST_EPICS(iocInit());
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 int main(int argc,char *argv[])
 {
     bool Ok =
         ProcessOptions(&argc, &argv) &&
+        TEST_OK_(argc == 0, "Unexpected extra arguments")  &&
         initialise_persistent_state(
             persistence_state_file, persistence_interval)  &&
         initialise_hardware()  &&
@@ -228,15 +266,14 @@ int main(int argc,char *argv[])
         initialise_sequencer()  &&
         initialise_buffer()  &&
         initialise_sensors()  &&
-        DO_(load_persistent_state());
+        DO_(load_persistent_state())  &&
+        initialise_epics();
 
-    for (int i = 0; Ok && i < argc; i ++)
-        Ok = TEST_EPICS(iocsh, argv[i]);
     if (Ok)
     {
         StartupMessage();
         if (Interactive)
-            Ok = TEST_EPICS(iocsh, NULL);
+            Ok = TEST_EPICS(iocsh(NULL));
         else
         {
             printf("Running in non-interactive mode.  "

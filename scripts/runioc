@@ -47,7 +47,6 @@ shift $((OPTIND - 1))
 
 
 export EPICS_CA_MAX_ARRAY_BYTES=1000000
-export DB_PARAMETERS="DEVICE=$HOSTNAME"
 
 # Discover the list of temporary filesystems we need to keep an eye on.  We
 # use echo to create a space separated list.
@@ -63,6 +62,6 @@ echo
 echo 'Starting IOC at' $(date)
 echo "IOC parameters: $IOC_PARAMETERS"
 trap 'rm -f "$PIDFILE"' EXIT
-bin/linux-arm_el/tmbf $IOC_PARAMETERS scripts/st.cmd
+bin/linux-arm_el/tmbf -d "$HOSTNAME" $IOC_PARAMETERS
 echo 'IOC stopped at' $(date)
 echo

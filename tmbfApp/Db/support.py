@@ -77,17 +77,36 @@ def set_out_defaults(fields, name):
     fields.setdefault('OMSL', 'supervisory')
     fields.setdefault('PINI', 'YES')
 
+# For longout and ao we want DRV{L,H} to match {L,H}OPR by default.  Also puts
+# all settings into fields for convenience.
+def set_scalar_out_defaults(fields, DRVL, DRVH):
+    assert (DRVL is None) == (DRVH is None), 'Inconsistent limits'
+    fields['DRVL'] = DRVL
+    fields['DRVH'] = DRVH
+    fields.setdefault('LOPR', DRVL)
+    fields.setdefault('HOPR', DRVH)
 
-def aIn(name, LOPR, HOPR, EGU=None, PREC=None, MDEL=-1, **fields):
+
+def aIn(name, LOPR, HOPR, EGU=None, PREC=None, **fields):
+    fields.setdefault('MDEL', -1)
     return GenericDevice.ai(name,
-        MDEL = MDEL,
-        LOPR = LOPR, HOPR = HOPR,  EGUL = LOPR,  EGUF = HOPR,
-        EGU  = EGU,  PREC = PREC, **fields)
+        LOPR = LOPR, HOPR = HOPR, EGU  = EGU,  PREC = PREC, **fields)
 
 def aOut(name, DRVL, DRVH, EGU=None, PREC=None, **fields):
     set_out_defaults(fields, name)
+    set_scalar_out_defaults(fields, DRVL, DRVH)
     return GenericDevice.ao(name + '_S',
-        DRVL = DRVL, DRVH = DRVH, EGU = EGU, PREC = PREC, **fields)
+        EGU  = EGU,  PREC = PREC, **fields)
+
+def longIn(name, LOPR=None, HOPR=None, EGU=None, **fields):
+    fields.setdefault('MDEL', -1)
+    return GenericDevice.longin(name,
+        LOPR = LOPR, HOPR = HOPR, EGU = EGU, **fields)
+
+def longOut(name, DRVL=None, DRVH=None, EGU=None, **fields):
+    set_out_defaults(fields, name)
+    set_scalar_out_defaults(fields, DRVL, DRVH)
+    return GenericDevice.longout(name + '_S', EGU = EGU, **fields)
 
 
 def boolIn(name, ZNAM=None, ONAM=None, **fields):
@@ -96,18 +115,6 @@ def boolIn(name, ZNAM=None, ONAM=None, **fields):
 def boolOut(name, ZNAM=None, ONAM=None, **fields):
     set_out_defaults(fields, name)
     return GenericDevice.bo(name + '_S', ZNAM = ZNAM, ONAM = ONAM, **fields)
-
-
-def longIn(name, LOPR=None, HOPR=None, EGU=None, **fields):
-    fields.setdefault('MDEL', -1)
-    return GenericDevice.longin(
-        name, LOPR = LOPR, HOPR = HOPR, EGU = EGU, **fields)
-
-def longOut(name, DRVL=None, DRVH=None, EGU=None, **fields):
-    set_out_defaults(fields, name)
-    return GenericDevice.longout(name + '_S',
-        DRVL = DRVL, DRVH = DRVH, LOPR = DRVL, HOPR = DRVH,
-        EGU = EGU, **fields)
 
 
 # Adds a list of (option, value [,severity]) tuples into field settings
