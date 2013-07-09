@@ -156,6 +156,10 @@ struct seq_entry {
 /* Rewrites the sequencer table.  All entries must be present. */
 void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT]);
 
+/* Programs sequencer program counter.  The sequencer will run the next time the
+ * buffer is armed. */
+void hw_write_seq_count(unsigned int sequencer_pc);
+
 /* Returns current sequencer state. */
 unsigned int hw_read_seq_state(void);
 

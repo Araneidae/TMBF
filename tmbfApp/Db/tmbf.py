@@ -8,6 +8,7 @@ import bunch_select # BUN
 import ddr          # DDR
 import fir          # FIR
 import sensors      # SE
+import sequencer    # SEQ
 import tune         # TUNE
 
 

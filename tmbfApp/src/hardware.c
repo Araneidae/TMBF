@@ -385,6 +385,11 @@ void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT])
     UNLOCK();
 }
 
+void hw_write_seq_count(unsigned int sequencer_pc)
+{
+    config_space->sequencer_arm = sequencer_pc;
+}
+
 unsigned int hw_read_seq_state(void)
 {
     return config_space->system_status & 0x7;

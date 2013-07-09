@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2408
-y 14
+x 2410
+y 16
 w 456
 h 575
 font "helvetica-medium-r-8.0"
@@ -828,29 +828,6 @@ displayFileName {
 }
 endObjectProperties
 
-# (Related Display)
-object relatedDisplayClass
-beginObjectProperties
-major 4
-minor 2
-release 0
-x 320
-y 456
-w 64
-h 24
-fgColor index 43
-bgColor index 4
-topShadowColor index 1
-botShadowColor index 11
-font "helvetica-bold-r-12.0"
-buttonLabel "BB Func"
-numPvs 4
-numDsps 1
-displayFileName {
-  0 "tmbf/bb_functions.edl"
-}
-endObjectProperties
-
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
@@ -1089,8 +1066,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 8
-y 456
+x 376
+y 488
 w 64
 h 24
 fgColor index 43
@@ -1790,6 +1767,29 @@ numPvs 4
 numDsps 1
 displayFileName {
   0 "tmbf/bunch_select.edl"
+}
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 272
+y 496
+w 96
+h 24
+fgColor index 43
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "Sequencer"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/sequencer.edl"
 }
 endObjectProperties
 

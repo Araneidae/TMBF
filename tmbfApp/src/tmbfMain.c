@@ -24,6 +24,7 @@
 #include "fir.h"
 #include "buffer.h"
 #include "bunch_select.h"
+#include "sequencer.h"
 #include "sensors.h"
 #include "pvlogging.h"
 #include "persistence.h"
@@ -224,6 +225,7 @@ int main(int argc,char *argv[])
         initialise_adc_dac()  &&
         initialise_fir()  &&
         initialise_bunch_select()  &&
+        initialise_sequencer()  &&
         initialise_buffer()  &&
         initialise_sensors()  &&
         DO_(load_persistent_state());
