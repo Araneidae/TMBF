@@ -7,7 +7,7 @@ MAX_FIR_TAPS = 9
 
 # There are four banks of FIR coefficients, each can either be written directly
 # as a waveform or by separately controlling phase and fractional frequency.
-for bank in range(1, 5):
+for bank in range(4):
     boolOut('FIR:%d:USEWF' % bank, 'Settings', 'Waveform',
         DESC = 'Use direct waveform or settings')
 

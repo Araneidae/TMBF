@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1008
-y 424
+x 1009
+y 425
 w 561
 h 304
 font "helvetica-medium-r-18.0"
@@ -559,8 +559,8 @@ minor 1
 release 0
 x 216
 y 272
-w 32
-h 16
+w 35
+h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -569,5 +569,28 @@ value {
   "Start:"
 }
 autoSize
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 368
+y 272
+w 72
+h 24
+fgColor index 25
+onColor index 4
+offColor index 3
+topShadowColor index 1
+botShadowColor index 14
+controlPv "$(device):SEQ:RESET_S.PROC"
+pressValue "0"
+onLabel "Reset"
+offLabel "Reset"
+3d
+font "helvetica-bold-r-12.0"
 endObjectProperties
 

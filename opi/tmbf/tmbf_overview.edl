@@ -32,21 +32,6 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
-y 72
-w 216
-h 64
-lineColor index 14
-fill
-fillColor index 5
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
 x 232
 y 64
 w 216
@@ -123,25 +108,6 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 120
-y 80
-w 96
-h 22
-fgColor index 14
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):DAC:ENABLE_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
 x 344
 y 80
 w 96
@@ -153,26 +119,6 @@ topShadowColor index 1
 botShadowColor index 11
 controlPv "$(device):HOMGAIN_S"
 font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 88
-w 78
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "DAC Output :"
-}
-autoSize
 endObjectProperties
 
 # (Static Text)
@@ -221,7 +167,7 @@ major 4
 minor 2
 release 0
 x 8
-y 416
+y 72
 w 64
 h 24
 fgColor index 43
@@ -234,25 +180,6 @@ numPvs 4
 numDsps 1
 displayFileName {
   0 "tmbf/adc_minmax.edl"
-}
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 56
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "Output"
 }
 endObjectProperties
 
@@ -282,8 +209,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 160
-y 416
+x 152
+y 168
 w 64
 h 24
 fgColor index 43
@@ -297,20 +224,6 @@ numDsps 1
 displayFileName {
   0 "tmbf/hb_monitor.edl"
 }
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 56
-w 120
-h 16
-lineColor index 14
-fillColor index 0
 endObjectProperties
 
 # (Rectangle)
@@ -874,52 +787,6 @@ controlPv "$(device):TUNESWEEPMODE_S"
 font "helvetica-medium-r-12.0"
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 112
-w 38
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Delay:"
-}
-autoSize
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 168
-y 112
-w 48
-h 16
-controlPv "$(device):DAC:DELAY_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-noExecuteClipMask
-endObjectProperties
-
 # (Menu Button)
 object activeMenuButtonClass
 beginObjectProperties
@@ -1183,431 +1050,6 @@ objType "monitors"
 noExecuteClipMask
 endObjectProperties
 
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 288
-w 216
-h 112
-lineColor index 14
-fill
-fillColor index 5
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 152
-w 216
-h 120
-lineColor index 14
-fill
-fillColor index 5
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 120
-y 168
-w 96
-h 22
-fgColor index 14
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):FIRGAIN_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 144
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "FIR Settings"
-}
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 176
-w 52
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "FIR gain:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 224
-w 63
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "FIR phase:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 280
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "Trigger Settings"
-}
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 304
-w 46
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Trigger:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 352
-w 28
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Arm:"
-}
-autoSize
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 120
-y 296
-w 96
-h 22
-fgColor index 14
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):TRIGSEL_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Button)
-object activeButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 120
-y 344
-w 96
-h 22
-fgColor index 14
-onColor index 5
-offColor index 3
-inconsistentColor index 14
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):SOFTARM_S"
-onLabel "Armed"
-offLabel "Arm"
-labelType "literal"
-buttonType "push"
-3d
-font "helvetica-medium-r-12.0"
-objType "controls"
-visPv "$(device):ARMSEL_S"
-visMin "0"
-visMax "1"
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 144
-w 120
-h 16
-lineColor index 14
-fillColor index 0
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 280
-w 120
-h 16
-lineColor index 14
-fillColor index 0
-endObjectProperties
-
-# (Message Button)
-object activeMessageButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 120
-y 320
-w 96
-h 22
-fgColor index 14
-onColor index 4
-offColor index 3
-topShadowColor index 1
-botShadowColor index 14
-controlPv "$(device):SOFTTRIG_S.PROC"
-pressValue "0"
-onLabel "Triggering"
-offLabel "Trigger"
-3d
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Motif Slider)
-object activeMotifSliderClass
-beginObjectProperties
-major 4
-minor 2
-release 0
-x 88
-y 216
-w 128
-h 24
-fgColor index 6
-bgColor index 2
-2ndBgColor index 3
-topShadowColor index 0
-botShadowColor index 14
-increment 10
-controlPv "$(device):FIRPHASE_S"
-controlLabel "$(device):FIRPHASE_S"
-controlLabelType "pvName"
-font "helvetica-medium-r-8.0"
-scaleMin 0
-scaleMax 360
-endObjectProperties
-
-# (Message Button)
-object activeMessageButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 120
-y 368
-w 96
-h 22
-fgColor index 14
-onColor index 4
-offColor index 3
-topShadowColor index 1
-botShadowColor index 14
-controlPv "$(device):BUNCHSYNC_S.PROC"
-pressValue "0"
-onLabel "Synced"
-offLabel "Sync"
-3d
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 368
-w 83
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Counter sync:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 248
-w 52
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "FIR freq:"
-}
-autoSize
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 152
-y 248
-w 24
-h 16
-controlPv "$(device):FIRCYCLES_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-noExecuteClipMask
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 200
-y 248
-w 16
-h 16
-controlPv "$(device):FIRLENGTH_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 192
-y 248
-w 4
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "/"
-}
-autoSize
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -1661,8 +1103,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 80
-y 416
+x 152
+y 72
 w 64
 h 24
 fgColor index 43
@@ -1684,8 +1126,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 80
-y 448
+x 144
+y 136
 w 72
 h 24
 fgColor index 43
@@ -1730,8 +1172,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 80
-y 480
+x 152
+y 40
 w 72
 h 24
 fgColor index 43
@@ -1753,8 +1195,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 160
-y 488
+x 64
+y 104
 w 88
 h 24
 fgColor index 43
@@ -1762,11 +1204,11 @@ bgColor index 4
 topShadowColor index 1
 botShadowColor index 11
 font "helvetica-bold-r-12.0"
-buttonLabel "Bunch Select"
+buttonLabel "Control"
 numPvs 4
 numDsps 1
 displayFileName {
-  0 "tmbf/bunch_select.edl"
+  0 "tmbf/control.edl"
 }
 endObjectProperties
 

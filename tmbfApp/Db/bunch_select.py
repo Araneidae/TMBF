@@ -12,13 +12,13 @@ def BunchWaveforms(bank, name, FTVL, desc, FLNK):
 
 # We have four banks and for each bank three waveforms of parameters to
 # configure.   Very similar to FIR.
-for bank in range(1, 5):
+for bank in range(4):
     boolOut('BUN:%d:USEWF' % bank, 'Settings', 'Waveform',
         DESC = 'Use direct waveform or settings')
 
     # Some canned settings
     reload = Action('BUN:%d:RELOAD' % bank, DESC = 'Reload bunch config')
-    mbbOut('BUN:%d:FIR' % bank, 'Bank 1', 'Bank 2', 'Bank 3', 'Bank 4',
+    mbbOut('BUN:%d:FIR' % bank, 'FIR 0', 'FIR 1', 'FIR 2', 'FIR 3',
         FLNK = reload, DESC = 'FIR bank select')
     mbbOut('BUN:%d:OUT' % bank,
         'Off', 'FIR', 'NCO+FIR', 'NCO',
@@ -39,7 +39,7 @@ Action('BUN:SYNC', DESC = 'Bunch synchronisation enable')
 
 
 # Also put the fixed NCO control here
-aOut('NCO:FREQ', 0, 0.5, 'tune', 5, DESC = 'Fixed NCO frequency')
+aOut('NCO:FREQ', -936, 936, 'tune', 5, DESC = 'Fixed NCO frequency')
 mbbOut('NCO:GAIN', DESC = 'Fixed NCO gain',
     *['Off'] + ['%sdB' % db for db in range(0, 45, 3)])
 

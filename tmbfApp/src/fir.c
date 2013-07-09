@@ -125,7 +125,7 @@ static void publish_bank(int ix, struct fir_bank *bank)
 
     char buffer[20];
 #define FORMAT(name) \
-    (sprintf(buffer, "FIR:%d:%s", ix + 1, name), buffer)
+    (sprintf(buffer, "FIR:%d:%s", ix, name), buffer)
 
     /* This is triggered when any coefficient is changed. */
     PUBLISH(bo, FORMAT("RELOAD"), reload_fir, .context = bank);

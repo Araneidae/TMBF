@@ -108,7 +108,7 @@ static void publish_bank(int ix, struct bunch_bank *bank)
 
     char buffer[20];
 #define FORMAT(name) \
-    (sprintf(buffer, "BUN:%d:%s", ix + 1, name), buffer)
+    (sprintf(buffer, "BUN:%d:%s", ix, name), buffer)
 
     PUBLISH(bo, FORMAT("RELOAD"), reload_settings, .context = bank);
     PUBLISH(bo, FORMAT("RELOADWF"), reload_waveforms, .context = bank);

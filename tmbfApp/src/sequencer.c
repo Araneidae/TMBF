@@ -43,7 +43,7 @@ static void publish_bank(int ix, struct sequencer_bank *bank)
 }
 
 
-static struct sequencer_bank banks[MAX_SEQUENCER_COUNT];
+static struct sequencer_bank banks[MAX_SEQUENCER_COUNT] = { };
 
 static unsigned int tune_to_freq(double tune)   // !!! share this
 {
@@ -60,9 +60,10 @@ printf("write_seq_state\n");
         struct seq_entry *entry = &entries[i];
         entry->start_freq = tune_to_freq(bank->start_freq);
         entry->delta_freq = tune_to_freq(bank->delta_freq);
-        entry->dwell_time = bank->dwell_time + 1;
-        entry->capture_count = bank->capture_count + 1;
+        entry->dwell_time = bank->dwell_time - 1;
+        entry->capture_count = bank->capture_count;
         entry->bunch_bank = bank->bunch_bank;
+        entry->hom_gain = bank->hom_gain;
         entry->wait_time = 0;
     }
     hw_write_seq_entries(entries);
@@ -76,6 +77,7 @@ bool initialise_sequencer(void)
     PUBLISH_ACTION("SEQ:WRITE", write_seq_state);
     PUBLISH_WRITER(ulongout, "SEQ:PC", hw_write_seq_count);
     PUBLISH_READER(ulongin, "SEQ:PC", hw_read_seq_state);
+    PUBLISH_ACTION("SEQ:RESET", hw_write_seq_reset);
 
     PUBLISH_WRITER_P(bo, "DET:MODE", hw_write_det_mode);
     PUBLISH_WRITER_P(mbbo, "DET:GAIN", hw_write_det_gain);
