@@ -27,18 +27,36 @@ longOut('DET:SKEW',
 
 
 
-# We have five IQ waveforms: one for each bunch and an aggregate consisting of
+# We have five sweep channels: one for each bunch and an aggregate consisting of
 # the sum of all four.
-def IQwf(name, desc):
+def SweepChannel(name, desc):
+    def Name(field):
+        return 'DET:%s:%s' % (field, name)
     return [
-        Waveform('DET:I:%s' % name, TUNE_LENGTH, 'SHORT',
-            DESC = '%s I' % desc),
-        Waveform('DET:Q:%s' % name, TUNE_LENGTH, 'SHORT',
-            DESC = '%s Q' % desc)]
+        # Basic I/Q waveforms
+        Waveform(Name('I'), TUNE_LENGTH, 'SHORT', DESC = '%s I' % desc),
+        Waveform(Name('Q'), TUNE_LENGTH, 'SHORT',
+            DESC = '%s Q' % desc),
 
-Trigger('DET',
-    *concat([IQwf(b, 'Bunch %s' % b) for b in '0123']) +
-    IQwf('M', 'Bunch mean'))
+        # Power spectrum and computed tune
+        Waveform(Name('POWER'), TUNE_LENGTH, 'LONG', DESC = '%s power' % desc),
+        aIn(Name('PTUNE'), 0, 1, PREC = 4, DESC = '%s tune from power'),
+        aIn(Name('PPHASE'), -180, 180, 'deg', PREC = 1,
+            DESC = '%s tune phase from power'),
+
+        # Cumulative sume and computed tune
+        Waveform(Name('CUMSUMI'), TUNE_LENGTH, 'LONG',
+            DESC = '%s cumsum I' % desc),
+        Waveform(Name('CUMSUMQ'), TUNE_LENGTH, 'LONG',
+            DESC = '%s cumsum Q' % desc),
+        aIn(Name('CTUNE'), 0, 1, PREC = 5, DESC = '%s tune from cumsum'),
+        aIn(Name('CPHASE'), -180, 180, 'deg', PREC = 1,
+            DESC = '%s tune phase from cumsum'),
+    ]
+
+bunch_channels = [SweepChannel(b, 'Bunch %s' % b) for b in '0123']
+mean_channel = SweepChannel('M', 'Bunch mean')
+Trigger('DET', *concat(bunch_channels) + mean_channel)
 
 
 # Also put the fixed NCO control here
