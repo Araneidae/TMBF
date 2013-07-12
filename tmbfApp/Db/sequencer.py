@@ -15,7 +15,7 @@ make_valid = records.bo('SEQ:MAKE_VALID', OUT = PP(validity), VAL = 1)
 for state in range(1, 8):
     aOut('SEQ:%d:START_FREQ' % state, -936, 936, 'tune', 5,
         FLNK = invalidate, DESC = 'Sweep NCO start frequency')
-    aOut('SEQ:%d:STEP_FREQ' % state, -936, 936, 'tune', 5,
+    aOut('SEQ:%d:STEP_FREQ' % state, -936, 936, 'tune', 7,
         FLNK = invalidate, DESC = 'Sweep NCO step frequency')
     longOut('SEQ:%d:DWELL' % state, 1, (1<<31) - 1,
         FLNK = invalidate, EGU = 'turns', DESC = 'Sweep dwell time')
@@ -24,22 +24,17 @@ for state in range(1, 8):
     mbbOut('SEQ:%d:BANK' % state, 'Bank 0', 'Bank 1', 'Bank 2', 'Bank 3',
         FLNK = invalidate, DESC = 'Bunch bank selection')
     mbbOut('SEQ:%d:GAIN' % state, DESC = 'Sweep NCO gain', FLNK = invalidate,
-        *['Off'] + ['%sdB' % db for db in range(0, 45, 3)])
+        *['Off'] + dBrange(15, -3))
 
 # This is the only valid control in state 0.
 mbbOut('SEQ:0:BANK', 'Bank 0', 'Bank 1', 'Bank 2', 'Bank 3',
-    FLNK = invalidate, DESC = 'Bunch bank selection')
+    DESC = 'Bunch bank selection')
 
 # Note the use of PINI='RUN' -- this triggers PINI processing later than all
 # the saved states above, ensuring that we write the correct saved state.
-boolOut('SEQ:WRITE', FLNK = make_valid, PINI = 'RUN',
-    DESC = 'Write sequencer settings')
+boolOut('SEQ:WRITE',
+    PINI = 'RUN', FLNK = make_valid, DESC = 'Write sequencer settings')
 
 longOut('SEQ:PC', 0, 7, DESC = 'Sequencer PC')
 longIn('SEQ:PC', DESC = 'Current sequencer state', SCAN = '.1 second')
 Action('SEQ:RESET')
-
-
-boolOut('DET:MODE', 'Single Bunch', 'All Bunches', DESC = 'Detector mode')
-mbbOut('DET:GAIN', DESC = 'Detector gain',
-    *['%sdB' % db for db in range(0, 45, 6)])

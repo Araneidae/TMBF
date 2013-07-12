@@ -180,7 +180,7 @@
  *  PUBLISH_WF_ACTION_I(field_type, name, max_length, action)
  *  PUBLISH_WF_ACTION_P(field_type, name, max_length, action)
  *
- *      void action(field_type value[max_length)
+ *      void action(field_type value[max_length])
  *          This is called each time the record processes.  It is up to the
  *          implementation of action() to determine whether this is a read or a
  *          write action.

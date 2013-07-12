@@ -36,10 +36,3 @@ for bank in range(4):
 
 
 Action('BUN:SYNC', DESC = 'Bunch synchronisation enable')
-
-
-# Also put the fixed NCO control here
-aOut('NCO:FREQ', -936, 936, 'tune', 5, DESC = 'Fixed NCO frequency')
-mbbOut('NCO:GAIN', DESC = 'Fixed NCO gain',
-    *['Off'] + ['%sdB' % db for db in range(0, 45, 3)])
-

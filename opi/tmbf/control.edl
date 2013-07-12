@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 71
-y 239
+x 2
+y 1
 w 544
-h 712
+h 625
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -56,21 +56,6 @@ fill
 fillColor index 4
 endObjectProperties
 
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 632
-w 184
-h 72
-lineColor index 14
-fill
-fillColor index 4
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -97,7 +82,7 @@ major 4
 minor 1
 release 0
 x 472
-y 680
+y 4
 w 64
 h 24
 fgColor index 46
@@ -190,125 +175,6 @@ value {
   "Output gain"
 }
 autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 648
-w 59
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "NCO freq:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 672
-w 59
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "NCO gain:"
-}
-autoSize
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 88
-y 648
-w 96
-h 20
-controlPv "$(device):NCO:FREQ_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-noExecuteClipMask
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 88
-y 672
-w 96
-h 22
-fgColor index 14
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):NCO:GAIN_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 624
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "NCO"
-}
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 624
-w 120
-h 16
-lineColor index 14
-fillColor index 0
 endObjectProperties
 
 # (Embedded Window)
@@ -971,7 +837,7 @@ major 4
 minor 0
 release 0
 x 448
-y 576
+y 584
 w 80
 h 22
 fgColor index 14
@@ -1272,16 +1138,17 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 432
-y 580
-w 8
-h 16
-font "helvetica-bold-r-14.0"
+x 400
+y 584
+w 43
+h 28
+font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "0"
+  "Steady"
+  "state:"
 }
 autoSize
 endObjectProperties

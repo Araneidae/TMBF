@@ -10,3 +10,7 @@ void process_fast_buffer(void);
 
 /* Enable or disable sequencer trigger. */
 void enable_seq_trigger(bool enable);
+
+/* Returns currently programmed sequencer table and current sequencer state
+ * count. */
+const struct seq_entry *read_sequencer_table(unsigned int *state_count);

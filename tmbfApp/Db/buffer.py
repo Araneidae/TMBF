@@ -1,7 +1,5 @@
 from common import *
 
-BUF_DATA_LENGTH = 16384
-
 
 Trigger('BUF',
     Waveform('BUF:WFA', BUF_DATA_LENGTH, 'SHORT',

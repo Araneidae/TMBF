@@ -7,7 +7,6 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
-#include <math.h>
 
 #include "error.h"
 #include "hardware.h"
@@ -139,19 +138,10 @@ static void publish_bank(int ix, struct bunch_bank *bank)
 static struct bunch_bank banks[BUNCH_BANKS];
 
 
-static void write_nco_freq(double tune)
-{
-    hw_write_nco_freq((unsigned int) round(pow(2,33) * tune / 936.0));
-}
-
-
 bool initialise_bunch_select(void)
 {
     PUBLISH_ACTION("BUN:SYNC", hw_write_bun_sync);
     for (int i = 0; i < BUNCH_BANKS; i ++)
         publish_bank(i, &banks[i]);
-
-    PUBLISH_WRITER_P(ao, "NCO:FREQ", write_nco_freq);
-    PUBLISH_WRITER_P(mbbo, "NCO:GAIN", hw_write_nco_gain);
     return true;
 }

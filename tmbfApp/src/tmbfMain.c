@@ -29,6 +29,7 @@
 #include "sequencer.h"
 #include "triggers.h"
 #include "sensors.h"
+#include "detector.h"
 #include "pvlogging.h"
 #include "persistence.h"
 
@@ -266,6 +267,7 @@ int main(int argc,char *argv[])
         initialise_sequencer()  &&
         initialise_triggers()  &&
         initialise_sensors()  &&
+        initialise_detector()  &&
         DO_(load_persistent_state())  &&
         initialise_epics();
 

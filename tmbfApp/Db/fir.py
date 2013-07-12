@@ -29,5 +29,4 @@ for bank in range(4):
 
 
 mbbOut('FIR:GAIN',
-    DESC = 'FIR gain select',
-    *['%sdB' % db for db in range(21, -25, -3)])
+    DESC = 'FIR gain select', *dBrange(16, -3, 21))

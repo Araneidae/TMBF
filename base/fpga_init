@@ -10,6 +10,13 @@ MSC2=0x48000010         # Configuration register for nCS(5:4)
 devmem $MSC2 32 $(($(devmem $MSC2) | 0x0FF00000))
 
 
+sleep()
+{
+    echo -n .
+    /bin/sleep $1
+}
+
+
 # Sleep after fp load
 sleep 1
 

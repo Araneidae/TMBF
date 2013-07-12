@@ -10,6 +10,14 @@ MB = KB * KB
 
 SAMPLES_PER_TURN = 936
 
+BUF_DATA_LENGTH = 16384
+TUNE_LENGTH = BUF_DATA_LENGTH / 4
+
+
+
+def dBrange(count, step, start = 0):
+    return ['%sdB' % db for db in range(start, start + count*step, step)]
+
 
 def Action(name, **kargs):
     return boolOut(name, PINI = 'NO', **kargs)
@@ -19,3 +27,7 @@ def Trigger(prefix, *pvs):
     return boolIn('%s:TRIG' % prefix,
         SCAN = 'I/O Intr', DESC = '%s processing trigger' % prefix,
         FLNK = create_fanout('%s:TRIG:FAN' % prefix, *pvs + (done,)))
+
+# Concatenates a list of lists
+def concat(ll):
+    return [x for l in ll for x in l]
