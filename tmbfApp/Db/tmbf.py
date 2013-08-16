@@ -16,6 +16,7 @@ import tune         # TUNE
 
 stringIn('VERSION', PINI = 'YES', DESC = 'TMBF version')
 longIn('FPGAVER', PINI = 'YES', DESC = 'FPGA version')
-boolOut('LOOPBACK', 'Normal', 'Loopback', VAL = 0)
+boolOut('LOOPBACK', 'Normal', 'Loopback', OSV = 'MAJOR', VAL = 0,
+    DESC = 'Enable internal data loopback')
 
 WriteRecords(sys.argv[1])

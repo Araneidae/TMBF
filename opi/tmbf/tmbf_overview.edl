@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2725
-y 14
+x 2727
+y 16
 w 456
 h 575
 font "helvetica-medium-r-8.0"
@@ -464,7 +464,7 @@ major 4
 minor 0
 release 0
 x 48
-y 392
+y 384
 w 16
 h 16
 lineColor index 14
@@ -481,7 +481,7 @@ major 4
 minor 0
 release 0
 x 48
-y 416
+y 408
 w 16
 h 16
 lineColor index 14
@@ -498,7 +498,7 @@ major 4
 minor 0
 release 0
 x 48
-y 440
+y 456
 w 16
 h 16
 lineColor index 14
@@ -515,7 +515,7 @@ major 4
 minor 0
 release 0
 x 48
-y 464
+y 480
 w 16
 h 16
 lineColor index 14
@@ -532,7 +532,7 @@ major 4
 minor 5
 release 0
 x 72
-y 392
+y 384
 w 152
 h 14
 controlPv "$(device):SE:OVF:FIR.DESC"
@@ -556,7 +556,7 @@ major 4
 minor 5
 release 0
 x 72
-y 416
+y 408
 w 152
 h 14
 controlPv "$(device):SE:OVF:DAC.DESC"
@@ -580,7 +580,7 @@ major 4
 minor 5
 release 0
 x 72
-y 440
+y 456
 w 152
 h 14
 controlPv "$(device):SE:OVF:ACC.DESC"
@@ -604,7 +604,7 @@ major 4
 minor 5
 release 0
 x 72
-y 464
+y 480
 w 152
 h 14
 controlPv "$(device):SE:OVF:IQ.DESC"
@@ -628,7 +628,7 @@ major 4
 minor 5
 release 0
 x 72
-y 488
+y 504
 w 152
 h 14
 controlPv "$(device):SE:OVF.DESC"
@@ -652,7 +652,7 @@ major 4
 minor 0
 release 0
 x 48
-y 488
+y 504
 w 16
 h 16
 lineColor index 14
@@ -660,5 +660,66 @@ fill
 fillColor index 16
 fillAlarm
 alarmPv "$(device):SE:OVF"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 304
+y 384
+w 96
+h 22
+fgColor index 14
+fgAlarm
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):LOOPBACK_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 72
+y 432
+w 152
+h 14
+controlPv "$(device):SE:OVF:COMP.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 48
+y 432
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):SE:OVF:COMP"
 endObjectProperties
 

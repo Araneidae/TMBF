@@ -34,13 +34,14 @@ struct tmbf_config_space
     //  2:0     Current sequencer state ("program counter")
     //  3       Set if buffer busy
     //  4       Set if sequencer busy
-    //  8:5     Overflow bits (IQ/ACC/DAC/FIR)
+    //  9:5     Overflow bits (IQ/ACC/DAC/FIR)
+    //  13:10   Trigger phase bits
 
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
     //  1       DDR trigger source select (0 => soft, 1 => external)
     //  2       Buffer & seq trigger source select (0 => soft, 1 => external)
-    //  3       (unused)
+    //  3       Enable internal loopback (testing only!)
     //  4       Arm DDR (must be pulsed, works on rising edge)
     //  5       Soft trigger DDR (pulsed)
     //  6       Arm buffer and sequencer
@@ -53,28 +54,33 @@ struct tmbf_config_space
     //  15      Detector input select
     //  19      (unused)
     //  18:16   HOM gain select (in 6dB steps)
-    //  23:20   FIR gain select (in 6dB steps)
-    //  27:24   Detector gain select (in 6dB steps)
+    //  19      (unused)
+    //  22:20   FIR gain select (in 6dB steps)
+    //  23      (unused)
+    //  26:24   Detector gain select (in 6dB steps)
+    //  27      (unused)
     //  29:28   DDR input select (0 => ADC, 1 => DAC, 2 => FIR, 3 => 0)
-    //  30      (unused)
-    //  31      Enable internal loopback
+    //  31:30   ACD input fine delay (2ns steps)
 
     uint32_t nco_frequency;         //  3  Fixed NCO generator frequency
     uint32_t dac_delay;             //  4  DAC output delay (2ns steps)
     uint32_t bunch_select;          //  5  Detector bunch selections
     uint32_t adc_offset_ab;         //  6  ADC channel offsets (channels A/B)
     uint32_t adc_offset_cd;         //  7  ADC channel offsets (channels C/D)
-    uint32_t fir_bank;              //  8  Select FIR bank
-    uint32_t fir_write;             //  9  Write FIR coefficients
-    uint32_t bunch_bank;            // 10  Select bunch config bank
-    uint32_t bunch_write;           // 11  Write bunch configuration
-    uint32_t sequencer_abort;       // 12  Abort sequencer operation
-    uint32_t sequencer_arm;         // 13  Arm sequencer
-    uint32_t sequencer_start_write; // 14  Starts write sequence
-    uint32_t sequencer_write;       // 15  Write sequencer data
-    uint32_t adc_minmax_channel;    // 16  Select ADC min/max readout channel
-    uint32_t dac_minmax_channel;    // 17  Select DAC min/max readout channel
-    uint32_t latch_overflow;        // 18  Latch new overflow status
+    uint32_t dac_precomp_taps[3];   // 8-10     DAC pre-compensation filter
+    uint32_t padding[5];            // 11-15    (unused)
+
+    uint32_t fir_bank;              // 16  Select FIR bank
+    uint32_t fir_write;             // 17  Write FIR coefficients
+    uint32_t bunch_bank;            // 18  Select bunch config bank
+    uint32_t bunch_write;           // 19  Write bunch configuration
+    uint32_t sequencer_abort;       // 20  Abort sequencer operation
+    uint32_t sequencer_pc;          // 21  Sequencer starting state
+    uint32_t sequencer_start_write; // 22  Starts write sequence
+    uint32_t sequencer_write;       // 23  Write sequencer data
+    uint32_t adc_minmax_channel;    // 24  Select ADC min/max readout channel
+    uint32_t dac_minmax_channel;    // 25  Select DAC min/max readout channel
+    uint32_t latch_overflow;        // 26  Latch new overflow status
 };
 
 /* These three pointers directly overlay the FF memory. */
@@ -159,20 +165,26 @@ int hw_read_version(void)
 }
 
 
-void hw_read_overflows(bool *fir, bool *dac, bool *acc, bool *iq)
+void hw_read_overflows(
+    const bool read_bits[OVERFLOW_BIT_COUNT],
+    bool overflow_bits[OVERFLOW_BIT_COUNT])
 {
-    config_space->latch_overflow = 0xF;
-    uint32_t status = config_space->system_status;
-    *fir = (status >> 5) & 1;
-    *dac = (status >> 6) & 1;
-    *acc = (status >> 7) & 1;
-    *iq  = (status >> 8) & 1;
+    uint32_t read_mask = 0;
+    for (int i = 0; i < OVERFLOW_BIT_COUNT; i ++)
+        read_mask |= read_bits[i] << i;
+
+    /* Latch the selected overflow bits and read back the associated status. */
+    config_space->latch_overflow = read_mask;
+    uint32_t status = config_space->system_status >> 5;
+
+    for (int i = 0; i < OVERFLOW_BIT_COUNT; i ++)
+        overflow_bits[i] = (status >> i) & 1;
 }
 
 
 void hw_write_loopback_enable(bool loopback)
 {
-    WRITE_CONTROL_BITS(31, 1, loopback);
+    WRITE_CONTROL_BITS(3, 1, loopback);
 }
 
 
@@ -190,10 +202,14 @@ void hw_write_adc_offsets(short offsets[4])
     config_space->adc_offset_cd = combine_offsets(offsets[2], offsets[3]);
 }
 
-
 void hw_read_adc_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT])
 {
     read_minmax(adc_minmax, &config_space->adc_minmax_channel, min, max);
+}
+
+void hw_write_adc_skew(unsigned int skew)
+{
+    WRITE_CONTROL_BITS(30, 2, skew);
 }
 
 
@@ -204,7 +220,7 @@ static int fir_filter_length;      // Initialised at startup
 
 void hw_write_fir_gain(unsigned int gain)
 {
-    WRITE_CONTROL_BITS(20, 4, gain);
+    WRITE_CONTROL_BITS(20, 3, gain);
 }
 
 void hw_write_fir_taps(int bank, int taps[])
@@ -237,7 +253,13 @@ void hw_write_dac_enable(unsigned int enable)
 
 void hw_write_dac_delay(unsigned int delay)
 {
-    config_space->dac_delay = delay;
+    config_space->dac_delay = delay + 4;
+}
+
+void hw_write_dac_precomp(short taps[3])
+{
+    for (int i = 0; i < 3; i ++)
+        config_space->dac_precomp_taps[i] = taps[i];
 }
 
 
@@ -356,7 +378,7 @@ void hw_write_det_bunches(unsigned int bunch[4])
 
 void hw_write_det_gain(unsigned int gain)
 {
-    WRITE_CONTROL_BITS(24, 4, gain);
+    WRITE_CONTROL_BITS(24, 3, gain);
 }
 
 void hw_write_det_window(uint16_t window[DET_WINDOW_LENGTH])
@@ -398,7 +420,7 @@ void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT])
 
 void hw_write_seq_count(unsigned int sequencer_pc)
 {
-    config_space->sequencer_arm = sequencer_pc;
+    config_space->sequencer_pc = sequencer_pc;
 }
 
 unsigned int hw_read_seq_state(void)
@@ -436,6 +458,11 @@ void hw_write_trg_arm(bool ddr, bool buf)
 void hw_write_trg_soft_trigger(bool ddr, bool buf)
 {
     pulse_mask(make_mask2(5, 7, ddr, buf));
+}
+
+int hw_read_trg_raw_phase(void)
+{
+    return (config_space->system_status >> 10) & 0xF;
 }
 
 

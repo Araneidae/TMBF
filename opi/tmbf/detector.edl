@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1931
-y 6
+x 1932
+y 7
 w 641
 h 713
 font "helvetica-medium-r-18.0"
@@ -912,5 +912,24 @@ ySigned {
 plotColor {
   0 index 26
 }
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 40
+y 600
+w 120
+h 24
+fgColor index 14
+bgColor index 4
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):BUF:SELECT_S"
+font "helvetica-medium-r-14.0"
 endObjectProperties
 

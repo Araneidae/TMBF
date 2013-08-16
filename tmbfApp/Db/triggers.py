@@ -34,3 +34,5 @@ TriggerTarget('BUF', 'Fast buffer')
 
 boolOut('TRG:SEQ:ENA', 'Disabled', 'Enabled', DESC = 'Sequencer trigger enable')
 TriggerStatus('SEQ', 'Sequencer')
+
+longIn('TRG:RAWPHASE', DESC = 'Raw trigger phase bits', SCAN = '.2 second')

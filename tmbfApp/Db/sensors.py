@@ -120,6 +120,7 @@ def overflow(name, desc):
 overflows = [
     overflow('SE:OVF:FIR', 'FIR overflow'),
     overflow('SE:OVF:DAC', 'DAC overflow'),
+    overflow('SE:OVF:COMP', 'DAC precompensation overflow'),
     overflow('SE:OVF:ACC', 'Detector accumulator overflow'),
     overflow('SE:OVF:IQ',  'IQ scaling overflow')]
 overflows.append(
@@ -127,4 +128,5 @@ overflows.append(
 
 boolOut('SE:OVF:SCAN',
     SCAN = '.1 second',
-    FLNK = create_fanout('SE:OVF:FAN', *overflows))
+    FLNK = create_fanout('SE:OVF:FAN', *overflows),
+    DESC = 'Overflow detect scan')

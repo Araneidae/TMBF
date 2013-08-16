@@ -40,9 +40,12 @@ def minmax_pvs(source):
 
 
 minmax_pvs('ADC')
-WaveformOut('ADC:OFFSET', 4, 'SHORT', DESC = 'ADC offsets')
+WaveformOut('ADC:OFFSET', CHANNEL_COUNT, 'SHORT', DESC = 'ADC offsets')
+mbbOut('ADC:DELAY', '0 ns', '2 ns', '4 ns', '6 ns', DESC = 'Input skew')
 
 
 minmax_pvs('DAC')
-longOut('DAC:DELAY', 0, 935, DESC = 'DAC output delay')
+longOut('DAC:DELAY', 0, SAMPLES_PER_TURN-1, DESC = 'DAC output delay')
 mbbOut('DAC:ENABLE', 'Off', 'On', DESC = 'DAC output enable')
+
+WaveformOut('DAC:PRECOMP', 3, 'SHORT', DESC = 'DAC output precompensation')

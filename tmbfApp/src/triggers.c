@@ -357,6 +357,7 @@ bool initialise_triggers(void)
     PUBLISH_WRITE_VAR_P(mbbo, "TRG:DDR:SEL", ddr_target.source);
     PUBLISH_WRITE_VAR_P(mbbo, "TRG:BUF:SEL", buf_target.source);
     PUBLISH_WRITE_VAR_P(bo,   "TRG:SEQ:ENA", seq_enable);
+    PUBLISH_READER(longin, "TRG:RAWPHASE", hw_read_trg_raw_phase);
 
     pthread_t thread_id;
     return TEST_0(pthread_create(&thread_id, NULL, monitor_events, NULL));

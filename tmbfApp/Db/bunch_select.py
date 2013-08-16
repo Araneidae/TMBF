@@ -21,8 +21,8 @@ for bank in range(4):
     mbbOut('BUN:%d:FIR' % bank, 'FIR 0', 'FIR 1', 'FIR 2', 'FIR 3',
         FLNK = reload, DESC = 'FIR bank select')
     mbbOut('BUN:%d:OUT' % bank,
-        'Off', 'FIR', 'NCO+FIR', 'NCO',
-        'Sweep', 'NCO+Sweep', 'Sweep+FIR', 'NCO+Sweep+FIR',
+        'Off', 'FIR', 'NCO', 'NCO+FIR',
+        'Sweep', 'Sweep+FIR', 'Sweep+NCO', 'Sweep+NCO+FIR',
         FLNK = reload, DESC = 'DAC output select')
     longOut('BUN:%d:GAIN' % bank, -(1<<10), (1<<10)-1,
         FLNK = reload, DESC = 'DAC output gain')

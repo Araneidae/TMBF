@@ -4,7 +4,7 @@ from common import *
 
 
 
-mbbOut('DET:GAIN', DESC = 'Detector gain', *dBrange(15, -12) + ['Min'])
+mbbOut('DET:GAIN', DESC = 'Detector gain', *dBrange(7, -12) + ['Min'])
 boolOut('DET:MODE', 'All Bunches', 'Single Bunch', DESC = 'Detector mode')
 mbbOut('DET:INPUT', 'FIR', 'ADC', DESC = 'Detector input selection')
 
@@ -62,7 +62,8 @@ Trigger('DET', *concat(bunch_channels) + mean_channel)
 
 # Control over the internal detector window.
 det_window = WaveformOut('DET:WINDOW', 1024, 'SHORT', DESC = 'Detector window')
-boolOut('DET:RESET_WIN', FLNK = det_window, PINI = 'YES')
+boolOut('DET:RESET_WIN', FLNK = det_window, PINI = 'YES',
+    DESC = 'Reset detector window to Hamming')
 
 
 # Also put the fixed NCO control here

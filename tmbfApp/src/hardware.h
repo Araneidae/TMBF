@@ -22,8 +22,20 @@ bool initialise_hardware(void);
 /* Returns version number. */
 int hw_read_version(void);
 
-/* Need to revisit this to read accum+iq separately. */
-void hw_read_overflows(bool *fir, bool *dac, bool *accum, bool *iq);
+/* All bits will be read into overflow_bits[], but only those bits selected in
+ * read_bits[] will be updated and correctly reset. */
+enum OVERFLOW_BITS {
+    OVERFLOW_FIR,           // Overflow in FIR gain control output
+    OVERFLOW_DAC,           // Overflow in DAC multiplexor and scaling
+    OVERFLOW_IQ_ACC,        // Overflow in IQ detector accumulator
+    OVERFLOW_IQ_SCALE,      // Overflow in IQ detector readout scaling
+    OVERFLOW_DAC_COMP,      // Overflow in DAC precompensation filter
+
+    OVERFLOW_BIT_COUNT = 5
+};
+void hw_read_overflows(
+    const bool read_bits[OVERFLOW_BIT_COUNT],
+    bool overflow_bits[OVERFLOW_BIT_COUNT]);
 
 /* Only useful for testing: loops digital DAC output to digital ADC input. */
 void hw_write_loopback_enable(bool loopback);
@@ -37,6 +49,9 @@ void hw_write_adc_offsets(short offsets[4]);
 
 /* Reads ADC minimum and maximum values since last reading. */
 void hw_read_adc_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT]);
+
+/* Sets low level initial ADC delay. */
+void hw_write_adc_skew(unsigned int skew);
 
 
 /* * * * * * * * * * * * * * * */
@@ -63,6 +78,9 @@ void hw_write_dac_enable(unsigned int enable);
 
 /* Output delay in 2ns steps up to 1023 steps. */
 void hw_write_dac_delay(unsigned int delay);
+
+/* Pre-compensation filter. */
+void hw_write_dac_precomp(short taps[3]);
 
 
 /* * * * * * * * * * * * * * * * * * * * * * */
@@ -180,3 +198,6 @@ void hw_write_trg_arm(bool ddr, bool buf);
 
 /* Simultaneously soft trigger one or both of DDR and BUF. */
 void hw_write_trg_soft_trigger(bool ddr, bool buf);
+
+/* Returns raw phase bits from trigger. */
+int hw_read_trg_raw_phase(void);

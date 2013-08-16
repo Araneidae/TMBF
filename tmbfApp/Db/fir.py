@@ -29,4 +29,4 @@ for bank in range(4):
 
 
 mbbOut('FIR:GAIN',
-    DESC = 'FIR gain select', *dBrange(15, -6, 84) + ['-18dB'])
+    DESC = 'FIR gain select', *dBrange(8, -6))

@@ -97,10 +97,14 @@ bool initialise_adc_dac(void)
 
     /* Offset control for ADC. */
     PUBLISH_WF_ACTION_P(short, "ADC:OFFSET", 4, hw_write_adc_offsets);
+    PUBLISH_WRITER_P(mbbo, "ADC:DELAY", hw_write_adc_skew);
 
     /* Direct register control for DAC. */
     PUBLISH_WRITER_P(mbbo, "DAC:ENABLE", hw_write_dac_enable);
     PUBLISH_WRITER_P(ulongout, "DAC:DELAY", hw_write_dac_delay);
+
+    /* Precompensation filter interface. */
+    PUBLISH_WF_ACTION_P(short, "DAC:PRECOMP", 3, hw_write_dac_precomp);
 
     return true;
 }

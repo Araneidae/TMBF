@@ -613,12 +613,12 @@ static void *sensors_thread(void *context)
 }
 
 
-static bool fir_overflow, dac_overflow, acc_overflow, iq_overflow;
+static bool overflows[OVERFLOW_BIT_COUNT];
 
 static void read_overflows(void)
 {
     hw_read_overflows(
-        &fir_overflow, &dac_overflow, &acc_overflow, &iq_overflow);
+        (const bool[]) { true, true, true, true, true }, overflows);
 }
 
 
@@ -643,10 +643,11 @@ bool initialise_sensors(void)
     PUBLISH_READ_VAR(stringin, "SE:SERVER",  NTP_server);
 
     PUBLISH_ACTION("SE:OVF:SCAN", read_overflows);
-    PUBLISH_READ_VAR(bi, "SE:OVF:FIR", fir_overflow);
-    PUBLISH_READ_VAR(bi, "SE:OVF:DAC", dac_overflow);
-    PUBLISH_READ_VAR(bi, "SE:OVF:ACC", acc_overflow);
-    PUBLISH_READ_VAR(bi, "SE:OVF:IQ",  iq_overflow);
+    PUBLISH_READ_VAR(bi, "SE:OVF:FIR", overflows[OVERFLOW_FIR]);
+    PUBLISH_READ_VAR(bi, "SE:OVF:DAC", overflows[OVERFLOW_DAC]);
+    PUBLISH_READ_VAR(bi, "SE:OVF:COMP", overflows[OVERFLOW_DAC_COMP]);
+    PUBLISH_READ_VAR(bi, "SE:OVF:ACC", overflows[OVERFLOW_IQ_ACC]);
+    PUBLISH_READ_VAR(bi, "SE:OVF:IQ",  overflows[OVERFLOW_IQ_SCALE]);
 
     InitialiseUptime();
     initialise_fan_control();

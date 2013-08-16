@@ -39,4 +39,4 @@ boolOut('SEQ:WRITE',
 
 longOut('SEQ:PC', 0, 7, DESC = 'Sequencer PC')
 longIn('SEQ:PC', DESC = 'Current sequencer state', SCAN = '.1 second')
-Action('SEQ:RESET')
+Action('SEQ:RESET', DESC = 'Halt detector if busy')
