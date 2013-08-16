@@ -478,8 +478,8 @@ void cos_sin(int angle_in, int *c_out, int *s_out)
  *
  * Here we use bit manipulation only to scale input and convert it into this
  * format. */
-void fixed_to_single(
-    int32_t input, float *result, uint32_t scaling, int scaling_shift)
+void unsigned_fixed_to_single(
+    uint32_t input, float *result, uint32_t scaling, int scaling_shift)
 {
     uint32_t *iresult = (uint32_t *) result;
     if (input == 0)
@@ -487,16 +487,11 @@ void fixed_to_single(
         *iresult = 0;
     else
     {
-        /* First extract the sign */
-        uint32_t sign = input & 0x80000000;
-        if (sign != 0)
-            input = -input;
-
         /* Normalise the input to maintain largest possible dynamic range.
          * After this we have:
          *      2**31 <= fraction < 2**32
          *      input = sign * fraction * 2**-shift_in */
-        uint32_t shift_in = CLZ((uint32_t) input);
+        uint32_t shift_in = CLZ(input);
         uint32_t fraction = input << shift_in;
 
         /* Rescale the fraction.  The following is optimal, assuming that the
@@ -530,23 +525,35 @@ void fixed_to_single(
              * separately, as >> is only computed modulo 32. */
             if (exponent < -22)
                 /* Complete underflow to zero */
-                *iresult = sign;
+                *iresult = 0;
             else
             {
                 /* Restore the missing fraction bit and return a denormalised
                  * result. */
                 fraction >>= 1;
                 fraction |= 1 << 31;
-                *iresult = sign | (fraction >> (9 - exponent));
+                *iresult = (fraction >> (9 - exponent));
             }
         }
         else if (exponent >= 255)
             /* Overflow!  Return the appropriate infinity */
-            *iresult = sign | 0x7F800000;
+            *iresult = 0x7F800000;
         else
             /* 0 < exponent < 255 -- normal case */
-            *iresult = sign | (exponent << 23) | (fraction >> 9);
+            *iresult = (exponent << 23) | (fraction >> 9);
     }
+}
+
+void fixed_to_single(
+    int32_t input, float *result, uint32_t scaling, int scaling_shift)
+{
+    uint32_t sign = input & 0x80000000;
+    if (sign != 0)
+        input = -input;
+
+    unsigned_fixed_to_single(input, result, scaling, scaling_shift);
+    uint32_t *iresult = (uint32_t *) result;
+    *iresult |= sign;
 }
 
 /* Computes factors scaling and scaling_shift for use by fixed_to_single() above

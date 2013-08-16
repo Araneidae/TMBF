@@ -231,6 +231,8 @@ void cos_sin(int angle_in, int *c_out, int *s_out);
  *      2**31 <= scaling < 2**32 . */
 void fixed_to_single(
     int32_t input, float *result, uint32_t scaling, int scaling_shift);
+void unsigned_fixed_to_single(
+    uint32_t input, float *result, uint32_t scaling, int scaling_shift);
 
 /* Computes scaling factors for fixed_to_single above so that
  *      target = scaling * 2**scaling_shift .
