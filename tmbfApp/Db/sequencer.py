@@ -24,7 +24,9 @@ for state in range(1, 8):
     mbbOut('SEQ:%d:BANK' % state, 'Bank 0', 'Bank 1', 'Bank 2', 'Bank 3',
         FLNK = invalidate, DESC = 'Bunch bank selection')
     mbbOut('SEQ:%d:GAIN' % state, DESC = 'Sweep NCO gain', FLNK = invalidate,
-        *['Off'] + dBrange(15, -3))
+        *dBrange(8, -6))
+    boolOut('SEQ:%d:ENWIN' % state, 'Disabled', 'Enabled',
+        FLNK = invalidate, DESC = 'Enable detector window')
 
 # This is the only valid control in state 0.
 mbbOut('SEQ:0:BANK', 'Bank 0', 'Bank 1', 'Bank 2', 'Bank 3',

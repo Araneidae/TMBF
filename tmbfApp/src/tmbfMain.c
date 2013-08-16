@@ -246,6 +246,7 @@ static bool initialise_subsystems(void)
 {
     PUBLISH_READ_VAR(stringin, "VERSION", version_string);
     PUBLISH_READER(longin, "FPGAVER", hw_read_version);
+    PUBLISH_WRITER(bo, "LOOPBACK", hw_write_loopback_enable);
 
     return
         initialise_ddr_epics()  &&

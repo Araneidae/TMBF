@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 756
-y 290
+x 1931
+y 6
 w 641
 h 713
 font "helvetica-medium-r-18.0"
@@ -39,56 +39,6 @@ h 152
 lineColor index 14
 fill
 fillColor index 4
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-# Geometry
-x 8
-y 40
-w 624
-h 184
-# Appearance
-autoScaleBothDirections
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-showXAxis
-xAxisSrc "AutoScale"
-xMin 0
-xMax 17000
-# Y axis properties
-showYAxis
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-xPv {
-  0 "$(device):DET:SCALE"
-}
-yPv {
-  0 "$(device):DET:I:M"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 26
-}
 endObjectProperties
 
 # (Static Text)
@@ -641,56 +591,6 @@ controlPv "$(device):DET:GAIN_S"
 font "helvetica-medium-r-12.0"
 endObjectProperties
 
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-# Geometry
-x 8
-y 224
-w 624
-h 184
-# Appearance
-autoScaleBothDirections
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-showXAxis
-xAxisSrc "AutoScale"
-xMin 0
-xMax 17000
-# Y axis properties
-showYAxis
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-xPv {
-  0 "$(device):DET:SCALE"
-}
-yPv {
-  0 "$(device):DET:Q:M"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 26
-}
-endObjectProperties
-
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
@@ -905,5 +805,112 @@ value {
   "Detector input:"
 }
 autoSize
+endObjectProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+# Geometry
+x 8
+y 40
+w 624
+h 184
+# Appearance
+autoScaleBothDirections
+graphTitle "Mean detected I/Q"
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+showXAxis
+xAxisSrc "AutoScale"
+xMin 0
+xMax 17000
+# Y axis properties
+showYAxis
+yAxisSrc "AutoScale"
+yMax 1
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 2
+xPv {
+  0 "$(device):DET:SCALE"
+  1 "$(device):DET:SCALE"
+}
+yPv {
+  0 "$(device):DET:I:M"
+  1 "$(device):DET:Q:M"
+}
+plotUpdateMode {
+  0 "xOrY"
+  1 "xOrY"
+}
+ySigned {
+  0 1
+  1 1
+}
+plotColor {
+  0 index 26
+  1 index 21
+}
+endObjectProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+# Geometry
+x 8
+y 224
+w 624
+h 184
+# Appearance
+autoScaleBothDirections
+graphTitle "Mean power"
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+showXAxis
+xAxisSrc "AutoScale"
+xMin 0
+xMax 17000
+# Y axis properties
+showYAxis
+yAxisSrc "AutoScale"
+yMax 1
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 1
+xPv {
+  0 "$(device):DET:SCALE"
+}
+yPv {
+  0 "$(device):DET:POWER:M"
+}
+plotUpdateMode {
+  0 "xOrY"
+}
+ySigned {
+  0 1
+}
+plotColor {
+  0 index 26
+}
 endObjectProperties
 

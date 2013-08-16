@@ -4,7 +4,7 @@ from common import *
 
 
 
-mbbOut('DET:GAIN', DESC = 'Detector gain', *dBrange(8, -6))
+mbbOut('DET:GAIN', DESC = 'Detector gain', *dBrange(15, -12) + ['Min'])
 boolOut('DET:MODE', 'All Bunches', 'Single Bunch', DESC = 'Detector mode')
 mbbOut('DET:INPUT', 'FIR', 'ADC', DESC = 'Detector input selection')
 
@@ -60,6 +60,11 @@ mean_channel = SweepChannel('M', 'Bunch mean')
 Trigger('DET', *concat(bunch_channels) + mean_channel)
 
 
+# Control over the internal detector window.
+det_window = WaveformOut('DET:WINDOW', 1024, 'SHORT', DESC = 'Detector window')
+boolOut('DET:RESET_WIN', FLNK = det_window, PINI = 'YES')
+
+
 # Also put the fixed NCO control here
 aOut('NCO:FREQ', -936, 936, 'tune', 5, DESC = 'Fixed NCO frequency')
-mbbOut('NCO:GAIN', DESC = 'Fixed NCO gain', *['Off'] + dBrange(15, -3))
+mbbOut('NCO:GAIN', DESC = 'Fixed NCO gain', *dBrange(8, -6))

@@ -111,3 +111,20 @@ Trigger('SE', *trigger_pvs)
 longOut('SE:TEMP', 30, 60, 'deg', DESC = 'Target temperature')
 longOut('SE:TEMP:KP', DESC = 'Fan controller KP')
 longOut('SE:TEMP:KI', DESC = 'Fan controller KI')
+
+
+
+# Overflow detection PVs
+def overflow(name, desc):
+    return boolIn(name, 'Ok', 'Overflow', OSV = 'MAJOR', DESC = desc)
+overflows = [
+    overflow('SE:OVF:FIR', 'FIR overflow'),
+    overflow('SE:OVF:DAC', 'DAC overflow'),
+    overflow('SE:OVF:ACC', 'Detector accumulator overflow'),
+    overflow('SE:OVF:IQ',  'IQ scaling overflow')]
+overflows.append(
+    AggregateSeverity('SE:OVF', 'Numerical overflow', overflows))
+
+boolOut('SE:OVF:SCAN',
+    SCAN = '.1 second',
+    FLNK = create_fanout('SE:OVF:FAN', *overflows))

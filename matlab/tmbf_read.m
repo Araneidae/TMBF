@@ -46,5 +46,6 @@ function data = tmbf_read(tmbf, turns, start)
             wf(1 : bunches_size);
 
         turns_read = turns_read + window_length;
+        fprintf('.');
     end
 end

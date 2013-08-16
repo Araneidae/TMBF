@@ -394,13 +394,13 @@ void cos_sin(int angle_in, int *c_out, int *s_out)
      * directions on the two octants. */
     int angle = angle_in;
     if (angle_in & 0x20000000)
-        angle = - angle;
+        angle = ~angle;
     angle &= 0x3FFFFFFF;
 
     /* Split angle into index and residue. */
     int shift = 32 - COS_SIN_N - 3;
-    int index = ((angle + (1 << (shift - 1))) >> shift);
-    int residue = angle - (index << shift);
+    int index = angle >> shift;
+    int residue = angle - (index << shift) - (1 << (shift - 1));
 
     /* Compute accurate sin/cos in current octant: lookup table followed by
      * linear fixup of the residue. */

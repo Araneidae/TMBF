@@ -11,7 +11,7 @@ SHORT_TURN_WF_LENGTH = SAMPLES_PER_TURN * SHORT_TURN_WF_COUNT
 LONG_TURN_WF_LENGTH = SAMPLES_PER_TURN * LONG_TURN_WF_COUNT
 
 
-mbbOut('DDR:INPUT', 'ADC', 'DAC', DESC = 'DDR input select')
+mbbOut('DDR:INPUT', 'ADC', 'DAC', 'FIR', DESC = 'DDR input select')
 
 
 # The short waveforms will be updated on any DDR trigger.

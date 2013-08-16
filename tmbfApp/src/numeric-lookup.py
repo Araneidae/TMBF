@@ -199,11 +199,9 @@ print
 
 print 'struct COS_SIN_LOOKUP { int cos, sin; };'
 print 'static const struct COS_SIN_LOOKUP cos_sin_lookup_table[%d] = {' % \
-    (2**COS_SIN_N + 1)
-# Note that the lookup table has an odd entry at the end: this is needed for
-# 45 degrees lookup to work properly, as this is a cusp between octants.
-for n in range(2**COS_SIN_N + 1):
-    angle = n * math.pi / 4 / 2**COS_SIN_N
+    (2**COS_SIN_N)
+for n in range(2**COS_SIN_N):
+    angle = (n + 0.5) * math.pi / 4 / 2**COS_SIN_N
     if n % 2 == 0:
         print '    ',
     print '{ 0x%08x, 0x%08x },   ' % (

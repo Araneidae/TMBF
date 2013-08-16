@@ -29,6 +29,7 @@ struct sequencer_bank {
     unsigned int capture_count;
     unsigned int bunch_bank;
     unsigned int hom_gain;
+    bool enable_window;
 };
 
 /* Sequencer state as currently seen through EPICS. */
@@ -61,6 +62,7 @@ static void publish_bank(int ix, struct sequencer_bank *bank)
     PUBLISH_WRITE_VAR_P(ulongout, FORMAT("COUNT"), bank->capture_count);
     PUBLISH_WRITE_VAR_P(mbbo, FORMAT("BANK"), bank->bunch_bank);
     PUBLISH_WRITE_VAR_P(mbbo, FORMAT("GAIN"), bank->hom_gain);
+    PUBLISH_WRITE_VAR_P(bo, FORMAT("ENWIN"), bank->enable_window);
 
 #undef FORMAT
 }
@@ -78,7 +80,10 @@ static void write_seq_state(void)
         entry->capture_count = bank->capture_count - 1;
         entry->bunch_bank = bank->bunch_bank;
         entry->hom_gain = bank->hom_gain;
-        entry->wait_time = 0;
+        entry->hom_enable = true;
+        entry->window_rate =
+            (unsigned int) lround((pow(2, 32) / 234) / bank->dwell_time);
+        entry->enable_window = bank->enable_window;
     }
     hw_write_seq_entries(current_sequencer);
 

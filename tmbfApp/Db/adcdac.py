@@ -44,5 +44,5 @@ WaveformOut('ADC:OFFSET', 4, 'SHORT', DESC = 'ADC offsets')
 
 
 minmax_pvs('DAC')
-longOut('DAC:DELAY', 4, 935, DESC = 'DAC output delay')
+longOut('DAC:DELAY', 0, 935, DESC = 'DAC output delay')
 mbbOut('DAC:ENABLE', 'Off', 'On', DESC = 'DAC output enable')

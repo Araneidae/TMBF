@@ -34,6 +34,7 @@ struct tmbf_config_space
     //  2:0     Current sequencer state ("program counter")
     //  3       Set if buffer busy
     //  4       Set if sequencer busy
+    //  8:5     Overflow bits (IQ/ACC/DAC/FIR)
 
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
@@ -45,15 +46,18 @@ struct tmbf_config_space
     //  6       Arm buffer and sequencer
     //  7       Soft trigger buffer and sequencer (pulsed)
     //  8       Arm bunch counter sync (pulsed)
-    //  9       DDR input select (0 => ADC, 1 => DAC)
+    //  9       (unused)
     //  11:10   Buffer data select (FIR+ADC/IQ/FIR+DAC/ADC+DAC)
     //  13:12   Buffer readback channel select
     //  14      Detector bunch mode enable
     //  15      Detector input select
-    //  19:16   HOM gain select (in 3dB steps)
-    //  23:20   FIR gain select (in 3dB steps)
-    //  26:24   Detector gain select (in 6dB steps)
-    //  31:27   (unused)
+    //  19      (unused)
+    //  18:16   HOM gain select (in 6dB steps)
+    //  23:20   FIR gain select (in 6dB steps)
+    //  27:24   Detector gain select (in 6dB steps)
+    //  29:28   DDR input select (0 => ADC, 1 => DAC, 2 => FIR, 3 => 0)
+    //  30      (unused)
+    //  31      Enable internal loopback
 
     uint32_t nco_frequency;         //  3  Fixed NCO generator frequency
     uint32_t dac_delay;             //  4  DAC output delay (2ns steps)
@@ -70,6 +74,7 @@ struct tmbf_config_space
     uint32_t sequencer_write;       // 15  Write sequencer data
     uint32_t adc_minmax_channel;    // 16  Select ADC min/max readout channel
     uint32_t dac_minmax_channel;    // 17  Select DAC min/max readout channel
+    uint32_t latch_overflow;        // 18  Latch new overflow status
 };
 
 /* These three pointers directly overlay the FF memory. */
@@ -154,6 +159,23 @@ int hw_read_version(void)
 }
 
 
+void hw_read_overflows(bool *fir, bool *dac, bool *acc, bool *iq)
+{
+    config_space->latch_overflow = 0xF;
+    uint32_t status = config_space->system_status;
+    *fir = (status >> 5) & 1;
+    *dac = (status >> 6) & 1;
+    *acc = (status >> 7) & 1;
+    *iq  = (status >> 8) & 1;
+}
+
+
+void hw_write_loopback_enable(bool loopback)
+{
+    WRITE_CONTROL_BITS(31, 1, loopback);
+}
+
+
 /* * * * * * * * * * * * */
 /* ADC: Data Input Stage */
 
@@ -224,7 +246,7 @@ void hw_write_dac_delay(unsigned int delay)
 
 void hw_write_ddr_select(unsigned int selection)
 {
-    WRITE_CONTROL_BITS(9, 1, selection);
+    WRITE_CONTROL_BITS(28, 2, selection);
 }
 
 void hw_write_ddr_trigger_select(bool external)
@@ -306,7 +328,7 @@ void hw_write_nco_freq(uint32_t freq)
 
 void hw_write_nco_gain(unsigned int gain)
 {
-    WRITE_CONTROL_BITS(16, 4, gain);
+    WRITE_CONTROL_BITS(16, 3, gain);
 }
 
 
@@ -334,7 +356,16 @@ void hw_write_det_bunches(unsigned int bunch[4])
 
 void hw_write_det_gain(unsigned int gain)
 {
-    WRITE_CONTROL_BITS(24, 3, gain);
+    WRITE_CONTROL_BITS(24, 4, gain);
+}
+
+void hw_write_det_window(uint16_t window[DET_WINDOW_LENGTH])
+{
+    LOCK();
+    config_space->sequencer_start_write = 1;    // Select sequencer window
+    for (int i = 0; i < DET_WINDOW_LENGTH; i ++)
+        config_space->sequencer_write = window[i];
+    UNLOCK();
 }
 
 
@@ -344,7 +375,7 @@ void hw_write_det_gain(unsigned int gain)
 void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT])
 {
     LOCK();
-    config_space->sequencer_start_write = 1;
+    config_space->sequencer_start_write = 0;    // Select seq state file
     for (int i = 0; i < MAX_SEQUENCER_COUNT; i ++)
     {
         struct seq_entry *entry = &entries[i];
@@ -354,8 +385,13 @@ void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT])
         config_space->sequencer_write =
             (entry->capture_count & 0xFFF) |        // bits 11:0
             ((entry->bunch_bank & 0x3) << 12) |     //      13:12
-            ((entry->hom_gain & 0xF) << 14) |       //      17:14
-            ((entry->wait_time & 0x3FFF) << 18);    //      31:18
+            ((entry->hom_gain & 0x7) << 14) |       //      16:14
+            (entry->hom_enable << 17) |             //      17
+            entry->enable_window << 18;             //      18
+        config_space->sequencer_write = entry->window_rate;
+        config_space->sequencer_write = 0;
+        config_space->sequencer_write = 0;
+        config_space->sequencer_write = 0;
     }
     UNLOCK();
 }

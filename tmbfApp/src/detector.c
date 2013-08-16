@@ -74,7 +74,7 @@ static int rotate_I[TUNE_LENGTH];  // 2**30 * cos(phase)
 static int rotate_Q[TUNE_LENGTH];  // 2**30 * sin(phase)
 
 /* Helper constants for fast tune scale and rotation waveform calculations
- * corresponding to multiplication by 936*2^-33. */
+ * corresponding to multiplication by 936*2^-32. */
 static uint32_t wf_scaling;
 static int wf_shift;
 
@@ -82,14 +82,14 @@ static int wf_shift;
 
 unsigned int tune_to_freq(double tune)
 {
-    return (unsigned int) round(tune * (pow(2, 33) / (double) MAX_BUNCH_COUNT));
+    return (unsigned int) round(tune * (pow(2, 32) / (double) MAX_BUNCH_COUNT));
 }
 
 
 static void store_one_tune_freq(unsigned int freq, int ix)
 {
     unsigned_fixed_to_single(freq, &tune_scale[ix], wf_scaling, wf_shift);
-    cos_sin(freq * group_delay, &rotate_I[ix], &rotate_Q[ix]);
+    cos_sin(-freq * group_delay, &rotate_I[ix], &rotate_Q[ix]);
 }
 
 /* Computes frequency scale directly from sequencer settings.  Triggered
@@ -148,8 +148,8 @@ static void extract_iq(const short buffer_low[], const short buffer_high[])
         int I_sum = 0, Q_sum = 0;
         for (int channel = 0; channel < 4; channel ++)
         {
-            int raw_I = buffer_low[4 * i + channel];
-            int raw_Q = buffer_high[4 * i + channel];
+            int raw_I = buffer_high[4 * i + channel];
+            int raw_Q = buffer_low[4 * i + channel];
             int I = MulSS(raw_I, rot_I) - MulSS(raw_Q, rot_Q);
             int Q = MulSS(raw_I, rot_Q) + MulSS(raw_Q, rot_I);
             I_sum += I;
@@ -314,6 +314,33 @@ static void publish_channel(const char *name, struct sweep_info *sweep)
 }
 
 
+static bool reset_window = true;
+
+/* Compute the appropriate windowing function for the detector. */
+static void write_detector_window(void *context, short *window, size_t *length)
+{
+    if (reset_window)
+    {
+        /* Let's use the Hamming window.  As this is only done once at startup
+         * it doesn't matter if we take our time and use full floating point
+         * arithmetic. */
+        double a = 0.54;
+        double b = 1 - a;
+        for (int i = 0; i < DET_WINDOW_LENGTH; i ++)
+            window[i] = (uint16_t) round(32767 *
+                (a - b * cos(2 * M_PI * i / (DET_WINDOW_LENGTH - 1))));
+
+        reset_window = false;
+    }
+    hw_write_det_window((uint16_t *) window);
+    *length = DET_WINDOW_LENGTH;
+}
+
+static void reset_detector_window(void)
+{
+    reset_window = true;
+}
+
 
 bool initialise_detector(void)
 {
@@ -342,9 +369,14 @@ bool initialise_detector(void)
     PUBLISH_WRITER_P(mbbo, "NCO:GAIN", hw_write_nco_gain);
 
     /* Initialise the scaling constants so that
-     *  wf_scaling * 2^wf_shift = 936 * 2^-33. */
+     *  wf_scaling * 2^wf_shift = 936 * 2^-32. */
     compute_scaling(MAX_BUNCH_COUNT, &wf_scaling, &wf_shift);
-    wf_shift -= 33;     // Divide by 2^33.
+    wf_shift -= 32;     // Divide by 2^32.
+
+    /* Program the sequencer window. */
+    PUBLISH_WAVEFORM(
+        short, "DET:WINDOW", DET_WINDOW_LENGTH, write_detector_window);
+    PUBLISH_ACTION("DET:RESET_WIN", reset_detector_window);
 
     return true;
 }

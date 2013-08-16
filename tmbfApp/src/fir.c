@@ -50,7 +50,7 @@ static void compute_fir_taps(struct fir_bank *bank)
 
     /* Calculate FIR coeffs and the mean value. */
     int sum = 0;
-    double max_int = (1 << 17) - 1;
+    double max_int = (1 << 15) - 1;
     for (int i = 0; i < bank->length; i++)
     {
         int tap = (int) round(max_int *

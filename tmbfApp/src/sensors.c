@@ -19,6 +19,7 @@
 #include "error.h"
 #include "epics_device.h"
 #include "epics_extra.h"
+#include "hardware.h"
 
 #include "sensors.h"
 
@@ -612,6 +613,15 @@ static void *sensors_thread(void *context)
 }
 
 
+static bool fir_overflow, dac_overflow, acc_overflow, iq_overflow;
+
+static void read_overflows(void)
+{
+    hw_read_overflows(
+        &fir_overflow, &dac_overflow, &acc_overflow, &iq_overflow);
+}
+
+
 
 bool initialise_sensors(void)
 {
@@ -631,6 +641,12 @@ bool initialise_sensors(void)
     PUBLISH_READ_VAR(mbbi,     "SE:NTPSTAT", NTP_status);
     PUBLISH_READ_VAR(longin,   "SE:STRATUM", NTP_stratum);
     PUBLISH_READ_VAR(stringin, "SE:SERVER",  NTP_server);
+
+    PUBLISH_ACTION("SE:OVF:SCAN", read_overflows);
+    PUBLISH_READ_VAR(bi, "SE:OVF:FIR", fir_overflow);
+    PUBLISH_READ_VAR(bi, "SE:OVF:DAC", dac_overflow);
+    PUBLISH_READ_VAR(bi, "SE:OVF:ACC", acc_overflow);
+    PUBLISH_READ_VAR(bi, "SE:OVF:IQ",  iq_overflow);
 
     InitialiseUptime();
     initialise_fan_control();

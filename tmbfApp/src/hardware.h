@@ -22,6 +22,12 @@ bool initialise_hardware(void);
 /* Returns version number. */
 int hw_read_version(void);
 
+/* Need to revisit this to read accum+iq separately. */
+void hw_read_overflows(bool *fir, bool *dac, bool *accum, bool *iq);
+
+/* Only useful for testing: loops digital DAC output to digital ADC input. */
+void hw_write_loopback_enable(bool loopback);
+
 
 /* * * * * * * * * * * * */
 /* ADC: Data Input Stage */
@@ -129,6 +135,10 @@ void hw_write_det_bunches(unsigned int bunch[4]);
 /* Configures detector gain. */
 void hw_write_det_gain(unsigned int gain);
 
+/* Writes the detector window waveform. */
+#define DET_WINDOW_LENGTH   1024
+void hw_write_det_window(uint16_t window[DET_WINDOW_LENGTH]);
+
 
 /* * * * * * * * * * * * * * * * * * * * * */
 /* SEQ: Programmed Bunch and Sweep Control */
@@ -140,7 +150,9 @@ struct seq_entry {
     unsigned int capture_count;     // Number of sweep points to capture
     unsigned int bunch_bank;        // Bunch bank selection
     unsigned int hom_gain;          // HOM output gain
-    unsigned int wait_time;         // Extra wait time
+    unsigned int window_rate;       // Detector window advance frequency
+    bool enable_window;             // Enable detector windowing
+    bool hom_enable;                // Enable HOM
 };
 
 /* Rewrites the sequencer table.  All entries must be present. */
