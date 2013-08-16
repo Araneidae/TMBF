@@ -90,11 +90,7 @@ else
 fi
 
 
-# Now install the epics_ioc file.
-{
-    # Add on the paths required for running the IOC
-    echo "TMBF_IOC='$IOC_TARGET/runioc'"
-} > /etc/tmbf_ioc
+# Install the epics_ioc file.
 cat <<EOF >/etc/tmbf_ioc
 TMBF_IOC='$IOC_TARGET/runioc'
 DESIGN=/opt/lib/tmbf.bin
@@ -104,7 +100,7 @@ EOF
 # Install the base files and startup scripts.
 copy_files install_d /etc/init.d epics  &&
 copy_files $BINDIR /opt/bin fp ddrInit  &&
-copy_files base /opt/bin configure-network fpga_init  &&
+copy_files base /opt/bin configure-network fpga_init load-fpga  &&
 copy_files base /opt/lib tmbf-ips  &&
 ln -sf /opt/bin/configure-network /usr/sbin  ||
     Error 'Error installing base files'

@@ -15,9 +15,7 @@ do_start()
         echo -n " - already running?"
     else
         # Load and initialise FPGA
-        /opt/bin/fp < "$DESIGN"
-        /opt/bin/fpga_init
-        /opt/bin/ddrInit
+        /opt/bin/load-fpga "$DESIGN"
 
         # Ensure MSP driver is running
 #         modprobe msp

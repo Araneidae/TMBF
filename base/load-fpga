@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Simple helper script to reload the FPGA
+
+HERE="$(dirname "$0")"
+
+if [ $# -eq 0 ]; then
+    . /etc/tmbf_ioc
+    : "${DESIGN:?}"
+else
+    DESIGN="$1"
+fi
+
+/opt/bin/fp < "$DESIGN"  &&
+"$HERE"/fpga_init  &&
+/opt/bin/ddrInit
