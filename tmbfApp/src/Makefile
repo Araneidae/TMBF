@@ -59,6 +59,7 @@ tmbf_SRCS += hashtable.c        # Simple generic hash table
 tmbf_SRCS += persistence.c      # Persistent value support for EPICS
 tmbf_SRCS += pvlogging.c        # Logging for all caputs
 tmbf_SRCS += numeric.c          # Some fast numerical algorithsm
+tmbf_SRCS += config_file.c      # Read configuration (for hardware offsets &c)
 
 # Hardware interfacing
 tmbf_SRCS += hardware.c         # Interface to FPGA

@@ -15,8 +15,9 @@
 #define SAMPLES_PER_TURN    MAX_BUNCH_COUNT  //!!!!???? Duplicate to eliminate
 
 
-/* To be called once at startup. */
-bool initialise_hardware(void);
+/* To be called once at startup.  The given config_file contains hardware
+ * offsets describing the FPGA behaviour. */
+bool initialise_hardware(const char *config_file);
 
 
 /* Returns version number. */
@@ -39,6 +40,9 @@ void hw_read_overflows(
 
 /* Only useful for testing: loops digital DAC output to digital ADC input. */
 void hw_write_loopback_enable(bool loopback);
+
+/* Only useful for testing: disables internal delay compensation. */
+void hw_write_compensate_disable(bool disable);
 
 
 /* * * * * * * * * * * * */
@@ -91,6 +95,10 @@ void hw_write_ddr_select(unsigned int select);
 
 /* Selects software or hardware trigger. */
 void hw_write_ddr_trigger_select(bool external);
+
+/* Returns delay (in clocks) from reference bunch to corresponding DDR readout.
+ * This depends on the currently selected data source. */
+int hw_read_ddr_delay(void);
 
 
 /* * * * * * * * * * * * * * * * * * * * */

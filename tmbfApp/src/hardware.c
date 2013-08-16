@@ -10,6 +10,8 @@
 #include <pthread.h>
 
 #include "error.h"
+#include "config_file.h"
+
 #include "hardware.h"
 
 
@@ -21,6 +23,37 @@
 
 #define ADC_MINMAX_OFFSET       (4 * 256)
 #define DAC_MINMAX_OFFSET       (4 * 512)
+
+
+/* Definition of hardware offsets.  These all define internal delays in the FPGA
+ * which we compensate for when reading and writing data. */
+static int DDR_ADC_DELAY;
+static int DDR_FIR_DELAY;
+static int DDR_RAW_DAC_DELAY;
+static int DDR_DAC_DELAY;
+
+static int BUF_ADC_DELAY;
+static int BUF_FIR_DELAY;
+static int BUF_DAC_DELAY;
+
+static int MINMAX_ADC_DELAY;
+static int MINMAX_DAC_DELAY;
+
+static const struct config_entry hardware_config_defs[] = {
+    CONFIG(DDR_ADC_DELAY),
+    CONFIG(DDR_FIR_DELAY),
+    CONFIG(DDR_RAW_DAC_DELAY),
+    CONFIG(DDR_DAC_DELAY),
+
+    CONFIG(BUF_ADC_DELAY),
+    CONFIG(BUF_FIR_DELAY),
+    CONFIG(BUF_DAC_DELAY),
+
+    CONFIG(MINMAX_ADC_DELAY),
+    CONFIG(MINMAX_DAC_DELAY),
+};
+
+static const char *hardware_config_file;
 
 
 
@@ -36,6 +69,8 @@ struct tmbf_config_space
     //  4       Set if sequencer busy
     //  9:5     Overflow bits (IQ/ACC/DAC/FIR)
     //  13:10   Trigger phase bits
+    //  14      Trigger armed
+    //  15:31   (unused)
 
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
@@ -104,7 +139,7 @@ static pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
  * and DAC readouts. */
 static void read_minmax(
     volatile uint32_t *minmax, volatile uint32_t *channel,
-    short *min_out, short *max_out)
+    int delay, short *min_out, short *max_out)
 {
     LOCK();
     for (int n = 0; n < 4; n++)
@@ -114,8 +149,9 @@ static void read_minmax(
         for (int i = 0; i < MAX_BUNCH_COUNT/4; i++)
         {
             uint32_t data = minmax[i];
-            min_out[4*i + n] = (short) (data & 0xFFFF);
-            max_out[4*i + n] = (short) (data >> 16);
+            int out_ix = (i + MAX_BUNCH_COUNT/4 - delay) % (MAX_BUNCH_COUNT/4);
+            min_out[4*out_ix + n] = (short) (data & 0xFFFF);
+            max_out[4*out_ix + n] = (short) (data >> 16);
         }
     }
     *channel = 0;
@@ -154,6 +190,9 @@ static void pulse_control_bit(unsigned int bit)
     write_control_bit_field(start, length, value); \
     UNLOCK()
 
+#define READ_STATUS_BITS(start, length) \
+    ((config_space->system_status >> (start)) & ((1 << (length)) - 1))
+
 
 /******************************************************************************/
 
@@ -175,7 +214,7 @@ void hw_read_overflows(
 
     /* Latch the selected overflow bits and read back the associated status. */
     config_space->latch_overflow = read_mask;
-    uint32_t status = config_space->system_status >> 5;
+    uint32_t status = READ_STATUS_BITS(5, OVERFLOW_BIT_COUNT);
 
     for (int i = 0; i < OVERFLOW_BIT_COUNT; i ++)
         overflow_bits[i] = (status >> i) & 1;
@@ -185,6 +224,18 @@ void hw_read_overflows(
 void hw_write_loopback_enable(bool loopback)
 {
     WRITE_CONTROL_BITS(3, 1, loopback);
+}
+
+
+void hw_write_compensate_disable(bool disable)
+{
+    int config_defs_count = ARRAY_SIZE(hardware_config_defs);
+    if (disable)
+        for (int i = 0; i < config_defs_count; i ++)
+            *hardware_config_defs[i].result = 0;
+    else
+        config_parse_file(
+            hardware_config_file, hardware_config_defs, config_defs_count);
 }
 
 
@@ -204,7 +255,9 @@ void hw_write_adc_offsets(short offsets[4])
 
 void hw_read_adc_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT])
 {
-    read_minmax(adc_minmax, &config_space->adc_minmax_channel, min, max);
+    read_minmax(
+        adc_minmax, &config_space->adc_minmax_channel,
+        MINMAX_ADC_DELAY, min, max);
 }
 
 void hw_write_adc_skew(unsigned int skew)
@@ -243,7 +296,9 @@ int hw_read_fir_length(void)
 
 void hw_read_dac_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT])
 {
-    read_minmax(dac_minmax, &config_space->dac_minmax_channel, min, max);
+    read_minmax(
+        dac_minmax, &config_space->dac_minmax_channel,
+        MINMAX_DAC_DELAY, min, max);
 }
 
 void hw_write_dac_enable(unsigned int enable)
@@ -266,14 +321,29 @@ void hw_write_dac_precomp(short taps[3])
 /* * * * * * * * * * * * * * * * * * * * * * */
 /* DDR: High Speed High Volume Data Capture */
 
+static int ddr_selection;
+
 void hw_write_ddr_select(unsigned int selection)
 {
+    ddr_selection = selection;
     WRITE_CONTROL_BITS(28, 2, selection);
 }
 
 void hw_write_ddr_trigger_select(bool external)
 {
     WRITE_CONTROL_BITS(1, 1, external);
+}
+
+int hw_read_ddr_delay(void)
+{
+    switch (ddr_selection)
+    {
+        case 0: return DDR_ADC_DELAY;
+        case 1: return DDR_FIR_DELAY;
+        case 2: return DDR_RAW_DAC_DELAY;
+        case 3: return DDR_DAC_DELAY;
+        default: ASSERT_FAIL();
+    }
 }
 
 
@@ -304,8 +374,11 @@ void hw_write_bun_sync(void)
 /* * * * * * * * * * * * * * * * * */
 /* BUF: High Speed Internal Buffer */
 
+static int buf_selection;
+
 void hw_write_buf_select(unsigned int selection)
 {
+    buf_selection = selection;
     WRITE_CONTROL_BITS(10, 2, selection);
 }
 
@@ -317,7 +390,21 @@ void hw_write_buf_trigger_select(bool external)
 
 bool hw_read_buf_status(void)
 {
-    return (config_space->system_status >> 3) & 1;
+    return READ_STATUS_BITS(3, 1) || READ_STATUS_BITS(14, 1);   // Separate out
+}
+
+/* To make things complicated, the fast buffer has separate delays for each of
+ * its two channels! */
+static void get_buf_delays(int *low_delay, int *high_delay)
+{
+    switch (buf_selection)
+    {
+        case 0: *low_delay = BUF_FIR_DELAY; *high_delay = BUF_ADC_DELAY; break;
+        case 1: *low_delay = 0;             *high_delay = 0;             break;
+        case 2: *low_delay = BUF_FIR_DELAY; *high_delay = BUF_DAC_DELAY; break;
+        case 3: *low_delay = BUF_ADC_DELAY; *high_delay = BUF_DAC_DELAY; break;
+        default: ASSERT_FAIL();
+    }
 }
 
 /* Annoyingly close to identical to min/max readout, but different channel
@@ -325,6 +412,9 @@ bool hw_read_buf_status(void)
 void hw_read_buf_data(short low[BUF_DATA_LENGTH], short high[BUF_DATA_LENGTH])
 {
     LOCK();
+    int low_delay, high_delay;
+    get_buf_delays(&low_delay, &high_delay);
+
     for (int n = 0; n < 4; n++)
     {
         /* Channel select and read enable for buffer. */
@@ -332,8 +422,10 @@ void hw_read_buf_data(short low[BUF_DATA_LENGTH], short high[BUF_DATA_LENGTH])
         for (int i = 0; i < BUF_DATA_LENGTH/4; i++)
         {
             uint32_t data = buffer_data[i];
-            low [4*i + n] = (short) (data & 0xFFFF);
-            high[4*i + n] = (short) (data >> 16);
+            low [4*((i - low_delay)  & (BUF_DATA_LENGTH/4 - 1)) + n] =
+                (short) (data & 0xFFFF);
+            high[4*((i - high_delay) & (BUF_DATA_LENGTH/4 - 1)) + n] =
+                (short) (data >> 16);
         }
     }
     UNLOCK();
@@ -425,12 +517,12 @@ void hw_write_seq_count(unsigned int sequencer_pc)
 
 unsigned int hw_read_seq_state(void)
 {
-    return config_space->system_status & 0x7;
+    return READ_STATUS_BITS(0, 3);
 }
 
 bool hw_read_seq_status(void)
 {
-    return (config_space->system_status >> 4) & 1;
+    return READ_STATUS_BITS(4, 1) || READ_STATUS_BITS(14, 1);   // Separate out
 }
 
 void hw_write_seq_reset(void)
@@ -462,16 +554,20 @@ void hw_write_trg_soft_trigger(bool ddr, bool buf)
 
 int hw_read_trg_raw_phase(void)
 {
-    return (config_space->system_status >> 10) & 0xF;
+    return READ_STATUS_BITS(10, 4);
 }
 
 
 /******************************************************************************/
 
-bool initialise_hardware(void)
+bool initialise_hardware(const char *config_file)
 {
+    hardware_config_file = config_file;
     int mem;
     bool ok =
+        config_parse_file(
+            config_file, hardware_config_defs,
+            ARRAY_SIZE(hardware_config_defs))  &&
         TEST_IO(mem = open("/dev/mem", O_RDWR | O_SYNC))  &&
         TEST_IO(config_space = mmap(
             0, CONTROL_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,

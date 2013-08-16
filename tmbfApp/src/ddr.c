@@ -110,9 +110,10 @@ static void purge_read_buffer(void)
 
 static void start_buffer_transfer(ssize_t offset, size_t interval, size_t count)
 {
+    int ddr_delay = hw_read_ddr_delay();
     history_buffer->post_filtering = 0;
     history_buffer->start_address =
-        (offset + trigger_timestamp - arm_timestamp) & 0xFFFFFF;
+        (offset + ddr_delay + trigger_timestamp - arm_timestamp) & 0xFFFFFF;
     history_buffer->address_step = interval;
     history_buffer->transfer_size = 1;
     /* Writing to this register initiates transfer.  count is in "atoms". */

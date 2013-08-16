@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2727
-y 16
+x 2720
+y 157
 w 456
 h 575
 font "helvetica-medium-r-8.0"
@@ -721,5 +721,25 @@ fill
 fillColor index 16
 fillAlarm
 alarmPv "$(device):SE:OVF:COMP"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 304
+y 408
+w 96
+h 22
+fgColor index 14
+fgAlarm
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):COMPENSATE_S"
+font "helvetica-medium-r-12.0"
 endObjectProperties
 

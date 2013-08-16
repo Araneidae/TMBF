@@ -16,7 +16,10 @@ import tune         # TUNE
 
 stringIn('VERSION', PINI = 'YES', DESC = 'TMBF version')
 longIn('FPGAVER', PINI = 'YES', DESC = 'FPGA version')
+
 boolOut('LOOPBACK', 'Normal', 'Loopback', OSV = 'MAJOR', VAL = 0,
     DESC = 'Enable internal data loopback')
+boolOut('COMPENSATE', 'Normal', 'Disabled', OSV = 'MAJOR', VAL = 0,
+    DESC = 'Disable internal delay compensation')
 
 WriteRecords(sys.argv[1])

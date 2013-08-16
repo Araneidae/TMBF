@@ -24,6 +24,8 @@ cd "$(dirname "$0")/.."
 
 . /etc/tmbf_ioc
 
+: "${DESIGN_CONFIG_FILE:?}"
+
 
 export HOSTNAME=$(hostname)
 
@@ -56,6 +58,7 @@ export TEMP_FS_LIST="$(echo -n $(
 
 IocParameter -p "$PIDFILE"
 IocParameter -s "$STATE_FILE"
+IocParameter -H "$DESIGN_CONFIG_FILE"
 
 # Now run the IOC.
 echo

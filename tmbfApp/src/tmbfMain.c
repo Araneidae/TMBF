@@ -48,7 +48,10 @@ static const char *persistence_state_file = NULL;
 static int persistence_interval = 1200;             // 20 minute update interval
 
 /* Device name configured on startup. */
-const char *device_name = "(unknown)";
+static const char *device_name = "(unknown)";
+
+/* File to read hardware configuration settings. */
+static const char *hardware_config_file = NULL;
 
 
 #define TEST_EPICS(command) \
@@ -179,13 +182,14 @@ static bool ProcessOptions(int *argc, char ** *argv)
     bool Ok = true;
     while (Ok)
     {
-        switch (getopt(*argc, *argv, "+np:s:i:d:"))
+        switch (getopt(*argc, *argv, "+np:s:i:d:H:"))
         {
             case 'n':   Interactive = false;                    break;
             case 'p':   Ok = WritePid(optarg);                  break;
             case 's':   persistence_state_file = optarg;        break;
             case 'i':   persistence_interval = atoi(optarg);    break;
             case 'd':   device_name = optarg;                   break;
+            case 'H':   hardware_config_file = optarg;          break;
             default:
                 printf("Sorry, didn't understand\n");
                 return false;
@@ -247,6 +251,7 @@ static bool initialise_subsystems(void)
     PUBLISH_READ_VAR(stringin, "VERSION", version_string);
     PUBLISH_READER(longin, "FPGAVER", hw_read_version);
     PUBLISH_WRITER(bo, "LOOPBACK", hw_write_loopback_enable);
+    PUBLISH_WRITER(bo, "COMPENSATE", hw_write_compensate_disable);
 
     return
         initialise_ddr_epics()  &&
@@ -268,7 +273,7 @@ int main(int argc,char *argv[])
 
         initialise_persistent_state(
             persistence_state_file, persistence_interval)  &&
-        initialise_hardware()  &&
+        initialise_hardware(hardware_config_file)  &&
         InitialiseSignals()  &&
 
         initialise_epics_device()  &&
