@@ -75,7 +75,7 @@ static void write_seq_state(void)
         entry->start_freq = tune_to_freq(bank->start_freq);
         entry->delta_freq = tune_to_freq(bank->delta_freq);
         entry->dwell_time = bank->dwell_time - 1;
-        entry->capture_count = bank->capture_count;
+        entry->capture_count = bank->capture_count - 1;
         entry->bunch_bank = bank->bunch_bank;
         entry->hom_gain = bank->hom_gain;
         entry->wait_time = 0;

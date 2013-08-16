@@ -86,9 +86,9 @@ unsigned int tune_to_freq(double tune)
 }
 
 
-static void store_one_tune_freq(int freq, int ix)
+static void store_one_tune_freq(unsigned int freq, int ix)
 {
-    fixed_to_single(freq, &tune_scale[ix], wf_scaling, wf_shift);
+    unsigned_fixed_to_single(freq, &tune_scale[ix], wf_scaling, wf_shift);
     cos_sin(freq * group_delay, &rotate_I[ix], &rotate_Q[ix]);
 }
 
@@ -106,7 +106,7 @@ static void update_det_scale(void)
         const struct seq_entry *entry = &sequencer_table[state];
         f0 = entry->start_freq;
         for (unsigned int i = 0;
-             i < entry->capture_count  &&  ix < TUNE_LENGTH; i ++)
+             i < entry->capture_count + 1  &&  ix < TUNE_LENGTH; i ++)
         {
             store_one_tune_freq(f0, ix++);
             f0 += entry->delta_freq;
