@@ -119,6 +119,9 @@ void hw_write_nco_gain(unsigned int gain);
 /* Switches detector between all bunch detection or individual bunch mode. */
 void hw_write_det_mode(bool bunch_mode);
 
+/* Switch between ADC and FIR input for detector. */
+void hw_write_det_input_select(unsigned int input);
+
 /* If bunch mode enabled selects which bunch will be detected in each of the
  * four concurrent channels. */
 void hw_write_det_bunches(unsigned int bunch[4]);

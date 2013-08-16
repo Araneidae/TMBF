@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 88
-y 139
+x 89
+y 140
 w 631
 h 784
 font "helvetica-medium-r-18.0"
@@ -39,6 +39,7 @@ w 616
 h 184
 # Appearance
 autoScaleBothDirections
+graphTitle "Channel $(tune) detected I/Q"
 fgColor index 14
 bgColor index 3
 gridColor index 14
@@ -96,7 +97,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 73
 value {
-  "$(device) Tune for bunch $(tune)"
+  "$(device) Tune for bunch channel $(tune)"
 }
 endObjectProperties
 
@@ -137,7 +138,7 @@ font "helvetica-bold-r-14.0"
 buttonLabel "?"
 numCmds 1
 command {
-  0 "diagnostics-help TMBF_detector"
+  0 "diagnostics-help TMBF_tune_channel"
 }
 includeHelpIcon
 endObjectProperties
@@ -155,7 +156,7 @@ w 304
 h 304
 # Appearance
 border
-graphTitle "DDC Response"
+graphTitle "I/Q Response"
 fgColor index 14
 bgColor index 3
 gridColor index 5
@@ -205,7 +206,7 @@ w 304
 h 304
 # Appearance
 border
-graphTitle "DDC Response"
+graphTitle "Cumulative sum I/Q"
 fgColor index 14
 bgColor index 3
 gridColor index 5
@@ -255,6 +256,7 @@ w 616
 h 184
 # Appearance
 autoScaleBothDirections
+graphTitle "Detected power"
 fgColor index 14
 bgColor index 3
 gridColor index 14

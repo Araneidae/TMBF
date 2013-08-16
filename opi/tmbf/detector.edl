@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 549
-y 299
+x 756
+y 290
 w 641
 h 713
 font "helvetica-medium-r-18.0"
@@ -311,7 +311,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 312
+x 320
 y 512
 w 56
 h 20
@@ -364,14 +364,14 @@ minor 1
 release 0
 x 240
 y 512
-w 60
+w 69
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Bunch #0:"
+  "Channel #0:"
 }
 autoSize
 endObjectProperties
@@ -382,7 +382,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 312
+x 320
 y 536
 w 56
 h 20
@@ -435,14 +435,14 @@ minor 1
 release 0
 x 240
 y 536
-w 60
+w 69
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Bunch #1:"
+  "Channel #1:"
 }
 autoSize
 endObjectProperties
@@ -453,7 +453,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 312
+x 320
 y 560
 w 56
 h 20
@@ -506,14 +506,14 @@ minor 1
 release 0
 x 240
 y 560
-w 60
+w 69
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Bunch #2:"
+  "Channel #2:"
 }
 autoSize
 endObjectProperties
@@ -524,7 +524,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 312
+x 320
 y 584
 w 56
 h 20
@@ -577,14 +577,14 @@ minor 1
 release 0
 x 240
 y 584
-w 60
+w 69
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Bunch #3:"
+  "Channel #3:"
 }
 autoSize
 endObjectProperties
@@ -866,5 +866,44 @@ displayFileName {
 symbols {
   0 "tune=3"
 }
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 336
+y 664
+w 96
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):DET:INPUT_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 240
+y 664
+w 89
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Detector input:"
+}
+autoSize
 endObjectProperties
 

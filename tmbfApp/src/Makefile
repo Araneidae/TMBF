@@ -50,25 +50,29 @@ DBD += generic.dbd
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 tmbf_SRCS += tmbf_registerRecordDeviceDriver.c
-tmbf_SRCS += tmbfMain.c
-tmbf_SRCS += epics_device.c
-tmbf_SRCS += epics_extra.c
-tmbf_SRCS += hashtable.c
-tmbf_SRCS += persistence.c
-tmbf_SRCS += hardware.c
-# tmbf_SRCS += tune.c
-# tmbf_SRCS += device.c
-tmbf_SRCS += pvlogging.c
-tmbf_SRCS += numeric.c
-tmbf_SRCS += ddr.c
-tmbf_SRCS += ddr_epics.c
-tmbf_SRCS += adc_dac.c
-tmbf_SRCS += fir.c
-tmbf_SRCS += bunch_select.c
-tmbf_SRCS += sequencer.c
-tmbf_SRCS += triggers.c
-tmbf_SRCS += detector.c
-tmbf_SRCS += sensors.c
+tmbf_SRCS += tmbfMain.c         # Entry point and initialisation
+
+# Core generic EPICS and miscellaneous support
+tmbf_SRCS += epics_device.c     # EPICS device support framework
+tmbf_SRCS += epics_extra.c      # Miscellanous extra EPICS support
+tmbf_SRCS += hashtable.c        # Simple generic hash table
+tmbf_SRCS += persistence.c      # Persistent value support for EPICS
+tmbf_SRCS += pvlogging.c        # Logging for all caputs
+tmbf_SRCS += numeric.c          # Some fast numerical algorithsm
+
+# Hardware interfacing
+tmbf_SRCS += hardware.c         # Interface to FPGA
+tmbf_SRCS += ddr.c              # Interface to large DDR buffer
+
+# TMBF components
+tmbf_SRCS += adc_dac.c          # ADC and DAC interface and control
+tmbf_SRCS += ddr_epics.c        # EPICS interface to DDR buffer
+tmbf_SRCS += fir.c              # FIR filter control
+tmbf_SRCS += bunch_select.c     # Bunch selection control
+tmbf_SRCS += sequencer.c        # State sequencer control
+tmbf_SRCS += triggers.c         # Trigger control and selection
+tmbf_SRCS += detector.c         # I/Q detector and tune
+tmbf_SRCS += sensors.c          # Miscellaneous system health sensors
 
 tmbf_LIBS += $(EPICS_BASE_IOC_LIBS)
 

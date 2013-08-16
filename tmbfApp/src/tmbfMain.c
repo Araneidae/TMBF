@@ -21,8 +21,6 @@
 #include "epics_device.h"
 #include "epics_extra.h"
 #include "adc_dac.h"
-#include "tune.h"
-#include "device.h"
 #include "ddr_epics.h"
 #include "fir.h"
 #include "bunch_select.h"
@@ -155,7 +153,6 @@ static bool InitialiseSignals(void)
 
 
 /* Write the PID of this process to the given file. */
-
 static bool WritePid(const char * FileName)
 {
     FILE * output = fopen(FileName, "w");
@@ -204,14 +201,6 @@ static bool ProcessOptions(int *argc, char ** *argv)
 }
 
 
-/* Prints interactive startup message as recommended by GPL. */
-
-static void StartupMessage(void)
-{
-    printf("EPICS TMBF Driver, Version %s.  Built: %s.\n",
-        TMBF_VERSION, BUILD_DATE_TIME);
-}
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Core EPICS startup (st.cmd equivalent processing). */
@@ -236,6 +225,8 @@ static bool initialise_epics(void)
 {
     set_prompt();
     return
+        StartCaRepeater()  &&
+        HookLogging()  &&
         TEST_EPICS(dbLoadDatabase("dbd/tmbf.dbd", NULL, NULL))  &&
         TEST_EPICS(tmbf_registerRecordDeviceDriver(pdbbase))  &&
         load_database("db/tmbf.db")  &&
@@ -245,21 +236,18 @@ static bool initialise_epics(void)
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-int main(int argc,char *argv[])
+
+/* Driver version. */
+static EPICS_STRING version_string = { TMBF_VERSION };
+
+
+/* Initialises the various TMBF subsystems. */
+static bool initialise_subsystems(void)
 {
-    bool Ok =
-        ProcessOptions(&argc, &argv) &&
-        TEST_OK_(argc == 0, "Unexpected extra arguments")  &&
-        initialise_persistent_state(
-            persistence_state_file, persistence_interval)  &&
-        initialise_hardware()  &&
-        StartCaRepeater()  &&
-        HookLogging()  &&
-        InitialiseSignals()  &&
-        initialise_epics_device()  &&
-        initialise_epics_extra()  &&
-//         InitialiseTune()  &&
-//         GenericInit()  &&
+    PUBLISH_READ_VAR(stringin, "VERSION", version_string);
+    PUBLISH_READER(longin, "FPGAVER", hw_read_version);
+
+    return
         initialise_ddr_epics()  &&
         initialise_adc_dac()  &&
         initialise_fir()  &&
@@ -267,13 +255,33 @@ int main(int argc,char *argv[])
         initialise_sequencer()  &&
         initialise_triggers()  &&
         initialise_sensors()  &&
-        initialise_detector()  &&
+        initialise_detector();
+}
+
+
+int main(int argc,char *argv[])
+{
+    bool Ok =
+        ProcessOptions(&argc, &argv) &&
+        TEST_OK_(argc == 0, "Unexpected extra arguments")  &&
+
+        initialise_persistent_state(
+            persistence_state_file, persistence_interval)  &&
+        initialise_hardware()  &&
+        InitialiseSignals()  &&
+
+        initialise_epics_device()  &&
+        initialise_epics_extra()  &&
+
+        initialise_subsystems()  &&
+
         DO_(load_persistent_state())  &&
         initialise_epics();
 
     if (Ok)
     {
-        StartupMessage();
+        printf("EPICS TMBF Driver, Version %s.  Built: %s.\n",
+            TMBF_VERSION, BUILD_DATE_TIME);
         if (Interactive)
             Ok = TEST_EPICS(iocsh(NULL));
         else

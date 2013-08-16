@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2
-y 1
+x 3
+y 2
 w 544
 h 625
 font "helvetica-medium-r-18.0"
@@ -897,7 +897,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 200
+x 216
 y 376
 w 63
 h 28
@@ -918,7 +918,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 296
+x 304
 y 376
 w 46
 h 28
@@ -939,16 +939,17 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 368
-y 384
-w 61
-h 14
+x 376
+y 376
+w 41
+h 28
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "HOM Gain"
+  "Sweep"
+  "gain"
 }
 autoSize
 endObjectProperties

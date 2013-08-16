@@ -5,7 +5,8 @@ from common import *
 
 
 mbbOut('DET:GAIN', DESC = 'Detector gain', *dBrange(8, -6))
-boolOut('DET:MODE', 'Single Bunch', 'All Bunches', DESC = 'Detector mode')
+boolOut('DET:MODE', 'All Bunches', 'Single Bunch', DESC = 'Detector mode')
+mbbOut('DET:INPUT', 'FIR', 'ADC', DESC = 'Detector input selection')
 
 update_bunch = Action('DET:WBUNCH', DESC = 'Update detector bunches')
 for bunch in range(4):

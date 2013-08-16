@@ -319,6 +319,7 @@ bool initialise_detector(void)
 {
     PUBLISH_WRITER_P(bo, "DET:MODE", hw_write_det_mode);
     PUBLISH_WRITER_P(mbbo, "DET:GAIN", hw_write_det_gain);
+    PUBLISH_WRITER_P(mbbo, "DET:INPUT", hw_write_det_input_select);
     PUBLISH_WRITER_P(longout, "DET:SKEW", set_group_delay);
 
     for (int i = 0; i < 4; i ++)

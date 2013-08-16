@@ -318,6 +318,11 @@ void hw_write_det_mode(bool bunch_mode)
     WRITE_CONTROL_BITS(14, 1, bunch_mode);
 }
 
+void hw_write_det_input_select(unsigned int input)
+{
+    WRITE_CONTROL_BITS(15, 1, input);
+}
+
 void hw_write_det_bunches(unsigned int bunch[4])
 {
     config_space->bunch_select =

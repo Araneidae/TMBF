@@ -15,5 +15,6 @@ import tune         # TUNE
 
 
 stringIn('VERSION', PINI = 'YES', DESC = 'TMBF version')
+longIn('FPGAVER', PINI = 'YES', DESC = 'FPGA version')
 
 WriteRecords(sys.argv[1])
