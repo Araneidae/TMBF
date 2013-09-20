@@ -17,20 +17,15 @@
 
 \usepackage{graphicx}       % Extended support for \includegraphics
 
-\usepackage{array}          % Improved array support
-\usepackage{booktabs}       % Publication quality tables
-
 \usepackage{mathptmx}       % Mathematical PostScript fonts
 \usepackage{amsmath}        % General mathematical symbols
-\usepackage{textcomp}       % Extra symbols
-\usepackage{mdwlist}
 
 \usepackage{url}            % \url command for decent line breaks in urls
 \usepackage{enumitem}       % For more control over list parameters.
 
 
 
-\hyphenpenalty 4000 % Tone down hyphenation
+\hyphenpenalty 2000 % Tone down hyphenation
 
 
 \newcommand{\textsubscript}[1]{$_{\text{#1}}$}
@@ -70,20 +65,20 @@ grow-damp measurements in unstable conditions.
 \section{Introduction}
 
 At Diamond we stabilise transverse oscillations of the bunches with two FPGA
-based Transverse Multi-Bunch Feedback processors, one operating horizontally,
-one vertically.  Each processor is a Libera Bunch-by-Bunch from Instrumentation
-Technologies \cite{libera}, packaged as a 1U unit containing 4 14-bit ADCs
-running at 125\,MHz, a Virtex-II Pro FPGA clocked at 125\,MHz, a 14-bit DAC
-running at 500\,MHz, and an embedded Single Board Computer (SBC) ARM
+based Transverse Multi-Bunch Feedback (TMBF) processors, one operating
+horizontally, one vertically.  Each processor is a Libera Bunch-by-Bunch from
+Instrumentation Technologies \cite{libera}, packaged as a 1U unit containing 4
+14-bit ADCs running at 125\,MHz, a Virtex-II Pro FPGA clocked at 125\,MHz, a
+14-bit DAC running at 500\,MHz, and an embedded Single Board Computer (SBC) ARM
 microprocessor running Linux to provide the control system.
 
 The system was delivered as a basic development platform with basic interfacing
 software on the Linux board and a layer of FPGA code for interfacing to the
 external signals and the processor board.  The initial implementation of the
-Transverse Multi-Bunch Feedback (TMBF) processor was done by Isa Uzun and was
-based on work at the ESRF \cite{esrf}.  The Diamond implementation consists of
-FPGA code together with an EPICS driver running on the embedded processor board
-\cite{early-tmbf}.
+Transverse Multi-Bunch Feedback (TMBF) processor was done at Diamond
+\cite{early-tmbf} based on work at the ESRF \cite{esrf}.  The Diamond
+implementation consists of FPGA code together with an EPICS driver running on
+the embedded processor board.
 
 The first version of the TMBF system has now been running at Diamond since 2007
 and provides good support for beam stabilisation through transverse feedback and
@@ -105,7 +100,7 @@ rest of the fill.
     Program sequencing, allowing a sequence of different control parameters to
 be applied to the beam at the same time as data capture.
 \item
-    Output gain compensation to compensate for high frequency roll-off.
+    Output gain pre-emphasis to compensate for high frequency roll-off.
 \end{itemize}
 
 A key concept here is the \emph{bunch number}: in the train of 936 bunches in
@@ -116,20 +111,20 @@ parameters are configured separately for each bunch.  The location of
 
 \section{Motivation}
 
-Diamond has been using a transverse multibunch feedback (TMBF) since 2007
+Diamond has been using transverse multibunch feedback since 2007
 \cite{early-tmbf, performance}.  This system, while using the Libera
 Bunch-by-Bunch hardware utilises an in-house developed FPGA code and EPICS
 interface.  The firmware and software have continued to develop and include
 functionality beyond the pure feedback action required for suppression of
-multibunch instabilities.  Namely, a Numerically Controlled Oscillator (NCO)
-with a programmable sweep function together with a numerical I/Q mixer and
-accumulator have enabled continuous measurement of the betatron tune oscillation
-frequency \cite{status} with minimal disturbance to the beam.
+multibunch instabilities.  A Numerically Controlled Oscillator (NCO) with a
+programmable sweep function together with a numerical I/Q mixer and accumulator
+has enabled continuous measurement of the betatron tune oscillation frequency
+\cite{status} with minimal disturbance to the beam.
 
-However, new operational requirements demand further functionality so a major
-upgrade of the FPGA and supporting EPICS interface has been implemented to
-enhance the capabilities of the existing system.  These requirements can be
-classified as follows:
+New operational requirements demand further functionality so a major upgrade of
+the FPGA and supporting EPICS interface has been implemented to enhance the
+capabilities of the existing system.  These requirements can be classified as
+follows:
 
 
 \subsection{Timed Sequence Experiments}
@@ -172,15 +167,15 @@ selection of any combination of feedback, \NCO1 (fixed frequency) or \NCO2
 
 \subsection{Capturing High Volumes of Data}
 
-Experiments which require large amounts or frequent collection of
-bunch-by-bunch data: in the previous implementation access to the large
-bunch-by-bunch data buffer  was not possible through the EPICS interface and
-instead required command line access, which was cumbersome and unreliable.
-Collection of data from frequently occurring events, like from the disturbance
-due to the injection kickers during each top-up was not possible.  The new
-implementation has access to this buffer fully integrated into the EPICS
-interface.  Access to large amounts of bunch-by-bunch data will facilitate a
-continuously updating display of an instability analysis mode by mode.
+Experiments which require large amounts or frequent collection of bunch-by-bunch
+data: in the previous implementation access to the large bunch-by-bunch data
+buffer  was not possible through the EPICS interface and instead required
+command line access, which was cumbersome and unreliable.  Collection of data
+from frequently occurring events, like from the disturbance due to the injection
+kickers during each injection cycle was not possible.  The new implementation
+has access to this buffer fully integrated into the EPICS interface.  Access to
+large amounts of bunch-by-bunch data will facilitate a continuously updating
+display of an instability analysis mode by mode.
 
 
 \subsection{Improving System Impulse Response}
@@ -195,7 +190,7 @@ output to the DAC.
 
 \begin{figure*}[!ht]
 \includegraphics[width=\linewidth]{WEPC10f1}
-\caption{Approximate Internal FPGA architecture of TMBF Processor}
+\caption{Functional architecture of TMBF processor and FPGA internals.}
 \label{fpga:architecture}
 \end{figure*}
 
@@ -215,7 +210,7 @@ the FPGA.
 
 One interesting complication in the FPGA implementation arises from a speed
 mismatch: the machine RF frequency is 500\,MHz with bunches separated by 2\,ns,
-but the ADCs and core FPGA processing can only running at 125\,MHz.  This is
+but the ADCs and core FPGA processing can only run at 125\,MHz.  This is
 resolved by running four concurrent channels of processing inside the FPGA.
 Mostly this is hidden and demultiplexed in software, but we take advantage of
 this to implement simultaneous bunch detection on four separate bunches.
@@ -249,12 +244,15 @@ selected as a sum of up to three sources: the filtered input, or one or both
 NCOs.  Also, each bunch has its own scaling applied at this stage.  Again
 overflow is checked for and detected.
 
-\item[Output.] The output data stream is now filtered with a three tap filter
-for output compensation and delayed by a programmable delay of up to a full
-machine turn: this is used to compensate for external delays to ensure that each
-bunch is processed separately.  Again, numeric overflow is checked and reported.
+\item[Output.] The output data stream is filtered with a three tap filter
+for output pre-emphasis and delayed by a programmable delay of up to a full
+machine turn to compensate for external delays to align bunches.
 
 \end{description}
+
+All timing and delays inside the TMBF processor are in steps of 2\,ns: sub
+nano-second precise alignment of bunches is performed during installation with
+carefully trimmed external cabling delays.
 
 
 \subsection{Data Capture}
@@ -345,21 +343,21 @@ can be left undisturbed.
 \begin{figure}[h]
 \centering
 \includegraphics{WEPC10f2}
-\caption{Effect of output pre-compensation on DAC output}
+\caption{Effect of output pre-emphasis on DAC output.}
 \label{precomp}
 \end{figure}
 
 
-\section{Output Pre-Compensation}
+\section{Output Pre-Emphasis}
 
 One of the goals of the TMBF is to operate on each bunch independently of its
 neighbours.  There is enough bandwidth in the system for this to be a sensible
 goal, but there is some spill-over between adjacent bunches in the DAC output.
-Much of this effect can be cancelled out by a simple three tap pre-compensation
+Much of this effect can be cancelled out by a simple three tap pre-emphasis
 filter on the output.
 
 Fig \ref{precomp} shows three oscilloscope traces measured on a high bandwidth
-scope showing the raw DAC output and the cancelling effect of precompensation.
+scope showing the raw DAC output and the cancelling effect of pre-emphasis.
 Note that with all three taps it is possible to cancel out most interference
 between bunches.
 
@@ -379,15 +377,15 @@ the year.
 Instrumentation Technologies, \emph{Libera Bunch-by-Bunch},
 \url{http://www.i-tech.si}.
 
+\bibitem{early-tmbf}
+A.F.D.~Morgan, G.~Rehm, I.~Uzun, \emph{First Tests of the Transverse Multibunch
+Feedback at Diamond}, DIPAC~2007
+
 \bibitem{esrf}
 E.~Plouviez, P.~Arnoux, F.~Epaud, J.~Jacob, J.M.~Koch, N.~Michel, G.A.~Naylor,
 J.\mbox{-}L.~Revol, V.~Serriere, D.~Vial, \emph{Broadband Bunch by Bunch
 Feedback for the ESRF using a Single High Resolution and Fast Sampling FPGA
 DSP}, EPAC~2006.
-
-\bibitem{early-tmbf}
-A.F.D.~Morgan, G.~Rehm, I.~Uzun, \emph{First Tests of the Transverse Multibunch
-Feedback at Diamond}, DIPAC~2007
 
 \bibitem{performance}
 A.F.D.~Morgan, G.~Rehm, I.~Uzun, \emph{Performance and Features of the Diamond
