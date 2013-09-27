@@ -11,299 +11,470 @@ import cothread
 from cothread.catools import *
 
 
-class PV:
-    def __init__(self, name, default_delay = 0, debug = False):
-        self.name = name
-        self.default_delay = default_delay
-        self.debug = debug
-        self.event = cothread.Event()
-        camonitor(name, self.on_update, format = FORMAT_TIME)
+# Common support code.
 
-    def on_update(self, value):
-        if self.debug:
-            print 'on_update', self.name
+BUNCH_COUNT = 936
+
+class DAC_OUT:
+    # Any combination of the values below is valid for a DAC output selection
+    OFF = 0
+    FIR = 1
+    NCO = 2
+    SWEEP = 4
+
+    # Maximum DAC output gain
+    MAX_GAIN = 1023
+
+
+class PV:
+    def __init__(self, name):
+        self.monitor = camonitor(name, self.__on_update, format = FORMAT_TIME)
+        self.event = cothread.Event()
+        self.value = None
+
+    def close(self):
+        self.monitor.close()
+
+    def __on_update(self, value):
         self.value = value
-        self.timestamp = value.timestamp
         self.event.Signal(value)
 
-    def get_next(self, min_age = None):
-        if min_age is None:
-            min_age = self.default_delay
-        now = time.time()
+    # Waits for a reasonably fresh value to arrive.  No guarantees, but it will
+    # be fresher than the last value!
+    def get(self):
+        return self.event.Wait()
+
+    # Waits for a value at least as old as the given age to arrive.
+    def get_new(self, age = 0, now = None):
+        if now is None:
+            now = time.time()
+        now = now + age
         while True:
-            value = self.event.Wait()
-            if min_age < 0 or value.timestamp - now >= min_age:
-                break
-        return value
-
-    def reset(self):
-        self.event.Reset()
+            value = self.get()
+            if value.timestamp >= now:
+                return value
 
 
-def pv(name):
-    return '%s:%s' % (tmbf, name)
+class TMBF:
+    def __init__(self, name):
+        self.tmbf = name
+
+        self.n_taps = self.PV('FIR:0:TAPS_S.NORD').get()
+
+    def pv(self, name):
+        return '%s:%s' % (self.tmbf, name)
+
+    def PV(self, name):
+        return PV(self.pv(name))
+
+    def set(self, name, value):
+        caput(self.pv(name), value)
 
 
-def one_bunch(bunch_value, other_values, bunch = 0, dtype = int):
-    result = all_bunches(other_values, dtype)
-    result[bunch] = bunch_value
+# Ensures sequencer is disabled and ensures given bank is selected
+def disable_sequencer(tmbf, bank):
+    tmbf.set('TRG:SEQ:ENA_S', 'Disabled')
+    tmbf.set('SEQ:RESET_S.PROC', 0)
+    tmbf.set('SEQ:0:BANK_S', bank)
+
+
+# Configure trigger targets for DDR, BUF and sequencer accordingly.
+def configure_trigger_targets(tmbf, ddr, buf, seq):
+    tmbf.set('TRG:DDR:SEL_S', ddr)
+    tmbf.set('TRG:BUF:SEL_S', buf)
+    tmbf.set('TRG:SEQ:ENA_S', seq)
+
+
+# Configure selected bank for waveform control with given gain, fir and output
+# waveform or constant values.
+def configure_bank_wf(tmbf, bank, gain, fir, output):
+    tmbf.set('BUN:%d:GAINWF_S' % bank, bunches(gain))
+    tmbf.set('BUN:%d:FIRWF_S' % bank, bunches(fir))
+    tmbf.set('BUN:%d:OUTWF_S' % bank, bunches(output))
+    tmbf.set('BUN:%d:USEWF_S' % bank, 'Waveform')
+
+def configure_bank(tmbf, bank, gain, fir, output):
+    tmbf.set('BUN:%d:GAIN_S' % bank, gain)
+    tmbf.set('BUN:%d:FIR_S' % bank, fir)
+    tmbf.set('BUN:%d:OUT_S' % bank, output)
+    tmbf.set('BUN:%d:USEWF_S' % bank, 'Settings')
+
+def configure_state(tmbf, state,
+        start, step, dwell, bank, gain, count=4096, window=True):
+    tmbf.set('SEQ:%d:START_FREQ_S' % state, start)
+    tmbf.set('SEQ:%d:STEP_FREQ_S' % state, step)
+    tmbf.set('SEQ:%d:DWELL_S' % state, dwell)
+    tmbf.set('SEQ:%d:COUNT_S' % state, count)
+    tmbf.set('SEQ:%d:GAIN_S' % state, gain)
+    tmbf.set('SEQ:%d:BANK_S' % state, bank)
+    tmbf.set('SEQ:%d:ENWIN_S' % state, window)
+
+def configure_nco(tmbf, frequency, gain):
+    tmbf.set('NCO:FREQ_S', frequency)
+    tmbf.set('NCO:GAIN_S', gain)
+
+def configure_fir_wf(tmbf, fir, taps):
+    tmbf.set('FIR:%d:TAPS_S' % fir, taps)
+    tmbf.set('FIR:%d:USEWF_S' % fir, 'Waveform')
+
+
+# Configure for tune sweep.
+def configure_sweep(tmbf,
+        start, step, dwell, bank, gain,
+        count=4096, window=True):
+    pass
+
+
+# ------------------------------------------------------------------------------
+# Data shaping and analysis
+
+# Converts a single value into an array, otherwise validates length of array.
+def bunches(value, length = BUNCH_COUNT):
+    value = numpy.array(value)
+    if value.size == 1:
+        value = numpy.repeat(value, length)
+    assert value.size == length, 'Invalid array length'
+    return value
+
+# Returns a waveform with one bunch set to value, all other bunches set to
+# other.  Used for single bunch control.
+def one_bunch(value, other, bunch = 0, length = BUNCH_COUNT, dtype = int):
+    result = numpy.empty(length, dtype = dtype)
+    result[:] = other
+    result[bunch] = value
     return result
 
-def all_bunches(bunch_value, dtype = int):
-    result = numpy.empty(936, dtype = dtype)
-    result[:] = bunch_value
-    return result
+# Searches for one non-zero value in waveform
+def find_one_peak(value):
+    hits = numpy.nonzero(value)[0]
+    assert len(hits) == 1, 'Unexpected data: %s' % value
+    return hits[0]
 
-def get_buffer(source):
-    caput(pv('DDR:INPUT_S'), source)
-    return ddr_buf.get_next()
-
-def get_one_peak(source, min_age = None):
-    data = source.get_next(min_age)[:936]
-    hits = numpy.nonzero(data)[0]
-    assert len(hits) == 1, 'Hits = %s' % hits
-    offset = hits[0]
-    assert offset % 4 == 0, 'Offset = %d' % offset
-    return offset
-
-def get_second_peak(source):
-    data = source.get_next()
-    tops = numpy.argsort(data)[-2:]
-    print tops, data[tops]
-    return tops[0]
-
-def get_det_power():
-    return det_power.get_next().mean()
+# Searches for second highest value in waveform
+def find_second_peak(value):
+    return numpy.argsort(value)[-2]
 
 
-tmbf = 'TS-DI-TMBF-01'
-
-max_adc  = PV(pv('ADC:MAXBUF'), 0.5)
-max_dac  = PV(pv('DAC:MAXBUF'), 0.5)
-buffer_a = PV(pv('BUF:WFA'), 0.5)
-buffer_b = PV(pv('BUF:WFB'), 0.5)
-ddr_buf  = PV(pv('DDR:SHORTWF'), 0.5)
-
-det_power = PV(pv('DET:POWER:0'), 1)
+# ------------------------------------------------------------------------------
+# Timing test setup
 
 
+# Configures basic set up for timing test: we use loopback with internal delay
+# compensation turned off and a standard DAC preemphasis.
+def configure_timing_test(tmbf, compensate = False):
+    # Disable delay compensation so we meaure raw delays
+    tmbf.set('COMPENSATE_S', 'Normal' if compensate else 'Disabled')
+    # This is our nominal zero delay for the DAC pre-emphasis
+    tmbf.set('DAC:PRECOMP_S', [0, 0, 1<<14])
 
-# Put system into base configuration
-caput(pv('LOOPBACK_S'), 1)                  # Loopback for predicable results
-caput(pv('COMPENSATE_S'), 1)                # Disable delay compensation
+    # For inputs use internal loopback
+    tmbf.set('LOOPBACK_S', 'Loopback')
+    # Turn off DAC output delay (until we need it...)
+    tmbf.set('DAC:DELAY_S', 0)
+    # Disable ADC input skew
+    tmbf.set('ADC:DELAY_S', '0 ns')
 
-caput(pv('DAC:PRECOMP_S'), [0, 0, 16384])   # Minimum precompensator delay
-caput(pv('DAC:DELAY_S'), 0)                 #  and minimum DAC
-caput(pv('ADC:DELAY_S'), 0)                 #  and ADC delays
+    # For a sensible starting state, disable the sequencer and select bank 0
+    disable_sequencer(tmbf, 0)
 
-caput(pv('DAC:SCAN_S.SCAN'), '.1 second')   # Ensure minmax data is lively
-caput(pv('ADC:SCAN_S.SCAN'), '.1 second')
+    # Reset detector window in case it's been messed with
+    tmbf.set('DET:RESET_WIN_S.PROC', 0)
 
-
-# Start with NCO as a DC source.
-caput(pv('NCO:FREQ_S'), 0)
-caput(pv('NCO:GAIN_S'), '0dB')
-
-# Disable sequencer and use bank 0, configure DDR and buffer for external
-# trigger (maybe need to use internal trigger...)
-caput(pv('TRG:SEQ:ENA_S'), 'Disabled')
-caput(pv('TRG:DDR:SEL_S'), 'External')
-caput(pv('TRG:BUF:SEL_S'), 'External')
-caput(pv('TRG:EXT:MODE_S'), 'Retrigger')
-caput(pv('TRG:EXT:ARM_S.PROC'), 0)
-
-caput(pv('SEQ:0:BANK_S'), 0)
+    # Configure NCO for DC output at maximum gain: this makes a useful pulse
+    # source when routed into a single bunch.
+    configure_nco(tmbf, 0, '0dB')
 
 
-fir = caget(pv('FIR:0:TAPS_S'))
-
-# Configure zero FIR in FIR 0
-fir[:] = 0
-caput(pv('FIR:0:TAPS_S'), fir)
-caput(pv('FIR:0:USEWF_S'), 'Waveform')
-
-# Configure impulse FIR in FIR 1
-fir[-1] = 32767
-caput(pv('FIR:1:TAPS_S'), fir)
-caput(pv('FIR:1:USEWF_S'), 'Waveform')
-
-caput(pv('FIR:GAIN_S'), '-24dB')
+# Configure bank for single pulse output from NCO
+def configure_dac_single_pulse(tmbf, bank = 0):
+    configure_bank_wf(tmbf, bank,
+        DAC_OUT.MAX_GAIN, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.OFF))
 
 
-# Let's first figure out where bunch DAC select 0 goes.  Both OUT and GAIN
-# should produce the same result, but we'll test one at a time.
-caput(pv('BUN:0:GAINWF_S'), all_bunches(1023))  # Max gain all bunches
-caput(pv('BUN:0:FIRWF_S'), all_bunches(1))      # Impulse FIR all bunches
-caput(pv('BUN:0:OUTWF_S'), one_bunch(2, 0))     # NCO in bunch 0, all else off
-caput(pv('BUN:0:USEWF_S'), 1)
+def configure_buf_soft_trigger(tmbf):
+    tmbf.set('TRG:S1:MODE_S', 'One Shot')
+    tmbf.set('TRG:BUF:SEL_S', 'Soft 1')
+
+def configure_ddr_soft_trigger(tmbf):
+    tmbf.set('TRG:S1:MODE_S', 'One Shot')
+    tmbf.set('TRG:DDR:SEL_S', 'Soft 1')
+
+def fire_soft_trigger_1(tmbf):
+    tmbf.set('TRG:S1:FIRE_S.PROC', 0)
+
+def configure_detector(tmbf, bank=1, fir=0):
+    # Configure the sequencer for a simple scan over a narrow range.
+    configure_state(tmbf, 1, 1.3, 1e-5, 20, bank, '0dB')
+    tmbf.set('SEQ:WRITE_S.PROC', 0)
+    tmbf.set('SEQ:PC_S', 1)
+
+    # Configure the selected bank for sweep
+    configure_bank_wf(tmbf, bank, DAC_OUT.MAX_GAIN, fir, DAC_OUT.SWEEP)
+
+    # Configure detector for single bunch capture
+    tmbf.set('DET:MODE_S', 'Single Bunch')
+    tmbf.set('DET:GAIN_S', '0dB')
+    tmbf.set('DET:BUNCH0_S', 0)
+
+    # Configure triggering and data capture
+    tmbf.set('TRG:SEQ:ENA_S', 'Enabled')
+    tmbf.set('TRG:BUF:SEL_S', 'Soft 1')
+    tmbf.set('BUF:SELECT_S', 'IQ')
 
 
-# Read the minmax buffers
-max_dac.get_next()
-dac_minmax_offset = get_one_peak(max_dac)
-adc_minmax_offset = get_one_peak(max_adc)
-print 'DAC bunch select to DAC minmax =', dac_minmax_offset
-print 'DAC bunch select to ADC minmax =', adc_minmax_offset
+# Simplest test of all: measure delay from DAC reference bunch to minmax
+# waveform.
+def dac_to_minmax(tmbf, maxval):
+    # Bunch zero will be our reference pulse
+    configure_dac_single_pulse(tmbf)
 
-# Read the DDR buffers
-caput(pv('DDR:INPUT_S'), 'ADC')
-ddr_adc_offset = get_one_peak(ddr_buf)
-caput(pv('DDR:INPUT_S'), 'FIR')
-ddr_fir_offset = get_one_peak(ddr_buf)
-caput(pv('DDR:INPUT_S'), 'Raw DAC')
-ddr_rawdac_offset = get_one_peak(ddr_buf)
-caput(pv('DDR:INPUT_S'), 'DAC')
-ddr_dac_offset = get_one_peak(ddr_buf)
-print 'DAC bunch select to DDR ADC =', ddr_adc_offset
-print 'DAC bunch select to DDR FIR =', ddr_fir_offset
-print 'DAC bunch select to DDR Raw DAC =', ddr_rawdac_offset
-print 'DAC bunch select to DDR DAC =', ddr_dac_offset
-
-# Read the fast internal buffer
-caput(pv('BUF:SELECT_S'), 'FIR+ADC')
-buf_fir_offset = get_one_peak(buffer_a)
-buf_adc_offset = get_one_peak(buffer_b)
-caput(pv('BUF:SELECT_S'), 'ADC+DAC')
-buf_dac_offset = get_one_peak(buffer_b)
-print 'DAC bunch select to buffer FIR =', buf_fir_offset
-print 'DAC bunch select to buffer ADC =', buf_adc_offset
-print 'DAC bunch select to buffer DAC =', buf_dac_offset
+    # Now fetch the next waveform with this data
+    return find_one_peak(maxval.get_new(0.25))
 
 
-# Now let's do a quick sanity check with gain control instead of output control.
-# Just need to check the DAC output for this.
-caput(pv('BUN:0:GAINWF_S'), one_bunch(1023, 0))
-caput(pv('BUN:0:OUTWF_S'), all_bunches(2))
+# Measures closed loop delay.  For this configuration we need to pass data
+# through the FIR for all bunches except the reference bunch.
+def dac_to_dac_closed_loop(tmbf, maxdac):
+    # Configure FIR 0 for passthrough
+    configure_fir_wf(tmbf, 0, one_bunch(32767, 0, tmbf.n_taps-1, tmbf.n_taps))
 
-assert get_one_peak(max_dac) == dac_minmax_offset
+    # Need quite strong attenuation to ensure the peak dies down before it comes
+    # around again.
+    tmbf.set('FIR:GAIN_S', '-24dB')
 
+    # Configure bank 0 for fir 0 on all bunches, NCO output on bunch 0, FIR
+    # passthrough on all other bunches.
+    configure_bank_wf(tmbf, 0,
+        DAC_OUT.MAX_GAIN, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.FIR))
 
-# Next figure out which bunch the FIR control is operating on.  Output all
-# bunches but look at position of selected FIR.
-caput(pv('BUN:0:GAINWF_S'), all_bunches(1023))
-caput(pv('BUN:0:FIRWF_S'), one_bunch(1, 0))
-
-caput(pv('BUF:SELECT_S'), 'FIR+ADC')
-fir_offset = get_one_peak(buffer_a)
-print 'FIR offset =', fir_offset
-
-
-# Now let's discover the closed loop delay.  Configure DAC for FIR everywhere
-# except bunch zero which is NCO.
-caput(pv('BUN:0:GAINWF_S'), all_bunches(1023))
-caput(pv('BUN:0:FIRWF_S'), all_bunches(1))
-caput(pv('BUN:0:OUTWF_S'), one_bunch(2, 1))
-
-closed_loop_delay_loopback = get_second_peak(max_dac)
-print 'Closed loop delay (loopback) =', closed_loop_delay_loopback
+    # Fetch and process next valid waveform
+    return find_second_peak(maxdac.get_new(0.25))
 
 
-# Now repeat DDR and buffer measurements with soft triggers
-caput(pv('TRG:EXT:MODE_S'), 'One Shot')
-caput(pv('TRG:SEQ:ENA_S'), 'Disabled')
-caput(pv('TRG:DDR:SEL_S'), 'Soft 1')
-caput(pv('TRG:BUF:SEL_S'), 'Soft 1')
+# Measures delay from reference bunch to selected buffer waveforms
+def dac_to_buf(tmbf, bufa, bufb, sources):
+    tmbf.set('BUF:SELECT_S', sources)
+    fire_soft_trigger_1(tmbf)
+    a = bufa.get()[:BUNCH_COUNT]
+    b = bufb.get()[:BUNCH_COUNT]
+    return find_one_peak(a), find_one_peak(b)
 
-caput(pv('BUN:0:GAINWF_S'), all_bunches(1023))  # Max gain all bunches
-caput(pv('BUN:0:FIRWF_S'), all_bunches(1))      # Impulse FIR all bunches
-caput(pv('BUN:0:OUTWF_S'), one_bunch(2, 0))     # NCO in bunch 0, all else off
-
-caput(pv('BUF:SELECT_S'), 'ADC+DAC')
-caput(pv('DDR:INPUT_S'), 'DAC')
-
-cothread.Sleep(1)
-buffer_a.reset()
-ddr_buf.reset()
-
-caput(pv('TRG:S1:FIRE_S.PROC'), 0)
-soft_buf = get_one_peak(buffer_a, -1)
-soft_ddr = get_one_peak(ddr_buf, -1)
-print 'Soft peaks:', soft_buf, soft_ddr
+# Measures delay from reference bunch to selected DDR waveform
+def dac_to_ddr(tmbf, ddr_buf, source):
+    tmbf.set('DDR:INPUT_S', source)
+    fire_soft_trigger_1(tmbf)
+    return find_one_peak(ddr_buf.get()[:BUNCH_COUNT])
 
 
-
-# Put triggers back for detector sweeping.
-caput(pv('TRG:SEQ:ENA_S'), 'Enabled')
-caput(pv('TRG:DDR:SEL_S'), 'External')
-caput(pv('TRG:BUF:SEL_S'), 'External')
-caput(pv('TRG:EXT:MODE_S'), 'Retrigger')
-caput(pv('TRG:EXT:ARM_S.PROC'), 0)
+# Measures which bunch has its gain controlled by bunch select 0
+def gain_delay(tmbf, maxdac):
+    configure_bank_wf(tmbf, 0,
+        one_bunch(DAC_OUT.MAX_GAIN, 0), 0, DAC_OUT.NCO)
+    return find_one_peak(maxdac.get_new(0.25))
 
 
+# Measures which bunch has its FIR controlled by bunch select 0
+def fir_to_ddr(tmbf, ddr_buf):
+    configure_fir_wf(tmbf, 1, bunches(0, tmbf.n_taps))
+    configure_bank_wf(tmbf, 0,
+        DAC_OUT.MAX_GAIN, one_bunch(0, 1), DAC_OUT.NCO)
 
-# Now we need to figure out where the detector bunch selects go.  This requires
-# more work as we're going to have to do a binary search.
-
-# Set bank 0 to be quiescent
-caput(pv('BUN:0:OUT_S'), 'Off')
-caput(pv('BUN:0:USEWF_S'), 'Settings')
-
-
-# Set up bank 1 for sweep excitation.  Start with all bunches.
-caput(pv('BUN:1:GAINWF_S'), all_bunches(1023))
-caput(pv('BUN:1:FIRWF_S'), all_bunches(1))
-caput(pv('BUN:1:OUTWF_S'), all_bunches(4))
-caput(pv('BUN:1:USEWF_S'), 'Waveform')
-
-# Configure sequencer etc as appropriate.  We'll do a fairly narrow sweep to
-# avoid funny frequency effects.
-caput(pv('SEQ:1:START_FREQ_S'), 1.3)
-caput(pv('SEQ:1:STEP_FREQ_S'), 0.00001) # Try to avoid corners
-caput(pv('SEQ:1:DWELL_S'), 100)
-caput(pv('SEQ:1:COUNT_S'), 4096)
-caput(pv('SEQ:1:GAIN_S'), '0dB')        # Anomalies to chase at higher gain
-caput(pv('SEQ:1:BANK_S'), 1)
-caput(pv('SEQ:1:ENWIN_S'), 1)
-caput(pv('SEQ:WRITE_S.PROC'), 0)
-caput(pv('SEQ:PC_S'), 1)
-
-caput(pv('TRG:SEQ:ENA_S'), 'Enabled')
-
-caput(pv('DET:RESET_WIN_S.PROC'), 0)    # Ensure we're using the standard window
-caput(pv('BUF:SELECT_S'), 'IQ')
-caput(pv('DET:BUNCH0_S'), 0)
-caput(pv('DET:BUNCH1_S'), 0)
-caput(pv('DET:BUNCH2_S'), 0)
-caput(pv('DET:BUNCH3_S'), 0)
-caput(pv('DET:MODE_S'), 'Single Bunch')
-caput(pv('DET:GAIN_S'), '-36dB')
-
-# Binary search.
-outwf = numpy.zeros(936)
-start, end = 0, 936
-while end - start > 1:
-    middle = (start + end) / 2
-    outwf[:start] = 0
-    outwf[start:middle] = 4
-    outwf[middle:] = 0
-    caput(pv('BUN:1:OUTWF_S'), outwf)
-    power = get_det_power()
-
-    print '>', start, middle, end, power
-    if power > 0:
-        # Hit, keep trying this half
-        end = middle
-    else:
-        # Miss, try the other half
-        start = middle
-print 'Detector bunch offset =', start
+    tmbf.set('DDR:INPUT_S', 'FIR')
+    fire_soft_trigger_1(tmbf)
+    return find_one_peak(ddr_buf.get()[:BUNCH_COUNT])
 
 
-# Finally let's measure closed loop delay with external connection
-caput(pv('TRG:SEQ:ENA_S'), 'Disabled')
-caput(pv('LOOPBACK_S'), 'Normal')
-
-caput(pv('BUN:0:GAINWF_S'), all_bunches(1023))
-caput(pv('BUN:0:FIRWF_S'), all_bunches(1))
-caput(pv('BUN:0:OUTWF_S'), one_bunch(2, 1))
-caput(pv('BUN:0:USEWF_S'), 'Waveform')
-caput(pv('FIR:GAIN_S'), '-6dB')
-
-closed_loop_delay_normal = get_second_peak(max_dac)
-print 'Closed loop delay (normal) =', closed_loop_delay_normal
+# Classical binary search.  test(a,b) should return true iff the target is in
+# the half open range [a,b), and the test range is [start,end).
+def binary_search(start, end, test):
+    while end - start > 1:
+        middle = (start + end) / 2
+        if test(start, middle):
+            end = middle
+        else:
+            start = middle
+    return start
 
 
-# Notes:
-# - Refactor for useful code
-# - Set DET:INPUT_S
-# - Sweep for both detector bunch sources
+# Performs binary search to discover which bunch is detected for bunch zero
+def search_det_bunch(tmbf, det_power, source):
+    # Configure source
+    tmbf.set('DET:INPUT_S', source)
+
+    # Binary search.
+    outwf = numpy.zeros(BUNCH_COUNT)
+
+    def test(start, end):
+        outwf[:start] = DAC_OUT.OFF
+        outwf[start:end] = DAC_OUT.SWEEP
+        outwf[end:] = DAC_OUT.OFF
+        tmbf.set('BUN:1:OUTWF_S', outwf)
+
+        fire_soft_trigger_1(tmbf)
+        return det_power.get().mean() > 0
+
+    return binary_search(0, BUNCH_COUNT, test)
+
+
+# Computes group delay from scaled IQ.
+def compute_group_delay(scale, iq):
+    angle = numpy.unwrap(numpy.angle(iq))
+    fit = numpy.polyfit(scale, angle)
+    slope = fit[0]
+    mean_error = numpy.std(angle - numpy.polyval(fit, scale))
+
+    assert mean_error < 0.001, 'Unexpected error in slope fit'
+
+    print 'slope', slope, 'error', mean_error
+
+    # Convert slope into revolutions per bunch to get group delay (frequency
+    # scale is in units of tune).
+    return int(round(slope/2/numpy.pi * BUNCH_COUNT))
+
+
+def search_det_delay(tmbf, det_i, det_q, source):
+    # Configure source
+    tmbf.set('DET:INPUT_S', source)
+
+    # Capture data
+    fire_soft_trigger_1(tmbf)
+    iq = numpy.dot([1, 1j], [det_i.get(), det_q.get()])
+    return compute_group_delay(scale, iq)
+
+
+# ------------------------------------------------------------------------------
+# Timing test
+
+# We'll gather final configuration parameters for printout at the end.
+class Results:
+    def __init__(self):
+        self.__dict__['items'] = []
+
+    def __setattr__(self, name, value):
+        # Ensure value is positive
+        if value < 0:
+            value += BUNCH_COUNT
+        assert 0 <= value < BUNCH_COUNT, \
+            'Value %s = %d out of range' % (name, value)
+        assert value % 4 == 0, \
+            'Value %s = %d out of phase' % (name, value)
+        self.items.append(name)
+        self.__dict__[name] = value / 4
+
+    def print_results(self):
+        for item in self.items:
+            print item, '=', getattr(self, item)
+
+
+# Performs initial calibration: measures DAC to ADC and DAC maxbuf and closes
+# the loop for the remaining measurements.
+def measure_maxbuf(tmbf, results):
+    print >>sys.stderr, 'Measuring DAC/ADC maxbuf'
+
+    maxdac = tmbf.PV('DAC:MAXBUF')
+    maxadc = tmbf.PV('ADC:MAXBUF')
+
+    # Start by taking DAC output mux select bunch zero as the reference bunch
+    # and measuring delays to DAC max.  This allows us to measure the closed
+    # loop delay and close the loop for all remaining measurements.
+    dac_minmax_delay = dac_to_minmax(tmbf, maxdac)
+    loop_delay = dac_to_dac_closed_loop(tmbf, maxdac)
+    results.MINMAX_DAC_DELAY = dac_minmax_delay
+
+    # Check that the gain control already acts on bunch zero: this is programmed
+    # to be thus in the FPGA at present.
+    results.BUNCH_GAIN_OFFSET = dac_minmax_delay - gain_delay(tmbf, maxdac)
+
+    # Close the loop
+    tmbf.set('DAC:DELAY_S', BUNCH_COUNT - loop_delay + dac_minmax_delay)
+
+    # Now we can capture the max ADC offset
+    results.MINMAX_ADC_DELAY = dac_to_minmax(tmbf, maxadc)
+
+    maxdac.close()
+    maxadc.close()
+
+
+# Measures delays for BUF
+def measure_buf(tmbf, results):
+    print >>sys.stderr, 'Measuring BUF'
+
+    configure_buf_soft_trigger(tmbf)
+    buf_a = tmbf.PV('BUF:WFA')
+    buf_b = tmbf.PV('BUF:WFB')
+    buf_a.get()
+    buf_b.get()
+
+    results.BUF_ADC_DELAY, results.BUF_DAC_DELAY = \
+        dac_to_buf(tmbf, buf_a, buf_b, 'ADC+DAC')
+    results.BUF_FIR_DELAY, _ = \
+        dac_to_buf(tmbf, buf_a, buf_b, 'FIR+DAC')
+
+    buf_a.close()
+    buf_b.close()
+
+
+# Similarly, measure triggered DDR data.  Also measure FIR bunch zero control
+# while we have the DDR buffer open.
+def measure_ddr(tmbf, results):
+    print >>sys.stderr, 'Measuring DDR'
+
+    configure_ddr_soft_trigger(tmbf)
+    ddr_buf = tmbf.PV('DDR:SHORTWF')
+    ddr_buf.get()
+
+    results.DDR_ADC_DELAY = dac_to_ddr(tmbf, ddr_buf, 'ADC')
+    dac_to_ddr_fir_delay = dac_to_ddr(tmbf, ddr_buf, 'FIR')
+    results.DDR_FIR_DELAY = dac_to_ddr_fir_delay
+    results.DDR_RAW_DAC_DELAY = dac_to_ddr(tmbf, ddr_buf, 'Raw DAC')
+    results.DDR_DAC_DELAY = dac_to_ddr(tmbf, ddr_buf, 'DAC')
+
+    fir_bunch_zero = fir_to_ddr(tmbf, ddr_buf)
+    results.BUNCH_FIR_OFFSET = dac_to_ddr_fir_delay - fir_bunch_zero
+
+    ddr_buf.close()
+
+
+# Discover the detector bunch offset by binary search.
+def measure_detector_bunch(tmbf, results):
+    print >>sys.stderr, 'Measuring Detector Bunch Offsets'
+
+    # Configure detector for sweep and soft trigger
+    configure_detector(tmbf)
+
+    det_power = tmbf.PV('DET:POWER:0')
+    det_power.get()
+
+    results.DET_ADC_OFFSET = search_det_bunch(tmbf, det_power, 'ADC')
+    results.DET_FIR_OFFSET = search_det_bunch(tmbf, det_power, 'FIR')
+    det_power.close()
+
+
+def measure_detector_delay(tmbf, results):
+    print >>sys.stderr, 'Measuring Detector Group Delays'
+
+    det_i = tmbf.PV('DET:I:M')
+    det_q = tmbf.PV('DET:Q:M')
+
+    results.DET_ADC_DELAY = search_det_delay(tmbf, det_i, det_q, 'ADC')
+    results.DET_FIR_DELAY = search_det_delay(tmbf, det_i, det_q, 'FIR')
+
+    det_i.close()
+    det_q.close()
+
+
+# ------------------------------------------------------------------------------
+
+
+tmbf = TMBF('TS-DI-TMBF-01')
+results = Results()
+
+
+configure_timing_test(tmbf)
+
+measure_maxbuf(tmbf, results)
+measure_buf(tmbf, results)
+measure_ddr(tmbf, results)
+measure_detector_bunch(tmbf, results)
+
+results.print_results()
