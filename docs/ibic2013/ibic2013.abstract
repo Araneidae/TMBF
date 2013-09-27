@@ -1,0 +1,18 @@
+Capability Upgrade of the Diamond Transverse Multibunch Feedback
+
+MG Abbott, G Rehm, IS Uzun
+
+We describe an upgrade to the Transverse Multi-Bunch Feedback processor used
+at Diamond for control of multibunch instabilities and measurement of betatron
+tunes.  The new system will improve both feedback and diagnostic capabilities.
+Bunch by bunch selectable control over feedback filters, gain and excitation
+will allow finer control over feedback, allowing for example the single bunch
+in a hybrid or camshaft fill pattern to be controlled independently from the
+bunch train.  It will also be possible to excite all bunches at a single
+frequency while simultaneously sweeping the excitation for tune measurement of
+a few selected bunches.  The single frequency excitation can be used for bunch
+cleaning or continuous measurement of the beta-function.  A simple
+programmable event sequencer will provide support for up to 8 steps of
+programmable sweeps and changes to feedback and excitation, allowing a variety
+of complex and precisely timed beam characterisation experiments including
+grow-damp measurements in unstable conditions.
