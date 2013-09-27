@@ -26,18 +26,25 @@
 
 
 /* Definition of hardware offsets.  These all define internal delays in the FPGA
- * which we compensate for when reading and writing data. */
-static int DDR_ADC_DELAY;
-static int DDR_FIR_DELAY;
-static int DDR_RAW_DAC_DELAY;
-static int DDR_DAC_DELAY;
+ * which we compensate for when reading and writing data.  In all cases the
+ * reference bunch "zero" is that selected by the output multiplexor.  Also, all
+ * offsets assume bunches are aligned in the closed loop. */
+static int DDR_ADC_DELAY;       // Offset into DDR of ADC bunch zero
+static int DDR_FIR_DELAY;       //                    FIR
+static int DDR_RAW_DAC_DELAY;   //                    Raw DAC
+static int DDR_DAC_DELAY;       //                    DAC
 
-static int BUF_ADC_DELAY;
-static int BUF_FIR_DELAY;
-static int BUF_DAC_DELAY;
+static int BUF_ADC_DELAY;       // Offset into BUF of ADC bunch zero
+static int BUF_FIR_DELAY;       //                    FIR
+static int BUF_DAC_DELAY;       //                    DAC
 
-static int MINMAX_ADC_DELAY;
-static int MINMAX_DAC_DELAY;
+static int MINMAX_ADC_DELAY;    // Offset into minmax buffer of ADC bunch zero
+static int MINMAX_DAC_DELAY;    //                              DAC
+
+static int BUNCH_FIR_OFFSET;    // Offset of FIR selection
+static int BUNCH_GAIN_OFFSET;   // Offset of DAC gain selection
+static int DET_ADC_OFFSET;      // Offset of detector ADC bunch zero
+static int DET_FIR_OFFSET;      // Offset of detector FIR bunch zero
 
 static const struct config_entry hardware_config_defs[] = {
     CONFIG(DDR_ADC_DELAY),
@@ -51,6 +58,11 @@ static const struct config_entry hardware_config_defs[] = {
 
     CONFIG(MINMAX_ADC_DELAY),
     CONFIG(MINMAX_DAC_DELAY),
+
+    CONFIG(BUNCH_FIR_OFFSET),
+    CONFIG(BUNCH_GAIN_OFFSET),
+    CONFIG(DET_ADC_OFFSET),
+    CONFIG(DET_FIR_OFFSET),
 };
 
 static const char *hardware_config_file;
@@ -135,6 +147,16 @@ static pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
 #define UNLOCK()    pthread_mutex_unlock(&global_lock);
 
 
+/* Used to compensate a value by subtracting a bunch count offset. */
+static int subtract_offset(int value, int offset, int max_count)
+{
+    value -= offset;
+    if (value < 0)
+        value += max_count;
+    return value;
+}
+
+
 /* Reads packed array of min/max values using readout selector.  Used for ADC
  * and DAC readouts. */
 static void read_minmax(
@@ -149,7 +171,7 @@ static void read_minmax(
         for (int i = 0; i < MAX_BUNCH_COUNT/4; i++)
         {
             uint32_t data = minmax[i];
-            int out_ix = (i + MAX_BUNCH_COUNT/4 - delay) % (MAX_BUNCH_COUNT/4);
+            int out_ix = subtract_offset(i, delay, MAX_BUNCH_COUNT/4);
             min_out[4*out_ix + n] = (short) (data & 0xFFFF);
             max_out[4*out_ix + n] = (short) (data >> 16);
         }
@@ -356,11 +378,17 @@ void hw_write_bun_entry(int bank, struct bunch_entry entries[MAX_BUNCH_COUNT])
     config_space->bunch_bank = (uint32_t) bank;
     for (int i = 0; i < MAX_BUNCH_COUNT; i ++)
     {
-        struct bunch_entry *entry = &entries[i];
+        /* Take bunch offsets into account when writing the bunch entry. */
+        int gain_ix = subtract_offset(i, 4*BUNCH_GAIN_OFFSET, MAX_BUNCH_COUNT);
+        int output_ix = i;  // Reference bunch, no offset required
+        int fir_ix  = subtract_offset(i, 4*BUNCH_FIR_OFFSET, MAX_BUNCH_COUNT);
+        unsigned int bunch_gain    = entries[gain_ix].bunch_gain;
+        unsigned int output_select = entries[output_ix].output_select;
+        unsigned int fir_select    = entries[fir_ix].fir_select;
         config_space->bunch_write =
-            (entry->bunch_gain & 0x7FF) |
-            ((entry->output_select & 0x7) << 11) |
-            ((entry->fir_select & 0x3) << 14);
+            (bunch_gain & 0x7FF) |
+            ((output_select & 0x7) << 11) |
+            ((fir_select & 0x3) << 14);
     }
     UNLOCK();
 }
@@ -449,23 +477,47 @@ void hw_write_nco_gain(unsigned int gain)
 /* * * * * * * * * * * * * */
 /* DET: Frequency Detector */
 
+static unsigned int det_input;
+static unsigned int det_bunches[4];
+
 void hw_write_det_mode(bool bunch_mode)
 {
     WRITE_CONTROL_BITS(14, 1, bunch_mode);
 }
 
-void hw_write_det_input_select(unsigned int input)
+/* Applies the appropriate bunch selection offset to the detector bunch
+ * selection before writing the result to hardware. */
+static void update_det_bunch_select(void)
 {
-    WRITE_CONTROL_BITS(15, 1, input);
-}
-
-void hw_write_det_bunches(unsigned int bunch[4])
-{
+    int offset = 0;
+    switch (det_input)
+    {
+        case 0: offset = DET_FIR_OFFSET;    break;
+        case 1: offset = DET_ADC_OFFSET;    break;
+    }
+    unsigned int bunch[4];
+    for (int i = 0; i < 4; i ++)
+        bunch[i] = subtract_offset(det_bunches[i], offset, MAX_BUNCH_COUNT/4);
     config_space->bunch_select =
         (bunch[0] & 0xFF) |
         ((bunch[1] & 0xFF) << 8) |
         ((bunch[2] & 0xFF) << 16) |
         ((bunch[3] & 0xFF) << 24);
+}
+
+void hw_write_det_input_select(unsigned int input)
+{
+    det_input = input;
+    WRITE_CONTROL_BITS(15, 1, input);
+    /* As bunch offset compensation depends on which source we have to rewrite
+     * the bunches when the input changes. */
+    update_det_bunch_select();
+}
+
+void hw_write_det_bunches(unsigned int bunch[4])
+{
+    memcpy(det_bunches, bunch, sizeof(det_bunches));
+    update_det_bunch_select();
 }
 
 void hw_write_det_gain(unsigned int gain)
