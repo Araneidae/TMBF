@@ -33,12 +33,14 @@ BINDIR=bin/linux-arm_el
 TARGET=none
 AUTOSTART=false
 STARTNOW=false
-while getopts 'ftash' option; do
+DELAY_FILE=false
+while getopts 'ftasdh' option; do
     case "$option" in
     f)  TARGET=final ;;
     t)  TARGET=test ;;
     a)  AUTOSTART=true ;;
     s)  STARTNOW=true ;;
+    d)  DELAY_FILE=true ;;
     h)  cat <<'EOF'
 Usage: tmbf-install-ioc <options>
 where <options> includes
@@ -46,6 +48,7 @@ where <options> includes
     -t  Testing install: don't copy files, use from configured location
     -a  Enable autostart via /etc/init.d/libera script.
     -s  Start IOC after installation
+    -d  Install timing delays file
     -h  Show this help
 EOF
         exit 0 ;;
@@ -105,6 +108,7 @@ copy_files base /opt/bin configure-network fpga_init load-fpga  &&
 copy_files base /opt/lib tmbf-ips  &&
 ln -sf /opt/bin/configure-network /usr/sbin  ||
     Error 'Error installing base files'
+$DELAY_FILE  &&  copy_files base /opt/lib tmbf.delays
 
 
 
