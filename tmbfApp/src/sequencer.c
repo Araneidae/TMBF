@@ -30,6 +30,8 @@ struct sequencer_bank {
     unsigned int bunch_bank;
     unsigned int hom_gain;
     bool enable_window;
+    struct epics_record *delta_freq_rec;
+    struct epics_record *end_freq_rec;
 };
 
 /* Sequencer state as currently seen through EPICS. */
@@ -49,6 +51,14 @@ static unsigned int sequencer_pc;
 static bool sequencer_enable;
 
 
+static bool write_end_freq(void *context, const double *value)
+{
+    struct sequencer_bank *bank = context;
+    bank->delta_freq = (*value - bank->start_freq) / bank->capture_count;
+    WRITE_OUT_RECORD(ao, bank->delta_freq_rec, bank->delta_freq, false);
+    return true;
+}
+
 
 static void publish_bank(int ix, struct sequencer_bank *bank)
 {
@@ -57,17 +67,22 @@ static void publish_bank(int ix, struct sequencer_bank *bank)
     (sprintf(buffer, "SEQ:%d:%s", ix + 1, name), buffer)
 
     PUBLISH_WRITE_VAR_P(ao, FORMAT("START_FREQ"), bank->start_freq);
-    PUBLISH_WRITE_VAR_P(ao, FORMAT("STEP_FREQ"), bank->delta_freq);
+    bank->delta_freq_rec =
+        PUBLISH_WRITE_VAR_P(ao, FORMAT("STEP_FREQ"), bank->delta_freq);
     PUBLISH_WRITE_VAR_P(ulongout, FORMAT("DWELL"), bank->dwell_time);
     PUBLISH_WRITE_VAR_P(ulongout, FORMAT("COUNT"), bank->capture_count);
     PUBLISH_WRITE_VAR_P(mbbo, FORMAT("BANK"), bank->bunch_bank);
     PUBLISH_WRITE_VAR_P(mbbo, FORMAT("GAIN"), bank->hom_gain);
     PUBLISH_WRITE_VAR_P(bo, FORMAT("ENWIN"), bank->enable_window);
 
+    bank->end_freq_rec =
+        PUBLISH(ao, FORMAT("END_FREQ"), write_end_freq, .context = bank);
 #undef FORMAT
 }
 
 
+/* Converts internal sequencer state into format suitable for writing to
+ * hardware and updates hardware. */
 static void write_seq_state(void)
 {
     for (int i = 1; i < MAX_SEQUENCER_COUNT; i ++)
@@ -86,6 +101,22 @@ static void write_seq_state(void)
         entry->enable_window = bank->enable_window;
     }
     hw_write_seq_entries(current_sequencer);
+}
+
+
+static void update_seq_state(void)
+{
+    /* Update all the end frequencies. */
+    for (int i = 1; i < MAX_SEQUENCER_COUNT; i ++)
+    {
+        struct sequencer_bank *bank = &banks[i - 1];
+        double end_freq =
+            bank->start_freq + bank->capture_count * bank->delta_freq;
+        WRITE_OUT_RECORD(ao, bank->end_freq_rec, end_freq, false);
+    }
+
+    /* Write the current state to hardware. */
+    write_seq_state();
 
     /* Let the detector know that things have changed. */
     seq_settings_changed();
@@ -171,7 +202,7 @@ bool initialise_sequencer(void)
 
     for (int i = 0; i < MAX_SEQUENCER_COUNT; i ++)
         publish_bank(i, &banks[i]);
-    PUBLISH_ACTION("SEQ:WRITE", write_seq_state);
+    PUBLISH_ACTION("SEQ:WRITE", update_seq_state);
     PUBLISH_WRITER_P(ulongout, "SEQ:PC", write_seq_count);
     PUBLISH_READER(ulongin, "SEQ:PC", hw_read_seq_state);
     PUBLISH_ACTION("SEQ:RESET", hw_write_seq_reset);

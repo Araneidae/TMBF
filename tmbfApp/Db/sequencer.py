@@ -6,7 +6,15 @@ from common import *
 # The sequencer has eight possible states, however state 0 has somewhat
 # different behaviour from the remaining 7.
 
-update = boolOut('SEQ:WRITE', DESC = 'Write sequencer settings')
+# Update the entire sequencer state on a write to any PV.  However, we don't
+# want to write anything until startup and PV initialisation is complete, so we
+# start with writing disabled and reenable at end.
+update = boolOut('SEQ:WRITE', DISV = 0, DESC = 'Write sequencer settings')
+records.seq('SEQ:ENWRITE',
+    PINI = 'RUN', SELM = 'All',
+    LNK1 = update.DISV, DO1 = 1,
+    LNK2 = update.PROC, DO2 = 0)
+
 for state in range(1, 8):
     aOut('SEQ:%d:START_FREQ' % state, -936, 936, 'tune', 5,
         FLNK = update, DESC = 'Sweep NCO start frequency')
@@ -22,6 +30,10 @@ for state in range(1, 8):
         *dBrange(8, -6))
     boolOut('SEQ:%d:ENWIN' % state, 'Disabled', 'Enabled',
         FLNK = update, DESC = 'Enable detector window')
+
+    # This fellow is treated a little differently and is processed internally.
+    aOut('SEQ:%d:END_FREQ' % state, EGU = 'tune', PREC = 5,
+        PINI = 'NO', DESC = 'Sweep NCO start frequency')
 
 # This is the only valid control in state 0.
 mbbOut('SEQ:0:BANK', 'Bank 0', 'Bank 1', 'Bank 2', 'Bank 3',

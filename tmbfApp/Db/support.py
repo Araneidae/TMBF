@@ -87,12 +87,12 @@ def set_scalar_out_defaults(fields, DRVL, DRVH):
     fields.setdefault('HOPR', DRVH)
 
 
-def aIn(name, LOPR, HOPR, EGU=None, PREC=None, **fields):
+def aIn(name, LOPR=None, HOPR=None, EGU=None, PREC=None, **fields):
     fields.setdefault('MDEL', -1)
     return GenericDevice.ai(name,
         LOPR = LOPR, HOPR = HOPR, EGU  = EGU,  PREC = PREC, **fields)
 
-def aOut(name, DRVL, DRVH, EGU=None, PREC=None, **fields):
+def aOut(name, DRVL=None, DRVH=None, EGU=None, PREC=None, **fields):
     set_out_defaults(fields, name)
     set_scalar_out_defaults(fields, DRVL, DRVH)
     return GenericDevice.ao(name + '_S',

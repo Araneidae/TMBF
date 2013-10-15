@@ -173,17 +173,17 @@ static void extract_iq(const short buffer_low[], const short buffer_high[])
         mean_sweep.wf_q[i] = Q_sum;
     }
 
-    /* Pad rest of results with zeros: none of this data is valid! */
+    /* Pad rest of results with last value: none of this data is valid! */
     for (int i = scale_length; i < TUNE_LENGTH; i ++)
     {
         for (int channel = 0; channel < 4; channel ++)
         {
             struct sweep_info *sweep = &channel_sweep[channel];
-            sweep->wf_i[i] = 0;
-            sweep->wf_q[i] = 0;
+            sweep->wf_i[i] = sweep->wf_i[scale_length-1];
+            sweep->wf_q[i] = sweep->wf_q[scale_length-1];
         }
-        mean_sweep.wf_i[i] = 0;
-        mean_sweep.wf_q[i] = 0;
+        mean_sweep.wf_i[i] = mean_sweep.wf_i[scale_length-1];
+        mean_sweep.wf_q[i] = mean_sweep.wf_q[scale_length-1];
     }
 }
 
