@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2289
-y 959
+x 2290
+y 960
 w 599
 h 26
 font "helvetica-medium-r-18.0"
@@ -47,7 +47,6 @@ autoHeight
 motifWidget
 limitsFromDb
 nullColor index 0
-changeValOnLoseFocus
 useHexPrefix
 newPos
 objType "controls"
@@ -64,7 +63,7 @@ release 0
 x 104
 y 0
 w 88
-h 24
+h 20
 controlPv "$(device):SEQ:$(state):STEP_FREQ_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -76,7 +75,6 @@ autoHeight
 motifWidget
 limitsFromDb
 nullColor index 0
-changeValOnLoseFocus
 useHexPrefix
 newPos
 objType "controls"
@@ -93,7 +91,7 @@ release 0
 x 200
 y 0
 w 80
-h 24
+h 20
 controlPv "$(device):SEQ:$(state):DWELL_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -105,7 +103,6 @@ autoHeight
 motifWidget
 limitsFromDb
 nullColor index 0
-changeValOnLoseFocus
 useHexPrefix
 newPos
 objType "controls"
@@ -134,7 +131,6 @@ autoHeight
 motifWidget
 limitsFromDb
 nullColor index 0
-changeValOnLoseFocus
 useHexPrefix
 newPos
 objType "controls"
