@@ -34,6 +34,11 @@
 #include <mbboRecord.h>
 #include <waveformRecord.h>
 
+#include <dbBase.h>
+#include <dbAddr.h>
+#include <dbAccessDefs.h>
+#include <dbLock.h>
+
 #include "error.h"
 #include "hashtable.h"
 #include "persistence.h"
@@ -61,7 +66,7 @@ static struct hash_table *hash_table = NULL;
 struct epics_record {
     char *key;                      // Name of lookup for record
     enum record_type record_type;
-    bool bound;                     // Ensures at most one bound record
+    const char *record_name;        // Full record name, once bound
 
     /* The following fields are shared between pairs of record classes. */
     IOSCANPVT ioscanpvt;            // Used for I/O intr enabled records
@@ -83,6 +88,7 @@ struct epics_record {
             bool (*write)(void *context, const void *value);
             bool (*init)(void *context, void *result);
             void *save_value;       // Used to restore after rejected write
+            bool disable_write;     // Used for write_out_record
         } out;
         // WAVEFORM record support
         struct {
@@ -156,8 +162,10 @@ static const char *get_type_name(enum record_type record_type)
         "ai",           "ao",           "bi",           "bo",
         "stringin",     "stringout",    "mbbi",         "mbbo",
         "waveform" };
-    ASSERT_OK(record_type < ARRAY_SIZE(names));
-    return names[record_type];
+    if (record_type < ARRAY_SIZE(names))
+        return names[record_type];
+    else
+        return "(invalid)";
 }
 
 
@@ -187,6 +195,7 @@ static void initialise_out_fields(
     base->out.write = out_args->write;
     base->out.init = out_args->init;
     base->out.save_value = malloc(write_data_size(base->record_type));
+    base->out.disable_write = false;
     base->context = out_args->context;
     base->persist = out_args->persist;
     if (base->persist)
@@ -225,7 +234,7 @@ struct epics_record *publish_epics_record(
     base->key = malloc(strlen(key) + 1);
     strcpy(base->key, key);
 
-    base->bound = false;
+    base->record_name = NULL;
     base->ioscanpvt = NULL;
     base->ioscan_pending = false;
     base->persist = false;
@@ -325,6 +334,76 @@ bool initialise_epics_device(void)
     initHookRegister(init_hook);
     return true;
 }
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/*                 Support for direct writing to OUT records                 */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/* Checks whether the given record is an OUT record for validating write. */
+static bool is_out_record(enum record_type record_type)
+{
+    switch (record_type)
+    {
+        case RECORD_TYPE_longout:   case RECORD_TYPE_ulongout:
+        case RECORD_TYPE_ao:        case RECORD_TYPE_bo:
+        case RECORD_TYPE_stringout: case RECORD_TYPE_mbbo:
+            return true;
+        default:
+            return false;
+    }
+}
+
+
+/* Returns DBR code associated with record type.  This needs to be compatible
+ * with the data type returned by TYPEOF(record). */
+static int record_type_dbr(enum record_type record_type)
+{
+    switch (record_type)
+    {
+        case RECORD_TYPE_longout:   return DBR_LONG;
+        case RECORD_TYPE_ulongout:  return DBR_LONG;
+        case RECORD_TYPE_ao:        return DBR_DOUBLE;
+        case RECORD_TYPE_bo:        return DBR_CHAR;
+        case RECORD_TYPE_stringout: return DBR_STRING;
+        case RECORD_TYPE_mbbo:      return DBR_LONG;
+        default: ASSERT_FAIL();
+    }
+}
+
+
+void _write_out_record(
+    enum record_type record_type, struct epics_record *record,
+    const void *value, bool process)
+{
+    struct dbAddr dbaddr;
+    bool ok =
+        // Validate the arguments to prevent disaster
+        TEST_OK_(is_out_record(record_type),
+            "%s is not an output type", get_type_name(record_type))  &&
+        TEST_OK_(record->record_type == record_type,
+            "%s is %s, not %s", record->key,
+            get_type_name(record->record_type), get_type_name(record_type))  &&
+
+        // The writing API needs a dbAddr to describe the target
+        TEST_NULL(record->record_name)  &&
+        TEST_OK_(dbNameToAddr(record->record_name, &dbaddr) == 0,
+            "Unable to find record %s", record->record_name);
+    if (ok)
+    {
+        // Finally write the desired value under the database lock: we disable
+        // writing if processing was not requested.
+        dbScanLock(dbaddr.precord);
+        record->out.disable_write = !process;
+        ok =
+            TEST_OK(dbPutField(
+                &dbaddr, record_type_dbr(record_type), value, 1) == 0);
+        record->out.disable_write = false;
+        dbScanUnlock(dbaddr.precord);
+    }
+    ASSERT_OK(ok);
+}
+
 
 
 /*****************************************************************************/
@@ -460,8 +539,9 @@ static bool init_record_common(
     struct epics_record *base = hash_table_lookup(hash_table, key);
     return
         TEST_NULL_(base, "No record found for %s", key)  &&
-        TEST_OK_(!base->bound, "Duplicate binding for %s", key)  &&
-        DO_(base->bound = true; pr->dpvt = base);
+        TEST_OK_(base->record_name == NULL,
+            "%s already bound to %s", key, base->record_name)  &&
+        DO_(base->record_name = pr->name; pr->dpvt = base);
 }
 
 
@@ -594,7 +674,10 @@ static bool process_out_record(dbCommon *pr, size_t value_size, void *result)
     if (base == NULL)
         return false;
 
-    if (base->out.write(base->context, result))
+    bool write_ok =
+        base->out.disable_write  ||
+        base->out.write(base->context, result);
+    if (write_ok)
     {
         /* On successful update take a record (in case we have to revert) and
          * update the persistent record. */

@@ -328,6 +328,17 @@ void copy_epics_string(EPICS_STRING *out, const char *in);
             .field_type = waveform_TYPE_##type, .max_length = length, ##args })
 
 
+/* This function (wrapped by a type dispatch macro) allows the value of an out
+ * record to be updated from within the device.  If process is False then the
+ * generated process callback is suppressed (as far as possible).  This method
+ * is only available for out records. */
+void _write_out_record(
+    enum record_type record_type, struct epics_record *record,
+    const void *value, bool process);
+#define WRITE_OUT_RECORD(type, record, value, process) \
+    _write_out_record( \
+        RECORD_TYPE_##type, record, (TYPEOF(type)[]) { value }, process)
+
 
 /******************************************************************************/
 /* Detailed macro based definitions.
