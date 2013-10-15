@@ -82,6 +82,8 @@ struct tmbf_config_space
     //  9:5     Overflow bits (IQ/ACC/DAC/FIR)
     //  13:10   Trigger phase bits
     //  14      Trigger armed
+    //  15      (unused)
+    //  19:16   Bunch trigger phase bits
     //  15:31   (unused)
 
     uint32_t control;               //  2  System control register
@@ -115,7 +117,8 @@ struct tmbf_config_space
     uint32_t adc_offset_ab;         //  6  ADC channel offsets (channels A/B)
     uint32_t adc_offset_cd;         //  7  ADC channel offsets (channels C/D)
     uint32_t dac_precomp_taps[3];   // 8-10     DAC pre-compensation filter
-    uint32_t padding[5];            // 11-15    (unused)
+    uint32_t bunch_zero_offset;     // 11  Bunch zero offset
+    uint32_t padding[4];            // 11-15    (unused)
 
     uint32_t fir_bank;              // 16  Select FIR bank
     uint32_t fir_write;             // 17  Write FIR coefficients
@@ -398,6 +401,16 @@ void hw_write_bun_sync(void)
     pulse_control_bit(8);
 }
 
+void hw_write_bun_zero_bunch(int bunch)
+{
+    config_space->bunch_zero_offset = bunch;
+}
+
+int hw_read_bun_trigger_phase(void)
+{
+    return READ_STATUS_BITS(16, 4);
+}
+
 
 /* * * * * * * * * * * * * * * * * */
 /* BUF: High Speed Internal Buffer */
@@ -550,10 +563,12 @@ void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT])
         config_space->sequencer_write = entry->dwell_time;
         config_space->sequencer_write =
             (entry->capture_count & 0xFFF) |        // bits 11:0
-            ((entry->bunch_bank & 0x3) << 12) |     //      13:12
-            ((entry->hom_gain & 0x7) << 14) |       //      16:14
-            (entry->hom_enable << 17) |             //      17
-            entry->enable_window << 18;             //      18
+            (entry->bunch_bank & 0x3) << 12 |       //      13:12
+            (entry->hom_gain & 0x7) << 14 |         //      16:14
+            entry->hom_enable << 17 |               //      17
+            entry->enable_window << 18 |            //      18
+            entry->write_enable << 19 |             //      19
+            (entry->holdoff & 0xFF) << 20;          //      27:20
         config_space->sequencer_write = entry->window_rate;
         config_space->sequencer_write = 0;
         config_space->sequencer_write = 0;

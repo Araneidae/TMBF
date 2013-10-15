@@ -36,3 +36,5 @@ for bank in range(4):
 
 
 Action('BUN:SYNC', DESC = 'Bunch synchronisation enable')
+longOut('BUN:OFFSET', 0, 233, DESC = 'Zero bunch offset')
+longIn('BUN:PHASE', SCAN = '.1 second')

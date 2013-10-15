@@ -141,6 +141,9 @@ static struct bunch_bank banks[BUNCH_BANKS];
 bool initialise_bunch_select(void)
 {
     PUBLISH_ACTION("BUN:SYNC", hw_write_bun_sync);
+    PUBLISH_WRITER_P(longout, "BUN:OFFSET", hw_write_bun_zero_bunch);
+    PUBLISH_READER(longin, "BUN:PHASE", hw_read_bun_trigger_phase);
+
     for (int i = 0; i < BUNCH_BANKS; i ++)
         publish_bank(i, &banks[i]);
     return true;

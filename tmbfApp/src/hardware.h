@@ -116,6 +116,13 @@ void hw_write_bun_entry(int bank, struct bunch_entry entries[MAX_BUNCH_COUNT]);
 /* Enables bunch counter synchronsation. */
 void hw_write_bun_sync(void);
 
+/* Configure zero bunch offset for bunch synchronisation. */
+void hw_write_bun_zero_bunch(int bunch);
+
+/* Returns zero if bunch counter not yet triggered, otherwise returns
+ * sub-trigger phase bits. */
+int hw_read_bun_trigger_phase(void);
+
 
 /* * * * * * * * * * * * * * * * * */
 /* BUF: High Speed Internal Buffer */
@@ -179,6 +186,8 @@ struct seq_entry {
     unsigned int window_rate;       // Detector window advance frequency
     bool enable_window;             // Enable detector windowing
     bool hom_enable;                // Enable HOM
+    bool write_enable;              // Enable data capture of sequence
+    unsigned int holdoff;           // Detector holdoff
 };
 
 /* Rewrites the sequencer table.  All entries must be present. */

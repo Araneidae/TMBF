@@ -28,8 +28,12 @@ for state in range(1, 8):
         FLNK = update, DESC = 'Bunch bank selection')
     mbbOut('SEQ:%d:GAIN' % state, DESC = 'Sweep NCO gain', FLNK = update,
         *dBrange(8, -6))
-    boolOut('SEQ:%d:ENWIN' % state, 'Disabled', 'Enabled',
+    boolOut('SEQ:%d:ENWIN' % state, 'Disabled', 'Windowed',
         FLNK = update, DESC = 'Enable detector window')
+    boolOut('SEQ:%d:CAPTURE' % state, 'Discard', 'Capture',
+        FLNK = update, DESC = 'Enable data capture')
+    longOut('SEQ:%d:HOLDOFF' % state, 1, 256,
+        FLNK = update, DESC = 'Detector holdoff')
 
     # This fellow is treated a little differently and is processed internally.
     aOut('SEQ:%d:END_FREQ' % state, EGU = 'tune', PREC = 5,

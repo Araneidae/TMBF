@@ -29,7 +29,9 @@ struct sequencer_bank {
     unsigned int capture_count;
     unsigned int bunch_bank;
     unsigned int hom_gain;
+    unsigned int holdoff;
     bool enable_window;
+    bool write_enable;
     struct epics_record *delta_freq_rec;
     struct epics_record *end_freq_rec;
 };
@@ -74,6 +76,8 @@ static void publish_bank(int ix, struct sequencer_bank *bank)
     PUBLISH_WRITE_VAR_P(mbbo, FORMAT("BANK"), bank->bunch_bank);
     PUBLISH_WRITE_VAR_P(mbbo, FORMAT("GAIN"), bank->hom_gain);
     PUBLISH_WRITE_VAR_P(bo, FORMAT("ENWIN"), bank->enable_window);
+    PUBLISH_WRITE_VAR_P(bo, FORMAT("CAPTURE"), bank->write_enable);
+    PUBLISH_WRITE_VAR_P(ulongout, FORMAT("HOLDOFF"), bank->holdoff);
 
     bank->end_freq_rec =
         PUBLISH(ao, FORMAT("END_FREQ"), write_end_freq, .context = bank);
@@ -96,9 +100,11 @@ static void write_seq_state(void)
         entry->bunch_bank = bank->bunch_bank;
         entry->hom_gain = bank->hom_gain;
         entry->hom_enable = true;
+        entry->enable_window = bank->enable_window;
+        entry->write_enable = bank->write_enable;
+        entry->holdoff = bank->holdoff - 1;
         entry->window_rate =
             (unsigned int) lround((pow(2, 32) / 234) / bank->dwell_time);
-        entry->enable_window = bank->enable_window;
     }
     hw_write_seq_entries(current_sequencer);
 }
