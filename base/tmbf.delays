@@ -4,10 +4,10 @@
 # Note that all values in this file should be in the range 0..233.
 
 # DDR readout delays
-DDR_ADC_DELAY = 227
-DDR_FIR_DELAY = 231
-DDR_RAW_DAC_DELAY = 1
-DDR_DAC_DELAY = 5
+DDR_ADC_DELAY = 226
+DDR_FIR_DELAY = 230
+DDR_RAW_DAC_DELAY = 0
+DDR_DAC_DELAY = 4
 
 # Buffer trigger delays
 BUF_ADC_DELAY = 233
@@ -23,5 +23,5 @@ BUNCH_FIR_OFFSET = 229
 BUNCH_GAIN_OFFSET = 0
 
 # Detector single bunch offsets
-DET_ADC_OFFSET = 4
-DET_FIR_OFFSET = 0
+DET_ADC_OFFSET = 1
+DET_FIR_OFFSET = 231
