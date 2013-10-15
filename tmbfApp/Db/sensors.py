@@ -120,9 +120,7 @@ def overflow(name, desc):
 overflows = [
     overflow('SE:OVF:FIR', 'FIR overflow'),
     overflow('SE:OVF:DAC', 'DAC overflow'),
-    overflow('SE:OVF:COMP', 'DAC precompensation overflow'),
-    overflow('SE:OVF:ACC', 'Detector accumulator overflow'),
-    overflow('SE:OVF:IQ',  'IQ scaling overflow')]
+    overflow('SE:OVF:COMP', 'DAC pre-emphasis overflow')]
 overflows.append(
     AggregateSeverity('SE:OVF', 'Numerical overflow', overflows))
 

@@ -34,6 +34,9 @@ static int scale_length;
 static bool tune_scale_needs_refresh = true;
 static struct epics_record *tune_scale_pv;
 
+/* Overflow status from the last sweep. */
+static bool overflows[OVERFLOW_BIT_COUNT];
+
 
 /* Information about a single channel of sweep measurement. */
 struct sweep_info {
@@ -142,7 +145,15 @@ void seq_settings_changed(void)
 static void set_group_delay(int delay)
 {
     group_delay = delay;
-    seq_settings_changed(); // Not really true, but does enough to get by
+    tune_scale_needs_refresh = true;
+}
+
+
+/* Returns 2^-32 * (a*c + b*d) with rounding of the last bit. */
+static int32_t dot_product(int32_t a, int32_t b, int32_t c, int32_t d)
+{
+    int64_t full = (int64_t) a * c + (int64_t) b * d;
+    return (int32_t) ((full + (1UL << 31)) >> 32);
 }
 
 
@@ -160,8 +171,8 @@ static void extract_iq(const short buffer_low[], const short buffer_high[])
         {
             int raw_I = buffer_high[4 * i + channel];
             int raw_Q = buffer_low[4 * i + channel];
-            int I = MulSS(raw_I, rot_I) - MulSS(raw_Q, rot_Q);
-            int Q = MulSS(raw_I, rot_Q) + MulSS(raw_Q, rot_I);
+            int I = dot_product(raw_I, raw_Q, rot_I, -rot_Q);
+            int Q = dot_product(raw_I, raw_Q, rot_Q, rot_I);
             I_sum += I;
             Q_sum += Q;
 
@@ -269,6 +280,17 @@ static void compute_sweep(struct sweep_info *sweep)
 }
 
 
+/* Read out accumulated overflow bits over the last capture. */
+static void update_overflow(void)
+{
+    const bool read_mask[OVERFLOW_BIT_COUNT] = {
+        [OVERFLOW_IQ_ACC] = true,
+        [OVERFLOW_IQ_SCALE] = true,
+    };
+    hw_read_overflows(read_mask, overflows);
+}
+
+
 /* This is called when IQ data has been read into the fast buffer.  Process it
  * according to our current configuration into separate IQ wavforms.  One
  * separate I/Q value is extracted from each channel and rotated to compensate
@@ -282,6 +304,7 @@ void update_iq(const short buffer_low[], const short buffer_high[])
     }
 
     interlock_wait(iq_trigger);
+    update_overflow();
     extract_iq(buffer_low, buffer_high);
     for (int i = 0; i < 4; i ++)
         compute_sweep(&channel_sweep[i]);
@@ -358,6 +381,9 @@ bool initialise_detector(void)
     PUBLISH_WRITER_P(mbbo, "DET:GAIN", hw_write_det_gain);
     PUBLISH_WRITER_P(mbbo, "DET:INPUT", hw_write_det_input_select);
     PUBLISH_WRITER_P(longout, "DET:SKEW", set_group_delay);
+
+    PUBLISH_READ_VAR(bi, "DET:OVF:ACC", overflows[OVERFLOW_IQ_ACC]);
+    PUBLISH_READ_VAR(bi, "DET:OVF:IQ",  overflows[OVERFLOW_IQ_SCALE]);
 
     for (int i = 0; i < 4; i ++)
     {

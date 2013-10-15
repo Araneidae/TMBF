@@ -617,8 +617,12 @@ static bool overflows[OVERFLOW_BIT_COUNT];
 
 static void read_overflows(void)
 {
-    hw_read_overflows(
-        (const bool[]) { true, true, true, true, true }, overflows);
+    const bool read_mask[OVERFLOW_BIT_COUNT] = {
+        [OVERFLOW_FIR] = true,
+        [OVERFLOW_DAC] = true,
+        [OVERFLOW_DAC_COMP] = true,
+    };
+    hw_read_overflows(read_mask, overflows);
 }
 
 
@@ -646,8 +650,6 @@ bool initialise_sensors(void)
     PUBLISH_READ_VAR(bi, "SE:OVF:FIR", overflows[OVERFLOW_FIR]);
     PUBLISH_READ_VAR(bi, "SE:OVF:DAC", overflows[OVERFLOW_DAC]);
     PUBLISH_READ_VAR(bi, "SE:OVF:COMP", overflows[OVERFLOW_DAC_COMP]);
-    PUBLISH_READ_VAR(bi, "SE:OVF:ACC", overflows[OVERFLOW_IQ_ACC]);
-    PUBLISH_READ_VAR(bi, "SE:OVF:IQ",  overflows[OVERFLOW_IQ_SCALE]);
 
     InitialiseUptime();
     initialise_fan_control();

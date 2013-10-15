@@ -26,7 +26,12 @@ Waveform('DET:SCALE', TUNE_LENGTH, 'FLOAT',
 longOut('DET:SKEW',
     EGU = 'turns', DESC = 'Detector skew group delay in turns')
 
-
+# Two overflow detection bits are generated
+overflows = [
+    boolIn('DET:OVF:ACC', 'Ok', 'Overflow', OSV = 'MAJOR',
+        DESC = 'Detector accumulator overflow'),
+    boolIn('DET:OVF:IQ',  'Ok', 'Overflow', OSV = 'MAJOR',
+        DESC = 'IQ scaling overflow')]
 
 # We have five sweep channels: one for each bunch and an aggregate consisting of
 # the sum of all four.
@@ -57,7 +62,7 @@ def SweepChannel(name, desc):
 
 bunch_channels = [SweepChannel(b, 'Bunch %s' % b) for b in '0123']
 mean_channel = SweepChannel('M', 'Bunch mean')
-Trigger('DET', *concat(bunch_channels) + mean_channel)
+Trigger('DET', *concat(bunch_channels) + mean_channel + overflows)
 
 
 # Control over the internal detector window.
