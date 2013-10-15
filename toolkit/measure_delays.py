@@ -10,6 +10,8 @@ import numpy
 import cothread
 from cothread.catools import *
 
+import configure
+
 
 # Common support code.
 
@@ -26,115 +28,22 @@ class DAC_OUT:
     MAX_GAIN = 1023
 
 
-class PV:
-    def __init__(self, name):
-        self.monitor = camonitor(name, self.__on_update, format = FORMAT_TIME)
-        self.event = cothread.Event()
-        self.value = None
 
-    def close(self):
-        self.monitor.close()
+# ------------------------------------------------------------------------------
+# Basic TMBF setup support
 
-    def __on_update(self, value):
-        self.value = value
-        self.event.Signal(value)
-
-    # Waits for a reasonably fresh value to arrive.  No guarantees, but it will
-    # be fresher than the last value!
-    def get(self):
-        return self.event.Wait()
-
-    # Waits for a value at least as old as the given age to arrive.
-    def get_new(self, age = 0, now = None):
-        if now is None:
-            now = time.time()
-        now = now + age
-        while True:
-            value = self.get()
-            if value.timestamp >= now:
-                return value
-
-
-class TMBF:
-    def __init__(self, name):
-        self.tmbf = name
-
-        self.n_taps = self.PV('FIR:0:TAPS_S.NORD').get()
-
-    def pv(self, name):
-        return '%s:%s' % (self.tmbf, name)
-
-    def PV(self, name):
-        return PV(self.pv(name))
-
-    def set(self, name, value):
-        caput(self.pv(name), value)
-
-
-# Ensures sequencer is disabled and ensures given bank is selected
-def disable_sequencer(tmbf, bank):
-    tmbf.set('TRG:SEQ:ENA_S', 'Disabled')
-    tmbf.set('SEQ:RESET_S.PROC', 0)
-    tmbf.set('SEQ:0:BANK_S', bank)
-
-
-# Configure trigger targets for DDR, BUF and sequencer accordingly.
-def configure_trigger_targets(tmbf, ddr, buf, seq):
-    tmbf.set('TRG:DDR:SEL_S', ddr)
-    tmbf.set('TRG:BUF:SEL_S', buf)
-    tmbf.set('TRG:SEQ:ENA_S', seq)
-
-
-# Configure selected bank for waveform control with given gain, fir and output
-# waveform or constant values.
-def configure_bank_wf(tmbf, bank, gain, fir, output):
-    tmbf.set('BUN:%d:GAINWF_S' % bank, bunches(gain))
-    tmbf.set('BUN:%d:FIRWF_S' % bank, bunches(fir))
-    tmbf.set('BUN:%d:OUTWF_S' % bank, bunches(output))
-    tmbf.set('BUN:%d:USEWF_S' % bank, 'Waveform')
-
-def configure_bank(tmbf, bank, gain, fir, output):
-    tmbf.set('BUN:%d:GAIN_S' % bank, gain)
-    tmbf.set('BUN:%d:FIR_S' % bank, fir)
-    tmbf.set('BUN:%d:OUT_S' % bank, output)
-    tmbf.set('BUN:%d:USEWF_S' % bank, 'Settings')
-
-def configure_state(tmbf, state,
-        start, step, dwell, bank, gain, count=4096, window=True):
-    tmbf.set('SEQ:%d:START_FREQ_S' % state, start)
-    tmbf.set('SEQ:%d:STEP_FREQ_S' % state, step)
-    tmbf.set('SEQ:%d:DWELL_S' % state, dwell)
-    tmbf.set('SEQ:%d:COUNT_S' % state, count)
-    tmbf.set('SEQ:%d:GAIN_S' % state, gain)
-    tmbf.set('SEQ:%d:BANK_S' % state, bank)
-    tmbf.set('SEQ:%d:ENWIN_S' % state, window)
-
-def configure_nco(tmbf, frequency, gain):
-    tmbf.set('NCO:FREQ_S', frequency)
-    tmbf.set('NCO:GAIN_S', gain)
-
-def configure_fir_wf(tmbf, fir, taps):
-    tmbf.set('FIR:%d:TAPS_S' % fir, taps)
-    tmbf.set('FIR:%d:USEWF_S' % fir, 'Waveform')
 
 
 # Configure for tune sweep.
-def configure_sweep(tmbf,
-        start, step, dwell, bank, gain,
-        count=4096, window=True):
-    pass
+def configure_sweep(tmbf, detector_gain, bunches=[], **sweep_args):
+    configure.state(tmbf, 1, **sweep_args)
+    configure.sequencer_pc(tmbf, 1)
+    configure.detector_gain(tmbf, detector_gain)
+    configure.detector_bunches(tmbf, bunches)
 
 
 # ------------------------------------------------------------------------------
 # Data shaping and analysis
-
-# Converts a single value into an array, otherwise validates length of array.
-def bunches(value, length = BUNCH_COUNT):
-    value = numpy.array(value)
-    if value.size == 1:
-        value = numpy.repeat(value, length)
-    assert value.size == length, 'Invalid array length'
-    return value
 
 # Returns a waveform with one bunch set to value, all other bunches set to
 # other.  Used for single bunch control.
@@ -173,21 +82,27 @@ def configure_timing_test(tmbf, compensate = False):
     tmbf.set('DAC:DELAY_S', 0)
     # Disable ADC input skew
     tmbf.set('ADC:DELAY_S', '0 ns')
+    # Turn DAC output in case there's something connected
+    tmbf.set('DAC:ENABLE_S', 'Off')
 
     # For a sensible starting state, disable the sequencer and select bank 0
-    disable_sequencer(tmbf, 0)
+    configure.state0(tmbf, 0)
+    configure.sequencer_enable(tmbf, False)
+
+    # We'll be using soft triggering.  Ensure it's in one shot state
+    tmbf.set('TRG:S1:MODE_S', 'One Shot')
 
     # Reset detector window in case it's been messed with
     tmbf.set('DET:RESET_WIN_S.PROC', 0)
 
     # Configure NCO for DC output at maximum gain: this makes a useful pulse
     # source when routed into a single bunch.
-    configure_nco(tmbf, 0, '0dB')
+    configure.nco(tmbf, 0, '0dB')
 
 
 # Configure bank for single pulse output from NCO
 def configure_dac_single_pulse(tmbf, bank = 0):
-    configure_bank_wf(tmbf, bank,
+    configure.bank_wf(tmbf, bank,
         DAC_OUT.MAX_GAIN, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.OFF))
 
 
@@ -202,14 +117,13 @@ def configure_ddr_soft_trigger(tmbf):
 def fire_soft_trigger_1(tmbf):
     tmbf.set('TRG:S1:FIRE_S.PROC', 0)
 
-def configure_detector(tmbf, bank=1, fir=0):
+def setup_detector_single_bunch(tmbf, bank=1, fir=0):
     # Configure the sequencer for a simple scan over a narrow range.
-    configure_state(tmbf, 1, 1.3, 1e-5, 20, bank, '0dB')
-    tmbf.set('SEQ:WRITE_S.PROC', 0)
-    tmbf.set('SEQ:PC_S', 1)
+    configure.state(tmbf, 1, 1.31, 1e-5, 20, '0dB', bank = bank)
+    configure.sequencer_pc(tmbf, 1)
 
     # Configure the selected bank for sweep
-    configure_bank_wf(tmbf, bank, DAC_OUT.MAX_GAIN, fir, DAC_OUT.SWEEP)
+    configure.bank_wf(tmbf, bank, DAC_OUT.MAX_GAIN, fir, DAC_OUT.SWEEP)
 
     # Configure detector for single bunch capture
     tmbf.set('DET:MODE_S', 'Single Bunch')
@@ -220,6 +134,12 @@ def configure_detector(tmbf, bank=1, fir=0):
     tmbf.set('TRG:SEQ:ENA_S', 'Enabled')
     tmbf.set('TRG:BUF:SEL_S', 'Soft 1')
     tmbf.set('BUF:SELECT_S', 'IQ')
+
+def setup_tune_sweep(tmbf, *args, **kargs):
+    configure.state(tmbf, 1, *args, **kargs)
+    configure.sequencer_pc(tmbf, 1)
+    tmbf.set('BUF:SELECT_S', 'IQ')
+    configure.sequencer_enable(tmbf, True)
 
 
 # Simplest test of all: measure delay from DAC reference bunch to minmax
@@ -236,7 +156,7 @@ def dac_to_minmax(tmbf, maxval):
 # through the FIR for all bunches except the reference bunch.
 def dac_to_dac_closed_loop(tmbf, maxdac):
     # Configure FIR 0 for passthrough
-    configure_fir_wf(tmbf, 0, one_bunch(32767, 0, tmbf.n_taps-1, tmbf.n_taps))
+    configure.fir_wf(tmbf, 0, 32767)
 
     # Need quite strong attenuation to ensure the peak dies down before it comes
     # around again.
@@ -244,7 +164,7 @@ def dac_to_dac_closed_loop(tmbf, maxdac):
 
     # Configure bank 0 for fir 0 on all bunches, NCO output on bunch 0, FIR
     # passthrough on all other bunches.
-    configure_bank_wf(tmbf, 0,
+    configure.bank_wf(tmbf, 0,
         DAC_OUT.MAX_GAIN, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.FIR))
 
     # Fetch and process next valid waveform
@@ -254,7 +174,8 @@ def dac_to_dac_closed_loop(tmbf, maxdac):
 # Measures delay from reference bunch to selected buffer waveforms
 def dac_to_buf(tmbf, bufa, bufb, sources):
     tmbf.set('BUF:SELECT_S', sources)
-    fire_soft_trigger_1(tmbf)
+#     fire_soft_trigger_1(tmbf)
+    configure.fire_and_wait(tmbf, False, True, False)
     a = bufa.get()[:BUNCH_COUNT]
     b = bufb.get()[:BUNCH_COUNT]
     return find_one_peak(a), find_one_peak(b)
@@ -262,21 +183,22 @@ def dac_to_buf(tmbf, bufa, bufb, sources):
 # Measures delay from reference bunch to selected DDR waveform
 def dac_to_ddr(tmbf, ddr_buf, source):
     tmbf.set('DDR:INPUT_S', source)
-    fire_soft_trigger_1(tmbf)
+#     fire_soft_trigger_1(tmbf)
+    configure.fire_and_wait(tmbf, False, True, False)
     return find_one_peak(ddr_buf.get()[:BUNCH_COUNT])
 
 
 # Measures which bunch has its gain controlled by bunch select 0
 def gain_delay(tmbf, maxdac):
-    configure_bank_wf(tmbf, 0,
+    configure.bank_wf(tmbf, 0,
         one_bunch(DAC_OUT.MAX_GAIN, 0), 0, DAC_OUT.NCO)
     return find_one_peak(maxdac.get_new(0.25))
 
 
 # Measures which bunch has its FIR controlled by bunch select 0
 def fir_to_ddr(tmbf, ddr_buf):
-    configure_fir_wf(tmbf, 1, bunches(0, tmbf.n_taps))
-    configure_bank_wf(tmbf, 0,
+    configure.fir_wf(tmbf, 1, 0)
+    configure.bank_wf(tmbf, 0,
         DAC_OUT.MAX_GAIN, one_bunch(0, 1), DAC_OUT.NCO)
 
     tmbf.set('DDR:INPUT_S', 'FIR')
@@ -299,7 +221,7 @@ def binary_search(start, end, test):
 # Performs binary search to discover which bunch is detected for bunch zero
 def search_det_bunch(tmbf, det_power, source):
     # Configure source
-    tmbf.set('DET:INPUT_S', source)
+    configure.detector_input(tmbf, source)
 
     # Binary search.
     outwf = numpy.zeros(BUNCH_COUNT)
@@ -319,13 +241,11 @@ def search_det_bunch(tmbf, det_power, source):
 # Computes group delay from scaled IQ.
 def compute_group_delay(scale, iq):
     angle = numpy.unwrap(numpy.angle(iq))
-    fit = numpy.polyfit(scale, angle)
+    fit = numpy.polyfit(scale, angle, 1)
     slope = fit[0]
     mean_error = numpy.std(angle - numpy.polyval(fit, scale))
 
     assert mean_error < 0.001, 'Unexpected error in slope fit'
-
-    print 'slope', slope, 'error', mean_error
 
     # Convert slope into revolutions per bunch to get group delay (frequency
     # scale is in units of tune).
@@ -334,10 +254,12 @@ def compute_group_delay(scale, iq):
 
 def search_det_delay(tmbf, det_i, det_q, source):
     # Configure source
-    tmbf.set('DET:INPUT_S', source)
+    configure.detector_input(tmbf, source)
 
     # Capture data
-    fire_soft_trigger_1(tmbf)
+#     fire_soft_trigger_1(tmbf)
+    configure.fire_and_wait(tmbf, False, True, True)
+    scale = tmbf.get('DET:SCALE')
     iq = numpy.dot([1, 1j], [det_i.get(), det_q.get()])
     return compute_group_delay(scale, iq)
 
@@ -350,6 +272,10 @@ class Results:
     def __init__(self):
         self.__dict__['items'] = []
 
+    def set(self, name, value):
+        self.items.append(name)
+        self.__dict__[name] = value
+
     def __setattr__(self, name, value):
         # Ensure value is positive
         if value < 0:
@@ -358,8 +284,7 @@ class Results:
             'Value %s = %d out of range' % (name, value)
         assert value % 4 == 0, \
             'Value %s = %d out of phase' % (name, value)
-        self.items.append(name)
-        self.__dict__[name] = value / 4
+        self.set(name, value / 4)
 
     def print_results(self):
         for item in self.items:
@@ -439,8 +364,14 @@ def measure_ddr(tmbf, results):
 def measure_detector_bunch(tmbf, results):
     print >>sys.stderr, 'Measuring Detector Bunch Offsets'
 
-    # Configure detector for sweep and soft trigger
-    configure_detector(tmbf)
+    # Configure detector for narrow band sweep and soft trigger
+#     setup_detector_single_bunch(tmbf)
+    setup_tune_sweep(tmbf, 1.31, 1e-5, 20, '0dB')
+    configure.detector_bunches(tmbf, 0)
+    configure.detector_gain(tmbf, '0dB')
+
+    configure.fir_wf(tmbf, 0, 32767)
+    configure.bank_wf(tmbf, 1, DAC_OUT.MAX_GAIN, 0, DAC_OUT.SWEEP)
 
     det_power = tmbf.PV('DET:POWER:0')
     det_power.get()
@@ -453,11 +384,20 @@ def measure_detector_bunch(tmbf, results):
 def measure_detector_delay(tmbf, results):
     print >>sys.stderr, 'Measuring Detector Group Delays'
 
+    setup_tune_sweep(tmbf, 1, 0.1, 20, '0dB')
+    configure.detector_bunches(tmbf)
+    configure.detector_gain(tmbf, '-36dB')
+
+    configure.fir_wf(tmbf, 0, 32767)
+    configure.bank(tmbf, 1, DAC_OUT.MAX_GAIN, 0, DAC_OUT.SWEEP)
+
+    tmbf.set('DET:SKEW_S', 936)
+
     det_i = tmbf.PV('DET:I:M')
     det_q = tmbf.PV('DET:Q:M')
 
-    results.DET_ADC_DELAY = search_det_delay(tmbf, det_i, det_q, 'ADC')
-    results.DET_FIR_DELAY = search_det_delay(tmbf, det_i, det_q, 'FIR')
+    results.set('DET_ADC_DELAY', search_det_delay(tmbf, det_i, det_q, 'ADC'))
+    results.set('DET_FIR_DELAY', search_det_delay(tmbf, det_i, det_q, 'FIR'))
 
     det_i.close()
     det_q.close()
@@ -466,15 +406,19 @@ def measure_detector_delay(tmbf, results):
 # ------------------------------------------------------------------------------
 
 
-tmbf = TMBF('TS-DI-TMBF-01')
+tmbf = configure.TMBF('TS-DI-TMBF-01')
 results = Results()
 
 
-configure_timing_test(tmbf)
+compensate = len(sys.argv) > 1
+
+
+configure_timing_test(tmbf, compensate)
 
 measure_maxbuf(tmbf, results)
 measure_buf(tmbf, results)
 measure_ddr(tmbf, results)
 measure_detector_bunch(tmbf, results)
+measure_detector_delay(tmbf, results)
 
 results.print_results()
