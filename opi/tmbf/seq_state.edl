@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2290
-y 960
+x 2407
+y 23
 w 599
-h 26
+h 64
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -89,7 +89,7 @@ major 4
 minor 5
 release 0
 x 200
-y 0
+y 24
 w 80
 h 20
 controlPv "$(device):SEQ:$(state):DWELL_S"
@@ -117,7 +117,7 @@ major 4
 minor 5
 release 0
 x 288
-y 0
+y 24
 w 56
 h 20
 controlPv "$(device):SEQ:$(state):COUNT_S"
@@ -144,9 +144,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 432
+x 440
 y 0
-w 80
+w 72
 h 22
 fgColor index 14
 bgColor index 3
@@ -165,7 +165,7 @@ minor 0
 release 0
 x 352
 y 0
-w 72
+w 80
 h 22
 fgColor index 14
 bgColor index 3
@@ -194,5 +194,98 @@ value {
   "$(state)"
 }
 autoSize
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 352
+y 24
+w 80
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):SEQ:$(state):ENWIN_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 200
+y 0
+w 72
+h 20
+controlPv "$(device):SEQ:$(state):END_FREQ_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 440
+y 24
+w 80
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):SEQ:$(state):CAPTURE_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 104
+y 24
+w 56
+h 20
+controlPv "$(device):SEQ:$(state):HOLDOFF_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
 endObjectProperties
 

@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 89
-y 140
+x 90
+y 141
 w 631
 h 784
 font "helvetica-medium-r-18.0"
@@ -181,6 +181,9 @@ xPv {
 }
 yPv {
   0 "$(device):DET:Q:$(tune)"
+}
+plotStyle {
+  0 "point"
 }
 xSigned {
   0 1
