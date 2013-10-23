@@ -83,8 +83,8 @@ void hw_write_dac_enable(unsigned int enable);
 /* Output delay in 2ns steps up to 1023 steps. */
 void hw_write_dac_delay(unsigned int delay);
 
-/* Pre-compensation filter. */
-void hw_write_dac_precomp(short taps[3]);
+/* Pre-emphasis filter. */
+void hw_write_dac_preemph(short taps[3]);
 
 
 /* * * * * * * * * * * * * * * * * * * * * * */

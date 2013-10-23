@@ -48,4 +48,4 @@ minmax_pvs('DAC')
 longOut('DAC:DELAY', 0, SAMPLES_PER_TURN-1, DESC = 'DAC output delay')
 mbbOut('DAC:ENABLE', 'Off', 'On', DESC = 'DAC output enable')
 
-WaveformOut('DAC:PRECOMP', 3, 'SHORT', DESC = 'DAC output precompensation')
+WaveformOut('DAC:PREEMPH', 3, 'SHORT', DESC = 'DAC output pre-emphasis')

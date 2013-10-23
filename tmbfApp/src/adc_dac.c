@@ -130,7 +130,7 @@ bool initialise_adc_dac(void)
     PUBLISH_WRITER_P(ulongout, "DAC:DELAY", write_dac_delay);
 
     /* Pre-emphasis filter interface. */
-    PUBLISH_WF_ACTION_P(short, "DAC:PRECOMP", 3, hw_write_dac_precomp);
+    PUBLISH_WF_ACTION_P(short, "DAC:PREEMPH", 3, hw_write_dac_preemph);
 
     return true;
 }

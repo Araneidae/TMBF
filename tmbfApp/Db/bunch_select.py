@@ -37,4 +37,5 @@ for bank in range(4):
 
 Action('BUN:SYNC', DESC = 'Bunch synchronisation enable')
 longOut('BUN:OFFSET', 0, 233, DESC = 'Zero bunch offset')
-longIn('BUN:PHASE', SCAN = 'I/O Intr', LOW = 0, LSV = 'MINOR', MDEL = 0)
+longIn('BUN:PHASE', SCAN = 'I/O Intr', LOW = 0, LSV = 'MINOR', MDEL = 0,
+    DESC = 'Bunch phase detect')

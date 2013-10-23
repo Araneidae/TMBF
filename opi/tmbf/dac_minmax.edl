@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 763
-y 117
+x 764
+y 118
 w 641
 h 570
 font "helvetica-medium-r-18.0"
@@ -493,7 +493,7 @@ y 480
 w 184
 h 80
 # Appearance
-graphTitle "Pre-compensation"
+graphTitle "Pre-emphasis"
 fgColor index 14
 bgColor index 3
 gridColor index 14
@@ -517,7 +517,7 @@ y2Max 16600
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):DAC:PRECOMP_S"
+  0 "$(device):DAC:PREEMPH_S"
 }
 plotStyle {
   0 "needle"
