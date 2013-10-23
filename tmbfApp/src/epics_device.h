@@ -314,6 +314,11 @@ void trigger_record(
 /* Simple helper for EPICS_STRING type. */
 void copy_epics_string(EPICS_STRING *out, const char *in);
 
+/* Returns published epics_record structure with the given type and name, or
+ * returns NULL if record not present. */
+struct epics_record *lookup_epics_record(
+    enum record_type record_type, const char *name);
+
 
 /* Core PUBLISH and PUBLISH_WAVEFORM macros.  Wrappers for publish_epics_record
  * above, possible argument structures defined below. */

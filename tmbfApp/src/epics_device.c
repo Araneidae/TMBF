@@ -264,6 +264,14 @@ struct epics_record *publish_epics_record(
 }
 
 
+struct epics_record *lookup_epics_record(
+    enum record_type record_type, const char *name)
+{
+    BUILD_KEY(key, name, record_type);
+    return hash_table_lookup(hash_table, key);
+}
+
+
 /* Checks whether the given record is an IN record for validating the trigger
  * method. */
 static bool is_in_record(enum record_type record_type)
@@ -297,8 +305,8 @@ void trigger_record(
 
     if (base->ioscanpvt)
     {
-        scanIoRequest(base->ioscanpvt);
         base->ioscan_pending = true;
+        scanIoRequest(base->ioscanpvt);
     }
 }
 
@@ -541,7 +549,11 @@ static bool init_record_common(
         TEST_NULL_(base, "No record found for %s", key)  &&
         TEST_OK_(base->record_name == NULL,
             "%s already bound to %s", key, base->record_name)  &&
-        DO_(base->record_name = pr->name; pr->dpvt = base);
+        DO_(base->record_name = pr->name; pr->dpvt = base)  &&
+        TEST_OK_(
+            (pr->scan == menuScanI_O_Intr) == (base->ioscanpvt != NULL),
+            "%s has inconsistent scan menu (%d) and ioscanpvt (%p)",
+            key, pr->scan, base->ioscanpvt);
 }
 
 
