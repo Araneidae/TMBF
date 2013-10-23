@@ -19,6 +19,7 @@
 
 
 enum { SELECT_IQ = 1 };     // Special treatment for buffer select 1.
+enum { HOM_GAIN_OFF = 8 };
 
 /* These are the sequencer states for states 1 to 7.  State 0 is special and
  * is not handled in this array. */
@@ -123,7 +124,7 @@ static void write_seq_state(void)
         entry->capture_count = bank->capture_count - 1;
         entry->bunch_bank = bank->bunch_bank;
         entry->hom_gain = bank->hom_gain;
-        entry->hom_enable = true;
+        entry->hom_enable = bank->hom_gain < HOM_GAIN_OFF;
         entry->enable_window = bank->enable_window;
         entry->write_enable = bank->write_enable;
         entry->holdoff = bank->holdoff - 1;

@@ -391,7 +391,7 @@ def measure_detector_delay(tmbf, results):
     configure.fir_wf(tmbf, 0, 32767)
     configure.bank(tmbf, 1, DAC_OUT.MAX_GAIN, 0, DAC_OUT.SWEEP)
 
-    tmbf.set('DET:SKEW_S', 936)
+    tmbf.set('DET:LOOP_S', 1)
 
     det_i = tmbf.PV('DET:I:M')
     det_q = tmbf.PV('DET:Q:M')

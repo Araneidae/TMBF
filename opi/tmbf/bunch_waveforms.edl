@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 593
-y 120
+x 216
+y 202
 w 641
-h 528
+h 577
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -52,16 +52,17 @@ xMin 0
 xMax 936
 # Y axis properties
 showYAxis
-yAxisSrc "AutoScale"
-yMax 1
+yAxisSrc "fromUser"
+yMin 0
+yMax 1024
 # Y2 axis properties
 y2AxisSrc "AutoScale"
 y2Max 1
 # Trace Properties
 numTraces 2
 yPv {
-  0 "$(device):BUN:$(bank):GAINWF"
-  1 "$(device):BUN:$(bank):GAINWF_S"
+  0 "$(device):BUN:$(bank):GAINWF_S"
+  1 "$(device):BUN:$(bank):GAINWF"
 }
 plotUpdateMode {
   0 "y"
@@ -70,8 +71,8 @@ ySigned {
   0 1
 }
 plotColor {
-  0 index 27
-  1 index 20
+  0 index 20
+  1 index 25
 }
 endObjectProperties
 
@@ -101,7 +102,7 @@ major 4
 minor 1
 release 0
 x 568
-y 4
+y 528
 w 64
 h 24
 fgColor index 46
@@ -162,16 +163,20 @@ xMin 0
 xMax 936
 # Y axis properties
 showYAxis
-yAxisSrc "AutoScale"
-yMax 1
+yAxisSrc "fromUser"
+yMin -0.5
+yMax 3.5
+yLabelIntervals 1
+yMajorsPerLabel 1
+yMinorsPerMajor 0
 # Y2 axis properties
 y2AxisSrc "AutoScale"
 y2Max 1
 # Trace Properties
 numTraces 2
 yPv {
-  0 "$(device):BUN:$(bank):FIRWF"
-  1 "$(device):BUN:$(bank):FIRWF_S"
+  0 "$(device):BUN:$(bank):FIRWF_S"
+  1 "$(device):BUN:$(bank):FIRWF"
 }
 plotUpdateMode {
   0 "y"
@@ -180,8 +185,8 @@ ySigned {
   0 1
 }
 plotColor {
-  0 index 27
-  1 index 20
+  0 index 20
+  1 index 25
 }
 endObjectProperties
 
@@ -211,16 +216,17 @@ xMin 0
 xMax 936
 # Y axis properties
 showYAxis
-yAxisSrc "AutoScale"
-yMax 1
+yAxisSrc "fromUser"
+yMin -0.5
+yMax 7.5
 # Y2 axis properties
 y2AxisSrc "AutoScale"
 y2Max 1
 # Trace Properties
 numTraces 2
 yPv {
-  0 "$(device):BUN:$(bank):OUTWF"
-  1 "$(device):BUN:$(bank):OUTWF_S"
+  0 "$(device):BUN:$(bank):OUTWF_S"
+  1 "$(device):BUN:$(bank):OUTWF"
 }
 plotUpdateMode {
   0 "y"
@@ -229,8 +235,48 @@ ySigned {
   0 1
 }
 plotColor {
-  0 index 27
-  1 index 20
+  0 index 20
+  1 index 25
 }
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 528
+w 128
+h 16
+font "helvetica-bold-r-14.0"
+fgColor index 25
+bgColor index 0
+useDisplayBg
+value {
+  "Currently selected"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 168
+y 528
+w 123
+h 16
+font "helvetica-bold-r-14.0"
+fgColor index 20
+bgColor index 0
+useDisplayBg
+value {
+  "Waveform Setting"
+}
+autoSize
 endObjectProperties
 

@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 129
-y 349
+x 371
+y 701
 w 641
 h 418
 font "helvetica-medium-r-18.0"
@@ -146,7 +146,7 @@ y 224
 w 624
 h 184
 # Appearance
-graphTitle "Set Filter Taps"
+graphTitle "Waveform Filter Taps"
 fgColor index 14
 bgColor index 3
 gridColor index 14
@@ -177,7 +177,7 @@ ySigned {
   0 1
 }
 plotColor {
-  0 index 27
+  0 index 20
 }
 endObjectProperties
 

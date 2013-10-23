@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2407
-y 23
+x 2408
+y 24
 w 599
 h 64
 font "helvetica-medium-r-18.0"
@@ -62,8 +62,8 @@ minor 5
 release 0
 x 104
 y 0
-w 88
-h 20
+w 80
+h 24
 controlPv "$(device):SEQ:$(state):STEP_FREQ_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -88,10 +88,10 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 200
+x 192
 y 24
-w 80
-h 20
+w 72
+h 24
 controlPv "$(device):SEQ:$(state):DWELL_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -116,7 +116,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 288
+x 24
 y 24
 w 56
 h 20
@@ -144,9 +144,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 440
+x 424
 y 0
-w 72
+w 88
 h 22
 fgColor index 14
 bgColor index 3
@@ -163,9 +163,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 352
+x 312
 y 0
-w 80
+w 96
 h 22
 fgColor index 14
 bgColor index 3
@@ -202,9 +202,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 352
+x 312
 y 24
-w 80
+w 96
 h 22
 fgColor index 14
 bgColor index 3
@@ -221,7 +221,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 200
+x 192
 y 0
 w 72
 h 20
@@ -248,9 +248,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 440
+x 424
 y 24
-w 80
+w 88
 h 22
 fgColor index 14
 bgColor index 3
@@ -287,5 +287,28 @@ newPos
 objType "controls"
 clipToDspLimits
 noExecuteClipMask
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 16
+y 50
+w 568
+h 0
+lineColor index 9
+fillColor index 0
+numPoints 2
+xPoints {
+  0 16
+  1 584
+}
+yPoints {
+  0 50
+  1 50
+}
 endObjectProperties
 
