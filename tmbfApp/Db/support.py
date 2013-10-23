@@ -80,7 +80,6 @@ def set_out_defaults(fields, name):
 # For longout and ao we want DRV{L,H} to match {L,H}OPR by default.  Also puts
 # all settings into fields for convenience.
 def set_scalar_out_defaults(fields, DRVL, DRVH):
-    assert (DRVL is None) == (DRVH is None), 'Inconsistent limits'
     fields['DRVL'] = DRVL
     fields['DRVH'] = DRVH
     fields.setdefault('LOPR', DRVL)

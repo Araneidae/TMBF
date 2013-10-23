@@ -59,7 +59,7 @@ static struct sweep_info mean_sweep;
 static struct epics_interlock *iq_trigger;
 
 
-/* Waveforms for compensating IQ by group_delay.
+/* Waveforms for compensating IQ by loop_delay.
  *
  * The DDC skew is a group delay in ns.  We translate this into a phase
  * advance of
@@ -72,7 +72,7 @@ static struct epics_interlock *iq_trigger;
  *    For economy of calculation, we precompute the rotations as scaled
  * integers so that the final computation can be a simple integer
  * multiplication (one instruction when the compiler is in the right mood). */
-static int group_delay = 0;
+static double loop_delay_turns = 0; // Raw delay as input by user
 static int rotate_I[TUNE_LENGTH];  // 2**30 * cos(phase)
 static int rotate_Q[TUNE_LENGTH];  // 2**30 * sin(phase)
 
@@ -80,6 +80,9 @@ static int rotate_Q[TUNE_LENGTH];  // 2**30 * sin(phase)
  * corresponding to multiplication by 936*2^-32. */
 static uint32_t wf_scaling;
 static int wf_shift;
+
+static int compensated_delay;       // Compensated delay in bunches
+static unsigned int input_select;   // FIR or ADC, affects compensated delay
 
 
 
@@ -99,10 +102,21 @@ unsigned int tune_to_freq(double tune)
 }
 
 
+/* Computes compensated_delay (in bunches) from user entered loop delay (in
+ * turns together with input specific delay. */
+static void compute_delay(void)
+{
+    int adc_delay, fir_delay;
+    hw_read_det_delays(&adc_delay, &fir_delay);
+    int compensation = input_select ? adc_delay : fir_delay;
+    compensated_delay = (int) round(
+        MAX_BUNCH_COUNT * loop_delay_turns + compensation);
+}
+
 static void store_one_tune_freq(unsigned int freq, int ix)
 {
     unsigned_fixed_to_single(freq, &tune_scale[ix], wf_scaling, wf_shift);
-    cos_sin(-freq * group_delay, &rotate_I[ix], &rotate_Q[ix]);
+    cos_sin(-freq * compensated_delay, &rotate_I[ix], &rotate_Q[ix]);
 }
 
 /* Computes frequency scale directly from sequencer settings.  Triggered
@@ -112,23 +126,30 @@ static void update_det_scale(void)
     unsigned int state;
     const struct seq_entry *sequencer_table = read_sequencer_table(&state);
 
+    compute_delay();
+
     int ix = 0;
     unsigned int f0 = 0;
     for ( ; state > 0  &&  ix < TUNE_LENGTH; state --)
     {
         const struct seq_entry *entry = &sequencer_table[state];
-        f0 = entry->start_freq;
-        for (unsigned int i = 0;
-             i < entry->capture_count + 1  &&  ix < TUNE_LENGTH; i ++)
+        if (entry->write_enable)
         {
-            store_one_tune_freq(f0, ix++);
-            f0 += entry->delta_freq;
+            f0 = entry->start_freq;
+            for (unsigned int i = 0;
+                 i < entry->capture_count + 1  &&  ix < TUNE_LENGTH; i ++)
+            {
+                store_one_tune_freq(f0, ix++);
+                f0 += entry->delta_freq;
+            }
         }
     }
 
+    /* Record how many points will actually be captured. */
+    scale_length = ix;
+
     /* Pad the rest of the scale.  The last frequency is a good a choice as any,
      * anything that goes here is invalid. */
-    scale_length = ix;
     while (ix < TUNE_LENGTH)
         store_one_tune_freq(f0, ix++);
 
@@ -142,9 +163,17 @@ void seq_settings_changed(void)
 }
 
 
-static void set_group_delay(int delay)
+static void set_loop_delay(double delay)
 {
-    group_delay = delay;
+    loop_delay_turns = delay;
+    tune_scale_needs_refresh = true;
+}
+
+
+static void write_det_input_select(unsigned int input)
+{
+    input_select = input;
+    hw_write_det_input_select(input);
     tune_scale_needs_refresh = true;
 }
 
@@ -184,7 +213,9 @@ static void extract_iq(const short buffer_low[], const short buffer_high[])
         mean_sweep.wf_q[i] = Q_sum;
     }
 
-    /* Pad rest of results with last value: none of this data is valid! */
+    /* Ensure the entire array is filled.  If IQ capture was short we extend the
+     * last read value to fill the rest of the waveform.  This makes the
+     * resulting display look better on a display tool like EDM. */
     for (int i = scale_length; i < TUNE_LENGTH; i ++)
     {
         for (int channel = 0; channel < 4; channel ++)
@@ -349,7 +380,9 @@ static void publish_channel(const char *name, struct sweep_info *sweep)
 
 static bool reset_window = true;
 
-/* Compute the appropriate windowing function for the detector. */
+/* Compute the appropriate windowing function for the detector.  If called after
+ * reset_window has been set then the incoming window is replaced by a standard
+ * window before being written to hardware. */
 static void write_detector_window(void *context, short *window, size_t *length)
 {
     if (reset_window)
@@ -377,10 +410,10 @@ static void reset_detector_window(void)
 
 bool initialise_detector(void)
 {
-    PUBLISH_WRITER_P(bo, "DET:MODE", hw_write_det_mode);
+    PUBLISH_WRITER_P(bo,   "DET:MODE", hw_write_det_mode);
     PUBLISH_WRITER_P(mbbo, "DET:GAIN", hw_write_det_gain);
-    PUBLISH_WRITER_P(mbbo, "DET:INPUT", hw_write_det_input_select);
-    PUBLISH_WRITER_P(longout, "DET:SKEW", set_group_delay);
+    PUBLISH_WRITER_P(mbbo, "DET:INPUT", write_det_input_select);
+    PUBLISH_WRITER_P(ao,   "DET:LOOP", set_loop_delay);
 
     PUBLISH_READ_VAR(bi, "DET:OVF:ACC", overflows[OVERFLOW_IQ_ACC]);
     PUBLISH_READ_VAR(bi, "DET:OVF:IQ",  overflows[OVERFLOW_IQ_SCALE]);

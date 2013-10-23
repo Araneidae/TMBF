@@ -22,6 +22,8 @@ MINMAX_DAC_DELAY = 7
 BUNCH_FIR_OFFSET = 229
 BUNCH_GAIN_OFFSET = 0
 
-# Detector single bunch offsets
+# Detector single bunch offsets and phase skews
 DET_ADC_OFFSET = 1
+DET_ADC_DELAY = -4
 DET_FIR_OFFSET = 231
+DET_FIR_DELAY = 12

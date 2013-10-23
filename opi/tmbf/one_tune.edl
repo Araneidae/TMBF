@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 90
-y 141
+x 1028
+y 142
 w 631
 h 784
 font "helvetica-medium-r-18.0"
@@ -155,7 +155,6 @@ y 424
 w 304
 h 304
 # Appearance
-border
 graphTitle "I/Q Response"
 fgColor index 14
 bgColor index 3
@@ -164,10 +163,12 @@ font "helvetica-medium-r-12.0"
 # Operating Modes
 nPts 2
 # X axis properties
+showXAxis
 xAxisSrc "AutoScale"
 xMax 1
 xShowLabelGrid
 # Y axis properties
+showYAxis
 yAxisSrc "AutoScale"
 yMax 1
 yShowLabelGrid

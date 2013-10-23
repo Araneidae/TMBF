@@ -172,6 +172,10 @@ void hw_write_det_gain(unsigned int gain);
 #define DET_WINDOW_LENGTH   1024
 void hw_write_det_window(uint16_t window[DET_WINDOW_LENGTH]);
 
+/* Returns measured detector phase delays (relative to a full turn of delay) for
+ * ADC and FIR measurements, results are reported in bunches. */
+void hw_read_det_delays(int *adc_delay, int *fir_delay);
+
 
 /* * * * * * * * * * * * * * * * * * * * * */
 /* SEQ: Programmed Bunch and Sweep Control */

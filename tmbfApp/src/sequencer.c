@@ -52,6 +52,11 @@ static unsigned int buf_select;
 static unsigned int sequencer_pc;
 static bool sequencer_enable;
 
+/* Number of IQ points to be captured by sequencer. */
+static struct epics_interlock *info_trigger;
+static int capture_count;       // Number of IQ points to capture
+static int sequencer_duration;  // Total duration of sequence
+
 
 static bool write_end_freq(void *context, const double *value)
 {
@@ -82,6 +87,25 @@ static void publish_bank(int ix, struct sequencer_bank *bank)
     bank->end_freq_rec =
         PUBLISH(ao, FORMAT("END_FREQ"), write_end_freq, .context = bank);
 #undef FORMAT
+}
+
+
+/* Compute number of captured points, to be called when the sequencer state or
+ * program counter changes. */
+static void update_capture_count(void)
+{
+    interlock_wait(info_trigger);
+    capture_count = 0;
+    sequencer_duration = 0;
+    for (unsigned int i = 1; i <= sequencer_pc; i ++)
+    {
+        struct sequencer_bank *bank = &banks[i - 1];
+        if (bank->write_enable)
+            capture_count += bank->capture_count;
+        sequencer_duration +=
+            bank->capture_count * (bank->dwell_time + bank->holdoff);
+    }
+    interlock_signal(info_trigger, NULL);
 }
 
 
@@ -123,6 +147,7 @@ static void update_seq_state(void)
 
     /* Write the current state to hardware. */
     write_seq_state();
+    update_capture_count();
 
     /* Let the detector know that things have changed. */
     seq_settings_changed();
@@ -152,7 +177,7 @@ void process_fast_buffer(void)
     hw_read_buf_data(buffer_low, buffer_high);
     interlock_signal(buffer_trigger, NULL);
 
-    if (buf_select == SELECT_IQ)
+    if (buf_select == SELECT_IQ  &&  capture_count > 0)
         update_iq(buffer_low, buffer_high);
 }
 
@@ -189,6 +214,7 @@ static void write_seq_count(unsigned int count)
     if (sequencer_enable)
         hw_write_seq_count(sequencer_pc);
 
+    update_capture_count();
     seq_settings_changed();
 }
 
@@ -212,6 +238,10 @@ bool initialise_sequencer(void)
     PUBLISH_WRITER_P(ulongout, "SEQ:PC", write_seq_count);
     PUBLISH_READER(ulongin, "SEQ:PC", hw_read_seq_state);
     PUBLISH_ACTION("SEQ:RESET", hw_write_seq_reset);
+
+    info_trigger = create_interlock("SEQ:INFO:TRIG", "SEQ:INFO:DONE", false);
+    PUBLISH_READ_VAR(longin, "SEQ:LENGTH", capture_count);
+    PUBLISH_READ_VAR(longin, "SEQ:DURATION", sequencer_duration);
 
     /* Fast buffer configuration settings. */
     buffer_trigger = create_interlock("BUF:TRIG", "BUF:DONE", false);

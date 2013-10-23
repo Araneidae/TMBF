@@ -43,8 +43,11 @@ static int MINMAX_DAC_DELAY;    //                              DAC
 
 static int BUNCH_FIR_OFFSET;    // Offset of FIR selection
 static int BUNCH_GAIN_OFFSET;   // Offset of DAC gain selection
+
 static int DET_ADC_OFFSET;      // Offset of detector ADC bunch zero
 static int DET_FIR_OFFSET;      // Offset of detector FIR bunch zero
+static int DET_ADC_DELAY;       // Group delay to detector for ADC
+static int DET_FIR_DELAY;       // Group delay to detector for FIR
 
 static const struct config_entry hardware_config_defs[] = {
     CONFIG(DDR_ADC_DELAY),
@@ -61,8 +64,11 @@ static const struct config_entry hardware_config_defs[] = {
 
     CONFIG(BUNCH_FIR_OFFSET),
     CONFIG(BUNCH_GAIN_OFFSET),
+
     CONFIG(DET_ADC_OFFSET),
     CONFIG(DET_FIR_OFFSET),
+    CONFIG(DET_ADC_DELAY),
+    CONFIG(DET_FIR_DELAY),
 };
 
 static const char *hardware_config_file;
@@ -84,7 +90,7 @@ struct tmbf_config_space
     //  14      Trigger armed
     //  15      (unused)
     //  19:16   Bunch trigger phase bits
-    //  15:31   (unused)
+    //  31:20   (unused)
 
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
@@ -545,6 +551,12 @@ void hw_write_det_window(uint16_t window[DET_WINDOW_LENGTH])
     for (int i = 0; i < DET_WINDOW_LENGTH; i ++)
         config_space->sequencer_write = window[i];
     UNLOCK();
+}
+
+void hw_read_det_delays(int *adc_delay, int *fir_delay)
+{
+    *adc_delay = DET_ADC_DELAY;
+    *fir_delay = DET_FIR_DELAY;
 }
 
 

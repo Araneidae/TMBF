@@ -23,9 +23,6 @@ for bunch in range(4):
 Waveform('DET:SCALE', TUNE_LENGTH, 'FLOAT',
     SCAN = 'I/O Intr', DESC = 'Scale for frequency sweep')
 
-longOut('DET:SKEW',
-    EGU = 'turns', DESC = 'Detector skew group delay in turns')
-
 # Two overflow detection bits are generated
 overflows = [
     boolIn('DET:OVF:ACC', 'Ok', 'Overflow', OSV = 'MAJOR',
@@ -69,6 +66,9 @@ Trigger('DET', *concat(bunch_channels) + mean_channel + overflows)
 det_window = WaveformOut('DET:WINDOW', 1024, 'SHORT', DESC = 'Detector window')
 boolOut('DET:RESET_WIN', FLNK = det_window, PINI = 'YES',
     DESC = 'Reset detector window to Hamming')
+
+# Total loop delay in turns.
+aOut('DET:LOOP', 1, EGU = 'turns', DESC = 'Closed loop delay in turns')
 
 
 # Also put the fixed NCO control here
