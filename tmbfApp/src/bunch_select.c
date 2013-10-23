@@ -7,10 +7,13 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
+#include <semaphore.h>
 
 #include "error.h"
 #include "hardware.h"
 #include "epics_device.h"
+#include "adc_dac.h"
 
 #include "bunch_select.h"
 
@@ -138,13 +141,73 @@ static void publish_bank(int ix, struct bunch_bank *bank)
 static struct bunch_bank banks[BUNCH_BANKS];
 
 
+/* Bunch synchronisation.  This is a trifle involved because when
+ * synchronisation is started we then need to poll the trigger phase until
+ * triggering is complete and then update the ADC skew accordingly.  We spawn a
+ * thread who's only purpose in life is to poll the bunch trigger status until a
+ * trigger occurs. */
+
+static sem_t bunch_sync_sem;
+static struct epics_record *sync_phase_pv;
+static int sync_phase;
+
+/* Each valid phase bit pattern corresponds to a clock skew in bunches. */
+static bool phase_to_skew(int phase, unsigned int *skew)
+{
+    switch (phase)
+    {
+        case 8:     *skew = 0;  break;
+        case 12:    *skew = 1;  break;
+        case 14:    *skew = 2;  break;
+        case 15:    *skew = 3;  break;
+        default:    return FAIL_("Invalid phase: %d\n", phase);
+    }
+    return true;
+}
+
+static void *bunch_sync_thread(void *context)
+{
+    sync_phase = hw_read_bun_trigger_phase();
+    trigger_record(sync_phase_pv, 0, NULL);
+
+    while (true)
+    {
+        /* Block until sync button pressed, then request sync operation. */
+        sem_wait(&bunch_sync_sem);
+        hw_write_bun_sync();
+
+        /* Now loop until trigger seen. */
+        do {
+            sync_phase = hw_read_bun_trigger_phase();
+            trigger_record(sync_phase_pv, 0, NULL);
+            usleep(100000);
+        } while (sync_phase == 0);
+
+        /* Finally use the measured phase to update the ADC skew. */
+        unsigned int skew;
+        if (phase_to_skew(sync_phase, &skew))
+            set_adc_skew(skew);
+    }
+    return NULL;
+}
+
+static void write_bun_sync(void)
+{
+    sem_post(&bunch_sync_sem);
+}
+
+
 bool initialise_bunch_select(void)
 {
-    PUBLISH_ACTION("BUN:SYNC", hw_write_bun_sync);
     PUBLISH_WRITER_P(longout, "BUN:OFFSET", hw_write_bun_zero_bunch);
-    PUBLISH_READER(longin, "BUN:PHASE", hw_read_bun_trigger_phase);
+    PUBLISH_ACTION("BUN:SYNC", write_bun_sync);
+    sync_phase_pv = PUBLISH_READ_VAR_I(longin, "BUN:PHASE", sync_phase);
 
     for (int i = 0; i < BUNCH_BANKS; i ++)
         publish_bank(i, &banks[i]);
-    return true;
+
+    pthread_t thread_id;
+    return
+        TEST_IO(sem_init(&bunch_sync_sem, 0, 0))  &&
+        TEST_0(pthread_create(&thread_id, NULL, bunch_sync_thread, NULL));
 }

@@ -791,6 +791,7 @@ h 16
 controlPv "$(device):BUN:PHASE"
 font "helvetica-medium-r-14.0"
 fgColor index 14
+fgAlarm
 bgColor index 5
 useDisplayBg
 autoHeight
