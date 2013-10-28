@@ -10,8 +10,8 @@ DDR_RAW_DAC_DELAY = 0
 DDR_DAC_DELAY = 5
 
 # Buffer trigger delays
-BUF_ADC_DELAY = 233
-BUF_FIR_DELAY = 3
+BUF_ADC_DELAY = 230
+BUF_FIR_DELAY = 0
 BUF_DAC_DELAY = 9
 
 # MinMax buffer delays
