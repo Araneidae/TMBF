@@ -88,28 +88,27 @@ struct tmbf_config_space
     //  9:5     Overflow bits (IQ/ACC/DAC/FIR)
     //  13:10   Trigger phase bits
     //  14      Trigger armed
-    //  15      (unused)
+    //  15      DDR armed
     //  19:16   Bunch trigger phase bits
     //  31:20   (unused)
 
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
-    //  1       DDR trigger source select (0 => soft, 1 => external)
-    //  2       Buffer & seq trigger source select (0 => soft, 1 => external)
+    //  1       Enable DDR capture (must be done before triggering)
+    //  2       (unused)
     //  3       Enable internal loopback (testing only!)
     //  4       Arm DDR (must be pulsed, works on rising edge)
     //  5       Soft trigger DDR (pulsed)
     //  6       Arm buffer and sequencer
     //  7       Soft trigger buffer and sequencer (pulsed)
     //  8       Arm bunch counter sync (pulsed)
-    //  9       (unused)
+    //  9       Disarm DDR, pulsed
     //  11:10   Buffer data select (FIR+ADC/IQ/FIR+DAC/ADC+DAC)
     //  13:12   Buffer readback channel select
     //  14      Detector bunch mode enable
     //  15      Detector input select
-    //  19      (unused)
     //  18:16   HOM gain select (in 6dB steps)
-    //  19      (unused)
+    //  19      Disarm buffer, pulsed
     //  22:20   FIR gain select (in 6dB steps)
     //  23      (unused)
     //  26:24   Detector gain select (in 6dB steps)
@@ -235,6 +234,8 @@ int hw_read_version(void)
 }
 
 
+/* This routine is a bit more involved that most because we want to read a
+ * programmable set of bits: all the bits we set are reset after being read. */
 void hw_read_overflows(
     const bool read_bits[OVERFLOW_BIT_COUNT],
     bool overflow_bits[OVERFLOW_BIT_COUNT])
@@ -360,9 +361,9 @@ void hw_write_ddr_select(unsigned int selection)
     WRITE_CONTROL_BITS(28, 2, selection);
 }
 
-void hw_write_ddr_trigger_select(bool external)
+void hw_write_ddr_enable(void)
 {
-    WRITE_CONTROL_BITS(1, 1, external);
+    pulse_control_bit(1);
 }
 
 int hw_read_ddr_delay(void)
@@ -429,15 +430,10 @@ void hw_write_buf_select(unsigned int selection)
     WRITE_CONTROL_BITS(10, 2, selection);
 }
 
-void hw_write_buf_trigger_select(bool external)
-{
-    WRITE_CONTROL_BITS(2, 1, external);
-}
-
 
 bool hw_read_buf_status(void)
 {
-    return READ_STATUS_BITS(3, 1) || READ_STATUS_BITS(14, 1);   // Separate out
+    return READ_STATUS_BITS(3, 1) || READ_STATUS_BITS(14, 1);   // Separate out?
 }
 
 /* To make things complicated, the fast buffer has separate delays for each of
@@ -629,6 +625,11 @@ void hw_write_trg_arm(bool ddr, bool buf)
 void hw_write_trg_soft_trigger(bool ddr, bool buf)
 {
     pulse_mask(make_mask2(5, 7, ddr, buf));
+}
+
+void hw_write_trig_disarm(bool ddr, bool buf)
+{
+    pulse_mask(make_mask2(9, 19, ddr, buf));
 }
 
 int hw_read_trg_raw_phase(void)

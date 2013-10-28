@@ -50,6 +50,7 @@ struct trigger_source {
     unsigned int source_id;     // Source identification
     bool retrigger;             // If auto-retrigger enabled, written from PV
     struct armed_status armed;  // Aggregate status of all our targets
+    bool stop_retrigger;        // Used to stop retriggering
 
     /* We keep track of which targets this source triggered last time it fired
      * so that we can refresh our status as appropriate. */
@@ -117,13 +118,13 @@ static void set_armed_status(struct armed_status *status, bool armed)
 /* Trigger targets (DDR/BUF/SEQ). */
 
 
-static void do_arm_ddr(bool external, bool one_shot)
+static void do_arm_ddr(bool one_shot)
 {
+    hw_write_ddr_enable();
+    arming_ddr_buffer();
+
     set_armed_status(&ddr_target.armed, true);
     ddr_target.one_shot = one_shot;
-
-    hw_write_ddr_trigger_select(external);
-    arming_ddr_buffer();
 }
 
 static void disarm_ddr(void)
@@ -132,10 +133,9 @@ static void disarm_ddr(void)
 }
 
 
-static void do_arm_buf(bool external)
+static void do_arm_buf(void)
 {
     set_armed_status(&buf_target.armed, true);
-    hw_write_buf_trigger_select(external);
 }
 
 static void disarm_buf(void)
@@ -154,16 +154,6 @@ static void disarm_seq(void)
 {
     set_armed_status(&seq_target.armed, false);
     enable_seq_trigger(false);
-}
-
-
-/* Arming and firing of DDR and BUF triggers to hardware need to be
- * simultaneous, so are gathered in this function. */
-static void arm_hardware(bool arm_ddr, bool arm_buf, bool external)
-{
-    hw_write_trg_arm(arm_ddr, arm_buf);
-    if (!external)
-        hw_write_trg_soft_trigger(arm_ddr, arm_buf);
 }
 
 
@@ -213,15 +203,18 @@ static void arm_and_fire(struct trigger_source *source)
 
     /* Prepare the targets that need arming. */
     if (arm_ddr)
-        do_arm_ddr(external, !source->retrigger);
+        do_arm_ddr(!source->retrigger);
     if (arm_buf)
     {
-        do_arm_buf(external);
+        do_arm_buf();
         maybe_arm_seq();
     }
 
     /* Hardware now ready, let's go. */
-    arm_hardware(arm_ddr, arm_buf, external);
+    if (external)
+        hw_write_trg_arm(arm_ddr, arm_buf);
+    else
+        hw_write_trg_soft_trigger(arm_ddr, arm_buf);
 
     /* Update reported status and record which reports we expect. */
     source->ddr_armed = arm_ddr;
@@ -245,17 +238,20 @@ static void update_source(struct trigger_source *source)
 {
     if (source->armed.armed)
     {
+        /* Update the armed flags. */
+        source->ddr_armed = source->ddr_armed  &&  ddr_target.armed.armed;
+        source->buf_armed = source->buf_armed  &&  buf_target.armed.armed;
+        source->seq_armed = source->seq_armed  &&  seq_target.armed.armed;
         bool busy =
-            (source->ddr_armed  &&  ddr_target.armed.armed)  ||
-            (source->buf_armed  &&  buf_target.armed.armed)  ||
-            (source->seq_armed  &&  seq_target.armed.armed);
+            source->ddr_armed  || source->buf_armed  || source->seq_armed;
         if (!busy)
         {
             /* We're not busy, so mark ourself as no longer armed ... but we
              * may also retrigger if appropriate. */
             set_armed_status(&source->armed, false);
-            if (source->retrigger)
+            if (source->retrigger  &&  !source->stop_retrigger)
                 arm_and_fire(source);
+            source->stop_retrigger = false;
         }
     }
 }
@@ -270,33 +266,32 @@ static void update_source_status(void)
 }
 
 
-#if 0
 /* If a trigger does not arrive (should only happen for external trigger), or if
  * a target fails to complete (should only happen for sequencer) put things back
  * as far as possible. */
 static void reset_source(struct trigger_source *source)
 {
-    if (source->armed)
+    if (source->armed.armed)
     {
-        if (source->ddr_armed)
-        /* Turn off triggers as appropriate.  Ideally would also like to reset
-         * the arm if possible. */
-        if (arm_ddr)    hw_write_ddr_trigger_select(false);
-        if (arm_buf)    hw_write_buf_trigger_select(false);
-        if (arm_seq)    hw_write_seq_reset();
+        /* If we're in retrigger mode ensure that we won't retrigger on the next
+         * trigger complete event. */
+        source->stop_retrigger = true;
 
-        source->ddr_armed = false;
-        source->buf_armed = false;
-        source->seq_armed = false;
-        set_source_armed(source, false);
+        /* For the external trigger disarm any external targets and ensure that
+         * DDR isn't waiting for the trigger. */
+        if (source->source_id == TRIG_SOURCE_EXTERNAL)
+        {
+            hw_write_trig_disarm(source->ddr_armed, source->buf_armed);
+            if (source->ddr_armed)
+                disarm_ddr();
+        }
     }
 }
-#endif
 
 static bool call_reset_source(void *context, const bool *value)
 {
     LOCK();
-//     reset_source(context);
+    reset_source(context);
     UNLOCK();
     return true;
 }

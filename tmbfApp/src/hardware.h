@@ -93,8 +93,8 @@ void hw_write_dac_preemph(short taps[3]);
 /* Selects data to capture to DDR RAM, either DAC or unprocessed ADC. */
 void hw_write_ddr_select(unsigned int select);
 
-/* Selects software or hardware trigger. */
-void hw_write_ddr_trigger_select(bool external);
+/* Starts data capture into DDR RAM.  Must be called before triggering. */
+void hw_write_ddr_enable(void);
 
 /* Returns delay (in clocks) from reference bunch to corresponding DDR readout.
  * This depends on the currently selected data source. */
@@ -129,10 +129,6 @@ int hw_read_bun_trigger_phase(void);
 
 /* Selects data for capture to buffer. */
 void hw_write_buf_select(unsigned int selection);
-
-/* Selects internal or external triggering.  This trigger can also be used for
- * triggering the sequencer. */
-void hw_write_buf_trigger_select(bool external);
 
 /* Returns current buffer status: true if waiting for data or trigger, false if
  * idle. */
@@ -219,6 +215,9 @@ void hw_write_trg_arm(bool ddr, bool buf);
 
 /* Simultaneously soft trigger one or both of DDR and BUF. */
 void hw_write_trg_soft_trigger(bool ddr, bool buf);
+
+/* Disarm pending trigger.  No effect if already triggered or not armed. */
+void hw_write_trig_disarm(bool ddr, bool buf);
 
 /* Returns raw phase bits from trigger. */
 int hw_read_trg_raw_phase(void);
