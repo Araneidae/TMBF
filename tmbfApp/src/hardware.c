@@ -118,6 +118,8 @@ struct tmbf_config_space
 
     uint32_t nco_frequency;         //  3  Fixed NCO generator frequency
     uint32_t dac_delay;             //  4  DAC output delay (2ns steps)
+    //  9:0     DAC output delay in 2ns steps
+    //  11:10   DAC pre-emphasis filter group delay in 2ns steps
     uint32_t bunch_select;          //  5  Detector bunch selections
     uint32_t adc_offset_ab;         //  6  ADC channel offsets (channels A/B)
     uint32_t adc_offset_cd;         //  7  ADC channel offsets (channels C/D)
@@ -338,15 +340,17 @@ void hw_write_dac_enable(unsigned int enable)
     WRITE_CONTROL_BITS(0, 1, enable);
 }
 
-void hw_write_dac_delay(unsigned int delay)
-{
-    config_space->dac_delay = delay + 4;
-}
-
 void hw_write_dac_preemph(short taps[3])
 {
     for (int i = 0; i < 3; i ++)
         config_space->dac_preemph_taps[i] = taps[i];
+}
+
+void hw_write_dac_delay(unsigned int dac_delay, unsigned int preemph_delay)
+{
+    config_space->dac_delay =
+        ((dac_delay + 4) & 0x3ff) |
+        (preemph_delay & 0x3) << 10;
 }
 
 

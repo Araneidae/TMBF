@@ -80,8 +80,9 @@ void hw_read_dac_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT]);
 /* Output enable. */
 void hw_write_dac_enable(unsigned int enable);
 
-/* Output delay in 2ns steps up to 1023 steps. */
-void hw_write_dac_delay(unsigned int delay);
+/* Output delay in 2ns steps up to 1023 steps for DAC delay and output delay
+ * from 0 to 2 (in 2ns steps) for preemphasis filter. */
+void hw_write_dac_delay(unsigned int dac_delay, unsigned int preemph_delay);
 
 /* Pre-emphasis filter. */
 void hw_write_dac_preemph(short taps[3]);

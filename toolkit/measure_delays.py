@@ -74,7 +74,8 @@ def configure_timing_test(tmbf, compensate = False):
     # Disable delay compensation so we meaure raw delays
     tmbf.set('COMPENSATE_S', 'Normal' if compensate else 'Disabled')
     # This is our nominal zero delay for the DAC pre-emphasis
-    tmbf.set('DAC:PREEMPH_S', [1<<14, 0, 0])
+    tmbf.set('DAC:PREEMPH_S', [0, 1<<14, 0])
+    tmbf.set('DAC:PREEMPH:DELAY_S', '0 ns')
 
     # For inputs use internal loopback
     tmbf.set('LOOPBACK_S', 'Loopback')

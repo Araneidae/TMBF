@@ -92,21 +92,33 @@ static struct min_max dac_min_max = { .read = hw_read_dac_minmax };
  * delay is always constant.  We handle this by subtracting the ADC skew from
  * the DAC delay actually written. */
 
-static unsigned int adc_skew;   // 0 to 3
-static unsigned int dac_delay;  // 0 to 935
+static unsigned int adc_skew;       // 0 to 3
+static unsigned int dac_delay;      // 0 to 935
+static unsigned int preemph_delay;  // 0 to 2
 static struct epics_record *adc_skew_pv;
+
+static void write_dac_delays(void)
+{
+    hw_write_dac_delay(dac_delay + 3 - adc_skew, preemph_delay);
+}
 
 static void write_dac_delay(unsigned int delay)
 {
     dac_delay = delay;
-    hw_write_dac_delay(delay + 3 - adc_skew);
+    write_dac_delays();
 }
 
 static void write_adc_skew(unsigned int skew)
 {
     adc_skew = skew;
     hw_write_adc_skew(skew);
-    write_dac_delay(dac_delay);
+    write_dac_delays();
+}
+
+static void write_preemph_delay(unsigned int delay)
+{
+    preemph_delay = delay;
+    write_dac_delays();
 }
 
 void set_adc_skew(unsigned int skew)
@@ -131,6 +143,7 @@ bool initialise_adc_dac(void)
 
     /* Pre-emphasis filter interface. */
     PUBLISH_WF_ACTION_P(short, "DAC:PREEMPH", 3, hw_write_dac_preemph);
+    PUBLISH_WRITER_P(mbbo, "DAC:PREEMPH:DELAY", write_preemph_delay);
 
     return true;
 }
