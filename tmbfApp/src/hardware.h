@@ -220,5 +220,8 @@ void hw_write_trg_soft_trigger(bool ddr, bool buf);
 /* Disarm pending trigger.  No effect if already triggered or not armed. */
 void hw_write_trig_disarm(bool ddr, bool buf);
 
+/* Configure trigger delays. */
+void hw_write_trg_delays(int ddr_delay, int buf_delay);
+
 /* Returns raw phase bits from trigger. */
 int hw_read_trg_raw_phase(void);

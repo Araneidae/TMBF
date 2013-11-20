@@ -125,7 +125,10 @@ struct tmbf_config_space
     uint32_t adc_offset_cd;         //  7  ADC channel offsets (channels C/D)
     uint32_t dac_preemph_taps[3];   // 8-10     DAC pre-emphasis filter
     uint32_t bunch_zero_offset;     // 11  Bunch zero offset
-    uint32_t padding[4];            // 11-15    (unused)
+    uint32_t trigger_delays;        // 12  Trigger delay control
+    // 15:0     DDR trigger delay in turns
+    // 31:16    BUF trigger delay in turns
+    uint32_t padding[3];            // 13-15    (unused)
 
     uint32_t fir_bank;              // 16  Select FIR bank
     uint32_t fir_write;             // 17  Write FIR coefficients
@@ -634,6 +637,11 @@ void hw_write_trg_soft_trigger(bool ddr, bool buf)
 void hw_write_trig_disarm(bool ddr, bool buf)
 {
     pulse_mask(make_mask2(9, 19, ddr, buf));
+}
+
+void hw_write_trg_delays(int ddr_delay, int buf_delay)
+{
+    config_space->trigger_delays = (ddr_delay & 0xFFFF) | (buf_delay << 16);
 }
 
 int hw_read_trg_raw_phase(void)

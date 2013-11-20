@@ -117,6 +117,21 @@ static void set_armed_status(struct armed_status *status, bool armed)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Trigger targets (DDR/BUF/SEQ). */
 
+static int ddr_trig_delay;
+static int buf_trig_delay;
+
+static void write_ddr_delay(int delay)
+{
+    ddr_trig_delay = delay;
+    hw_write_trg_delays(ddr_trig_delay, buf_trig_delay);
+}
+
+static void write_buf_delay(int delay)
+{
+    buf_trig_delay = delay;
+    hw_write_trg_delays(ddr_trig_delay, buf_trig_delay);
+}
+
 
 static void do_arm_ddr(bool one_shot)
 {
@@ -175,6 +190,8 @@ static void publish_targets(void)
     PUBLISH_WRITE_VAR_P(mbbo, "TRG:DDR:SEL", ddr_target.source_select);
     PUBLISH_WRITE_VAR_P(mbbo, "TRG:BUF:SEL", buf_target.source_select);
     PUBLISH_WRITE_VAR_P(bo,   "TRG:SEQ:ENA", seq_target.enabled);
+    PUBLISH_WRITER_P(longout, "TRG:DDR:DELAY", write_ddr_delay);
+    PUBLISH_WRITER_P(longout, "TRG:BUF:DELAY", write_buf_delay);
 }
 
 
