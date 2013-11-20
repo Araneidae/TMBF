@@ -10,7 +10,7 @@ from common import *
 # want to write anything until startup and PV initialisation is complete, so we
 # start with writing disabled and reenable at end.
 update = boolOut('SEQ:WRITE', DISV = 0, DESC = 'Write sequencer settings')
-seq_pc = longOut('SEQ:PC', 0, 7, DISV = 0, DESC = 'Sequencer PC')
+seq_pc = longOut('SEQ:PC', 1, 7, DISV = 0, DESC = 'Sequencer PC')
 records.seq('SEQ:ENWRITE',
     PINI = 'RUN', SELM = 'All',     # Perform initialisation after startup
     LNK1 = update.DISV, DO1 = 1,

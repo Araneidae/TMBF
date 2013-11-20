@@ -40,7 +40,8 @@ struct sequencer_bank {
 /* Sequencer state as currently seen through EPICS. */
 static struct sequencer_bank banks[MAX_SEQUENCER_COUNT - 1];
 
-/* Sequencer state as currently written to hardware. */
+/* Sequencer state as currently written to hardware, or as will be written at
+ * start of next trigger. */
 static struct seq_entry current_sequencer[MAX_SEQUENCER_COUNT];
 
 /* Fast buffer interface. */
@@ -146,12 +147,20 @@ static void update_seq_state(void)
         WRITE_OUT_RECORD(ao, bank->end_freq_rec, end_freq, false);
     }
 
-    /* Write the current state to hardware. */
-    write_seq_state();
+    /* Update overall information about sequence. */
     update_capture_count();
 
     /* Let the detector know that things have changed. */
     seq_settings_changed();
+}
+
+
+/* Called before arming the sequencer: now is the time to configure the hardware
+ * for operation. */
+void prepare_sequencer(void)
+{
+    write_seq_state();
+    prepare_detector();
 }
 
 

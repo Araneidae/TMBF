@@ -18,7 +18,7 @@
 
 
 
-void update_tune_sweep(const struct sweep_info *sweep_info)
+void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow)
 {
 }
 

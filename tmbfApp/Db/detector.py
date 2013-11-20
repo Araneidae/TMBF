@@ -9,13 +9,11 @@ mbbOut('DET:INPUT', 'FIR', 'ADC', DESC = 'Detector input selection')
 boolOut('DET:AUTOGAIN', 'Fixed Gain', 'Autogain',
     DESC = 'Detector automatic gain')
 
-update_bunch = Action('DET:WBUNCH', DESC = 'Update detector bunches')
 for bunch in range(4):
     bunch_select = longOut('DET:BUNCH%d' % bunch, 0, SAMPLES_PER_TURN/4-1,
         DESC = 'Detector bunch select #%d' % bunch)
     bunch_select.FLNK = records.calc('DET:BUNCH%d' % bunch,
         CALC = '4*A+B',  INPA = bunch_select, INPB = bunch,
-        FLNK = update_bunch,
         DESC = 'Selected bunch #%d' % bunch)
 
 

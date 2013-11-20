@@ -26,6 +26,9 @@
 /* Detector bunches: one bunch for each operating channel. */
 static unsigned int detector_bunches[4];
 
+/* Selects single bunch mode if set to true. */
+static bool detector_mode;
+
 /* Each time a sequencer setting changes we'll need to recompute the scale. */
 static bool tune_scale_needs_refresh = true;
 static struct epics_record *tune_scale_pv;
@@ -36,7 +39,7 @@ static bool overflows[OVERFLOW_BIT_COUNT];
 /* Gain and autogain control.  If autogain is enabled then we'll bump the
  * detector gain up or down where necessary and possible. */
 static bool autogain_enable;
-static unsigned int current_det_gain;
+static unsigned int detector_gain;
 static struct epics_record *gain_setting;
 #define MAX_DET_GAIN    7       // 3 bit enumeration
 /* The gain will be pushed up if the signal is below this threshold.  This has
@@ -73,7 +76,7 @@ static uint32_t wf_scaling;
 static int wf_shift;
 
 static int compensated_delay;       // Compensated delay in bunches
-static unsigned int input_select;   // FIR or ADC, affects compensated delay
+static unsigned int detector_input; // FIR or ADC, affects compensated delay
 
 
 /* This is called each time an IQ waveform has been captured.  If autogain is
@@ -83,7 +86,7 @@ static void update_autogain(int abs_max)
 {
     if (autogain_enable)
     {
-        unsigned int new_gain = current_det_gain;
+        unsigned int new_gain = detector_gain;
         if (overflows[OVERFLOW_IQ_SCALE])
             /* Push gain down on overflow. */
             new_gain += 1;
@@ -93,17 +96,10 @@ static void update_autogain(int abs_max)
 
         /* Only write new gain if in range and changed.  Push the update
          * through the EPICS layer so the outside is fully informed. */
-        if (new_gain <= MAX_DET_GAIN  &&  new_gain != current_det_gain)
+        if (new_gain <= MAX_DET_GAIN  &&  new_gain != detector_gain)
             WRITE_OUT_RECORD(mbbo, gain_setting, new_gain, true);
     }
 }
-
-static void write_det_gain(unsigned int gain)
-{
-    current_det_gain = gain;
-    hw_write_det_gain(gain);
-}
-
 
 
 /* Convert fractional tune in cycles per machine revolution to phase advance per
@@ -128,7 +124,7 @@ static void compute_delay(void)
 {
     int adc_delay, fir_delay;
     hw_read_det_delays(&adc_delay, &fir_delay);
-    int compensation = input_select ? adc_delay : fir_delay;
+    int compensation = detector_input ? adc_delay : fir_delay;
     compensated_delay = (int) round(
         MAX_BUNCH_COUNT * loop_delay_turns + compensation);
 }
@@ -193,8 +189,7 @@ static void set_loop_delay(double delay)
 
 static void write_det_input_select(unsigned int input)
 {
-    input_select = input;
-    hw_write_det_input_select(input);
+    detector_input = input;
     tune_scale_needs_refresh = true;
 }
 
@@ -213,7 +208,7 @@ static int32_t dot_product(int32_t a, int32_t b, int32_t c, int32_t d)
  * updates *abs_max for autogain calculation. */
 static void extract_iq(
     const short buffer_low[], const short buffer_high[], int channel,
-    struct channel_sweep_info *sweep, int *abs_max)
+    struct channel_sweep *sweep, int *abs_max)
 {
     for (int i = 0; i < sweep_info.sweep_length; i ++)
     {
@@ -248,7 +243,7 @@ static void compute_mean_iq(void)
         int I_sum = 0, Q_sum = 0;
         for (int channel = 0; channel < 4; channel ++)
         {
-            struct channel_sweep_info *sweep = &sweep_info.channels[channel];
+            struct channel_sweep *sweep = &sweep_info.channels[channel];
             I_sum += sweep->wf_i[i];
             Q_sum += sweep->wf_q[i];
         }
@@ -260,7 +255,7 @@ static void compute_mean_iq(void)
 
 /* The power waveform for each sweep is simply the sum of squares. */
 #define SQR(x)      ((x) * (x))
-static void compute_power(struct channel_sweep_info *sweep)
+static void compute_power(struct channel_sweep *sweep)
 {
     for (int i = 0; i < TUNE_LENGTH; i ++)
         sweep->power[i] = SQR(sweep->wf_i[i]) + SQR(sweep->wf_q[i]);
@@ -275,7 +270,7 @@ static void update_sweep_info(
     *abs_max = 0;
     for (int channel = 0; channel < 4; channel ++)
     {
-        struct channel_sweep_info *sweep = &sweep_info.channels[channel];
+        struct channel_sweep *sweep = &sweep_info.channels[channel];
         extract_iq(buffer_low, buffer_high, channel, sweep, abs_max);
         compute_power(sweep);
     }
@@ -285,13 +280,14 @@ static void update_sweep_info(
 
 
 /* Read out accumulated overflow bits over the last capture. */
-static void update_overflow(void)
+static bool update_overflow(void)
 {
     const bool read_mask[OVERFLOW_BIT_COUNT] = {
         [OVERFLOW_IQ_ACC] = true,
         [OVERFLOW_IQ_SCALE] = true,
     };
     hw_read_overflows(read_mask, overflows);
+    return overflows[OVERFLOW_IQ_ACC] || overflows[OVERFLOW_IQ_SCALE];
 }
 
 
@@ -308,21 +304,17 @@ void update_iq(const short buffer_low[], const short buffer_high[])
     }
 
     interlock_wait(iq_trigger);
-    update_overflow();
+    bool overflow = update_overflow();
 
     int abs_max;
     update_sweep_info(buffer_low, buffer_high, &abs_max);
     update_autogain(abs_max);
 
-    update_tune_sweep(&sweep_info);
-
     interlock_signal(iq_trigger, NULL);
-}
 
-
-static void write_det_bunches(void)
-{
-    hw_write_det_bunches(detector_bunches);
+    /* Perform tune sweep update outside trigger interlock so that the tune
+     * layer can do its own separate update signalling. */
+    update_tune_sweep(&sweep_info, overflow);
 }
 
 
@@ -332,7 +324,18 @@ static void write_nco_freq(double tune)
 }
 
 
-static void publish_channel(const char *name, struct channel_sweep_info *sweep)
+void prepare_detector(void)
+{
+    /* We don't want the following states to change during a detector sweep, so
+     * we write them now immediately before starting a fresh sweep. */
+    hw_write_det_bunches(detector_bunches);
+    hw_write_det_gain(detector_gain);
+    hw_write_det_input_select(detector_input);
+    hw_write_det_mode(detector_mode);
+}
+
+
+static void publish_channel(const char *name, struct channel_sweep *sweep)
 {
     char buffer[20];
 #define FORMAT(field) \
@@ -378,11 +381,11 @@ static void reset_detector_window(void)
 
 bool initialise_detector(void)
 {
-    gain_setting = PUBLISH_WRITER_P(mbbo, "DET:GAIN", write_det_gain);
+    gain_setting = PUBLISH_WRITE_VAR_P(mbbo, "DET:GAIN", detector_gain);
     PUBLISH_WRITE_VAR_P(bo, "DET:AUTOGAIN", autogain_enable);
     PUBLISH_WRITER_P(mbbo, "DET:INPUT", write_det_input_select);
-    PUBLISH_WRITER_P(bo,   "DET:MODE", hw_write_det_mode);
-    PUBLISH_WRITER_P(ao,   "DET:LOOP", set_loop_delay);
+    PUBLISH_WRITE_VAR_P(bo, "DET:MODE", detector_mode);
+    PUBLISH_WRITER_P(ao, "DET:LOOP", set_loop_delay);
 
     PUBLISH_READ_VAR(bi, "DET:OVF:ACC", overflows[OVERFLOW_IQ_ACC]);
     PUBLISH_READ_VAR(bi, "DET:OVF:IQ",  overflows[OVERFLOW_IQ_SCALE]);
@@ -397,8 +400,6 @@ bool initialise_detector(void)
     }
     publish_channel("M", &sweep_info.mean);
     iq_trigger = create_interlock("DET:TRIG", "DET:DONE", false);
-
-    PUBLISH_ACTION("DET:WBUNCH", write_det_bunches);
 
     tune_scale_pv = PUBLISH_WF_READ_VAR_I(
         float, "DET:SCALE", TUNE_LENGTH, sweep_info.tune_scale);
