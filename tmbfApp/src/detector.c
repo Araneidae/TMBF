@@ -16,21 +16,16 @@
 #include "epics_extra.h"
 #include "sequencer.h"
 #include "numeric.h"
+#include "tune.h"
 
 #include "detector.h"
 
 
 
-#define TUNE_LENGTH    (RAW_BUF_DATA_LENGTH / 4)
-
 
 /* Detector bunches: one bunch for each operating channel. */
 static unsigned int detector_bunches[4];
 
-/* The tune scale is used both for presentation and as part of the tune
- * calculation, so we hang onto it here. */
-static float tune_scale[TUNE_LENGTH];
-static int scale_length;
 /* Each time a sequencer setting changes we'll need to recompute the scale. */
 static bool tune_scale_needs_refresh = true;
 static struct epics_record *tune_scale_pv;
@@ -49,24 +44,8 @@ static struct epics_record *gain_setting;
  * further factor of around 3/4 to avoid premature switching and bouncing. */
 #define GAIN_UP_THRESHOLD   6100
 
-
-/* Information about a single channel of sweep measurement. */
-struct sweep_info {
-    short wf_i[TUNE_LENGTH];
-    short wf_q[TUNE_LENGTH];
-    int power[TUNE_LENGTH];
-    double power_tune;
-    double power_phase;
-    int cumsum_i[TUNE_LENGTH];
-    int cumsum_q[TUNE_LENGTH];
-    double cumsum_tune;
-    double cumsum_phase;
-};
-
-/* We have five channels of sweep measurement: one for each channel plus an
- * aggregate across all four channels. */
-static struct sweep_info channel_sweep[4];
-static struct sweep_info mean_sweep;
+/* Completely analysed data from a successful detector sweep. */
+static struct sweep_info sweep_info;
 /* Used to trigger update of all sweep info. */
 static struct epics_interlock *iq_trigger;
 
@@ -156,7 +135,8 @@ static void compute_delay(void)
 
 static void store_one_tune_freq(unsigned int freq, int ix)
 {
-    unsigned_fixed_to_single(freq, &tune_scale[ix], wf_scaling, wf_shift);
+    unsigned_fixed_to_single(
+        freq, &sweep_info.tune_scale[ix], wf_scaling, wf_shift);
     cos_sin(-freq * compensated_delay, &rotate_I[ix], &rotate_Q[ix]);
 }
 
@@ -187,7 +167,7 @@ static void update_det_scale(void)
     }
 
     /* Record how many points will actually be captured. */
-    scale_length = ix;
+    sweep_info.sweep_length = ix;
 
     /* Pad the rest of the scale.  The last frequency is a good a choice as any,
      * anything that goes here is invalid. */
@@ -219,142 +199,88 @@ static void write_det_input_select(unsigned int input)
 }
 
 
-/* Returns 2^-32 * (a*c + b*d) with rounding of the last bit. */
+/* Returns 2^-31 * (a*c + b*d) with rounding of the last bit.  The scaling here
+ * is chosen to balance the 2^30 scaling on (sin,cos) without risking overflow,
+ * which unfortunately is possible if we scale by 2^-30. */
 static int32_t dot_product(int32_t a, int32_t b, int32_t c, int32_t d)
 {
     int64_t full = (int64_t) a * c + (int64_t) b * d;
-    return (int32_t) ((full + (1UL << 31)) >> 32);
+    return (int32_t) ((full + (1UL << 30)) >> 31);
 }
 
 
-/* IQ values are packed with four channels of data for each sample.  Here we
- * extract the four channels, compute an average channel and compensate for
- * group delay. */
+/* Extracts and scales IQ for one channel from the incoming raw IQ buffer.  Also
+ * updates *abs_max for autogain calculation. */
 static void extract_iq(
-    const short buffer_low[], const short buffer_high[], int *abs_max)
+    const short buffer_low[], const short buffer_high[], int channel,
+    struct channel_sweep_info *sweep, int *abs_max)
 {
-    *abs_max = 0;
-
-    for (int i = 0; i < scale_length; i ++)
+    for (int i = 0; i < sweep_info.sweep_length; i ++)
     {
+        int raw_I = buffer_high[4 * i + channel];
+        int raw_Q = buffer_low[4 * i + channel];
+        if (abs(raw_I) > *abs_max)  *abs_max = abs(raw_I);
+        if (abs(raw_Q) > *abs_max)  *abs_max = abs(raw_Q);
+
         int rot_I = rotate_I[i];
         int rot_Q = rotate_Q[i];
-        int I_sum = 0, Q_sum = 0;
-        for (int channel = 0; channel < 4; channel ++)
-        {
-            int raw_I = buffer_high[4 * i + channel];
-            int raw_Q = buffer_low[4 * i + channel];
-            if (abs(raw_I) > *abs_max)  *abs_max = abs(raw_I);
-            if (abs(raw_Q) > *abs_max)  *abs_max = abs(raw_Q);
-
-            int I = dot_product(raw_I, raw_Q, rot_I, -rot_Q);
-            int Q = dot_product(raw_I, raw_Q, rot_Q, rot_I);
-            I_sum += I;
-            Q_sum += Q;
-
-            struct sweep_info *sweep = &channel_sweep[channel];
-            sweep->wf_i[i] = I;
-            sweep->wf_q[i] = Q;
-        }
-        mean_sweep.wf_i[i] = I_sum;
-        mean_sweep.wf_q[i] = Q_sum;
+        sweep->wf_i[i] = dot_product(raw_I, raw_Q, rot_I, -rot_Q);
+        sweep->wf_q[i] = dot_product(raw_I, raw_Q, rot_Q, rot_I);
     }
 
     /* Ensure the entire array is filled.  If IQ capture was short we extend the
      * last read value to fill the rest of the waveform.  This makes the
      * resulting display look better on a display tool like EDM. */
-    for (int i = scale_length; i < TUNE_LENGTH; i ++)
+    for (int i = sweep_info.sweep_length; i < TUNE_LENGTH; i ++)
     {
+        sweep->wf_i[i] = sweep->wf_i[sweep_info.sweep_length-1];
+        sweep->wf_q[i] = sweep->wf_q[sweep_info.sweep_length-1];
+    }
+}
+
+
+/* Once IQ has been computed for the four channels, the mean IQ is just the mean
+ * of the four channels. */
+static void compute_mean_iq(void)
+{
+    for (int i = 0; i < TUNE_LENGTH; i ++)
+    {
+        int I_sum = 0, Q_sum = 0;
         for (int channel = 0; channel < 4; channel ++)
         {
-            struct sweep_info *sweep = &channel_sweep[channel];
-            sweep->wf_i[i] = sweep->wf_i[scale_length-1];
-            sweep->wf_q[i] = sweep->wf_q[scale_length-1];
+            struct channel_sweep_info *sweep = &sweep_info.channels[channel];
+            I_sum += sweep->wf_i[i];
+            Q_sum += sweep->wf_q[i];
         }
-        mean_sweep.wf_i[i] = mean_sweep.wf_i[scale_length-1];
-        mean_sweep.wf_q[i] = mean_sweep.wf_q[scale_length-1];
+        sweep_info.mean.wf_i[i] = (I_sum + 2) / 4;  // Rounded average of four
+        sweep_info.mean.wf_q[i] = (Q_sum + 2) / 4;
     }
 }
 
 
-/* Converts a tune, detected as an index into the tune sweep waveform, into the
- * corresponding tune frequency offset and phase. */
-static void index_to_tune(
-    struct sweep_info *sweep, int ix, double *tune, double *phase)
-{
-    double harmonic;
-    *tune = modf(tune_scale[ix], &harmonic);
-    *phase = 180.0 / M_PI * atan2(sweep->wf_i[ix], sweep->wf_q[ix]);
-}
-
-
+/* The power waveform for each sweep is simply the sum of squares. */
 #define SQR(x)      ((x) * (x))
-
-
-/* Computes tune from maximum power.  Somewhat crude but can give quite good
- * results. */
-static void compute_power_tune(struct sweep_info *sweep)
+static void compute_power(struct channel_sweep_info *sweep)
 {
-    /* Simple power computation. */
     for (int i = 0; i < TUNE_LENGTH; i ++)
         sweep->power[i] = SQR(sweep->wf_i[i]) + SQR(sweep->wf_q[i]);
-
-    /* Take the peak power as the reported tune. */
-    int peak_value = 0;
-    int peak_index = 0;
-    for (int i = 0; i < TUNE_LENGTH; i ++)
-    {
-        if (sweep->power[i] > peak_value)
-        {
-            peak_value = sweep->power[i];
-            peak_index = i;
-        }
-    }
-
-    /* Convert detected peak offset into tune frequency and phase. */
-    index_to_tune(sweep, peak_index, &sweep->power_tune, &sweep->power_phase);
 }
 
 
-/* Computes tune from cumulative sum. */
-static void compute_cumsum_tune(struct sweep_info *sweep)
+/* From the raw buffer extract IQ data for each channel and update the computed
+ * power waveform. */
+static void update_sweep_info(
+    const short buffer_low[], const short buffer_high[], int *abs_max)
 {
-    /* Simple cumulative sum. */
-    int sum_i = 0, sum_q = 0;
-    for (int i = 0; i < TUNE_LENGTH; i ++)
+    *abs_max = 0;
+    for (int channel = 0; channel < 4; channel ++)
     {
-        sum_i += sweep->wf_i[i];
-        sum_q += sweep->wf_q[i];
-        sweep->cumsum_i[i] = sum_i;
-        sweep->cumsum_q[i] = sum_q;
+        struct channel_sweep_info *sweep = &sweep_info.channels[channel];
+        extract_iq(buffer_low, buffer_high, channel, sweep, abs_max);
+        compute_power(sweep);
     }
-
-    /* Search for peak absolute magnitude. */
-    int peak_value = 0;
-    int64_t peak_index = 0;
-    for (int i = 0; i < TUNE_LENGTH; i ++)
-    {
-        int64_t value =
-            SQR((int64_t) sweep->cumsum_i[i]) +
-            SQR((int64_t) sweep->cumsum_q[i]);
-        if (value > peak_value)
-        {
-            peak_value = value;
-            peak_index = i;
-        }
-    }
-
-    index_to_tune(sweep, peak_index, &sweep->cumsum_tune, &sweep->cumsum_phase);
-}
-
-
-/* Once I/Q waveforms have been computed we can perform final processing on all
- * five channels independently.  The power spectrum and cumulative sum is
- * generated and tune measurements made. */
-static void compute_sweep(struct sweep_info *sweep)
-{
-    compute_power_tune(sweep);
-    compute_cumsum_tune(sweep);
+    compute_mean_iq();
+    compute_power(&sweep_info.mean);
 }
 
 
@@ -383,13 +309,13 @@ void update_iq(const short buffer_low[], const short buffer_high[])
 
     interlock_wait(iq_trigger);
     update_overflow();
+
     int abs_max;
-    extract_iq(buffer_low, buffer_high, &abs_max);
+    update_sweep_info(buffer_low, buffer_high, &abs_max);
     update_autogain(abs_max);
 
-    for (int i = 0; i < 4; i ++)
-        compute_sweep(&channel_sweep[i]);
-    compute_sweep(&mean_sweep);
+    update_tune_sweep(&sweep_info);
+
     interlock_signal(iq_trigger, NULL);
 }
 
@@ -406,7 +332,7 @@ static void write_nco_freq(double tune)
 }
 
 
-static void publish_channel(const char *name, struct sweep_info *sweep)
+static void publish_channel(const char *name, struct channel_sweep_info *sweep)
 {
     char buffer[20];
 #define FORMAT(field) \
@@ -414,15 +340,7 @@ static void publish_channel(const char *name, struct sweep_info *sweep)
 
     PUBLISH_WF_READ_VAR(short, FORMAT("I"), TUNE_LENGTH, sweep->wf_i);
     PUBLISH_WF_READ_VAR(short, FORMAT("Q"), TUNE_LENGTH, sweep->wf_q);
-
     PUBLISH_WF_READ_VAR(int, FORMAT("POWER"), TUNE_LENGTH, sweep->power);
-    PUBLISH_READ_VAR(ai, FORMAT("PTUNE"), sweep->power_tune);
-    PUBLISH_READ_VAR(ai, FORMAT("PPHASE"), sweep->power_phase);
-
-    PUBLISH_WF_READ_VAR(int, FORMAT("CUMSUMI"), TUNE_LENGTH, sweep->cumsum_i);
-    PUBLISH_WF_READ_VAR(int, FORMAT("CUMSUMQ"), TUNE_LENGTH, sweep->cumsum_q);
-    PUBLISH_READ_VAR(ai, FORMAT("CTUNE"), sweep->cumsum_tune);
-    PUBLISH_READ_VAR(ai, FORMAT("CPHASE"), sweep->cumsum_phase);
 
 #undef FORMAT
 }
@@ -475,15 +393,15 @@ bool initialise_detector(void)
         sprintf(name, "DET:BUNCH%d", i);
         PUBLISH_WRITE_VAR_P(ulongout, name, detector_bunches[i]);
         sprintf(name, "%d", i);
-        publish_channel(name, &channel_sweep[i]);
+        publish_channel(name, &sweep_info.channels[i]);
     }
-    publish_channel("M", &mean_sweep);
+    publish_channel("M", &sweep_info.mean);
     iq_trigger = create_interlock("DET:TRIG", "DET:DONE", false);
 
     PUBLISH_ACTION("DET:WBUNCH", write_det_bunches);
 
     tune_scale_pv = PUBLISH_WF_READ_VAR_I(
-        float, "DET:SCALE", TUNE_LENGTH, tune_scale);
+        float, "DET:SCALE", TUNE_LENGTH, sweep_info.tune_scale);
 
     PUBLISH_WRITER_P(ao,   "NCO:FREQ", write_nco_freq);
     PUBLISH_WRITER_P(mbbo, "NCO:GAIN", hw_write_nco_gain);

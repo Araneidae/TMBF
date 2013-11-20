@@ -72,7 +72,8 @@ tmbf_SRCS += fir.c              # FIR filter control
 tmbf_SRCS += bunch_select.c     # Bunch selection control
 tmbf_SRCS += sequencer.c        # State sequencer control
 tmbf_SRCS += triggers.c         # Trigger control and selection
-tmbf_SRCS += detector.c         # I/Q detector and tune
+tmbf_SRCS += detector.c         # I/Q detector
+tmbf_SRCS += tune.c             # Tune measurement and high level control
 tmbf_SRCS += sensors.c          # Miscellaneous system health sensors
 
 tmbf_LIBS += $(EPICS_BASE_IOC_LIBS)

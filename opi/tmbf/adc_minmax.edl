@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 59
-y 139
+x 61
+y 141
 w 641
 h 512
 font "helvetica-medium-r-18.0"
@@ -32,7 +32,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 336
+x 8
 y 424
 w 224
 h 80
@@ -207,7 +207,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 408
+x 80
 y 464
 w 64
 h 16
@@ -234,7 +234,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 344
+x 16
 y 464
 w 40
 h 16
@@ -254,7 +254,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 344
+x 16
 y 480
 w 27
 h 16
@@ -274,7 +274,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 408
+x 80
 y 480
 w 64
 h 16
@@ -301,7 +301,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 408
+x 80
 y 440
 w 64
 h 16
@@ -329,7 +329,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 344
+x 16
 y 440
 w 66
 h 16
@@ -349,7 +349,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 480
+x 152
 y 440
 w 4
 h 16
@@ -369,7 +369,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 496
+x 168
 y 440
 w 48
 h 16
@@ -398,9 +398,9 @@ major 4
 minor 6
 release 0
 # Geometry
-x 8
+x 240
 y 416
-w 160
+w 152
 h 88
 # Appearance
 graphTitle "ADC Offset"
@@ -452,46 +452,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 176
-y 464
-w 62
-h 14
-font "helvetica-medium-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "ADC skew:"
-}
-autoSize
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 176
-y 480
-w 64
-h 24
-fgColor index 14
-bgColor index 4
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):ADC:DELAY_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 336
+x 8
 y 416
 w 120
 h 16
@@ -510,11 +471,30 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 336
+x 8
 y 416
 w 120
 h 16
 lineColor index 14
 fillColor index 0
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 512
+y 416
+w 120
+h 24
+fgColor index 14
+bgColor index 4
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):ADC:SCAN_S.SCAN"
+font "helvetica-medium-r-12.0"
 endObjectProperties
 

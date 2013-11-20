@@ -129,6 +129,7 @@ def setup_detector_single_bunch(tmbf, bank=1, fir=0):
     # Configure detector for single bunch capture
     tmbf.set('DET:MODE_S', 'Single Bunch')
     tmbf.set('DET:GAIN_S', '0dB')
+    tmbf.set('DET:AUTOGAIN_S', 'Fixed Gain')
     tmbf.set('DET:BUNCH0_S', 0)
 
     # Configure triggering and data capture

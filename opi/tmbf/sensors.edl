@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1529
-y 128
+x 2462
+y 334
 w 320
-h 584
+h 609
 font "helvetica-medium-r-14.0"
 ctlFont "helvetica-medium-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -33,7 +33,7 @@ major 4
 minor 1
 release 0
 x 224
-y 552
+y 576
 w 88
 h 24
 fgColor index 46
@@ -96,7 +96,7 @@ release 0
 x 8
 y 48
 w 304
-h 152
+h 176
 lineColor index 14
 fill
 fillColor index 4
@@ -292,7 +292,7 @@ major 4
 minor 0
 release 0
 x 8
-y 376
+y 400
 w 304
 h 168
 lineColor index 14
@@ -307,7 +307,7 @@ major 4
 minor 1
 release 0
 x 8
-y 368
+y 392
 w 176
 h 16
 font "helvetica-medium-r-12.0"
@@ -326,7 +326,7 @@ major 4
 minor 0
 release 0
 x 8
-y 368
+y 392
 w 176
 h 16
 lineColor index 14
@@ -340,7 +340,7 @@ major 4
 minor 5
 release 0
 x 224
-y 392
+y 416
 w 72
 h 16
 controlPv "$(device):SE:CAPVS"
@@ -365,7 +365,7 @@ major 4
 minor 5
 release 0
 x 16
-y 392
+y 416
 w 192
 h 16
 controlPv "$(device):SE:CAPVS.DESC"
@@ -388,7 +388,7 @@ major 4
 minor 5
 release 0
 x 224
-y 408
+y 432
 w 72
 h 16
 controlPv "$(device):SE:CACLNT"
@@ -413,7 +413,7 @@ major 4
 minor 5
 release 0
 x 16
-y 408
+y 432
 w 192
 h 16
 controlPv "$(device):SE:CACLNT.DESC"
@@ -436,7 +436,7 @@ major 4
 minor 5
 release 0
 x 224
-y 432
+y 456
 w 72
 h 16
 controlPv "$(device):SE:NWBRX"
@@ -461,7 +461,7 @@ major 4
 minor 5
 release 0
 x 16
-y 432
+y 456
 w 192
 h 16
 controlPv "$(device):SE:NWBRX.DESC"
@@ -484,7 +484,7 @@ major 4
 minor 5
 release 0
 x 224
-y 448
+y 472
 w 72
 h 16
 controlPv "$(device):SE:NWPRX"
@@ -509,7 +509,7 @@ major 4
 minor 5
 release 0
 x 16
-y 448
+y 472
 w 192
 h 16
 controlPv "$(device):SE:NWPRX.DESC"
@@ -532,7 +532,7 @@ major 4
 minor 5
 release 0
 x 224
-y 464
+y 488
 w 72
 h 16
 controlPv "$(device):SE:NWMRX"
@@ -557,7 +557,7 @@ major 4
 minor 5
 release 0
 x 16
-y 464
+y 488
 w 192
 h 16
 controlPv "$(device):SE:NWMRX.DESC"
@@ -580,7 +580,7 @@ major 4
 minor 5
 release 0
 x 224
-y 488
+y 512
 w 72
 h 16
 controlPv "$(device):SE:NWBTX"
@@ -605,7 +605,7 @@ major 4
 minor 5
 release 0
 x 16
-y 488
+y 512
 w 192
 h 16
 controlPv "$(device):SE:NWBTX.DESC"
@@ -628,7 +628,7 @@ major 4
 minor 5
 release 0
 x 224
-y 504
+y 528
 w 72
 h 16
 controlPv "$(device):SE:NWPTX"
@@ -653,7 +653,7 @@ major 4
 minor 5
 release 0
 x 16
-y 504
+y 528
 w 192
 h 16
 controlPv "$(device):SE:NWPTX.DESC"
@@ -676,7 +676,7 @@ major 4
 minor 5
 release 0
 x 224
-y 520
+y 544
 w 72
 h 16
 controlPv "$(device):SE:NWMTX"
@@ -701,7 +701,7 @@ major 4
 minor 5
 release 0
 x 16
-y 520
+y 544
 w 192
 h 16
 controlPv "$(device):SE:NWMTX.DESC"
@@ -952,7 +952,7 @@ major 4
 minor 0
 release 0
 x 8
-y 216
+y 240
 w 304
 h 144
 lineColor index 14
@@ -967,7 +967,7 @@ major 4
 minor 1
 release 0
 x 24
-y 208
+y 232
 w 160
 h 16
 font "helvetica-medium-r-12.0"
@@ -986,7 +986,7 @@ major 4
 minor 0
 release 0
 x 24
-y 208
+y 232
 w 160
 h 16
 lineColor index 14
@@ -1000,7 +1000,7 @@ major 4
 minor 0
 release 0
 x 8
-y 208
+y 232
 w 16
 h 16
 lineColor index 14
@@ -1017,7 +1017,7 @@ major 4
 minor 5
 release 0
 x 112
-y 272
+y 296
 w 80
 h 16
 controlPv "$(device):SE:FAN1"
@@ -1042,7 +1042,7 @@ major 4
 minor 5
 release 0
 x 112
-y 232
+y 256
 w 80
 h 16
 controlPv "$(device):SE:TEMP"
@@ -1067,7 +1067,7 @@ major 4
 minor 5
 release 0
 x 160
-y 304
+y 328
 w 80
 h 16
 controlPv "$(device):SE:FAN_SET"
@@ -1092,7 +1092,7 @@ major 4
 minor 5
 release 0
 x 112
-y 288
+y 312
 w 80
 h 16
 controlPv "$(device):SE:FAN1_ERR"
@@ -1117,7 +1117,7 @@ major 4
 minor 5
 release 0
 x 208
-y 272
+y 296
 w 80
 h 16
 controlPv "$(device):SE:FAN2"
@@ -1142,7 +1142,7 @@ major 4
 minor 5
 release 0
 x 208
-y 288
+y 312
 w 80
 h 16
 controlPv "$(device):SE:FAN2_ERR"
@@ -1167,7 +1167,7 @@ major 4
 minor 1
 release 0
 x 16
-y 232
+y 256
 w 85
 h 16
 font "helvetica-medium-r-14.0"
@@ -1187,7 +1187,7 @@ major 4
 minor 1
 release 0
 x 112
-y 256
+y 280
 w 40
 h 16
 font "helvetica-medium-r-14.0"
@@ -1207,7 +1207,7 @@ major 4
 minor 1
 release 0
 x 16
-y 272
+y 296
 w 72
 h 16
 font "helvetica-medium-r-14.0"
@@ -1227,7 +1227,7 @@ major 4
 minor 1
 release 0
 x 16
-y 304
+y 328
 w 68
 h 16
 font "helvetica-medium-r-14.0"
@@ -1247,7 +1247,7 @@ major 4
 minor 1
 release 0
 x 16
-y 288
+y 312
 w 79
 h 16
 font "helvetica-medium-r-14.0"
@@ -1268,7 +1268,7 @@ major 4
 minor 1
 release 0
 x 208
-y 256
+y 280
 w 40
 h 16
 font "helvetica-medium-r-14.0"
@@ -1288,7 +1288,7 @@ major 4
 minor 5
 release 0
 x 104
-y 328
+y 352
 w 40
 h 24
 controlPv "$(device):SE:TEMP_S"
@@ -1313,7 +1313,7 @@ major 4
 minor 1
 release 0
 x 16
-y 328
+y 352
 w 80
 h 16
 font "helvetica-medium-r-14.0"
@@ -1333,7 +1333,7 @@ major 4
 minor 0
 release 0
 x 8
-y 552
+y 576
 w 16
 h 16
 lineColor index 14
@@ -1350,7 +1350,7 @@ major 4
 minor 5
 release 0
 x 32
-y 552
+y 576
 w 184
 h 14
 controlPv "$(device):SE:HEALTH.DESC"
@@ -1365,5 +1365,49 @@ useHexPrefix
 newPos
 objType "monitors"
 noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 128
+y 200
+w 160
+h 16
+controlPv "$(device):SE:ADCCLK"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 200
+w 87
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "FPGA status:"
+}
+autoSize
 endObjectProperties
 

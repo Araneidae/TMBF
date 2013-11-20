@@ -640,6 +640,9 @@ bool initialise_sensors(void)
     PUBLISH_READ_VAR(ai, "SE:UPTIME",  UptimeHours);
     PUBLISH_READ_VAR(ai, "SE:EPICSUP", EpicsUpHours);
     PUBLISH_READ_VAR(ai, "SE:CPU",     CpuUsage);
+
+    PUBLISH_READER(bi, "SE:ADCCLK", hw_read_clock_dropout);
+
     PublishNetworkStats();
 
     PUBLISH_READ_VAR(mbbi,     "SE:NTPSTAT", NTP_status);

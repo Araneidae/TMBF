@@ -170,6 +170,7 @@ def detector_input(tmbf, source):
     tmbf.set('DET:INPUT_S', source)
 
 def detector_gain(tmbf, gain):
+    tmbf.set('DET:AUTOGAIN_S', 'Fixed Gain')
     tmbf.set('DET:GAIN_S', gain)
 
 def detector_bunches(tmbf, *bunches):

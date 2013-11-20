@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <semaphore.h>
 #include <signal.h>
+#include <fcntl.h>
 
 #include <epicsThread.h>
 #include <iocsh.h>
@@ -28,6 +29,7 @@
 #include "triggers.h"
 #include "sensors.h"
 #include "detector.h"
+#include "tune.h"
 #include "pvlogging.h"
 #include "persistence.h"
 
@@ -239,6 +241,63 @@ static bool initialise_epics(void)
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Reboot and Restart Support */
+
+/* This is a fairly dirty system for ensuring that we can restart either EPICS
+ * or the entire Libera even when fairly low on memory. */
+
+static void detach_process(const char *process, const char *const argv[])
+{
+    /* Annoyingly we need to fork a new process because the first thing that
+     * `/etc/init.d/epics restart` does is to kill the old PID, so we need a new
+     * one.  We need to use vfork() here because if we are low on memory then
+     * fork() will fail. */
+    pid_t pid;
+    if (TEST_IO(pid = vfork()))
+    {
+        if (pid == 0)
+        {
+            /* We're not obeying the rules for forkv(), but we should get away
+             * with it.  All the calls we're making are system calls which
+             * should only affect the new process, and the old one is going to
+             * be gone soon anyway. */
+
+            /* Ensure that none of our open files will be inherited.  It's safer
+             * to do this than to close them. */
+            for (int i = 3; i < sysconf(_SC_OPEN_MAX); i ++)
+                fcntl(i, F_SETFD, FD_CLOEXEC);
+
+            /* Enable all signals. */
+            sigset_t all_signals;
+            sigfillset(&all_signals);
+            sigprocmask(SIG_UNBLOCK, &all_signals, NULL);
+
+            /* Finally we can actually exec the new process... */
+            char *envp[] = { NULL };
+            execve(process, REINTERPRET_CAST(char **, argv), envp);
+        }
+    }
+}
+
+
+static void do_reboot(void)
+{
+    printf("TMBF reboot requested\n");
+    const char *args[] = { "/sbin/reboot", NULL };
+    detach_process(args[0], args);
+}
+
+
+static void do_restart(void)
+{
+    printf("EPICS IOC restart requested\n");
+    const char *args[] = { "/etc/init.d/epics", "restart", NULL };
+    detach_process(args[0], args);
+}
+
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
 /* Driver version. */
@@ -252,6 +311,8 @@ static bool initialise_subsystems(void)
     PUBLISH_READER(longin, "FPGAVER", hw_read_version);
     PUBLISH_WRITER(bo, "LOOPBACK", hw_write_loopback_enable);
     PUBLISH_WRITER(bo, "COMPENSATE", hw_write_compensate_disable);
+    PUBLISH_ACTION("RESTART", do_restart);
+    PUBLISH_ACTION("REBOOT", do_reboot);
 
     return
         initialise_ddr_epics()  &&
@@ -261,7 +322,8 @@ static bool initialise_subsystems(void)
         initialise_sequencer()  &&
         initialise_triggers()  &&
         initialise_sensors()  &&
-        initialise_detector();
+        initialise_detector()  &&
+        initialise_tune();
 }
 
 

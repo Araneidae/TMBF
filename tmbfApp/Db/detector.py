@@ -39,25 +39,10 @@ def SweepChannel(name, desc):
     def Name(field):
         return 'DET:%s:%s' % (field, name)
     return [
-        # Basic I/Q waveforms
+        # Basic I/Q waveforms and power spectrum
         Waveform(Name('I'), TUNE_LENGTH, 'SHORT', DESC = '%s I' % desc),
-        Waveform(Name('Q'), TUNE_LENGTH, 'SHORT',
-            DESC = '%s Q' % desc),
-
-        # Power spectrum and computed tune
+        Waveform(Name('Q'), TUNE_LENGTH, 'SHORT', DESC = '%s Q' % desc),
         Waveform(Name('POWER'), TUNE_LENGTH, 'LONG', DESC = '%s power' % desc),
-        aIn(Name('PTUNE'), 0, 1, PREC = 4, DESC = '%s tune from power'),
-        aIn(Name('PPHASE'), -180, 180, 'deg', PREC = 1,
-            DESC = '%s tune phase from power'),
-
-        # Cumulative sume and computed tune
-        Waveform(Name('CUMSUMI'), TUNE_LENGTH, 'LONG',
-            DESC = '%s cumsum I' % desc),
-        Waveform(Name('CUMSUMQ'), TUNE_LENGTH, 'LONG',
-            DESC = '%s cumsum Q' % desc),
-        aIn(Name('CTUNE'), 0, 1, PREC = 5, DESC = '%s tune from cumsum'),
-        aIn(Name('CPHASE'), -180, 180, 'deg', PREC = 1,
-            DESC = '%s tune phase from cumsum'),
     ]
 
 bunch_channels = [SweepChannel(b, 'Bunch %s' % b) for b in '0123']

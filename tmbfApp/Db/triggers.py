@@ -38,3 +38,10 @@ boolOut('TRG:SEQ:ENA', 'Disabled', 'Enabled', DESC = 'Sequencer trigger enable')
 TriggerStatus('SEQ', 'Sequencer')
 
 longIn('TRG:RAWPHASE', DESC = 'Raw trigger phase bits', SCAN = '.2 second')
+
+# A simple device to toggle the front panel LED at 1Hz to show life.
+fp_led = boolOut('FPLED', DESC = 'Front panel LED control')
+fp_led_control = records.calcout('FPLED:TOGGLE',
+    CALC = '!A', SCAN = '1 second',
+    OUT  = PP(fp_led), OOPT = 'Every Time', DOPT = 'Use CALC')
+fp_led_control.INPA = fp_led_control

@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1028
-y 142
+x 1030
+y 144
 w 631
 h 784
 font "helvetica-medium-r-18.0"
@@ -152,8 +152,8 @@ release 0
 # Geometry
 x 8
 y 424
-w 304
-h 304
+w 408
+h 352
 # Appearance
 graphTitle "I/Q Response"
 fgColor index 14
@@ -185,56 +185,6 @@ yPv {
 }
 plotStyle {
   0 "point"
-}
-xSigned {
-  0 1
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 14
-}
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-# Geometry
-x 320
-y 424
-w 304
-h 304
-# Appearance
-border
-graphTitle "Cumulative sum I/Q"
-fgColor index 14
-bgColor index 3
-gridColor index 5
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "AutoScale"
-xMax 1
-xShowLabelGrid
-# Y axis properties
-yAxisSrc "AutoScale"
-yMax 1
-yShowLabelGrid
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-xPv {
-  0 "$(device):DET:CUMSUMI:$(tune)"
-}
-yPv {
-  0 "$(device):DET:CUMSUMQ:$(tune)"
 }
 xSigned {
   0 1
@@ -304,69 +254,48 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 72
-y 736
-w 72
+x 512
+y 472
+w 32
 h 16
-controlPv "$(device):DET:PTUNE:$(tune)"
+controlPv "$(device):DET:BUNCH$(tune)"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
-fgAlarm
 bgColor index 0
 useDisplayBg
 autoHeight
 limitsFromDb
 nullColor index 0
-showUnits
 newPos
 objType "monitors"
 noExecuteClipMask
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 736
-w 39
-h 16
-font "helvetica-bold-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Tune:"
-}
-autoSize
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
+# (Text Control)
+object activeXTextDspClass
 beginObjectProperties
 major 4
 minor 5
 release 0
-x 72
-y 760
-w 72
-h 16
-controlPv "$(device):DET:PPHASE:$(tune)"
+x 456
+y 472
+w 56
+h 20
+controlPv "$(device):DET:BUNCH$(tune)_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
-fgAlarm
 bgColor index 0
 useDisplayBg
+editable
 autoHeight
+motifWidget
 limitsFromDb
 nullColor index 0
-showUnits
+useHexPrefix
 newPos
-objType "monitors"
+objType "controls"
 noExecuteClipMask
 endObjectProperties
 
@@ -376,108 +305,16 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 8
-y 760
-w 48
-h 16
-font "helvetica-bold-r-14.0"
+x 448
+y 448
+w 107
+h 14
+font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Phase:"
-}
-autoSize
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 384
-y 736
-w 72
-h 16
-controlPv "$(device):DET:CTUNE:$(tune)"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-fgAlarm
-bgColor index 0
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 320
-y 736
-w 39
-h 16
-font "helvetica-bold-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Tune:"
-}
-autoSize
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 384
-y 760
-w 72
-h 16
-controlPv "$(device):DET:CPHASE:$(tune)"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-fgAlarm
-bgColor index 0
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 320
-y 760
-w 48
-h 16
-font "helvetica-bold-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Phase:"
+  "Channel #$(tune):"
 }
 autoSize
 endObjectProperties

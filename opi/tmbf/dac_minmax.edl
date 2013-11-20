@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 766
-y 120
+x 767
+y 121
 w 641
-h 512
+h 513
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -32,7 +32,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 200
+x 208
 y 424
 w 160
 h 80
@@ -47,7 +47,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 368
+x 8
 y 424
 w 192
 h 80
@@ -222,7 +222,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 440
+x 80
 y 464
 w 64
 h 16
@@ -249,7 +249,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 376
+x 16
 y 464
 w 40
 h 16
@@ -269,7 +269,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 376
+x 16
 y 480
 w 27
 h 16
@@ -289,7 +289,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 440
+x 80
 y 480
 w 64
 h 16
@@ -316,7 +316,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 440
+x 80
 y 440
 w 48
 h 16
@@ -344,7 +344,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 376
+x 16
 y 440
 w 66
 h 16
@@ -364,7 +364,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 496
+x 136
 y 440
 w 4
 h 16
@@ -384,7 +384,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 512
+x 152
 y 440
 w 40
 h 16
@@ -412,7 +412,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 272
+x 280
 y 440
 w 72
 h 24
@@ -431,7 +431,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 272
+x 280
 y 472
 w 72
 h 24
@@ -458,7 +458,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 208
+x 216
 y 440
 w 42
 h 28
@@ -479,7 +479,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 208
+x 216
 y 472
 w 37
 h 28
@@ -501,7 +501,7 @@ major 4
 minor 6
 release 0
 # Geometry
-x 8
+x 376
 y 416
 w 96
 h 88
@@ -516,7 +516,7 @@ nPts 2
 # X axis properties
 xAxisSrc "fromUser"
 xMin -0.5
-xMax 3.5
+xMax 3
 # Y axis properties
 yAxisSrc "AutoScale"
 yMax 1
@@ -554,7 +554,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 112
+x 480
 y 480
 w 72
 h 24
@@ -573,7 +573,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 112
+x 480
 y 464
 w 72
 h 14
@@ -593,7 +593,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 368
+x 8
 y 416
 w 120
 h 16
@@ -612,7 +612,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 368
+x 8
 y 416
 w 120
 h 16
@@ -626,7 +626,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 200
+x 208
 y 416
 w 120
 h 16
@@ -645,11 +645,30 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 200
+x 208
 y 416
 w 120
 h 16
 lineColor index 14
 fillColor index 0
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 512
+y 416
+w 120
+h 24
+fgColor index 14
+bgColor index 4
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):DAC:SCAN_S.SCAN"
+font "helvetica-medium-r-12.0"
 endObjectProperties
 

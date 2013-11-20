@@ -22,4 +22,7 @@ boolOut('LOOPBACK', 'Normal', 'Loopback', OSV = 'MAJOR', VAL = 0,
 boolOut('COMPENSATE', 'Normal', 'Disabled', OSV = 'MAJOR', VAL = 0,
     DESC = 'Disable internal delay compensation')
 
+Action('RESTART', DESC = 'Restart EPICS driver')
+Action('REBOOT', DESC = 'Reboot IOC')
+
 WriteRecords(sys.argv[1])

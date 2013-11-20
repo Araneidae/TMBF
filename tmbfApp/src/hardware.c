@@ -90,7 +90,8 @@ struct tmbf_config_space
     //  14      Trigger armed
     //  15      DDR armed
     //  19:16   Bunch trigger phase bits
-    //  31:20   (unused)
+    //  20      ADC clock dropout detect.
+    //  31:21   (unused)
 
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
@@ -112,7 +113,7 @@ struct tmbf_config_space
     //  22:20   FIR gain select (in 6dB steps)
     //  23      (unused)
     //  26:24   Detector gain select (in 6dB steps)
-    //  27      (unused)
+    //  27      Front panel LED
     //  29:28   DDR input select (0 => ADC, 1 => DAC, 2 => FIR, 3 => 0)
     //  31:30   ACD input fine delay (2ns steps)
 
@@ -273,6 +274,18 @@ void hw_write_compensate_disable(bool disable)
     else
         config_parse_file(
             hardware_config_file, hardware_config_defs, config_defs_count);
+}
+
+
+void hw_write_front_panel_led(bool enable)
+{
+    WRITE_CONTROL_BITS(27, 1, enable);
+}
+
+
+bool hw_read_clock_dropout(void)
+{
+    return READ_STATUS_BITS(20, 1);
 }
 
 

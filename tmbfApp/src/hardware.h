@@ -49,6 +49,13 @@ void hw_write_loopback_enable(bool loopback);
 /* Only useful for testing: disables internal delay compensation. */
 void hw_write_compensate_disable(bool disable);
 
+/* Control front panel LED. */
+void hw_write_front_panel_led(bool enable);
+
+/* Returns clock dropout detection.  If true returned then the FPGA must be
+ * reloaded to restore normal operation. */
+bool hw_read_clock_dropout(void);
+
 
 /* * * * * * * * * * * * */
 /* ADC: Data Input Stage */

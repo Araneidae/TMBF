@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1094
-y 121
+x 2704
+y 9
 w 457
 h 604
 font "helvetica-medium-r-8.0"
@@ -1131,5 +1131,28 @@ yPoints {
   0 240
   1 240
 }
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 16
+y 448
+w 104
+h 24
+fgColor index 25
+onColor index 4
+offColor index 3
+topShadowColor index 1
+botShadowColor index 14
+controlPv "$(device):RESTART_S.PROC"
+pressValue "0"
+onLabel "Restart FPGA"
+offLabel "Restart FPGA"
+3d
+font "helvetica-bold-r-12.0"
 endObjectProperties
 

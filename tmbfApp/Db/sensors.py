@@ -48,6 +48,9 @@ system_alarm_pvs = [
         HIGH = 80,      HSV  = 'MINOR',
         HIHI = 95,      HHSV = 'MAJOR'),
 
+    boolIn('SE:ADCCLK', 'Clock Ok', 'Clock Dropout',
+        ZSV  = 'NO_ALARM', OSV = 'MAJOR', DESC = 'ADC clock dropout detect'),
+
     # The following list must match the corresponding enum in sensors.c
     mbbIn('SE:NTPSTAT',
         ('Not monitored',   0,  'NO_ALARM'),    # Monitoring disabled
