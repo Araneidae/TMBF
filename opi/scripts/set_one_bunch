@@ -1,0 +1,60 @@
+#!/usr/bin/env dls-python
+
+# Helper script for setting bunch waveforms
+
+from pkg_resources import require
+
+require('cothread')
+
+import sys
+
+import numpy
+from cothread.catools import *
+
+
+tmbf = sys.argv[1]
+bank = int(sys.argv[2])
+action = sys.argv[3]
+
+def pv(name):
+    return '%s:BUN:%d:%s_S' % (tmbf, bank, name)
+
+fir_wf_pv    = pv('FIRWF')
+output_wf_pv = pv('OUTWF')
+gain_wf_pv   = pv('GAINWF')
+wf_pvs = [fir_wf_pv, output_wf_pv, gain_wf_pv]
+
+
+if action == 'one':
+    bunch, fir, output, gain = map(int, sys.argv[4:])
+    fir_wf, output_wf, gain_wf = caget(wf_pvs)
+
+    fir_wf[bunch] = fir
+    output_wf[bunch] = output
+    gain_wf[bunch] = gain
+
+elif action == 'all' or action == 'set':
+    if action == 'all':
+        fir, output, gain = map(int, sys.argv[4:])
+    else:
+        set_pvs = [pv('FIR'), pv('OUT'), pv('GAIN')]
+        fir, output, gain = caget(set_pvs)
+
+    z = numpy.zeros(936, dtype = int)
+    fir_wf    = z + fir
+    output_wf = z + output
+    gain_wf   = z + gain
+
+else:
+    assert False, 'Unknown action: %s' % action
+
+
+def check(wf, max_val):
+    return (0 <= wf).all() and (wf < max_val).all()
+
+assert check(fir_wf, 4), 'Invalid FIR value'
+assert check(output_wf, 8), 'Invalid output valie'
+assert check(gain_wf, 1024), 'Invalid gain value'
+caput(wf_pvs, [fir_wf, output_wf, gain_wf])
+
+# vim: set filetype=python:

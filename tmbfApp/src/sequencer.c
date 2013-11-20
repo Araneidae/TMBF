@@ -18,7 +18,6 @@
 #include "sequencer.h"
 
 
-enum { SELECT_IQ = 1 };     // Special treatment for buffer select 1.
 enum { HOM_GAIN_OFF = 8 };
 
 /* These are the sequencer states for states 1 to 7.  State 0 is special and
@@ -49,6 +48,7 @@ static struct epics_interlock *buffer_trigger;
 static short buffer_low[RAW_BUF_DATA_LENGTH];
 static short buffer_high[RAW_BUF_DATA_LENGTH];
 static unsigned int buf_select;
+static bool capture_iq;     // Set from buf_select when written to hardware
 
 /* Sequencer enable and program counter. */
 static unsigned int sequencer_pc;
@@ -58,6 +58,8 @@ static bool sequencer_enable;
 static struct epics_interlock *info_trigger;
 static int capture_count;       // Number of IQ points to capture
 static int sequencer_duration;  // Total duration of sequence
+
+static bool settings_changed;
 
 
 static bool write_end_freq(void *context, const double *value)
@@ -108,6 +110,9 @@ static void update_capture_count(void)
             bank->capture_count * (bank->dwell_time + bank->holdoff);
     }
     interlock_signal(info_trigger, NULL);
+
+    /* The sequencer will need to know about this in due course. */
+    settings_changed = true;
 }
 
 
@@ -117,7 +122,7 @@ static void write_seq_state(void)
 {
     for (int i = 1; i < MAX_SEQUENCER_COUNT; i ++)
     {
-        struct sequencer_bank *bank = &banks[i - 1];
+        const struct sequencer_bank *bank = &banks[i - 1];
         struct seq_entry *entry = &current_sequencer[i];
         entry->start_freq = tune_to_freq(bank->start_freq);
         entry->delta_freq = tune_to_freq(bank->delta_freq);
@@ -149,9 +154,6 @@ static void update_seq_state(void)
 
     /* Update overall information about sequence. */
     update_capture_count();
-
-    /* Let the detector know that things have changed. */
-    seq_settings_changed();
 }
 
 
@@ -159,8 +161,11 @@ static void update_seq_state(void)
  * for operation. */
 void prepare_sequencer(void)
 {
+    capture_iq = buf_select == SELECT_IQ  &&  capture_count > 0;
+    hw_write_buf_select(buf_select);
     write_seq_state();
-    prepare_detector();
+    prepare_detector(settings_changed);
+    settings_changed = false;
 }
 
 
@@ -187,7 +192,7 @@ void process_fast_buffer(void)
     hw_read_buf_data(buffer_low, buffer_high);
     interlock_signal(buffer_trigger, NULL);
 
-    if (buf_select == SELECT_IQ  &&  capture_count > 0)
+    if (capture_iq)
         update_iq(buffer_low, buffer_high);
 }
 
@@ -199,7 +204,6 @@ static void write_seq_count(unsigned int count)
         hw_write_seq_count(sequencer_pc);
 
     update_capture_count();
-    seq_settings_changed();
 }
 
 void enable_seq_trigger(bool enable)

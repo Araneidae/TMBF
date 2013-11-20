@@ -2,6 +2,8 @@
 
 from common import *
 
+import tune
+
 
 # The sequencer has eight possible states, however state 0 has somewhat
 # different behaviour from the remaining 7.
@@ -9,7 +11,9 @@ from common import *
 # Update the entire sequencer state on a write to any PV.  However, we don't
 # want to write anything until startup and PV initialisation is complete, so we
 # start with writing disabled and reenable at end.
-update = boolOut('SEQ:WRITE', DISV = 0, DESC = 'Write sequencer settings')
+update = boolOut('SEQ:WRITE',
+    DISV = 0, FLNK = tune.setting_changed,
+    DESC = 'Update sequencer settings')
 seq_pc = longOut('SEQ:PC', 1, 7, DISV = 0, DESC = 'Sequencer PC')
 records.seq('SEQ:ENWRITE',
     PINI = 'RUN', SELM = 'All',     # Perform initialisation after startup
@@ -58,3 +62,14 @@ Trigger('SEQ:INFO',
 
 longIn('SEQ:PC', DESC = 'Current sequencer state', SCAN = '.1 second')
 Action('SEQ:RESET', DESC = 'Halt detector if busy')
+
+
+Trigger('BUF',
+    Waveform('BUF:WFA', BUF_DATA_LENGTH, 'SHORT',
+        DESC = 'Fast buffer first half'),
+    Waveform('BUF:WFB', BUF_DATA_LENGTH, 'SHORT',
+        DESC = 'Fast buffer second half'))
+
+mbbOut('BUF:SELECT', 'FIR+ADC', 'IQ', 'FIR+DAC', 'ADC+DAC',
+    FLNK = tune.setting_changed,
+    DESC = 'Select buffer capture source')

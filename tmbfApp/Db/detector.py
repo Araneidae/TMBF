@@ -2,9 +2,12 @@
 
 from common import *
 
+import tune
+
 
 mbbOut('DET:GAIN', DESC = 'Detector gain', *dBrange(7, -12) + ['Min'])
-boolOut('DET:MODE', 'All Bunches', 'Single Bunch', DESC = 'Detector mode')
+boolOut('DET:MODE', 'All Bunches', 'Single Bunch',
+    FLNK = tune.setting_changed, DESC = 'Detector mode')
 mbbOut('DET:INPUT', 'FIR', 'ADC', DESC = 'Detector input selection')
 boolOut('DET:AUTOGAIN', 'Fixed Gain', 'Autogain',
     DESC = 'Detector automatic gain')
@@ -14,6 +17,7 @@ for bunch in range(4):
         DESC = 'Detector bunch select #%d' % bunch)
     bunch_select.FLNK = records.calc('DET:BUNCH%d' % bunch,
         CALC = '4*A+B',  INPA = bunch_select, INPB = bunch,
+        FLNK = tune.setting_changed,
         DESC = 'Selected bunch #%d' % bunch)
 
 

@@ -3,10 +3,9 @@ import sys
 from common import *
 
 import adcdac       # ADC, DAC
-import buffer       # BUF
 import bunch_select # BUN
 import ddr          # DDR
-import detector     # DET
+import detector     # DET, BUF
 import fir          # FIR
 import sensors      # SE
 import sequencer    # SEQ

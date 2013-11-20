@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 217
-y 203
-w 641
-h 577
+x 47
+y 194
+w 642
+h 633
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -25,6 +25,69 @@ snapToGrid
 gridSize 8
 disableScroll
 endScreenProperties
+
+# (Menu Mux PV)
+object menuMuxPVClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 640
+w 152
+h 40
+fgColour index 14
+bgColour index 0
+topShadowColour index 0
+botShadowColour index 14
+font "helvetica-medium-r-18.0"
+numItems 1
+symbolTag {
+  0 "convert"
+}
+symbol0 {
+  0 "gain"
+}
+PV0 {
+  0 "LOC\\gain=i:1023"
+}
+symbol1 {
+  0 "bunch"
+}
+PV1 {
+  0 "LOC\\bunch=i:0"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 320
+y 536
+w 240
+h 88
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 536
+w 304
+h 88
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
 
 # (X-Y Graph)
 object xyGraphClass
@@ -102,7 +165,7 @@ major 4
 minor 1
 release 0
 x 568
-y 528
+y 600
 w 64
 h 24
 fgColor index 46
@@ -202,7 +265,7 @@ y 360
 w 624
 h 160
 # Appearance
-graphTitle "Output Selection"
+graphTitle "Output Selection: 1=FIR, 2=NCO, 4=Sweep"
 fgColor index 14
 bgColor index 3
 gridColor index 14
@@ -240,22 +303,131 @@ plotColor {
 }
 endObjectProperties
 
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 248
+y 568
+w 56
+h 20
+controlPv "LOC\\gain"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 104
+y 592
+w 56
+h 20
+controlPv "LOC\\bunch"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Shell Command)
+object shellCmdClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 16
+y 592
+w 80
+h 24
+fgColor index 25
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "Set One"
+numCmds 1
+command {
+  0 "xterm -T 'Set bunch' -e 'set_one_bunch $(device) $(bank) one $(bunch) $(fir) $(out) $(gain) || read -p \"press return\"'"
+}
+endObjectProperties
+
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
 release 0
-x 16
+x 8
 y 528
-w 128
+w 120
 h 16
-font "helvetica-bold-r-14.0"
-fgColor index 25
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Set Bunch"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 528
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 56
+y 552
+w 20
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Currently selected"
+  "FIR"
 }
 autoSize
 endObjectProperties
@@ -266,17 +438,261 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 168
-y 528
-w 123
-h 16
+x 136
+y 552
+w 88
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "DAC out select"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 248
+y 552
+w 53
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "DAC gain"
+}
+autoSize
+endObjectProperties
+
+# (Shell Command)
+object shellCmdClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 208
+y 592
+w 96
+h 24
+fgColor index 25
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "Set All"
+numCmds 1
+command {
+  0 "xterm -T 'Set bunch' -e 'set_one_bunch $(device) $(bank) all $(fir) $(out) $(gain) || read -p \"press return\"'"
+}
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 328
+y 552
+w 120
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):BUN:$(bank):USEWF_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Shell Command)
+object shellCmdClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 328
+y 592
+w 120
+h 24
+fgColor index 25
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "From Settings"
+numCmds 1
+command {
+  0 "xterm -T 'Set bunch' -e 'set_one_bunch $(device) $(bank) set || read -p \"press return\"'"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 472
+y 544
+w 66
+h 32
 font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 25
+bgColor index 0
+useDisplayBg
+value {
+  "Currently"
+  "selected"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 472
+y 584
+w 69
+h 32
+font "helvetica-bold-r-14.0"
+fontAlign "center"
 fgColor index 20
 bgColor index 0
 useDisplayBg
 value {
-  "Waveform Setting"
+  "Waveform"
+  "Setting"
 }
 autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 320
+y 528
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Setup Source"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 320
+y 528
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Menu Mux)
+object menuMuxClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 568
+w 96
+h 22
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-medium-r-12.0"
+numItems 4
+symbolTag {
+  0 "FIR 0"
+  1 "FIR 1"
+  2 "FIR 2"
+  3 "FIR 3"
+}
+symbol0 {
+  0 "fir"
+  1 "fir"
+  2 "fir"
+  3 "fir"
+}
+value0 {
+  0 "0"
+  1 "1"
+  2 "2"
+  3 "3"
+}
+endObjectProperties
+
+# (Menu Mux)
+object menuMuxClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 120
+y 568
+w 120
+h 22
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-medium-r-12.0"
+numItems 8
+symbolTag {
+  0 "Off"
+  1 "FIR"
+  2 "NCO"
+  3 "NCO+FIR"
+  4 "Sweep"
+  5 "Sweep+FIR"
+  6 "Sweep+NCO"
+  7 "Sweep+NCO+FIR"
+}
+symbol0 {
+  0 "out"
+  1 "out"
+  2 "out"
+  3 "out"
+  4 "out"
+  5 "out"
+  6 "out"
+  7 "out"
+}
+value0 {
+  0 "0"
+  1 "1"
+  2 "2"
+  3 "3"
+  4 "4"
+  5 "5"
+  6 "6"
+  7 "7"
+}
 endObjectProperties
 

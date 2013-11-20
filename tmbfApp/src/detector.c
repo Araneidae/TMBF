@@ -174,12 +174,6 @@ static void update_det_scale(void)
 }
 
 
-void seq_settings_changed(void)
-{
-    tune_scale_needs_refresh = true;
-}
-
-
 static void set_loop_delay(double delay)
 {
     loop_delay_turns = delay;
@@ -309,6 +303,7 @@ void update_iq(const short buffer_low[], const short buffer_high[])
     int abs_max;
     update_sweep_info(buffer_low, buffer_high, &abs_max);
     update_autogain(abs_max);
+    sweep_info.single_bunch_mode = detector_mode;
 
     interlock_signal(iq_trigger, NULL);
 
@@ -324,7 +319,7 @@ static void write_nco_freq(double tune)
 }
 
 
-void prepare_detector(void)
+void prepare_detector(bool settings_changed)
 {
     /* We don't want the following states to change during a detector sweep, so
      * we write them now immediately before starting a fresh sweep. */
@@ -332,6 +327,8 @@ void prepare_detector(void)
     hw_write_det_gain(detector_gain);
     hw_write_det_input_select(detector_input);
     hw_write_det_mode(detector_mode);
+    if (settings_changed)
+        tune_scale_needs_refresh = true;
 }
 
 
