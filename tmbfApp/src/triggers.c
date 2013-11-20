@@ -360,7 +360,7 @@ static void *monitor_events(void *context)
 
         LOCK();
 
-        bool buf_ready = buf_target.armed.armed  &&  !poll_buf_busy();
+        bool buf_ready = buf_target.armed.armed  &&  !hw_read_buf_busy();
         bool seq_ready = seq_target.armed.armed  &&  !hw_read_seq_status();
 
         /* Allow all the corresponding targets to be processed. */

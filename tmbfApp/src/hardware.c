@@ -456,6 +456,15 @@ bool hw_read_buf_status(void)
     return READ_STATUS_BITS(3, 1) || READ_STATUS_BITS(14, 1);   // Separate out?
 }
 
+bool hw_read_buf_busy(void)
+{
+    if (buf_selection == SELECT_IQ)
+        return hw_read_buf_status()  &&  hw_read_seq_status();
+    else
+        return hw_read_buf_status();
+}
+
+
 /* To make things complicated, the fast buffer has separate delays for each of
  * its two channels! */
 static void get_buf_delays(int *low_delay, int *high_delay)

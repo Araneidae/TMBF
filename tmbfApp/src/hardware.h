@@ -140,12 +140,17 @@ int hw_read_bun_trigger_phase(void);
 /* * * * * * * * * * * * * * * * * */
 /* BUF: High Speed Internal Buffer */
 
+enum { SELECT_IQ = 1 };     // Special treatment for buffer select 1.
+
 /* Selects data for capture to buffer. */
 void hw_write_buf_select(unsigned int selection);
 
 /* Returns current buffer status: true if waiting for data or trigger, false if
  * idle. */
 bool hw_read_buf_status(void);
+
+/* Digest of buf_status above, returns true if buffer expects more data. */
+bool hw_read_buf_busy(void);
 
 /* Reads buffer into two separate 16-bit arrays. */
 void hw_read_buf_data(

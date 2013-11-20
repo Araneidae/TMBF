@@ -192,32 +192,6 @@ void process_fast_buffer(void)
 }
 
 
-/* We need to keep track of the buffer selection for sequencer completion
- * detection below. */
-static void write_buf_select(unsigned int value)
-{
-    buf_select = value;
-    hw_write_buf_select(buf_select);
-}
-
-
-/* If buf_select is IQ (numerical value 1) then we have to report the buffer
- * busy when the sequencer is busy, otherwise it's up to the buffer.
- *    Think this really belongs in the hardware...! */
-bool poll_buf_busy(void)
-{
-    if (buf_select == SELECT_IQ)
-    {
-        if (sequencer_enable)
-            return hw_read_seq_status();
-        else
-            return false;   // It's never going to trigger in fact...
-    }
-    else
-        return hw_read_buf_status();
-}
-
-
 static void write_seq_count(unsigned int count)
 {
     sequencer_pc = count;
@@ -257,7 +231,7 @@ bool initialise_sequencer(void)
     buffer_trigger = create_interlock("BUF:TRIG", "BUF:DONE", false);
     PUBLISH_WF_READ_VAR(short, "BUF:WFA", BUF_DATA_LENGTH, buffer_low);
     PUBLISH_WF_READ_VAR(short, "BUF:WFB", BUF_DATA_LENGTH, buffer_high);
-    PUBLISH_WRITER_P(mbbo, "BUF:SELECT", write_buf_select);
+    PUBLISH_WRITE_VAR_P(mbbo, "BUF:SELECT", buf_select);
 
     return true;
 }

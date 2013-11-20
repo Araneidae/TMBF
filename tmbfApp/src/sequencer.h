@@ -2,9 +2,6 @@
 
 bool initialise_sequencer(void);
 
-/* Called to poll the fast buffer status. */
-bool poll_buf_busy(void);
-
 /* Called when the fast buffer has triggered. */
 void process_fast_buffer(void);
 
