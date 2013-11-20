@@ -3,21 +3,6 @@
 from common import *
 
 
-# Aggregates the severity of all the given records into a single record.  The
-# value of the record is constant, but its SEVR value reflects the maximum
-# severity of all of the given records.
-def AggregateSeverity(name, description, recs):
-    assert len(recs) <= 12, 'Too many records to aggregate'
-    return records.calc(name,
-        CALC = 1, DESC = description,
-        # Assign each record of interest to a calc record input with MS.
-        # This then automatically propagates to the severity of the whole
-        # record.
-        **dict([
-            ('INP' + c, MS(r))
-            for c, r in zip ('ABCDEFGHIJKL', recs)]))
-
-
 trigger_pvs = []        # All sensor records that need triggering, in order
 health_pvs = []         # Records for reporting aggregate health
 

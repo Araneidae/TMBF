@@ -298,7 +298,7 @@ static void reset_source(struct trigger_source *source)
          * DDR isn't waiting for the trigger. */
         if (source->source_id == TRIG_SOURCE_EXTERNAL)
         {
-            hw_write_trig_disarm(source->ddr_armed, source->buf_armed);
+            hw_write_trg_disarm(source->ddr_armed, source->buf_armed);
             if (source->ddr_armed)
                 disarm_ddr();
         }

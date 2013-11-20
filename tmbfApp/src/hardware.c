@@ -634,7 +634,7 @@ void hw_write_trg_soft_trigger(bool ddr, bool buf)
     pulse_mask(make_mask2(5, 7, ddr, buf));
 }
 
-void hw_write_trig_disarm(bool ddr, bool buf)
+void hw_write_trg_disarm(bool ddr, bool buf)
 {
     pulse_mask(make_mask2(9, 19, ddr, buf));
 }

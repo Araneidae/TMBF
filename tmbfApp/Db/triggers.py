@@ -21,7 +21,8 @@ def TriggerTarget(name, desc):
     mbbOut('TRG:%s:SEL' % name, 'Disabled', 'Soft 1', 'Soft 2', 'External',
         DESC = '%s trigger source' % desc)
     TriggerStatus(name, desc)
-    longOut('TRG:%s:DELAY' % name, 0, 65535, EGU = 'turns')
+    longOut('TRG:%s:DELAY' % name, 0, 65535, EGU = 'turns',
+        DESC = 'Trigger delay in turns')
 
 
 # Three trigger sources including two soft triggers

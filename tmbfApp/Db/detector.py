@@ -3,10 +3,11 @@
 from common import *
 
 
-
 mbbOut('DET:GAIN', DESC = 'Detector gain', *dBrange(7, -12) + ['Min'])
 boolOut('DET:MODE', 'All Bunches', 'Single Bunch', DESC = 'Detector mode')
 mbbOut('DET:INPUT', 'FIR', 'ADC', DESC = 'Detector input selection')
+boolOut('DET:AUTOGAIN', 'Fixed Gain', 'Autogain',
+    DESC = 'Detector automatic gain')
 
 update_bunch = Action('DET:WBUNCH', DESC = 'Update detector bunches')
 for bunch in range(4):
@@ -29,6 +30,8 @@ overflows = [
         DESC = 'Detector accumulator overflow'),
     boolIn('DET:OVF:IQ',  'Ok', 'Overflow', OSV = 'MAJOR',
         DESC = 'IQ scaling overflow')]
+overflows.append(
+    AggregateSeverity('DET:OVF', 'Detector overflow', overflows))
 
 # We have five sweep channels: one for each bunch and an aggregate consisting of
 # the sum of all four.

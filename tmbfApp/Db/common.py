@@ -29,6 +29,20 @@ def Trigger(prefix, *pvs):
         SCAN = 'I/O Intr', DESC = '%s processing trigger' % prefix,
         FLNK = create_fanout('%s:TRIG:FAN' % prefix, *pvs + (done,)))
 
+# Aggregates the severity of all the given records into a single record.  The
+# value of the record is constant, but its SEVR value reflects the maximum
+# severity of all of the given records.
+def AggregateSeverity(name, description, recs):
+    assert len(recs) <= 12, 'Too many records to aggregate'
+    return records.calc(name,
+        CALC = 1, DESC = description,
+        # Assign each record of interest to a calc record input with MS.
+        # This then automatically propagates to the severity of the whole
+        # record.
+        **dict([
+            ('INP' + c, MS(r))
+            for c, r in zip ('ABCDEFGHIJKL', recs)]))
+
 # Concatenates a list of lists
 def concat(ll):
     return [x for l in ll for x in l]

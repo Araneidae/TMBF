@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -36,6 +37,17 @@ static struct epics_record *tune_scale_pv;
 
 /* Overflow status from the last sweep. */
 static bool overflows[OVERFLOW_BIT_COUNT];
+
+/* Gain and autogain control.  If autogain is enabled then we'll bump the
+ * detector gain up or down where necessary and possible. */
+static bool autogain_enable;
+static unsigned int current_det_gain;
+static struct epics_record *gain_setting;
+#define MAX_DET_GAIN    7       // 3 bit enumeration
+/* The gain will be pushed up if the signal is below this threshold.  This has
+ * to be a factor of at least 4 below the maximum signal of 32767, and there's a
+ * further factor of around 3/4 to avoid premature switching and bouncing. */
+#define GAIN_UP_THRESHOLD   6100
 
 
 /* Information about a single channel of sweep measurement. */
@@ -83,6 +95,35 @@ static int wf_shift;
 
 static int compensated_delay;       // Compensated delay in bunches
 static unsigned int input_select;   // FIR or ADC, affects compensated delay
+
+
+/* This is called each time an IQ waveform has been captured.  If autogain is
+ * enabled we bump the gain up or down as appropriate if necessary and possible.
+ * A certain amount of hystersis is added to avoid bouncing. */
+static void update_autogain(int abs_max)
+{
+    if (autogain_enable)
+    {
+        unsigned int new_gain = current_det_gain;
+        if (overflows[OVERFLOW_IQ_SCALE])
+            /* Push gain down on overflow. */
+            new_gain += 1;
+        else if (abs_max < GAIN_UP_THRESHOLD)
+            /* Push gain up if signal too low. */
+            new_gain -= 1;
+
+        /* Only write new gain if in range and changed.  Push the update
+         * through the EPICS layer so the outside is fully informed. */
+        if (new_gain <= MAX_DET_GAIN  &&  new_gain != current_det_gain)
+            WRITE_OUT_RECORD(mbbo, gain_setting, new_gain, true);
+    }
+}
+
+static void write_det_gain(unsigned int gain)
+{
+    current_det_gain = gain;
+    hw_write_det_gain(gain);
+}
 
 
 
@@ -189,8 +230,11 @@ static int32_t dot_product(int32_t a, int32_t b, int32_t c, int32_t d)
 /* IQ values are packed with four channels of data for each sample.  Here we
  * extract the four channels, compute an average channel and compensate for
  * group delay. */
-static void extract_iq(const short buffer_low[], const short buffer_high[])
+static void extract_iq(
+    const short buffer_low[], const short buffer_high[], int *abs_max)
 {
+    *abs_max = 0;
+
     for (int i = 0; i < scale_length; i ++)
     {
         int rot_I = rotate_I[i];
@@ -200,6 +244,9 @@ static void extract_iq(const short buffer_low[], const short buffer_high[])
         {
             int raw_I = buffer_high[4 * i + channel];
             int raw_Q = buffer_low[4 * i + channel];
+            if (abs(raw_I) > *abs_max)  *abs_max = abs(raw_I);
+            if (abs(raw_Q) > *abs_max)  *abs_max = abs(raw_Q);
+
             int I = dot_product(raw_I, raw_Q, rot_I, -rot_Q);
             int Q = dot_product(raw_I, raw_Q, rot_Q, rot_I);
             I_sum += I;
@@ -336,7 +383,10 @@ void update_iq(const short buffer_low[], const short buffer_high[])
 
     interlock_wait(iq_trigger);
     update_overflow();
-    extract_iq(buffer_low, buffer_high);
+    int abs_max;
+    extract_iq(buffer_low, buffer_high, &abs_max);
+    update_autogain(abs_max);
+
     for (int i = 0; i < 4; i ++)
         compute_sweep(&channel_sweep[i]);
     compute_sweep(&mean_sweep);
@@ -410,9 +460,10 @@ static void reset_detector_window(void)
 
 bool initialise_detector(void)
 {
-    PUBLISH_WRITER_P(bo,   "DET:MODE", hw_write_det_mode);
-    PUBLISH_WRITER_P(mbbo, "DET:GAIN", hw_write_det_gain);
+    gain_setting = PUBLISH_WRITER_P(mbbo, "DET:GAIN", write_det_gain);
+    PUBLISH_WRITE_VAR_P(bo, "DET:AUTOGAIN", autogain_enable);
     PUBLISH_WRITER_P(mbbo, "DET:INPUT", write_det_input_select);
+    PUBLISH_WRITER_P(bo,   "DET:MODE", hw_write_det_mode);
     PUBLISH_WRITER_P(ao,   "DET:LOOP", set_loop_delay);
 
     PUBLISH_READ_VAR(bi, "DET:OVF:ACC", overflows[OVERFLOW_IQ_ACC]);
