@@ -45,8 +45,8 @@ static struct seq_entry current_sequencer[MAX_SEQUENCER_COUNT];
 
 /* Fast buffer interface. */
 static struct epics_interlock *buffer_trigger;
-static short buffer_low[BUF_DATA_LENGTH];
-static short buffer_high[BUF_DATA_LENGTH];
+static short buffer_low[RAW_BUF_DATA_LENGTH];
+static short buffer_high[RAW_BUF_DATA_LENGTH];
 static unsigned int buf_select;
 
 /* Sequencer enable and program counter. */

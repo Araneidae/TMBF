@@ -21,7 +21,7 @@
 
 
 
-#define TUNE_LENGTH    (BUF_DATA_LENGTH / 4)
+#define TUNE_LENGTH    (RAW_BUF_DATA_LENGTH / 4)
 
 
 /* Detector bunches: one bunch for each operating channel. */

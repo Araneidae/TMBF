@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 700
-y 58
+x 1093
+y 120
 w 456
-h 406
+h 417
 font "helvetica-medium-r-8.0"
 ctlFont "helvetica-medium-r-8.0"
 btnFont "helvetica-medium-r-8.0"
@@ -35,10 +35,10 @@ release 0
 x 8
 y 48
 w 216
-h 80
+h 88
 lineColor index 14
 fill
-fillColor index 5
+fillColor index 4
 endObjectProperties
 
 # (Rectangle)
@@ -50,10 +50,10 @@ release 0
 x 232
 y 48
 w 216
-h 80
+h 88
 lineColor index 14
 fill
-fillColor index 5
+fillColor index 4
 endObjectProperties
 
 # (Static Text)
@@ -82,7 +82,7 @@ major 4
 minor 1
 release 0
 x 392
-y 344
+y 352
 w 56
 h 24
 fgColor index 46
@@ -123,16 +123,16 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 344
+x 288
 y 64
-w 96
-h 22
+w 80
+h 24
 fgColor index 14
 bgColor index 3
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):FIRGAIN_S"
+controlPv "$(device):FIR:GAIN_S"
 font "helvetica-medium-r-12.0"
 endObjectProperties
 
@@ -182,7 +182,7 @@ major 4
 minor 1
 release 0
 x 240
-y 96
+y 104
 w 40
 h 14
 font "helvetica-bold-r-12.0"
@@ -193,39 +193,6 @@ value {
   "Phase:"
 }
 autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 40
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "Selected Function"
-}
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 40
-w 120
-h 16
-lineColor index 14
-fillColor index 0
 endObjectProperties
 
 # (Rectangle)
@@ -242,52 +209,6 @@ lineColor index 14
 fillColor index 0
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 64
-w 143
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-visPv "$(device):TEMPDACOUT_S"
-visMin "3"
-visMax "4"
-value {
-  "Tune Measurement only"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 104
-w 176
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-visPv "$(device):BUNCHMODE_S"
-visMin "1"
-visMax "2"
-value {
-  "Loop closed + SB Tune Meas."
-}
-autoSize
-endObjectProperties
-
 # (Motif Slider)
 object activeMotifSliderClass
 beginObjectProperties
@@ -295,7 +216,7 @@ major 4
 minor 2
 release 0
 x 288
-y 96
+y 104
 w 152
 h 24
 fgColor index 6
@@ -304,7 +225,7 @@ bgColor index 2
 topShadowColor index 0
 botShadowColor index 14
 increment 10
-controlPv "$(device):FIRPHASE_S"
+controlPv "$(device):FIR:0:PHASE_S"
 controlLabel "$(device):FIRPHASE_S"
 controlLabelType "pvName"
 font "helvetica-medium-r-8.0"
@@ -316,11 +237,11 @@ endObjectProperties
 object xyGraphClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 # Geometry
 x 8
-y 136
+y 144
 w 440
 h 200
 # Appearance
@@ -333,8 +254,9 @@ font "helvetica-medium-r-12.0"
 nPts 2
 # X axis properties
 showXAxis
-xAxisSrc "AutoScale"
-xMax 1
+xAxisSrc "fromUser"
+xMin -10
+xMax 936
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -346,7 +268,7 @@ y2Max 16600
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):ADC_DIFFBUF"
+  0 "$(device):ADC:DIFFBUF"
 }
 plotUpdateMode {
   0 "y"
@@ -369,7 +291,7 @@ major 4
 minor 2
 release 0
 x 8
-y 344
+y 352
 w 80
 h 24
 fgColor index 43
@@ -401,7 +323,7 @@ major 4
 minor 2
 release 0
 x 8
-y 376
+y 384
 w 136
 h 24
 fgColor index 25
@@ -423,7 +345,7 @@ major 4
 minor 2
 release 0
 x 312
-y 376
+y 384
 w 136
 h 24
 fgColor index 25
@@ -445,7 +367,7 @@ major 4
 minor 2
 release 0
 x 160
-y 376
+y 384
 w 136
 h 24
 fgColor index 25
@@ -466,32 +388,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 16
-y 84
-w 103
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 36
-bgColor index 0
-useDisplayBg
-visPv "$(device):HOMGAIN_S"
-visInvert
-visMin "15"
-visMax "16"
-value {
-  "Strong Excitation"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
 x 96
-y 346
+y 352
 w 47
 h 21
 font "helvetica-medium-r-18.0"
@@ -508,10 +406,10 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 5
 release 0
 x 152
-y 344
+y 352
 w 72
 h 24
 controlPv "$(device):TUNE"
@@ -536,7 +434,7 @@ major 4
 minor 1
 release 0
 x 240
-y 346
+y 352
 w 55
 h 21
 font "helvetica-medium-r-18.0"
@@ -553,10 +451,10 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 5
 release 0
 x 304
-y 344
+y 352
 w 72
 h 24
 controlPv "$(device):TUNEPHASE"
@@ -582,7 +480,7 @@ major 4
 minor 2
 release 0
 x 96
-y 344
+y 352
 w 136
 h 24
 fgColor index 14
@@ -608,7 +506,7 @@ major 4
 minor 2
 release 0
 x 240
-y 344
+y 352
 w 136
 h 24
 fgColor index 14
@@ -621,6 +519,265 @@ numPvs 4
 numDsps 1
 displayFileName {
   0 "tmbf/iq_monitor.edl"
+}
+setPosition {
+  0 "button"
+}
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 400
+y 80
+w 40
+h 16
+controlPv "$(device):FIR:0:PHASE_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 40
+y 64
+w 184
+h 16
+controlPv "$(device):SE:OVF.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 16
+y 64
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):SE:OVF"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 40
+y 88
+w 184
+h 14
+controlPv "$(device):DET:OVF.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 16
+y 88
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):DET:OVF"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 16
+y 112
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):SE:HEALTH"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 40
+y 112
+w 184
+h 14
+controlPv "$(device):SE:HEALTH.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 40
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "System Status"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 40
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 16
+y 112
+w 200
+h 16
+fgColor index 14
+bgColor index 0
+topShadowColor index 0
+botShadowColor index 14
+font "helvetica-medium-r-18.0"
+invisible
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/sensors.edl"
+}
+setPosition {
+  0 "button"
+}
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 16
+y 64
+w 200
+h 16
+fgColor index 14
+bgColor index 0
+topShadowColor index 0
+botShadowColor index 14
+font "helvetica-medium-r-18.0"
+invisible
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/control.edl"
+}
+setPosition {
+  0 "button"
+}
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 16
+y 88
+w 200
+h 16
+fgColor index 14
+bgColor index 0
+topShadowColor index 0
+botShadowColor index 14
+font "helvetica-medium-r-18.0"
+invisible
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/detector.edl"
 }
 setPosition {
   0 "button"

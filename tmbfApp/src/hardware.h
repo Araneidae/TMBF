@@ -7,10 +7,15 @@
 
 /* Some standard array size definitions. */
 #define MAX_BUNCH_COUNT     936     // Bunches in a single turn
-#define BUF_DATA_LENGTH     16384   // Points in internal fast buffer
+#define RAW_BUF_DATA_LENGTH 16384   // Points in internal fast buffer
 #define MAX_SEQUENCER_COUNT 8       // Steps in sequencer
 #define FIR_BANKS           4
 #define BUNCH_BANKS         4
+
+/* Delay compensation on ADC/FIR/DAC buffer data can result in garbage in the
+ * last turn's worth of the buffer, so don't include this in the published and
+ * processed data length. */
+#define BUF_DATA_LENGTH     (RAW_BUF_DATA_LENGTH - MAX_BUNCH_COUNT)
 
 #define SAMPLES_PER_TURN    MAX_BUNCH_COUNT  //!!!!???? Duplicate to eliminate
 
@@ -136,7 +141,8 @@ void hw_write_buf_select(unsigned int selection);
 bool hw_read_buf_status(void);
 
 /* Reads buffer into two separate 16-bit arrays. */
-void hw_read_buf_data(short low[BUF_DATA_LENGTH], short high[BUF_DATA_LENGTH]);
+void hw_read_buf_data(
+    short low[RAW_BUF_DATA_LENGTH], short high[RAW_BUF_DATA_LENGTH]);
 
 
 /* * * * * * * * * * * * * * * * * * * * * * */

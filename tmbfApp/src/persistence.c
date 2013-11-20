@@ -463,14 +463,15 @@ static void write_lines(
 static bool write_persistent_state(const char *filename)
 {
     FILE *out;
-    if (!TEST_NULL(out = fopen(filename, "w")))
+    bool ok = TEST_NULL_(out = fopen(filename, "w"),
+        "Unable to write persistent state: cannot open \"%s\"", filename);
+    if (!ok)
         return false;
 
     /* Start with a timestamp log. */
     char out_buffer[40];
     time_t now = time(NULL);
-    bool ok =
-        TEST_OK(fprintf(out, "# Written: %s", ctime_r(&now, out_buffer)) > 0);
+    ok = TEST_OK(fprintf(out, "# Written: %s", ctime_r(&now, out_buffer)) > 0);
 
     int ix = 0;
     const void *key;

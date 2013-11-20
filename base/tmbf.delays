@@ -1,7 +1,8 @@
 # Delay compensation file for FPGA.  This should be calibrated against the FPGA
 # to ensure that all delay settings are accurate.
 #
-# Note that all values in this file should be in the range 0..233.
+# Note that all values in this file (except where noted below) should be in the
+# range 0..233 as they record clock count offsets within a machine revolution.
 
 # DDR readout delays
 DDR_ADC_DELAY = 226
@@ -24,6 +25,8 @@ BUNCH_GAIN_OFFSET = 0
 
 # Detector single bunch offsets and phase skews
 DET_ADC_OFFSET = 1
-DET_ADC_DELAY = -4
 DET_FIR_OFFSET = 231
+# These two values represent actual phase delays in bunches relative to an
+# aligned single turn.
+DET_ADC_DELAY = -4
 DET_FIR_DELAY = 12

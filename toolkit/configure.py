@@ -102,7 +102,7 @@ def fir_wf(tmbf, fir, taps):
     # Zero extend taps to full size
     taps = numpy.array(taps)
     taps_out = numpy.zeros(tmbf.n_taps)
-    taps_out[-numpy.size(taps):] = taps
+    taps_out[:numpy.size(taps)] = taps
     tmbf.set('FIR:%d:TAPS_S' % fir, taps_out)
     tmbf.set('FIR:%d:USEWF_S' % fir, 'Waveform')
 

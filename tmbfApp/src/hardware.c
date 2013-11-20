@@ -318,7 +318,7 @@ void hw_write_fir_taps(int bank, int taps[])
     LOCK();
     config_space->fir_bank = (uint32_t) bank;
     for (int i = 0; i < fir_filter_length; i++)
-        config_space->fir_write = taps[i];
+        config_space->fir_write = taps[fir_filter_length - i - 1];
     UNLOCK();
 }
 
@@ -459,7 +459,8 @@ static void get_buf_delays(int *low_delay, int *high_delay)
 
 /* Annoyingly close to identical to min/max readout, but different channel
  * control. */
-void hw_read_buf_data(short low[BUF_DATA_LENGTH], short high[BUF_DATA_LENGTH])
+void hw_read_buf_data(
+    short low[RAW_BUF_DATA_LENGTH], short high[RAW_BUF_DATA_LENGTH])
 {
     LOCK();
     int low_delay, high_delay;
@@ -469,12 +470,12 @@ void hw_read_buf_data(short low[BUF_DATA_LENGTH], short high[BUF_DATA_LENGTH])
     {
         /* Channel select and read enable for buffer. */
         write_control_bit_field(12, 2, n);
-        for (int i = 0; i < BUF_DATA_LENGTH/4; i++)
+        for (int i = 0; i < RAW_BUF_DATA_LENGTH/4; i++)
         {
             uint32_t data = buffer_data[i];
-            low [4*((i - low_delay)  & (BUF_DATA_LENGTH/4 - 1)) + n] =
+            low [4*((i - low_delay)  & (RAW_BUF_DATA_LENGTH/4 - 1)) + n] =
                 (short) (data & 0xFFFF);
-            high[4*((i - high_delay) & (BUF_DATA_LENGTH/4 - 1)) + n] =
+            high[4*((i - high_delay) & (RAW_BUF_DATA_LENGTH/4 - 1)) + n] =
                 (short) (data >> 16);
         }
     }

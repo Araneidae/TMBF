@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1922
-y 2
-w 456
-h 575
+x 1094
+y 121
+w 457
+h 604
 font "helvetica-medium-r-8.0"
 ctlFont "helvetica-medium-r-8.0"
 btnFont "helvetica-medium-r-8.0"
@@ -25,6 +25,36 @@ snapToGrid
 gridSize 8
 disableScroll
 endScreenProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 288
+w 224
+h 72
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 152
+w 400
+h 120
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
 
 # (Static Text)
 object activeXTextClass
@@ -94,7 +124,7 @@ major 4
 minor 2
 release 0
 x 8
-y 120
+y 80
 w 64
 h 24
 fgColor index 43
@@ -116,8 +146,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 144
-y 216
+x 232
+y 80
 w 72
 h 24
 fgColor index 43
@@ -281,8 +311,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 152
-y 120
+x 80
+y 80
 w 64
 h 24
 fgColor index 43
@@ -304,8 +334,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 144
-y 184
+x 152
+y 80
 w 72
 h 24
 fgColor index 43
@@ -327,8 +357,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 152
-y 88
+x 312
+y 80
 w 72
 h 24
 fgColor index 43
@@ -350,8 +380,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 64
-y 152
+x 8
+y 112
 w 88
 h 24
 fgColor index 43
@@ -373,8 +403,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 144
-y 264
+x 104
+y 112
 w 72
 h 24
 fgColor index 43
@@ -396,8 +426,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 144
-y 304
+x 184
+y 112
 w 72
 h 24
 fgColor index 43
@@ -463,8 +493,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 48
-y 384
+x 16
+y 168
 w 16
 h 16
 lineColor index 14
@@ -480,8 +510,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 48
-y 408
+x 16
+y 192
 w 16
 h 16
 lineColor index 14
@@ -497,8 +527,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 72
-y 384
+x 40
+y 168
 w 184
 h 16
 controlPv "$(device):SE:OVF:FIR.DESC"
@@ -521,8 +551,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 72
-y 408
+x 40
+y 192
 w 184
 h 16
 controlPv "$(device):SE:OVF:DAC.DESC"
@@ -545,8 +575,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 72
-y 464
+x 40
+y 248
 w 184
 h 16
 controlPv "$(device):SE:OVF.DESC"
@@ -569,8 +599,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 48
-y 464
+x 16
+y 248
 w 16
 h 16
 lineColor index 14
@@ -586,8 +616,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 304
-y 384
+x 128
+y 304
 w 96
 h 22
 fgColor index 14
@@ -606,8 +636,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 72
-y 432
+x 40
+y 216
 w 184
 h 16
 controlPv "$(device):SE:OVF:COMP.DESC"
@@ -630,8 +660,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 48
-y 432
+x 16
+y 216
 w 16
 h 16
 lineColor index 14
@@ -647,8 +677,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 304
-y 408
+x 128
+y 328
 w 96
 h 22
 fgColor index 14
@@ -667,8 +697,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 360
-y 248
+x 240
+y 392
 w 72
 h 24
 fgColor index 14
@@ -686,8 +716,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 248
-y 160
+x 240
+y 288
 w 184
 h 72
 lineColor index 14
@@ -701,8 +731,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 256
-y 176
+x 248
+y 304
 w 59
 h 14
 font "helvetica-bold-r-12.0"
@@ -721,8 +751,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 256
-y 200
+x 248
+y 328
 w 59
 h 14
 font "helvetica-bold-r-12.0"
@@ -741,8 +771,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 328
-y 176
+x 320
+y 304
 w 96
 h 20
 controlPv "$(device):NCO:FREQ_S"
@@ -768,8 +798,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 328
-y 200
+x 320
+y 328
 w 96
 h 22
 fgColor index 14
@@ -787,8 +817,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 248
-y 152
+x 240
+y 280
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -806,8 +836,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 248
-y 152
+x 240
+y 280
 w 120
 h 16
 lineColor index 14
@@ -820,8 +850,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 248
-y 248
+x 128
+y 392
 w 105
 h 16
 font "helvetica-bold-r-14.0"
@@ -832,5 +862,274 @@ value {
   "Output Enable:"
 }
 autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 144
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Overflows"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 144
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 280
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Test Control"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 280
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 304
+w 100
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Data Loopback:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 16
+y 328
+w 68
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Fix delays:"
+}
+autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 240
+y 48
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):SE:HEALTH"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 200
+y 168
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):DET:OVF:ACC"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 224
+y 168
+w 176
+h 16
+controlPv "$(device):DET:OVF:ACC.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 224
+y 248
+w 176
+h 16
+controlPv "$(device):DET:OVF.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 200
+y 248
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):DET:OVF"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 224
+y 192
+w 176
+h 16
+controlPv "$(device):DET:OVF:IQ.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 200
+y 192
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):DET:OVF:IQ"
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 16
+y 240
+w 384
+h 0
+lineColor index 9
+fillColor index 0
+numPoints 2
+xPoints {
+  0 16
+  1 400
+}
+yPoints {
+  0 240
+  1 240
+}
 endObjectProperties
 

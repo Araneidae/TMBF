@@ -41,29 +41,26 @@ static void compute_fir_taps(struct fir_bank *bank)
 {
     double tune = (double) bank->cycles / bank->length;
 
-    /* Only work on the active part of the filter, leaving the beginning of the
-     * filter padded with zeros.  This ensures zero extra delay from the filter
-     * if the length is shorter than the filter length. */
-    int *taps = bank->current_taps;
-    int start = fir_filter_length - bank->length;
-    memset(taps, 0, FILTER_SIZE);
-
     /* Calculate FIR coeffs and the mean value. */
+    int *taps = bank->current_taps;
     int sum = 0;
     double max_int = (1 << 15) - 1;
     for (int i = 0; i < bank->length; i++)
     {
         int tap = (int) round(max_int *
             sin(2*M_PI * (tune * (i+0.5) + bank->phase / 360.0)));
-        taps[i + start] = tap;
+        taps[i] = tap;
         sum += tap;
     }
+    /* Pad end of filter with zeros. */
+    for (int i = bank->length; i < fir_filter_length; i++)
+        taps[i] = 0;
 
     /* Fixup the DC offset introduced by the residual sum.  Turns out that this
      * is generally quite miniscule (0, 1 or -1), so it doesn't hugely matter
      * where we put it... unless we're really unlucky (eg, tune==1), in which
      * case it really hardly matters! */
-    taps[start] -= sum;
+    taps[0] -= sum;
 }
 
 

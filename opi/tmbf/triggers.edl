@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1925
-y 582
+x 1949
+y 631
 w 440
-h 376
+h 361
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -35,7 +35,7 @@ release 0
 x 8
 y 272
 w 424
-h 96
+h 80
 lineColor index 14
 fill
 fillColor index 4
@@ -700,7 +700,7 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 328
+x 352
 y 288
 w 56
 h 20
@@ -823,7 +823,7 @@ inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
 controlPv "$(device):ADC:DELAY_S"
-font "helvetica-medium-r-14.0"
+font "helvetica-medium-r-12.0"
 endObjectProperties
 
 # (Static Text)
@@ -852,7 +852,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 232
+x 272
 y 296
 w 70
 h 14

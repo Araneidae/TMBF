@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 274
-y 527
+x 59
+y 139
 w 641
-h 504
+h 512
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -25,6 +25,21 @@ snapToGrid
 gridSize 8
 disableScroll
 endScreenProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 336
+y 424
+w 224
+h 80
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
 
 # (X-Y Graph)
 object xyGraphClass
@@ -48,7 +63,7 @@ nPts 2
 # X axis properties
 showXAxis
 xAxisSrc "fromUser"
-xMin 0
+xMin -10
 xMax 1000
 # Y axis properties
 showYAxis
@@ -103,7 +118,7 @@ major 4
 minor 1
 release 0
 x 568
-y 472
+y 480
 w 64
 h 24
 fgColor index 25
@@ -160,7 +175,7 @@ nPts 2
 # X axis properties
 showXAxis
 xAxisSrc "fromUser"
-xMin 1
+xMin -10
 xMax 1000
 # Y axis properties
 showYAxis
@@ -186,33 +201,14 @@ plotColor {
 }
 endObjectProperties
 
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 512
-y 416
-w 120
-h 24
-fgColor index 14
-bgColor index 4
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):ADC:SCAN_S.SCAN"
-font "helvetica-medium-r-14.0"
-endObjectProperties
-
 # (Text Monitor)
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
 minor 5
 release 0
-x 272
-y 448
+x 408
+y 464
 w 64
 h 16
 controlPv "$(device):ADC:MEAN"
@@ -238,8 +234,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 208
-y 448
+x 344
+y 464
 w 40
 h 16
 font "helvetica-medium-r-14.0"
@@ -258,8 +254,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 208
-y 464
+x 344
+y 480
 w 27
 h 16
 font "helvetica-medium-r-14.0"
@@ -278,8 +274,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 272
-y 464
+x 408
+y 480
 w 64
 h 16
 controlPv "$(device):ADC:STD"
@@ -305,8 +301,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 272
-y 424
+x 408
+y 440
 w 64
 h 16
 controlPv "$(device):ADC:MAX"
@@ -333,8 +329,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 208
-y 424
+x 344
+y 440
 w 66
 h 16
 font "helvetica-medium-r-14.0"
@@ -353,8 +349,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 344
-y 424
+x 480
+y 440
 w 4
 h 16
 font "helvetica-medium-r-14.0"
@@ -373,8 +369,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 360
-y 424
+x 496
+y 440
 w 48
 h 16
 controlPv "$(device):ADC:MAX_PC"
@@ -404,8 +400,8 @@ release 0
 # Geometry
 x 8
 y 416
-w 184
-h 80
+w 160
+h 88
 # Appearance
 graphTitle "ADC Offset"
 fgColor index 14
@@ -456,11 +452,11 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 368
-y 472
-w 65
+x 176
+y 464
+w 62
 h 14
-font "helvetica-bold-r-12.0"
+font "helvetica-medium-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
@@ -476,8 +472,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 440
-y 472
+x 176
+y 480
 w 64
 h 24
 fgColor index 14
@@ -486,6 +482,39 @@ inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
 controlPv "$(device):ADC:DELAY_S"
-font "helvetica-medium-r-14.0"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 336
+y 416
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Input Range"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 336
+y 416
+w 120
+h 16
+lineColor index 14
+fillColor index 0
 endObjectProperties
 

@@ -7,7 +7,6 @@ SOURCE="$(cd "$(dirname "$0")"/..; pwd)"
 . "$SOURCE"/install_d/CONFIG
 if (($# > 0)); then
     INSTALL_HOST="$1"
-    FPGA_SOURCE="$2"
 else
     : ${INSTALL_HOST:?Local installation path not defined}
 fi

@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2425
-y 26
+x 2427
+y 28
 w 641
 h 713
 font "helvetica-medium-r-18.0"
@@ -32,8 +32,23 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 232
-y 464
+x 8
+y 456
+w 224
+h 96
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 336
+y 456
 w 296
 h 152
 lineColor index 14
@@ -102,148 +117,14 @@ command {
 includeHelpIcon
 endObjectProperties
 
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 480
-w 184
-h 72
-lineColor index 14
-fill
-fillColor index 4
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 496
-w 59
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "NCO freq:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 520
-w 59
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "NCO gain:"
-}
-autoSize
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 88
-y 496
-w 96
-h 20
-controlPv "$(device):NCO:FREQ_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-noExecuteClipMask
-endObjectProperties
-
 # (Menu Button)
 object activeMenuButtonClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 88
-y 520
-w 96
-h 22
-fgColor index 14
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):NCO:GAIN_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
+x 344
 y 472
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "NCO"
-}
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 472
-w 120
-h 16
-lineColor index 14
-fillColor index 0
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 240
-y 480
 w 112
 h 24
 fgColor index 14
@@ -261,8 +142,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 320
-y 512
+x 424
+y 504
 w 56
 h 20
 controlPv "$(device):DET:BUNCH0_S"
@@ -288,8 +169,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 376
-y 512
+x 480
+y 504
 w 32
 h 16
 controlPv "$(device):DET:BUNCH0"
@@ -312,8 +193,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 240
-y 512
+x 344
+y 504
 w 69
 h 14
 font "helvetica-bold-r-12.0"
@@ -332,8 +213,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 320
-y 536
+x 424
+y 528
 w 56
 h 20
 controlPv "$(device):DET:BUNCH1_S"
@@ -359,8 +240,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 376
-y 536
+x 480
+y 528
 w 32
 h 16
 controlPv "$(device):DET:BUNCH1"
@@ -383,8 +264,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 240
-y 536
+x 344
+y 528
 w 69
 h 14
 font "helvetica-bold-r-12.0"
@@ -403,8 +284,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 320
-y 560
+x 424
+y 552
 w 56
 h 20
 controlPv "$(device):DET:BUNCH2_S"
@@ -430,8 +311,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 376
-y 560
+x 480
+y 552
 w 32
 h 16
 controlPv "$(device):DET:BUNCH2"
@@ -454,8 +335,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 240
-y 560
+x 344
+y 552
 w 69
 h 14
 font "helvetica-bold-r-12.0"
@@ -474,8 +355,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 320
-y 584
+x 424
+y 576
 w 56
 h 20
 controlPv "$(device):DET:BUNCH3_S"
@@ -501,8 +382,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 376
-y 584
+x 480
+y 576
 w 32
 h 16
 controlPv "$(device):DET:BUNCH3"
@@ -525,8 +406,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 240
-y 584
+x 344
+y 576
 w 69
 h 14
 font "helvetica-bold-r-12.0"
@@ -545,8 +426,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 232
-y 456
+x 336
+y 448
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -564,8 +445,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 232
-y 456
+x 336
+y 448
 w 120
 h 16
 lineColor index 14
@@ -578,8 +459,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 360
-y 480
+x 464
+y 472
 w 72
 h 24
 fgColor index 14
@@ -644,8 +525,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 440
-y 480
+x 544
+y 472
 w 80
 h 24
 fgColor index 43
@@ -670,8 +551,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 424
-y 512
+x 528
+y 504
 w 96
 h 22
 fgColor index 43
@@ -696,8 +577,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 424
-y 536
+x 528
+y 528
 w 96
 h 22
 fgColor index 43
@@ -722,8 +603,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 424
-y 560
+x 528
+y 552
 w 96
 h 22
 fgColor index 43
@@ -748,8 +629,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 424
-y 584
+x 528
+y 576
 w 96
 h 22
 fgColor index 43
@@ -940,7 +821,7 @@ major 4
 minor 0
 release 0
 x 16
-y 632
+y 472
 w 16
 h 16
 lineColor index 14
@@ -957,7 +838,7 @@ major 4
 minor 5
 release 0
 x 40
-y 632
+y 472
 w 184
 h 14
 controlPv "$(device):DET:OVF:ACC.DESC"
@@ -981,7 +862,7 @@ major 4
 minor 5
 release 0
 x 40
-y 688
+y 528
 w 184
 h 14
 controlPv "$(device):DET:OVF.DESC"
@@ -1005,7 +886,7 @@ major 4
 minor 0
 release 0
 x 16
-y 688
+y 528
 w 16
 h 16
 lineColor index 14
@@ -1022,7 +903,7 @@ major 4
 minor 5
 release 0
 x 40
-y 656
+y 496
 w 184
 h 14
 controlPv "$(device):DET:OVF:IQ.DESC"
@@ -1046,7 +927,7 @@ major 4
 minor 0
 release 0
 x 16
-y 656
+y 496
 w 16
 h 16
 lineColor index 14
@@ -1099,5 +980,76 @@ value {
   "Captured:"
 }
 autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 448
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Overflows"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 448
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 40
+y 632
+w 96
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:SEQ:ENA_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 208
+y 424
+w 104
+h 24
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):DET:AUTOGAIN_S"
+font "helvetica-medium-r-12.0"
 endObjectProperties
 

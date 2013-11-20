@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 765
-y 119
+x 766
+y 120
 w 641
-h 570
+h 512
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -25,6 +25,36 @@ snapToGrid
 gridSize 8
 disableScroll
 endScreenProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 200
+y 424
+w 160
+h 80
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 368
+y 424
+w 192
+h 80
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
 
 # (X-Y Graph)
 object xyGraphClass
@@ -48,7 +78,7 @@ nPts 2
 # X axis properties
 showXAxis
 xAxisSrc "fromUser"
-xMin 0
+xMin -10
 xMax 1000
 # Y axis properties
 showYAxis
@@ -103,7 +133,7 @@ major 4
 minor 1
 release 0
 x 568
-y 448
+y 480
 w 64
 h 24
 fgColor index 25
@@ -160,7 +190,7 @@ nPts 2
 # X axis properties
 showXAxis
 xAxisSrc "fromUser"
-xMin 1
+xMin -10
 xMax 1000
 # Y axis properties
 showYAxis
@@ -186,33 +216,14 @@ plotColor {
 }
 endObjectProperties
 
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 512
-y 416
-w 120
-h 24
-fgColor index 14
-bgColor index 4
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):DAC:SCAN_S.SCAN"
-font "helvetica-medium-r-14.0"
-endObjectProperties
-
 # (Text Monitor)
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
 minor 5
 release 0
-x 368
-y 440
+x 440
+y 464
 w 64
 h 16
 controlPv "$(device):DAC:MEAN"
@@ -238,11 +249,11 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 304
-y 440
-w 43
+x 376
+y 464
+w 40
 h 16
-font "helvetica-bold-r-14.0"
+font "helvetica-medium-r-14.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
@@ -258,11 +269,11 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 304
-y 456
-w 29
+x 376
+y 480
+w 27
 h 16
-font "helvetica-bold-r-14.0"
+font "helvetica-medium-r-14.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
@@ -278,8 +289,8 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 368
-y 456
+x 440
+y 480
 w 64
 h 16
 controlPv "$(device):DAC:STD"
@@ -305,9 +316,9 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 368
-y 416
-w 64
+x 440
+y 440
+w 48
 h 16
 controlPv "$(device):DAC:MAX"
 font "helvetica-medium-r-14.0"
@@ -333,11 +344,11 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 304
-y 416
-w 69
+x 376
+y 440
+w 66
 h 16
-font "helvetica-bold-r-14.0"
+font "helvetica-medium-r-14.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
@@ -353,8 +364,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 440
-y 416
+x 496
+y 440
 w 4
 h 16
 font "helvetica-medium-r-14.0"
@@ -373,9 +384,9 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 456
-y 416
-w 48
+x 512
+y 440
+w 40
 h 16
 controlPv "$(device):DAC:MAX_PC"
 font "helvetica-medium-r-14.0"
@@ -401,8 +412,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 136
-y 416
+x 272
+y 440
 w 72
 h 24
 fgColor index 14
@@ -420,10 +431,10 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 136
-y 448
-w 48
-h 20
+x 272
+y 472
+w 72
+h 24
 controlPv "$(device):DAC:DELAY_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -447,16 +458,17 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 8
-y 416
-w 105
-h 16
-font "helvetica-bold-r-14.0"
+x 208
+y 440
+w 42
+h 28
+font "helvetica-medium-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Output Enable:"
+  "Output"
+  "Enable:"
 }
 autoSize
 endObjectProperties
@@ -467,16 +479,17 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 16
-y 448
-w 97
-h 16
-font "helvetica-bold-r-14.0"
+x 208
+y 472
+w 37
+h 28
+font "helvetica-medium-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Output Delay:"
+  "Output"
+  "Delay:"
 }
 autoSize
 endObjectProperties
@@ -489,9 +502,9 @@ minor 6
 release 0
 # Geometry
 x 8
-y 480
-w 184
-h 80
+y 416
+w 96
+h 88
 # Appearance
 graphTitle "Pre-emphasis"
 fgColor index 14
@@ -505,7 +518,6 @@ xAxisSrc "fromUser"
 xMin -0.5
 xMax 3.5
 # Y axis properties
-showYAxis
 yAxisSrc "AutoScale"
 yMax 1
 yLabelIntervals 2
@@ -542,8 +554,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
-y 512
+x 112
+y 480
 w 72
 h 24
 fgColor index 14
@@ -553,5 +565,91 @@ topShadowColor index 1
 botShadowColor index 11
 controlPv "$(device):DAC:PREEMPH:DELAY_S"
 font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 112
+y 464
+w 72
+h 14
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Group delay:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 368
+y 416
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Output Range"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 368
+y 416
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 200
+y 416
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Output Control"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 200
+y 416
+w 120
+h 16
+lineColor index 14
+fillColor index 0
 endObjectProperties
 
