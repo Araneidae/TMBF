@@ -18,6 +18,10 @@
 /*                            IOC PV put logging                             */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+/* Used to trim arrays of excessive length when logging. */
+static int max_array_length;
+
+
 /* Alas dbGetField is rather rubbish at formatting floating point numbers, so we
  * do that ourselves, but the rest formats ok. */
 static void FormatField(dbAddr *dbaddr, dbr_string_t *value)
@@ -52,11 +56,16 @@ static void PrintValue(dbr_string_t *value, int length)
     else
     {
         printf("[");
-        for (int i = 0; i < length; i ++)
+        int i = 0;
+        for (; i < length  &&  i < max_array_length; i ++)
         {
             if (i > 0)  printf(", ");
             printf("%s", value[i]);
         }
+        if (length > max_array_length + 1)
+            printf(", ...");
+        if (length > max_array_length)
+            printf(", %s", value[length-1]);
         printf("]");
     }
 }
@@ -89,8 +98,9 @@ static void EpicsPvPutHook(asTrapWriteMessage *pmessage, int after)
 }
 
 
-bool HookLogging(void)
+bool HookLogging(int max_length)
 {
+    max_array_length = max_length;
     asSetFilename("db/access.acf");
     asTrapWriteRegisterListener(EpicsPvPutHook);
     return true;

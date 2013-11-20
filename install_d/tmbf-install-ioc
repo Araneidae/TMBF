@@ -98,6 +98,7 @@ cat <<EOF >/etc/tmbf_ioc
 TMBF_IOC='$IOC_TARGET/runioc'
 DESIGN=/opt/lib/tmbf.bin
 DESIGN_CONFIG_FILE=/opt/lib/tmbf.delays
+LOG_WF_LIMIT=20
 EOF
 
 

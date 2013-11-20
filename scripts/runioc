@@ -22,6 +22,8 @@ IocParameter()
 
 cd "$(dirname "$0")/.."
 
+LOG_WF_LIMIT=20
+
 . /etc/tmbf_ioc
 
 : "${DESIGN_CONFIG_FILE:?}"
@@ -59,6 +61,7 @@ export TEMP_FS_LIST="$(echo -n $(
 IocParameter -p "$PIDFILE"
 IocParameter -s "$STATE_FILE"
 IocParameter -H "$DESIGN_CONFIG_FILE"
+IocParameter -l "$LOG_WF_LIMIT"
 
 # Now run the IOC.
 echo

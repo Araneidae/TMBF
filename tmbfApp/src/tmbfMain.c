@@ -55,6 +55,9 @@ static const char *device_name = "(unknown)";
 /* File to read hardware configuration settings. */
 static const char *hardware_config_file = NULL;
 
+/* Limits length of waveforms logged on output. */
+static int max_log_array_length = 10000;
+
 
 #define TEST_EPICS(command) \
     ( { \
@@ -184,12 +187,13 @@ static bool ProcessOptions(int *argc, char ** *argv)
     bool Ok = true;
     while (Ok)
     {
-        switch (getopt(*argc, *argv, "+np:s:i:d:H:"))
+        switch (getopt(*argc, *argv, "+np:s:i:l:d:H:"))
         {
             case 'n':   Interactive = false;                    break;
             case 'p':   Ok = WritePid(optarg);                  break;
             case 's':   persistence_state_file = optarg;        break;
             case 'i':   persistence_interval = atoi(optarg);    break;
+            case 'l':   max_log_array_length = atoi(optarg);    break;
             case 'd':   device_name = optarg;                   break;
             case 'H':   hardware_config_file = optarg;          break;
             default:
@@ -232,7 +236,7 @@ static bool initialise_epics(void)
     set_prompt();
     return
         StartCaRepeater()  &&
-        HookLogging()  &&
+        HookLogging(max_log_array_length)  &&
         TEST_EPICS(dbLoadDatabase("dbd/tmbf.dbd", NULL, NULL))  &&
         TEST_EPICS(tmbf_registerRecordDeviceDriver(pdbbase))  &&
         load_database("db/tmbf.db")  &&
