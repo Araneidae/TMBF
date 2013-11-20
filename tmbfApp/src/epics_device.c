@@ -67,6 +67,7 @@ struct epics_record {
     char *key;                      // Name of lookup for record
     enum record_type record_type;
     const char *record_name;        // Full record name, once bound
+    size_t max_length;              // Waveform length
 
     /* The following fields are shared between pairs of record classes. */
     IOSCANPVT ioscanpvt;            // Used for I/O intr enabled records
@@ -93,7 +94,6 @@ struct epics_record {
         // WAVEFORM record support
         struct {
             enum waveform_type field_type;
-            size_t max_length;
             void (*process)(void *context, void *array, size_t *length);
             void (*init)(void *context, void *array, size_t *length);
         } waveform;
@@ -184,6 +184,7 @@ static void initialise_in_fields(
 {
     base->in.set_time = in_args->set_time;
     base->in.read = in_args->read;
+    base->max_length = 1;
     base->context = in_args->context;
     if (in_args->io_intr)
         scanIoInit(&base->ioscanpvt);
@@ -196,6 +197,7 @@ static void initialise_out_fields(
     base->out.init = out_args->init;
     base->out.save_value = malloc(write_data_size(base->record_type));
     base->out.disable_write = false;
+    base->max_length = 1;
     base->context = out_args->context;
     base->persist = out_args->persist;
     if (base->persist)
@@ -207,9 +209,9 @@ static void initialise_waveform_fields(
     struct epics_record *base, const struct waveform_args_void *waveform_args)
 {
     base->waveform.field_type = waveform_args->field_type;
-    base->waveform.max_length = waveform_args->max_length;
     base->waveform.process = waveform_args->process;
     base->waveform.init = waveform_args->init;
+    base->max_length = waveform_args->max_length;
     base->context = waveform_args->context;
     base->persist = waveform_args->persist;
     if (base->persist)
@@ -268,7 +270,9 @@ struct epics_record *lookup_epics_record(
     enum record_type record_type, const char *name)
 {
     BUILD_KEY(key, name, record_type);
-    return hash_table_lookup(hash_table, key);
+    struct epics_record *result = hash_table_lookup(hash_table, key);
+    ASSERT_OK(TEST_NULL_(result, "Lookup %s failed", key));
+    return result;
 }
 
 
@@ -369,34 +373,65 @@ static int record_type_dbr(enum record_type record_type)
 {
     switch (record_type)
     {
+        case RECORD_TYPE_longin:    return DBR_LONG;
+        case RECORD_TYPE_ulongin:   return DBR_LONG;
+        case RECORD_TYPE_ai:        return DBR_DOUBLE;
+        case RECORD_TYPE_bi:        return DBR_CHAR;
+        case RECORD_TYPE_stringin:  return DBR_STRING;
+        case RECORD_TYPE_mbbi:      return DBR_LONG;
+
         case RECORD_TYPE_longout:   return DBR_LONG;
         case RECORD_TYPE_ulongout:  return DBR_LONG;
         case RECORD_TYPE_ao:        return DBR_DOUBLE;
         case RECORD_TYPE_bo:        return DBR_CHAR;
         case RECORD_TYPE_stringout: return DBR_STRING;
         case RECORD_TYPE_mbbo:      return DBR_LONG;
+
+        default: ASSERT_FAIL();
+    }
+}
+
+static int waveform_type_dbr(enum waveform_type waveform_type)
+{
+    switch (waveform_type)
+    {
+        case waveform_TYPE_char:    return DBR_CHAR;
+        case waveform_TYPE_short:   return DBR_SHORT;
+        case waveform_TYPE_int:     return DBR_LONG;
+        case waveform_TYPE_float:   return DBR_FLOAT;
+        case waveform_TYPE_double:  return DBR_DOUBLE;
         default: ASSERT_FAIL();
     }
 }
 
 
-void _write_out_record(
-    enum record_type record_type, struct epics_record *record,
-    const void *value, bool process)
+/* Used to convert an internal record name to the associated dbaddr value and
+ * performs sanity validation. */
+static bool record_to_dbaddr(
+    enum record_type record_type, struct epics_record *record, size_t length,
+    struct dbAddr *dbaddr)
 {
-    struct dbAddr dbaddr;
-    bool ok =
-        // Validate the arguments to prevent disaster
-        TEST_OK_(is_out_record(record_type),
-            "%s is not an output type", get_type_name(record_type))  &&
+    return
         TEST_OK_(record->record_type == record_type,
             "%s is %s, not %s", record->key,
             get_type_name(record->record_type), get_type_name(record_type))  &&
+        TEST_OK_(length <= record->max_length, "Length request too long")  &&
 
         // The writing API needs a dbAddr to describe the target
         TEST_NULL(record->record_name)  &&
-        TEST_OK_(dbNameToAddr(record->record_name, &dbaddr) == 0,
+        TEST_OK_(dbNameToAddr(record->record_name, dbaddr) == 0,
             "Unable to find record %s", record->record_name);
+}
+
+
+/* Wrapper around dbPutField to write value to EPICS database. */
+static void _write_out_record(
+    enum record_type record_type, struct epics_record *record,
+    int dbr_type, const void *value, size_t length, bool process)
+{
+    struct dbAddr dbaddr;
+    bool ok =
+        record_to_dbaddr(record_type, record, length, &dbaddr);
     if (ok)
     {
         // Finally write the desired value under the database lock: we disable
@@ -404,12 +439,64 @@ void _write_out_record(
         dbScanLock(dbaddr.precord);
         record->out.disable_write = !process;
         ok =
-            TEST_OK(dbPutField(
-                &dbaddr, record_type_dbr(record_type), value, 1) == 0);
+            TEST_OK(dbPutField(&dbaddr, dbr_type, value, length) == 0);
         record->out.disable_write = false;
         dbScanUnlock(dbaddr.precord);
     }
     ASSERT_OK(ok);
+}
+
+void _write_out_record_value(
+    enum record_type record_type, struct epics_record *record,
+    const void *value, bool process)
+{
+    bool ok =
+        // Validate the arguments to prevent disaster
+        TEST_OK_(is_out_record(record_type),
+            "%s is not an output type", get_type_name(record_type));
+    ASSERT_OK(ok);
+    _write_out_record(
+        record_type, record, record_type_dbr(record_type), value, 1, process);
+}
+
+void _write_out_record_waveform(
+    enum waveform_type waveform_type, struct epics_record *record,
+    const void *value, size_t length, bool process)
+{
+    _write_out_record(
+        RECORD_TYPE_waveform, record, waveform_type_dbr(waveform_type),
+        value, length, process);
+}
+
+
+/* Wrapper around dbGetField to read value from EPICS. */
+static void _read_record(
+    enum record_type record_type, struct epics_record *record,
+    int dbr_type, void *value, size_t length)
+{
+    long get_length = length;
+    struct dbAddr dbaddr;
+    bool ok =
+        record_to_dbaddr(record_type, record, length, &dbaddr)  &&
+        TEST_OK(dbGetField(
+            &dbaddr, dbr_type, value, NULL, &get_length, NULL) == 0)  &&
+        TEST_OK_((size_t) get_length == length, "Failed to get all values");
+    ASSERT_OK(ok);
+}
+
+void _read_record_value(
+    enum record_type record_type, struct epics_record *record, void *value)
+{
+    _read_record(record_type, record, record_type_dbr(record_type), value, 1);
+}
+
+void _read_record_waveform(
+    enum waveform_type waveform_type, struct epics_record *record,
+    void *value, size_t length)
+{
+    _read_record(
+        RECORD_TYPE_waveform, record, waveform_type_dbr(waveform_type),
+        value, length);
 }
 
 
@@ -788,9 +875,9 @@ static bool check_waveform_type(waveformRecord *pr, struct epics_record *base)
         TEST_OK_(pr->ftvl == expected,
             "Array %s.FTVL mismatch %d != %d (%d)",
             base->key, pr->ftvl, expected, base->waveform.field_type)  &&
-        TEST_OK_(pr->nelm == base->waveform.max_length,
+        TEST_OK_(pr->nelm == base->max_length,
             "Array %s wrong length, %d != %d",
-            base->key, pr->nelm, base->waveform.max_length);
+            base->key, pr->nelm, base->max_length);
 }
 
 

@@ -314,10 +314,12 @@ void trigger_record(
 /* Simple helper for EPICS_STRING type. */
 void copy_epics_string(EPICS_STRING *out, const char *in);
 
-/* Returns published epics_record structure with the given type and name, or
- * returns NULL if record not present. */
+/* Returns published epics_record structure with the given type and name.
+ * Generates ASSERT fail if record not present. */
 struct epics_record *lookup_epics_record(
     enum record_type record_type, const char *name);
+#define LOOKUP_RECORD(record, name) \
+    lookup_epics_record(RECORD_TYPE_##record, name)
 
 
 /* Core PUBLISH and PUBLISH_WAVEFORM macros.  Wrappers for publish_epics_record
@@ -337,12 +339,49 @@ struct epics_record *lookup_epics_record(
  * record to be updated from within the device.  If process is False then the
  * generated process callback is suppressed (as far as possible).  This method
  * is only available for out records. */
-void _write_out_record(
+void _write_out_record_value(
     enum record_type record_type, struct epics_record *record,
     const void *value, bool process);
+void _write_out_record_waveform(
+    enum waveform_type waveform_type, struct epics_record *record,
+    const void *value, size_t length, bool process);
 #define WRITE_OUT_RECORD(type, record, value, process) \
-    _write_out_record( \
-        RECORD_TYPE_##type, record, (TYPEOF(type)[]) { value }, process)
+    _write_out_record_value( \
+        RECORD_TYPE_##type, record, (const TYPEOF(type)[]) { value }, process)
+#define WRITE_OUT_RECORD_WF(type, record, value, length, process) \
+    _write_out_record_waveform( \
+        waveform_TYPE_##type, record, *(const type*[]) { value }, \
+        length, process)
+/* Helper macro for writing a value to a named record. */
+#define WRITE_NAMED_RECORD(record, name, value) \
+    WRITE_OUT_RECORD( \
+        record, LOOKUP_RECORD(record, name), (value), true)
+#define WRITE_NAMED_RECORD_WF(type, name, value, length) \
+    WRITE_OUT_RECORD_WF( \
+        type, LOOKUP_RECORD(waveform, name), (value), length, true)
+
+
+/* The value of any managed record can be read. */
+void _read_record_value(
+    enum record_type record_type, struct epics_record *record, void *value);
+void _read_record_waveform(
+    enum waveform_type waveform_type, struct epics_record *record,
+    void *value, size_t length);
+#define READ_RECORD_VALUE(type, record) \
+    ( { \
+        TYPEOF(type) value__; \
+        _read_record_value(RECORD_TYPE_##type, record, &value__); \
+        value__; \
+    } )
+#define READ_RECORD_VALUE_WF(type, record, value, length) \
+    _read_record_waveform( \
+        waveform_TYPE_##type, record, *(type *[]) { value }, length)
+
+#define READ_NAMED_RECORD_VALUE(record, name) \
+    READ_RECORD_VALUE(record, LOOKUP_RECORD(record, name))
+#define READ_NAMED_RECORD_WF(type, name, value, length) \
+    READ_RECORD_VALUE_WF( \
+        type, LOOKUP_RECORD(waveform, name), value, length)
 
 
 /******************************************************************************/
