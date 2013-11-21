@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2705
-y 10
-w 457
-h 604
+x 646
+y 32
+w 415
+h 345
 font "helvetica-medium-r-8.0"
 ctlFont "helvetica-medium-r-8.0"
 btnFont "helvetica-medium-r-8.0"
@@ -33,21 +33,6 @@ major 4
 minor 0
 release 0
 x 8
-y 288
-w 224
-h 72
-lineColor index 14
-fill
-fillColor index 4
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
 y 152
 w 400
 h 120
@@ -64,7 +49,7 @@ minor 1
 release 0
 x 0
 y 0
-w 456
+w 416
 h 32
 font "helvetica-medium-r-18.0"
 fontAlign "center"
@@ -81,8 +66,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 392
-y 456
+x 352
+y 280
 w 56
 h 24
 fgColor index 46
@@ -170,8 +155,8 @@ major 4
 minor 2
 release 0
 x 8
-y 536
-w 136
+y 312
+w 128
 h 24
 fgColor index 25
 bgColor index 4
@@ -191,9 +176,9 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 312
-y 536
-w 136
+x 280
+y 312
+w 128
 h 24
 fgColor index 25
 bgColor index 4
@@ -213,8 +198,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 376
-y 488
+x 280
+y 280
 w 64
 h 24
 fgColor index 43
@@ -245,9 +230,9 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 160
-y 536
-w 136
+x 144
+y 312
+w 128
 h 24
 fgColor index 25
 bgColor index 4
@@ -357,8 +342,8 @@ beginObjectProperties
 major 4
 minor 2
 release 0
-x 312
-y 80
+x 336
+y 40
 w 72
 h 24
 fgColor index 43
@@ -587,26 +572,6 @@ fillAlarm
 alarmPv "$(device):SE:OVF"
 endObjectProperties
 
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 128
-y 304
-w 96
-h 22
-fgColor index 14
-fgAlarm
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):LOOPBACK_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
 # (Text Monitor)
 object activeXTextDspClass:noedit
 beginObjectProperties
@@ -654,28 +619,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 128
-y 328
-w 96
-h 22
-fgColor index 14
-fgAlarm
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):COMPENSATE_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 240
-y 392
+x 120
+y 280
 w 72
 h 24
 fgColor index 14
@@ -687,148 +632,14 @@ controlPv "$(device):DAC:ENABLE_S"
 font "helvetica-medium-r-12.0"
 endObjectProperties
 
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 240
-y 288
-w 184
-h 72
-lineColor index 14
-fill
-fillColor index 4
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
 release 0
-x 248
-y 304
-w 59
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "NCO freq:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 248
-y 328
-w 59
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "NCO gain:"
-}
-autoSize
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 320
-y 304
-w 96
-h 20
-controlPv "$(device):NCO:FREQ_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-noExecuteClipMask
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 320
-y 328
-w 96
-h 22
-fgColor index 14
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):NCO:GAIN_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 240
+x 8
 y 280
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "NCO"
-}
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 240
-y 280
-w 120
-h 16
-lineColor index 14
-fillColor index 0
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 128
-y 392
 w 105
 h 16
 font "helvetica-bold-r-14.0"
@@ -874,87 +685,14 @@ lineColor index 14
 fillColor index 0
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 280
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "Test Control"
-}
-endObjectProperties
-
 # (Rectangle)
 object activeRectangleClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
-y 280
-w 120
-h 16
-lineColor index 14
-fillColor index 0
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 304
-w 100
-h 16
-font "helvetica-medium-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Data Loopback:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 16
-y 328
-w 68
-h 16
-font "helvetica-medium-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Fix delays:"
-}
-autoSize
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 240
-y 48
+x 312
+y 40
 w 16
 h 16
 lineColor index 14
@@ -1110,36 +848,13 @@ yPoints {
 }
 endObjectProperties
 
-# (Message Button)
-object activeMessageButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 16
-y 448
-w 104
-h 24
-fgColor index 25
-onColor index 4
-offColor index 3
-topShadowColor index 1
-botShadowColor index 14
-controlPv "$(device):RESTART_S.PROC"
-pressValue "0"
-onLabel "Restart FPGA"
-offLabel "Restart FPGA"
-3d
-font "helvetica-bold-r-12.0"
-endObjectProperties
-
 # (Related Display)
 object relatedDisplayClass
 beginObjectProperties
 major 4
 minor 2
 release 0
-x 264
+x 184
 y 112
 w 72
 h 24
@@ -1153,6 +868,29 @@ numPvs 4
 numDsps 1
 displayFileName {
   0 "tmbf/tune.edl"
+}
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 336
+y 112
+w 72
+h 24
+fgColor index 43
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "Restart"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/restart.edl"
 }
 endObjectProperties
 
