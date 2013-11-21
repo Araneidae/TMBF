@@ -33,13 +33,8 @@ if action == 'one':
     output_wf[bunch] = output
     gain_wf[bunch] = gain
 
-elif action == 'all' or action == 'set':
-    if action == 'all':
-        fir, output, gain = map(int, sys.argv[4:])
-    else:
-        set_pvs = [pv('FIR'), pv('OUT'), pv('GAIN')]
-        fir, output, gain = caget(set_pvs)
-
+elif action == 'all':
+    fir, output, gain = map(int, sys.argv[4:])
     z = numpy.zeros(936, dtype = int)
     fir_wf    = z + fir
     output_wf = z + output
