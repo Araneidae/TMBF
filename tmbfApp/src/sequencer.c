@@ -50,9 +50,8 @@ static short buffer_high[RAW_BUF_DATA_LENGTH];
 static unsigned int buf_select;
 static bool capture_iq;     // Set from buf_select when written to hardware
 
-/* Sequencer enable and program counter. */
+/* Sequencer program counter. */
 static unsigned int sequencer_pc;
-static bool sequencer_enable;
 
 /* Number of IQ points to be captured by sequencer. */
 static struct epics_interlock *info_trigger;
@@ -159,13 +158,17 @@ static void update_seq_state(void)
 
 /* Called before arming the sequencer: now is the time to configure the hardware
  * for operation. */
-void prepare_sequencer(void)
+void prepare_sequencer(bool enable_sequencer)
 {
     capture_iq = buf_select == SELECT_IQ  &&  capture_count > 0;
     hw_write_buf_select(buf_select);
-    write_seq_state();
-    prepare_detector(settings_changed);
-    settings_changed = false;
+    hw_write_seq_count(enable_sequencer ? sequencer_pc : 0);
+    if (enable_sequencer)
+    {
+        write_seq_state();
+        prepare_detector(settings_changed);
+        settings_changed = false;
+    }
 }
 
 
@@ -200,17 +203,9 @@ void process_fast_buffer(void)
 static void write_seq_count(unsigned int count)
 {
     sequencer_pc = count;
-    if (sequencer_enable)
-        hw_write_seq_count(sequencer_pc);
-
     update_capture_count();
 }
 
-void enable_seq_trigger(bool enable)
-{
-    sequencer_enable = enable;
-    hw_write_seq_count(enable ? sequencer_pc : 0);
-}
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

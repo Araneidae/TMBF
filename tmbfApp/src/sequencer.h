@@ -5,11 +5,8 @@ bool initialise_sequencer(void);
 /* Called when the fast buffer has triggered. */
 void process_fast_buffer(void);
 
-/* Enable or disable sequencer trigger. */
-void enable_seq_trigger(bool enable);
-
 /* Called immediately before arming the sequencer. */
-void prepare_sequencer(void);
+void prepare_sequencer(bool enable_sequencer);
 
 /* Returns currently programmed sequencer table and current sequencer state
  * count. */

@@ -162,15 +162,12 @@ static void disarm_buf(void)
 static void maybe_arm_seq(void)
 {
     set_armed_status(&seq_target.armed, seq_target.enabled);
-    enable_seq_trigger(seq_target.enabled);
-    if (seq_target.enabled)
-        prepare_sequencer();
+    prepare_sequencer(seq_target.enabled);
 }
 
 static void disarm_seq(void)
 {
     set_armed_status(&seq_target.armed, false);
-    enable_seq_trigger(false);
 }
 
 
