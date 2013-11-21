@@ -66,9 +66,10 @@ static struct epics_interlock *iq_trigger;
  *    For economy of calculation, we precompute the rotations as scaled
  * integers so that the final computation can be a simple integer
  * multiplication (one instruction when the compiler is in the right mood). */
-static double loop_delay_turns = 0; // Raw delay as input by user
-static int rotate_I[TUNE_LENGTH];  // 2**30 * cos(phase)
-static int rotate_Q[TUNE_LENGTH];  // 2**30 * sin(phase)
+static double adc_loop_delay;       // Base ADC loop delay as input by user
+static double fir_loop_delay;       // Extra FIR loop delay
+static int rotate_I[TUNE_LENGTH];   // 2**30 * cos(phase)
+static int rotate_Q[TUNE_LENGTH];   // 2**30 * sin(phase)
 
 /* Helper constants for fast tune scale and rotation waveform calculations
  * corresponding to multiplication by 936*2^-32. */
@@ -124,9 +125,10 @@ static void compute_delay(void)
 {
     int adc_delay, fir_delay;
     hw_read_det_delays(&adc_delay, &fir_delay);
+    double loop_delay = detector_input ? adc_loop_delay : fir_loop_delay;
     int compensation = detector_input ? adc_delay : fir_delay;
     compensated_delay = (int) round(
-        BUNCHES_PER_TURN * loop_delay_turns + compensation);
+        BUNCHES_PER_TURN * loop_delay + compensation);
 }
 
 static void store_one_tune_freq(unsigned int freq, int ix)
@@ -174,12 +176,17 @@ static void update_det_scale(void)
 }
 
 
-static void set_loop_delay(double delay)
+static void set_adc_loop_delay(double delay)
 {
-    loop_delay_turns = delay;
+    adc_loop_delay = delay;
     tune_scale_needs_refresh = true;
 }
 
+static void set_fir_loop_delay(double delay)
+{
+    fir_loop_delay = delay;
+    tune_scale_needs_refresh = true;
+}
 
 static void write_det_input_select(unsigned int input)
 {
@@ -382,7 +389,8 @@ bool initialise_detector(void)
     PUBLISH_WRITE_VAR_P(bo, "DET:AUTOGAIN", autogain_enable);
     PUBLISH_WRITER_P(mbbo, "DET:INPUT", write_det_input_select);
     PUBLISH_WRITE_VAR_P(bo, "DET:MODE", detector_mode);
-    PUBLISH_WRITER_P(ao, "DET:LOOP", set_loop_delay);
+    PUBLISH_WRITER_P(ao, "DET:LOOP:ADC", set_adc_loop_delay);
+    PUBLISH_WRITER_P(ao, "DET:LOOP:FIR", set_fir_loop_delay);
 
     PUBLISH_READ_VAR(bi, "DET:OVF:ACC", overflows[OVERFLOW_IQ_ACC]);
     PUBLISH_READ_VAR(bi, "DET:OVF:IQ",  overflows[OVERFLOW_IQ_SCALE]);

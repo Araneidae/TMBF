@@ -13,6 +13,7 @@ aOut('TUNE:RANGE', 0, 0.5, PREC = 4,
     FLNK = setting_changed, DESC = 'Tune sweep range')
 longOut('TUNE:BUNCH', 0, BUNCHES_PER_TURN-1,
     FLNK = setting_changed, DESC = 'Single bunch selection')
+aOut('TUNE:ALARM', 0, 0.5, PREC = 4, DESC = 'Set tune alarm range')
 
 
 Action('TUNE:SET', DESC = 'Set tune settings')
@@ -42,6 +43,7 @@ Trigger('TUNE',
         ('Extra peaks', 3,  'MINOR'),
         ('Bad fit',     4,  'MINOR'),
         ('Overflow',    5,  'MAJOR'),
+        ('Out of range', 6, 'MINOR'),
         DESC = 'Status of last tune measurement')
 )
 

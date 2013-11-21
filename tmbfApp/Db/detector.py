@@ -58,7 +58,10 @@ boolOut('DET:RESET_WIN', FLNK = det_window, PINI = 'YES',
     DESC = 'Reset detector window to Hamming')
 
 # Total loop delay in turns.
-aOut('DET:LOOP', 1, EGU = 'turns', DESC = 'Closed loop delay in turns')
+aOut('DET:LOOP:ADC', 1,
+    EGU = 'turns', PREC = 1, DESC = 'Closed loop delay in turns')
+aOut('DET:LOOP:FIR', 0,
+    EGU = 'turns', PREC = 1, DESC = 'Extra FIR loop delay')
 
 
 # Also put the fixed NCO control here

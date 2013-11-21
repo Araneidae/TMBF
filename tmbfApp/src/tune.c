@@ -45,6 +45,7 @@ enum tune_status {
     TUNE_EXTRA_PEAKS,   // Too many peaks found
     TUNE_BAD_FIT,       // Misshapen peak
     TUNE_OVERFLOW,      // Detector input overflow
+    TUNE_RANGE,         // Alarm range error
 };
 
 
@@ -283,7 +284,8 @@ static struct epics_interlock *tune_trigger;
 static int harmonic;            // Base frequency for tune sweep
 static double centre_tune;      // Centre of tune sweep
 static double half_range;       // Min/max tune setting
-static int selected_bunch;        // Selected single bunch
+static double alarm_range;      // Alarm range to test
+static int selected_bunch;      // Selected single bunch
 
 /* Waveforms from last detector sweep. */
 static struct channel_sweep sweep;
@@ -341,6 +343,13 @@ void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow)
         severity = measure_tune(
             sweep_info->sweep_length, &sweep, sweep_info->tune_scale, overflow,
             &tune_status, &measured_tune, &measured_phase);
+    if (severity == epicsSevNone)
+        /* Check for measured tune within given alarm range. */
+        if (fabs(measured_tune - centre_tune) >= alarm_range)
+        {
+            severity = epicsSevMinor;
+            tune_status = TUNE_RANGE;
+        }
     trigger_record(measured_tune_rec, severity, NULL);
     trigger_record(measured_phase_rec, severity, NULL);
     interlock_signal(tune_trigger, NULL);
@@ -428,6 +437,7 @@ bool initialise_tune(void)
     PUBLISH_WRITE_VAR_P(longout, "TUNE:HARMONIC", harmonic);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:CENTRE", centre_tune);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:RANGE", half_range);
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:ALARM", alarm_range);
     PUBLISH_WRITE_VAR_P(longout, "TUNE:BUNCH", selected_bunch);
 
     PUBLISH_WF_READ_VAR(short, "TUNE:I", TUNE_LENGTH, sweep.wf_i);

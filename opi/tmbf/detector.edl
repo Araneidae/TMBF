@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2427
-y 28
+x 785
+y 398
 w 641
 h 713
 font "helvetica-medium-r-18.0"
@@ -486,7 +486,7 @@ x 320
 y 632
 w 56
 h 20
-controlPv "$(device):DET:LOOP_S"
+controlPv "$(device):DET:LOOP:ADC_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -500,7 +500,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -510,16 +509,16 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 240
+x 216
 y 632
-w 76
+w 93
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Group delay:"
+  "ADC loop delay:"
 }
 autoSize
 endObjectProperties
@@ -660,8 +659,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 336
-y 664
+x 520
+y 672
 w 96
 h 22
 fgColor index 14
@@ -679,8 +678,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 240
-y 664
+x 424
+y 672
 w 89
 h 14
 font "helvetica-bold-r-12.0"
@@ -942,51 +941,6 @@ fillAlarm
 alarmPv "$(device):DET:OVF:IQ"
 endObjectProperties
 
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 480
-y 632
-w 48
-h 16
-controlPv "$(device):DET:LENGTH"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-fgAlarm
-bgColor index 0
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 416
-y 632
-w 57
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Captured:"
-}
-autoSize
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -1056,5 +1010,52 @@ topShadowColor index 1
 botShadowColor index 11
 controlPv "$(device):DET:AUTOGAIN_S"
 font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 320
+y 656
+w 56
+h 20
+controlPv "$(device):DET:LOOP:FIR_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 216
+y 656
+w 88
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "FIR loop delay:"
+}
+autoSize
 endObjectProperties
 
