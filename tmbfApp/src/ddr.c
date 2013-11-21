@@ -102,7 +102,7 @@ static void purge_read_buffer(void)
 
 
 #define SAMPLES_PER_ATOM    4
-#define ATOMS_PER_TURN      (SAMPLES_PER_TURN / SAMPLES_PER_ATOM)   // 234
+#define ATOMS_PER_TURN      (BUNCHES_PER_TURN / SAMPLES_PER_ATOM)   // 234
 
 #define MAX_FIFO_SIZE       512
 

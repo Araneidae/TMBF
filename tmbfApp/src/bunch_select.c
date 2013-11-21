@@ -24,12 +24,12 @@ struct bunch_bank {
     unsigned int fir_select;
     unsigned int out_select;
     int gain_select;
-    char current_fir_wf[SAMPLES_PER_TURN];
-    char current_out_wf[SAMPLES_PER_TURN];
-    int current_gain_wf[SAMPLES_PER_TURN];
-    char set_fir_wf[SAMPLES_PER_TURN];
-    char set_out_wf[SAMPLES_PER_TURN];
-    int set_gain_wf[SAMPLES_PER_TURN];
+    char current_fir_wf[BUNCHES_PER_TURN];
+    char current_out_wf[BUNCHES_PER_TURN];
+    int current_gain_wf[BUNCHES_PER_TURN];
+    char set_fir_wf[BUNCHES_PER_TURN];
+    char set_out_wf[BUNCHES_PER_TURN];
+    int set_gain_wf[BUNCHES_PER_TURN];
     struct epics_record *fir_wf_pv;
     struct epics_record *out_wf_pv;
     struct epics_record *gain_wf_pv;
@@ -41,8 +41,8 @@ struct bunch_bank {
 static void update_bunch_select(struct bunch_bank *bank)
 {
     /* Reshape our waveforms into format suitable for hardware. */
-    struct bunch_entry entries[SAMPLES_PER_TURN];
-    for (int i = 0; i < SAMPLES_PER_TURN; i++)
+    struct bunch_entry entries[BUNCHES_PER_TURN];
+    for (int i = 0; i < BUNCHES_PER_TURN; i++)
     {
         entries[i].bunch_gain    = bank->current_gain_wf[i];
         entries[i].output_select = bank->current_out_wf[i];
@@ -62,7 +62,7 @@ static bool reload_settings(void *context, const bool *value)
     if (!bank->use_waveform)
     {
 #define MAKE_WF(name, type) \
-    for (int i = 0; i < SAMPLES_PER_TURN; i ++) \
+    for (int i = 0; i < BUNCHES_PER_TURN; i ++) \
         bank->current_##name##_wf[i] = (type) bank->name##_select
         MAKE_WF(fir, char);
         MAKE_WF(out, char);
@@ -122,17 +122,17 @@ static void publish_bank(int ix, struct bunch_bank *bank)
     PUBLISH_WRITE_VAR_P(longout, FORMAT("GAIN"), bank->gain_select);
 
     PUBLISH_WF_WRITE_VAR_P(
-        char, FORMAT("FIRWF_S"), SAMPLES_PER_TURN, bank->set_fir_wf);
+        char, FORMAT("FIRWF_S"), BUNCHES_PER_TURN, bank->set_fir_wf);
     PUBLISH_WF_WRITE_VAR_P(
-        char, FORMAT("OUTWF_S"), SAMPLES_PER_TURN, bank->set_out_wf);
+        char, FORMAT("OUTWF_S"), BUNCHES_PER_TURN, bank->set_out_wf);
     PUBLISH_WF_WRITE_VAR_P(
-        int, FORMAT("GAINWF_S"), SAMPLES_PER_TURN, bank->set_gain_wf);
+        int, FORMAT("GAINWF_S"), BUNCHES_PER_TURN, bank->set_gain_wf);
     bank->fir_wf_pv = PUBLISH_WF_READ_VAR_I(
-        char, FORMAT("FIRWF"), SAMPLES_PER_TURN, bank->current_fir_wf);
+        char, FORMAT("FIRWF"), BUNCHES_PER_TURN, bank->current_fir_wf);
     bank->out_wf_pv = PUBLISH_WF_READ_VAR_I(
-        char, FORMAT("OUTWF"), SAMPLES_PER_TURN, bank->current_out_wf);
+        char, FORMAT("OUTWF"), BUNCHES_PER_TURN, bank->current_out_wf);
     bank->gain_wf_pv = PUBLISH_WF_READ_VAR_I(
-        int, FORMAT("GAINWF"), SAMPLES_PER_TURN, bank->current_gain_wf);
+        int, FORMAT("GAINWF"), BUNCHES_PER_TURN, bank->current_gain_wf);
 
 #undef FORMAT
 }

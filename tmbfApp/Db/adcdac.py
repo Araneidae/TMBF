@@ -23,11 +23,11 @@ def minmax_pvs(source):
         LOPR = 0,   HOPR = 100,
         PREC = 1,   EGU  = '%')
     pvs = [
-        Waveform('%s:MINBUF' % source, SAMPLES_PER_TURN, 'SHORT',
+        Waveform('%s:MINBUF' % source, BUNCHES_PER_TURN, 'SHORT',
             DESC = '%s min value per bunch' % source),
-        Waveform('%s:MAXBUF' % source, SAMPLES_PER_TURN, 'SHORT',
+        Waveform('%s:MAXBUF' % source, BUNCHES_PER_TURN, 'SHORT',
             DESC = '%s max value per bunch' % source),
-        Waveform('%s:DIFFBUF' % source, SAMPLES_PER_TURN, 'SHORT',
+        Waveform('%s:DIFFBUF' % source, BUNCHES_PER_TURN, 'SHORT',
             DESC = '%s max min diff per bunch' % source),
         aIn('%s:MEAN' % source, -4096, 4096, '', 2,
             DESC = 'Readback %s diff mean' % source),
@@ -45,7 +45,7 @@ mbbOut('ADC:DELAY', '0 ns', '2 ns', '4 ns', '6 ns', DESC = 'Input skew')
 
 
 minmax_pvs('DAC')
-longOut('DAC:DELAY', 0, SAMPLES_PER_TURN-1, DESC = 'DAC output delay')
+longOut('DAC:DELAY', 0, BUNCHES_PER_TURN-1, DESC = 'DAC output delay')
 mbbOut('DAC:ENABLE', 'Off', 'On', DESC = 'DAC output enable')
 
 WaveformOut('DAC:PREEMPH', 3, 'SHORT', DESC = 'DAC output pre-emphasis')

@@ -23,9 +23,11 @@ records.seq('SEQ:ENWRITE',
     LNK4 = seq_pc.PROC, DO4 = 0)
 
 for state in range(1, 8):
-    aOut('SEQ:%d:START_FREQ' % state, -936, 936, 'tune', 5,
+    aOut('SEQ:%d:START_FREQ' % state,
+        -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 5,
         FLNK = update, DESC = 'Sweep NCO start frequency')
-    aOut('SEQ:%d:STEP_FREQ' % state, -936, 936, 'tune', 7,
+    aOut('SEQ:%d:STEP_FREQ' % state,
+        -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 7,
         FLNK = update, DESC = 'Sweep NCO step frequency')
     longOut('SEQ:%d:DWELL' % state, 1, (1<<31) - 1,
         FLNK = update, EGU = 'turns', DESC = 'Sweep dwell time')

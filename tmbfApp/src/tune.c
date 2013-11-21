@@ -146,24 +146,24 @@ static void set_bunch_control(void)
     WRITE_NAMED_RECORD(bo, "BUN:1:USEWF", true);
 
     /* Copy FIR and gain settings from bank 0 to bank 1. */
-    char fir_wf[MAX_BUNCH_COUNT];
-    int gain_wf[MAX_BUNCH_COUNT];
-    READ_NAMED_RECORD_WF(char, "BUN:0:FIRWF", fir_wf, MAX_BUNCH_COUNT);
-    READ_NAMED_RECORD_WF(int,  "BUN:0:GAINWF", gain_wf, MAX_BUNCH_COUNT);
-    WRITE_NAMED_RECORD_WF(char, "BUN:1:FIRWF_S", fir_wf, MAX_BUNCH_COUNT);
-    WRITE_NAMED_RECORD_WF(int,  "BUN:1:GAINWF_S", gain_wf, MAX_BUNCH_COUNT);
+    char fir_wf[BUNCHES_PER_TURN];
+    int gain_wf[BUNCHES_PER_TURN];
+    READ_NAMED_RECORD_WF(char, "BUN:0:FIRWF", fir_wf, BUNCHES_PER_TURN);
+    READ_NAMED_RECORD_WF(int,  "BUN:0:GAINWF", gain_wf, BUNCHES_PER_TURN);
+    WRITE_NAMED_RECORD_WF(char, "BUN:1:FIRWF_S", fir_wf, BUNCHES_PER_TURN);
+    WRITE_NAMED_RECORD_WF(int,  "BUN:1:GAINWF_S", gain_wf, BUNCHES_PER_TURN);
 
     bool single_bunch_mode = READ_NAMED_RECORD_VALUE(bo, "DET:MODE");
 
-    char out_wf[MAX_BUNCH_COUNT];
+    char out_wf[BUNCHES_PER_TURN];
     if (single_bunch_mode)
     {
-        READ_NAMED_RECORD_WF(char, "BUN:0:OUTWF", out_wf, MAX_BUNCH_COUNT);
+        READ_NAMED_RECORD_WF(char, "BUN:0:OUTWF", out_wf, BUNCHES_PER_TURN);
         out_wf[selected_bunch] = 4;
     }
     else
-        memset(out_wf, 4, MAX_BUNCH_COUNT);
-    WRITE_NAMED_RECORD_WF(char, "BUN:1:OUTWF_S", out_wf, MAX_BUNCH_COUNT);
+        memset(out_wf, 4, BUNCHES_PER_TURN);
+    WRITE_NAMED_RECORD_WF(char, "BUN:1:OUTWF_S", out_wf, BUNCHES_PER_TURN);
 }
 
 

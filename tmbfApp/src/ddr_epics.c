@@ -20,7 +20,7 @@
 
 /* Total number of turns in the DDR buffer following the trigger.  We have to
  * subtract a couple of turns because of some jitter in the trigger. */
-#define BUFFER_TURN_COUNT   (64 * 1024 * 1024 / SAMPLES_PER_TURN / 2 - 2)
+#define BUFFER_TURN_COUNT   (64 * 1024 * 1024 / BUNCHES_PER_TURN / 2 - 2)
 
 /* Size of turn readout waveform. */
 #define SHORT_TURN_WF_COUNT       8
@@ -154,9 +154,9 @@ bool initialise_ddr_epics(void)
     PUBLISH_WF_ACTION(short, "DDR:BUNCHWF",
         BUFFER_TURN_COUNT, read_bunch_waveform);
     PUBLISH_WF_ACTION(short, "DDR:SHORTWF",
-        SHORT_TURN_WF_COUNT * SAMPLES_PER_TURN, read_short_turn_waveform);
+        SHORT_TURN_WF_COUNT * BUNCHES_PER_TURN, read_short_turn_waveform);
     PUBLISH_WF_ACTION(short, "DDR:LONGWF",
-        LONG_TURN_WF_COUNT * SAMPLES_PER_TURN, read_long_turn_waveform);
+        LONG_TURN_WF_COUNT * BUNCHES_PER_TURN, read_long_turn_waveform);
 
     /* These two interlock chains are used to process the waveforms. */
     short_trigger = PUBLISH_TRIGGER("DDR:SHORT:TRIG");

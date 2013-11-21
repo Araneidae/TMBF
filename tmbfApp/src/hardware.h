@@ -6,7 +6,7 @@
 
 
 /* Some standard array size definitions. */
-#define MAX_BUNCH_COUNT     936     // Bunches in a single turn
+#define BUNCHES_PER_TURN    936     // Bunches in a single turn
 #define RAW_BUF_DATA_LENGTH 16384   // Points in internal fast buffer
 #define MAX_SEQUENCER_COUNT 8       // Steps in sequencer
 #define FIR_BANKS           4
@@ -15,9 +15,7 @@
 /* Delay compensation on ADC/FIR/DAC buffer data can result in garbage in the
  * last turn's worth of the buffer, so don't include this in the published and
  * processed data length. */
-#define BUF_DATA_LENGTH     (RAW_BUF_DATA_LENGTH - MAX_BUNCH_COUNT)
-
-#define SAMPLES_PER_TURN    MAX_BUNCH_COUNT  //!!!!???? Duplicate to eliminate
+#define BUF_DATA_LENGTH     (RAW_BUF_DATA_LENGTH - BUNCHES_PER_TURN)
 
 
 /* To be called once at startup.  The given config_file contains hardware
@@ -64,7 +62,7 @@ bool hw_read_clock_dropout(void);
 void hw_write_adc_offsets(short offsets[4]);
 
 /* Reads ADC minimum and maximum values since last reading. */
-void hw_read_adc_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT]);
+void hw_read_adc_minmax(short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN]);
 
 /* Sets low level initial ADC delay. */
 void hw_write_adc_skew(unsigned int skew);
@@ -87,7 +85,7 @@ int hw_read_fir_length(void);
 /* DAC: Data Output Stage */
 
 /* Reads DAC minimum and maximum values since last reading. */
-void hw_read_dac_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT]);
+void hw_read_dac_minmax(short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN]);
 
 /* Output enable. */
 void hw_write_dac_enable(unsigned int enable);
@@ -124,7 +122,7 @@ struct bunch_entry {
 };
 
 /* Writes the selected bunch entries to the selected bank. */
-void hw_write_bun_entry(int bank, struct bunch_entry entries[MAX_BUNCH_COUNT]);
+void hw_write_bun_entry(int bank, struct bunch_entry entries[BUNCHES_PER_TURN]);
 
 /* Enables bunch counter synchronsation. */
 void hw_write_bun_sync(void);

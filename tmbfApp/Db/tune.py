@@ -5,13 +5,13 @@ from common import *
 
 # Common controls for simple tune control
 setting_changed = Action('TUNE:CHANGED', DESC = 'Record tune settings changed')
-longOut('TUNE:HARMONIC', 0, SAMPLES_PER_TURN/2-1,
+longOut('TUNE:HARMONIC', 0, BUNCHES_PER_TURN/2-1,
     FLNK = setting_changed, DESC = 'Select tune harmonic')
 aOut('TUNE:CENTRE', 0, 1, PREC = 4,
     FLNK = setting_changed, DESC = 'Centre tune frequency')
 aOut('TUNE:RANGE', 0, 0.5, PREC = 4,
     FLNK = setting_changed, DESC = 'Tune sweep range')
-longOut('TUNE:BUNCH', 0, SAMPLES_PER_TURN-1,
+longOut('TUNE:BUNCH', 0, BUNCHES_PER_TURN-1,
     FLNK = setting_changed, DESC = 'Single bunch selection')
 
 

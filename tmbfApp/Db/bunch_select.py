@@ -4,9 +4,9 @@ from common import *
 
 def BunchWaveforms(bank, name, FTVL, desc, FLNK):
     name = 'BUN:%d:%s' % (bank, name)
-    WaveformOut(name + '_S', SAMPLES_PER_TURN, FTVL,
+    WaveformOut(name + '_S', BUNCHES_PER_TURN, FTVL,
         FLNK = FLNK, DESC = 'Set %s' % desc)
-    Waveform(name, SAMPLES_PER_TURN, FTVL,
+    Waveform(name, BUNCHES_PER_TURN, FTVL,
         SCAN = 'I/O Intr', DESC = 'Current %s' % desc)
 
 

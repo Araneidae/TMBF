@@ -13,7 +13,7 @@ boolOut('DET:AUTOGAIN', 'Fixed Gain', 'Autogain',
     DESC = 'Detector automatic gain')
 
 for bunch in range(4):
-    bunch_select = longOut('DET:BUNCH%d' % bunch, 0, SAMPLES_PER_TURN/4-1,
+    bunch_select = longOut('DET:BUNCH%d' % bunch, 0, BUNCHES_PER_TURN/4-1,
         DESC = 'Detector bunch select #%d' % bunch)
     bunch_select.FLNK = records.calc('DET:BUNCH%d' % bunch,
         CALC = '4*A+B',  INPA = bunch_select, INPB = bunch,
@@ -62,5 +62,6 @@ aOut('DET:LOOP', 1, EGU = 'turns', DESC = 'Closed loop delay in turns')
 
 
 # Also put the fixed NCO control here
-aOut('NCO:FREQ', -936, 936, 'tune', 5, DESC = 'Fixed NCO frequency')
+aOut('NCO:FREQ', -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 5,
+    DESC = 'Fixed NCO frequency')
 mbbOut('NCO:GAIN', DESC = 'Fixed NCO gain', *dBrange(8, -6))

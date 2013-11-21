@@ -58,7 +58,7 @@ static struct epics_interlock *iq_trigger;
  * The DDC skew is a group delay in ns.  We translate this into a phase
  * advance of
  *
- *      phase = 0.5 * skew * 2pi * frequency / 936
+ *      phase = 0.5 * skew * 2pi * frequency / BUNCHES_PER_TURN
  *
  * Here the frequency is in tunes, one revolution per turn, which we convert
  * into one revolution per bunch, or half a revolution per nanosecond (at
@@ -110,7 +110,7 @@ unsigned int tune_to_freq(double tune)
      * advance per bunch by scaling and reducing to the half open interval
      * [0, 1). */
     double integral;
-    double fraction = modf(tune / MAX_BUNCH_COUNT, &integral);
+    double fraction = modf(tune / BUNCHES_PER_TURN, &integral);
     if (fraction < 0.0)
         fraction += 1.0;
     /* Can now scale up to hardware units. */
@@ -126,7 +126,7 @@ static void compute_delay(void)
     hw_read_det_delays(&adc_delay, &fir_delay);
     int compensation = detector_input ? adc_delay : fir_delay;
     compensated_delay = (int) round(
-        MAX_BUNCH_COUNT * loop_delay_turns + compensation);
+        BUNCHES_PER_TURN * loop_delay_turns + compensation);
 }
 
 static void store_one_tune_freq(unsigned int freq, int ix)
@@ -406,7 +406,7 @@ bool initialise_detector(void)
 
     /* Initialise the scaling constants so that
      *  wf_scaling * 2^wf_shift = 936 * 2^-32. */
-    compute_scaling(MAX_BUNCH_COUNT, &wf_scaling, &wf_shift);
+    compute_scaling(BUNCHES_PER_TURN, &wf_scaling, &wf_shift);
     wf_shift -= 32;     // Divide by 2^32.
 
     /* Program the sequencer window. */

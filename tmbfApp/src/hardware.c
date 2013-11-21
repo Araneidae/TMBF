@@ -182,10 +182,10 @@ static void read_minmax(
     {
         /* Channel select and read enable for buffer. */
         *channel = 2*n + 1;
-        for (int i = 0; i < MAX_BUNCH_COUNT/4; i++)
+        for (int i = 0; i < BUNCHES_PER_TURN/4; i++)
         {
             uint32_t data = minmax[i];
-            int out_ix = subtract_offset(i, delay, MAX_BUNCH_COUNT/4);
+            int out_ix = subtract_offset(i, delay, BUNCHES_PER_TURN/4);
             min_out[4*out_ix + n] = (short) (data & 0xFFFF);
             max_out[4*out_ix + n] = (short) (data >> 16);
         }
@@ -303,7 +303,7 @@ void hw_write_adc_offsets(short offsets[4])
     config_space->adc_offset_cd = combine_offsets(offsets[2], offsets[3]);
 }
 
-void hw_read_adc_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT])
+void hw_read_adc_minmax(short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN])
 {
     read_minmax(
         adc_minmax, &config_space->adc_minmax_channel,
@@ -344,7 +344,7 @@ int hw_read_fir_length(void)
 /* * * * * * * * * * * * * */
 /* DAC: Data Output Stage */
 
-void hw_read_dac_minmax(short min[MAX_BUNCH_COUNT], short max[MAX_BUNCH_COUNT])
+void hw_read_dac_minmax(short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN])
 {
     read_minmax(
         dac_minmax, &config_space->dac_minmax_channel,
@@ -402,16 +402,16 @@ int hw_read_ddr_delay(void)
 /* * * * * * * * * * * * * * * * * * * * */
 /* BUN: Bunch by Bunch Banked Selection */
 
-void hw_write_bun_entry(int bank, struct bunch_entry entries[MAX_BUNCH_COUNT])
+void hw_write_bun_entry(int bank, struct bunch_entry entries[BUNCHES_PER_TURN])
 {
     LOCK();
     config_space->bunch_bank = (uint32_t) bank;
-    for (int i = 0; i < MAX_BUNCH_COUNT; i ++)
+    for (int i = 0; i < BUNCHES_PER_TURN; i ++)
     {
         /* Take bunch offsets into account when writing the bunch entry. */
-        int gain_ix = subtract_offset(i, 4*BUNCH_GAIN_OFFSET, MAX_BUNCH_COUNT);
+        int gain_ix = subtract_offset(i, 4*BUNCH_GAIN_OFFSET, BUNCHES_PER_TURN);
         int output_ix = i;  // Reference bunch, no offset required
-        int fir_ix  = subtract_offset(i, 4*BUNCH_FIR_OFFSET, MAX_BUNCH_COUNT);
+        int fir_ix  = subtract_offset(i, 4*BUNCH_FIR_OFFSET, BUNCHES_PER_TURN);
         unsigned int bunch_gain    = entries[gain_ix].bunch_gain;
         unsigned int output_select = entries[output_ix].output_select;
         unsigned int fir_select    = entries[fir_ix].fir_select;
@@ -542,7 +542,7 @@ static void update_det_bunch_select(void)
     }
     unsigned int bunch[4];
     for (int i = 0; i < 4; i ++)
-        bunch[i] = subtract_offset(det_bunches[i], offset, MAX_BUNCH_COUNT/4);
+        bunch[i] = subtract_offset(det_bunches[i], offset, BUNCHES_PER_TURN/4);
     config_space->bunch_select =
         (bunch[0] & 0xFF) |
         ((bunch[1] & 0xFF) << 8) |

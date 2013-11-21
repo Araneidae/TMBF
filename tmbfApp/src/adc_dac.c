@@ -22,9 +22,9 @@
 
 struct min_max {
     void (*read)(short *min_buf, short *max_buf);
-    short int min_buf[MAX_BUNCH_COUNT];
-    short int max_buf[MAX_BUNCH_COUNT];
-    short int diff_buf[MAX_BUNCH_COUNT];
+    short int min_buf[BUNCHES_PER_TURN];
+    short int max_buf[BUNCHES_PER_TURN];
+    short int diff_buf[BUNCHES_PER_TURN];
     double mean_diff;
     double var_diff;
     int max_max;
@@ -44,7 +44,7 @@ static bool read_minmax(void *context, const bool *ignore)
     int sum_diff = 0;
     long long int sum_var = 0;
     int max_max = 0;
-    for (unsigned int i = 0; i < MAX_BUNCH_COUNT; ++i)
+    for (unsigned int i = 0; i < BUNCHES_PER_TURN; ++i)
     {
         short int diff = min_max->max_buf[i] - min_max->min_buf[i];
         min_max->diff_buf[i] = diff;
@@ -55,9 +55,9 @@ static bool read_minmax(void *context, const bool *ignore)
     }
 
     min_max->max_max = max_max;
-    min_max->mean_diff = sum_diff / (double) MAX_BUNCH_COUNT;
+    min_max->mean_diff = sum_diff / (double) BUNCHES_PER_TURN;
     min_max->var_diff  =
-        sum_var  / (double) MAX_BUNCH_COUNT -
+        sum_var  / (double) BUNCHES_PER_TURN -
         min_max->mean_diff * min_max->mean_diff;
     return true;
 }
@@ -71,11 +71,11 @@ static void publish_minmax(const char *name, struct min_max *min_max)
     PUBLISH(bo, FORMAT("SCAN"), .write = read_minmax, .context = min_max);
 
     PUBLISH_WF_READ_VAR(
-        short, FORMAT("MINBUF"), MAX_BUNCH_COUNT, min_max->min_buf);
+        short, FORMAT("MINBUF"), BUNCHES_PER_TURN, min_max->min_buf);
     PUBLISH_WF_READ_VAR(
-        short, FORMAT("MAXBUF"), MAX_BUNCH_COUNT, min_max->max_buf);
+        short, FORMAT("MAXBUF"), BUNCHES_PER_TURN, min_max->max_buf);
     PUBLISH_WF_READ_VAR(
-        short, FORMAT("DIFFBUF"), MAX_BUNCH_COUNT, min_max->diff_buf);
+        short, FORMAT("DIFFBUF"), BUNCHES_PER_TURN, min_max->diff_buf);
 
     PUBLISH_READ_VAR(ai,      FORMAT("MEAN"), min_max->mean_diff);
     PUBLISH_READ_VAR(ai,      FORMAT("STD"),  min_max->var_diff);
