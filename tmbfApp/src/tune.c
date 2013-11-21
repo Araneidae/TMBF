@@ -287,6 +287,7 @@ static int selected_bunch;        // Selected single bunch
 
 /* Waveforms from last detector sweep. */
 static struct channel_sweep sweep;
+static float phase_waveform[TUNE_LENGTH];
 static int cumsum_i[TUNE_LENGTH];
 static int cumsum_q[TUNE_LENGTH];
 
@@ -307,6 +308,13 @@ static void update_iq_power(const struct sweep_info *sweep_info)
 }
 
 
+static void update_phase_wf(void)
+{
+    for (int i = 0; i < TUNE_LENGTH; i ++)
+        phase_waveform[i] = 180.0 / M_PI * atan2f(sweep.wf_q[i], sweep.wf_i[i]);
+}
+
+
 static void update_cumsum(void)
 {
     int sum_i = 0, sum_q = 0;
@@ -324,6 +332,7 @@ void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow)
 {
     interlock_wait(tune_trigger);
     update_iq_power(sweep_info);
+    update_phase_wf();
     update_cumsum();
     epicsAlarmSeverity severity;
     if (overflow)
@@ -424,6 +433,7 @@ bool initialise_tune(void)
     PUBLISH_WF_READ_VAR(short, "TUNE:I", TUNE_LENGTH, sweep.wf_i);
     PUBLISH_WF_READ_VAR(short, "TUNE:Q", TUNE_LENGTH, sweep.wf_q);
     PUBLISH_WF_READ_VAR(int, "TUNE:POWER", TUNE_LENGTH, sweep.power);
+    PUBLISH_WF_READ_VAR(float, "TUNE:PHASEWF", TUNE_LENGTH, phase_waveform);
     PUBLISH_WF_READ_VAR(int, "TUNE:CUMSUMI", TUNE_LENGTH, cumsum_i);
     PUBLISH_WF_READ_VAR(int, "TUNE:CUMSUMQ", TUNE_LENGTH, cumsum_q);
 

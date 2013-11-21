@@ -26,6 +26,7 @@ Trigger('TUNE',
     Waveform('TUNE:I', TUNE_LENGTH, 'SHORT', DESC = 'Tune I'),
     Waveform('TUNE:Q', TUNE_LENGTH, 'SHORT', DESC = 'Tune Q'),
     Waveform('TUNE:POWER', TUNE_LENGTH, 'LONG', DESC = 'Tune power'),
+    Waveform('TUNE:PHASEWF', TUNE_LENGTH, 'FLOAT', DESC = 'Tune phase'),
 
     # Cumsum waveforms for easy viewing of phase information
     Waveform('TUNE:CUMSUMI', TUNE_LENGTH, 'LONG', DESC = 'Cumsum I'),
