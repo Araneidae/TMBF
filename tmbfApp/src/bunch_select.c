@@ -20,21 +20,131 @@
 
 struct bunch_bank {
     int index;
-    bool use_waveform;
-    unsigned int fir_select;
-    unsigned int out_select;
-    int gain_select;
-    char current_fir_wf[BUNCHES_PER_TURN];
-    char current_out_wf[BUNCHES_PER_TURN];
-    int current_gain_wf[BUNCHES_PER_TURN];
-    char set_fir_wf[BUNCHES_PER_TURN];
-    char set_out_wf[BUNCHES_PER_TURN];
-    int set_gain_wf[BUNCHES_PER_TURN];
-    struct epics_record *fir_wf_pv;
-    struct epics_record *out_wf_pv;
-    struct epics_record *gain_wf_pv;
+
+    int fir_wf[BUNCHES_PER_TURN];
+    int out_wf[BUNCHES_PER_TURN];
+    int gain_wf[BUNCHES_PER_TURN];
+
+    EPICS_STRING fir_status;
+    EPICS_STRING out_status;
+    EPICS_STRING gain_status;
 };
 
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Status string computation. */
+
+/* Helper routine: counts number of instances of given value, not all set,
+ * returns index of last non-equal value. */
+static int count_value(int *wf, int value, int *diff_ix)
+{
+    int count = 0;
+    for (int i = 0; i < BUNCHES_PER_TURN; i ++)
+        if (wf[i] == value)
+            count += 1;
+        else
+            *diff_ix = i;
+    return count;
+}
+
+
+/* Converts output control into concise displayable value. */
+static const char *out_name(int value)
+{
+    const char *out_names[] = {
+        "Off",      "FIR",      "NCO",      "NCO+FIR",
+        "Sweep",    "Sw+FIR",   "Sw+NCO",   "S+F+N" };
+    if (0 <= value  &&  value < 8)
+        return out_names[value];
+    else
+        return "Error";
+}
+
+
+/* Status computation.  We support three possibilities:
+ *  1.  All one value
+ *  2.  All one value except for one different value
+ *  3.  Something else: "It's complicated" */
+enum complexity { ALL_SAME, ALL_BUT_ONE, COMPLICATED };
+static enum complexity assess_complexity(
+    int wf[BUNCHES_PER_TURN], int *value, int *other, int *other_ix)
+{
+    *other_ix = 0;
+    *value = wf[0];
+    int count = count_value(wf, *value, other_ix);
+    if (count == BUNCHES_PER_TURN)
+        return ALL_SAME;
+    else if (1 < count  &&  count < BUNCHES_PER_TURN-1)
+        return COMPLICATED;
+    else
+    {
+        *other = wf[*other_ix];
+        if (count == 1)
+        {
+            int t = *value; *value = *other; *other = t;
+            *other_ix = 0;
+        }
+        return ALL_BUT_ONE;
+    }
+}
+
+static void update_fir_status(struct bunch_bank *bank)
+{
+    int value, other, other_ix;
+    switch (assess_complexity(bank->fir_wf, &value, &other, &other_ix))
+    {
+        case ALL_SAME:
+            sprintf(bank->fir_status.s, "All #%d", value);
+            break;
+        case ALL_BUT_ONE:
+            sprintf(bank->fir_status.s, "#%d (#%d @%d)",
+                value, other, other_ix);
+            break;
+        case COMPLICATED:
+            sprintf(bank->fir_status.s, "Mixed");
+            break;
+    }
+}
+
+static void update_out_status(struct bunch_bank *bank)
+{
+    int value, other, other_ix;
+    switch (assess_complexity(bank->out_wf, &value, &other, &other_ix))
+    {
+        case ALL_SAME:
+            sprintf(bank->out_status.s, "%s", out_name(value));
+            break;
+        case ALL_BUT_ONE:
+            sprintf(bank->out_status.s, "%s (%s @%d)",
+                out_name(value), out_name(other), other_ix);
+            break;
+        case COMPLICATED:
+            sprintf(bank->out_status.s, "Mixed outputs");
+            break;
+    }
+}
+
+static void update_gain_status(struct bunch_bank *bank)
+{
+    int value, other, other_ix;
+    switch (assess_complexity(bank->gain_wf, &value, &other, &other_ix))
+    {
+        case ALL_SAME:
+            sprintf(bank->gain_status.s, "%d", value);
+            break;
+        case ALL_BUT_ONE:
+            sprintf(bank->gain_status.s, "%d (%d @%d)",
+                value, other, other_ix);
+            break;
+        case COMPLICATED:
+            sprintf(bank->gain_status.s, "Mixed gains");
+            break;
+    }
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Bunch publish and control. */
 
 /* Called when the current waveforms are up to date.  Write the current
  * settings out to the FPGA. */
@@ -44,64 +154,31 @@ static void update_bunch_select(struct bunch_bank *bank)
     struct bunch_entry entries[BUNCHES_PER_TURN];
     for (int i = 0; i < BUNCHES_PER_TURN; i++)
     {
-        entries[i].bunch_gain    = bank->current_gain_wf[i];
-        entries[i].output_select = bank->current_out_wf[i];
-        entries[i].fir_select    = bank->current_fir_wf[i];
+        entries[i].bunch_gain    = bank->gain_wf[i];
+        entries[i].output_select = bank->out_wf[i];
+        entries[i].fir_select    = bank->fir_wf[i];
     }
-
     hw_write_bun_entry(bank->index, entries);
-    trigger_record(bank->fir_wf_pv, 0, NULL);
-    trigger_record(bank->out_wf_pv, 0, NULL);
-    trigger_record(bank->gain_wf_pv, 0, NULL);
 }
 
 
-static bool reload_settings(void *context, const bool *value)
-{
-    struct bunch_bank *bank = context;
-    if (!bank->use_waveform)
-    {
-#define MAKE_WF(name, type) \
-    for (int i = 0; i < BUNCHES_PER_TURN; i ++) \
-        bank->current_##name##_wf[i] = (type) bank->name##_select
-        MAKE_WF(fir, char);
-        MAKE_WF(out, char);
-        MAKE_WF(gain, int);
-#undef MAKE_WF
-        update_bunch_select(bank);
+
+/* The update for each bunch control waveform follows the same pattern, but
+ * there are type differences preventing direct reuse. */
+#define DEFINE_WRITE_WF(type, field) \
+    static void write_##field##_wf(void *context, type *wf, size_t *length) \
+    { \
+        struct bunch_bank *bank = context; \
+        *length = BUNCHES_PER_TURN; \
+        for (int i = 0; i < BUNCHES_PER_TURN; i ++) \
+            bank->field##_wf[i] = wf[i]; \
+        update_bunch_select(bank); \
+        update_##field##_status(bank); \
     }
-    return true;
-}
 
-
-static bool reload_waveforms(void *context, const bool *value)
-{
-    struct bunch_bank *bank = context;
-    if (bank->use_waveform)
-    {
-#define COPY_WF(name) \
-    memcpy(bank->current_##name##_wf, bank->set_##name##_wf, \
-        sizeof(bank->current_##name##_wf))
-        COPY_WF(fir);
-        COPY_WF(out);
-        COPY_WF(gain);
-#undef COPY_WF
-        update_bunch_select(bank);
-    }
-    return true;
-}
-
-
-static bool set_use_waveform(void *context, const bool *use_waveform)
-{
-    struct bunch_bank *bank = context;
-    bank->use_waveform = *use_waveform;
-    if (bank->use_waveform)
-        reload_waveforms(bank, use_waveform);
-    else
-        reload_settings(bank, use_waveform);
-    return true;
-}
+DEFINE_WRITE_WF(char, fir)
+DEFINE_WRITE_WF(char, out)
+DEFINE_WRITE_WF(int, gain)
 
 
 static void publish_bank(int ix, struct bunch_bank *bank)
@@ -112,34 +189,36 @@ static void publish_bank(int ix, struct bunch_bank *bank)
 #define FORMAT(name) \
     (sprintf(buffer, "BUN:%d:%s", ix, name), buffer)
 
-    PUBLISH(bo, FORMAT("RELOAD"), reload_settings, .context = bank);
-    PUBLISH(bo, FORMAT("RELOADWF"), reload_waveforms, .context = bank);
-    PUBLISH(bo, FORMAT("USEWF"),
-        set_use_waveform, .context = bank, .persist = true);
+#define PUBLISH_BANK_WF(type, name, action) \
+    PUBLISH_WAVEFORM( \
+        type, FORMAT(name), BUNCHES_PER_TURN, action, \
+        .context = bank, .persist = true)
 
-    PUBLISH_WRITE_VAR_P(mbbo, FORMAT("FIR"), bank->fir_select);
-    PUBLISH_WRITE_VAR_P(mbbo, FORMAT("OUT"), bank->out_select);
-    PUBLISH_WRITE_VAR_P(longout, FORMAT("GAIN"), bank->gain_select);
+    PUBLISH_BANK_WF(char, "FIRWF_S", write_fir_wf);
+    PUBLISH_BANK_WF(char, "OUTWF_S", write_out_wf);
+    PUBLISH_BANK_WF(int, "GAINWF_S", write_gain_wf);
 
-    PUBLISH_WF_WRITE_VAR_P(
-        char, FORMAT("FIRWF_S"), BUNCHES_PER_TURN, bank->set_fir_wf);
-    PUBLISH_WF_WRITE_VAR_P(
-        char, FORMAT("OUTWF_S"), BUNCHES_PER_TURN, bank->set_out_wf);
-    PUBLISH_WF_WRITE_VAR_P(
-        int, FORMAT("GAINWF_S"), BUNCHES_PER_TURN, bank->set_gain_wf);
-    bank->fir_wf_pv = PUBLISH_WF_READ_VAR_I(
-        char, FORMAT("FIRWF"), BUNCHES_PER_TURN, bank->current_fir_wf);
-    bank->out_wf_pv = PUBLISH_WF_READ_VAR_I(
-        char, FORMAT("OUTWF"), BUNCHES_PER_TURN, bank->current_out_wf);
-    bank->gain_wf_pv = PUBLISH_WF_READ_VAR_I(
-        int, FORMAT("GAINWF"), BUNCHES_PER_TURN, bank->current_gain_wf);
+    PUBLISH_READ_VAR(stringin, FORMAT("FIRWF:STA"), bank->fir_status);
+    PUBLISH_READ_VAR(stringin, FORMAT("OUTWF:STA"), bank->out_status);
+    PUBLISH_READ_VAR(stringin, FORMAT("GAINWF:STA"), bank->gain_status);
 
+#undef PUBLISH_BANK_WF
 #undef FORMAT
 }
 
 
 static struct bunch_bank banks[BUNCH_BANKS];
 
+static void publish_bank_control(void)
+{
+    for (int i = 0; i < BUNCH_BANKS; i ++)
+        publish_bank(i, &banks[i]);
+}
+
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Bunch synchronisation. */
 
 /* Bunch synchronisation.  This is a trifle involved because when
  * synchronisation is started we then need to poll the trigger phase until
@@ -197,14 +276,16 @@ static void write_bun_sync(void)
 }
 
 
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 bool initialise_bunch_select(void)
 {
+    publish_bank_control();
+
     PUBLISH_WRITER_P(longout, "BUN:OFFSET", hw_write_bun_zero_bunch);
     PUBLISH_ACTION("BUN:SYNC", write_bun_sync);
     sync_phase_pv = PUBLISH_READ_VAR_I(longin, "BUN:PHASE", sync_phase);
-
-    for (int i = 0; i < BUNCH_BANKS; i ++)
-        publish_bank(i, &banks[i]);
 
     pthread_t thread_id;
     return

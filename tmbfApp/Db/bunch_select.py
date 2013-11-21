@@ -2,39 +2,26 @@ from common import *
 
 # Bunch selection
 
-def BunchWaveforms(bank, name, FTVL, desc, FLNK):
+# For each bunch setting there is an associated status string which is updated
+# as the waveform is updated.
+def BunchWaveforms(bank, name, FTVL, desc):
     name = 'BUN:%d:%s' % (bank, name)
+    status = stringIn('%s:STA' % name,
+        DESC = 'Bank %d %s status' % (bank, name))
     WaveformOut(name + '_S', BUNCHES_PER_TURN, FTVL,
-        FLNK = FLNK, DESC = 'Set %s' % desc)
-    Waveform(name, BUNCHES_PER_TURN, FTVL,
-        SCAN = 'I/O Intr', DESC = 'Current %s' % desc)
+        FLNK = status, DESC = 'Set %d %s' % (bank, desc))
 
 
 # We have four banks and for each bank three waveforms of parameters to
 # configure.   Very similar to FIR.
 for bank in range(4):
-    boolOut('BUN:%d:USEWF' % bank, 'Settings', 'Waveform',
-        DESC = 'Use direct waveform or settings')
-
-    # Some canned settings
-    reload = Action('BUN:%d:RELOAD' % bank, DESC = 'Reload bunch config')
-    mbbOut('BUN:%d:FIR' % bank, 'FIR 0', 'FIR 1', 'FIR 2', 'FIR 3',
-        FLNK = reload, DESC = 'FIR bank select')
-    mbbOut('BUN:%d:OUT' % bank,
-        'Off', 'FIR', 'NCO', 'NCO+FIR',
-        'Sweep', 'Sweep+FIR', 'Sweep+NCO', 'Sweep+NCO+FIR',
-        FLNK = reload, DESC = 'DAC output select')
-    longOut('BUN:%d:GAIN' % bank, -(1<<10), (1<<10)-1,
-        FLNK = reload, DESC = 'DAC output gain')
-
-    # Waveform settings with readbacks
-    reload_wf = Action('BUN:%d:RELOADWF' % bank,
-        DESC = 'Reload bunch waveform config')
-    BunchWaveforms(bank, 'FIRWF', 'CHAR', 'FIR bank select', FLNK = reload_wf)
-    BunchWaveforms(bank, 'OUTWF', 'CHAR', 'DAC output select', FLNK = reload_wf)
-    BunchWaveforms(bank, 'GAINWF', 'LONG', 'DAC output gain', FLNK = reload_wf)
+    # Waveform settings with status update
+    BunchWaveforms(bank, 'FIRWF', 'CHAR', 'FIR bank select')
+    BunchWaveforms(bank, 'OUTWF', 'CHAR', 'DAC output select')
+    BunchWaveforms(bank, 'GAINWF', 'LONG', 'DAC output gain')
 
 
+# Bunch synchronisation.
 Action('BUN:SYNC', DESC = 'Bunch synchronisation enable')
 longOut('BUN:OFFSET', 0, 233, DESC = 'Zero bunch offset')
 longIn('BUN:PHASE', SCAN = 'I/O Intr', LOW = 0, LSV = 'MINOR', MDEL = 0,

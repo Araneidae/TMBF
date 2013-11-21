@@ -128,13 +128,9 @@ def bank_wf(tmbf, bank, gain, fir, output):
     tmbf.set('BUN:%d:GAINWF_S' % bank, bunches(gain))
     tmbf.set('BUN:%d:FIRWF_S' % bank, bunches(fir))
     tmbf.set('BUN:%d:OUTWF_S' % bank, bunches(output))
-    tmbf.set('BUN:%d:USEWF_S' % bank, 'Waveform')
 
 def bank(tmbf, bank, gain, fir, output):
-    tmbf.set('BUN:%d:GAIN_S' % bank, gain)
-    tmbf.set('BUN:%d:FIR_S' % bank, fir)
-    tmbf.set('BUN:%d:OUT_S' % bank, output)
-    tmbf.set('BUN:%d:USEWF_S' % bank, 'Settings')
+    bank_wf(tmbf, bank, gain, fir, output)
 
 
 # ------------------------------------------------------------------------------

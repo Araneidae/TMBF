@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 927
-y 261
+x 624
+y 33
 w 544
 h 529
 font "helvetica-medium-r-18.0"
@@ -123,16 +123,16 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 64
+x 48
 y 240
-w 20
+w 60
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "FIR"
+  "FIR select"
 }
 autoSize
 endObjectProperties
@@ -143,16 +143,16 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 152
+x 144
 y 240
-w 88
+w 90
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "DAC out select"
+  "DAC out status"
 }
 autoSize
 endObjectProperties
@@ -163,10 +163,10 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 272
+x 328
 y 240
-w 53
-h 14
+w 56
+h 16
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -287,26 +287,6 @@ symbols {
   0 "bank=3"
 }
 noScroll
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 360
-y 240
-w 35
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Setup"
-}
-autoSize
 endObjectProperties
 
 # (Static Text)
