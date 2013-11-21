@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1069
-y 672
-w 636
-h 400
+x 1071
+y 674
+w 632
+h 385
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -26,50 +26,6 @@ gridSize 8
 disableScroll
 endScreenProperties
 
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 3
-release 0
-# Geometry
-x 8
-y 40
-w 304
-h 304
-# Appearance
-border
-graphTitle "DDC Response"
-fgColor index 14
-bgColor index 3
-gridColor index 5
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "AutoScale"
-xMax 1
-xShowLabelGrid
-# Y axis properties
-yAxisSrc "AutoScale"
-yMax 1
-yShowLabelGrid
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-xPv {
-  0 "$(device):DDC_I"
-}
-yPv {
-  0 "$(device):DDC_Q"
-}
-plotColor {
-  0 index 14
-}
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -78,7 +34,7 @@ minor 1
 release 0
 x 0
 y 0
-w 648
+w 632
 h 32
 font "helvetica-medium-r-18.0"
 fontAlign "center"
@@ -96,7 +52,7 @@ major 4
 minor 1
 release 0
 x 560
-y 368
+y 352
 w 64
 h 24
 fgColor index 25
@@ -131,20 +87,111 @@ command {
 includeHelpIcon
 endObjectProperties
 
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 64
+y 352
+w 80
+h 21
+controlPv "$(device):TUNE:TUNE"
+font "helvetica-medium-r-18.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 184
+y 352
+w 55
+h 21
+font "helvetica-medium-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Phase:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 352
+w 47
+h 21
+font "helvetica-medium-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Tune:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 232
+y 352
+w 80
+h 21
+controlPv "$(device):TUNE:PHASE"
+font "helvetica-medium-r-18.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
 # (X-Y Graph)
 object xyGraphClass
 beginObjectProperties
 major 4
-minor 3
+minor 6
 release 0
 # Geometry
-x 320
+x 8
 y 40
 w 304
 h 304
 # Appearance
-border
-graphTitle "DDC Integral"
+graphTitle "I/Q Response"
 fgColor index 14
 bgColor index 3
 gridColor index 5
@@ -152,10 +199,12 @@ font "helvetica-medium-r-12.0"
 # Operating Modes
 nPts 2
 # X axis properties
+showXAxis
 xAxisSrc "AutoScale"
 xMax 1
 xShowLabelGrid
 # Y axis properties
+showYAxis
 yAxisSrc "AutoScale"
 yMax 1
 yShowLabelGrid
@@ -163,198 +212,101 @@ yShowLabelGrid
 y2AxisSrc "AutoScale"
 y2Max 1
 # Trace Properties
-numTraces 2
+numTraces 1
 xPv {
-  0 "$(device):RAWCUMSUM_I"
-  1 "$(device):CUMSUM_I"
+  0 "$(device):TUNE:I"
 }
 yPv {
-  0 "$(device):RAWCUMSUM_Q"
-  1 "$(device):CUMSUM_Q"
+  0 "$(device):TUNE:Q"
+}
+plotStyle {
+  0 "point"
+}
+xSigned {
+  0 1
+}
+ySigned {
+  0 1
 }
 plotColor {
-  0 index 33
-  1 index 14
+  0 index 14
 }
 endObjectProperties
 
-# (Text Monitor)
-object activeXTextDspClass:noedit
+# (X-Y Graph)
+object xyGraphClass
 beginObjectProperties
 major 4
-minor 1
+minor 6
 release 0
-x 408
+# Geometry
+x 320
+y 40
+w 304
+h 304
+# Appearance
+graphTitle "I/Q Cumulative Response"
+fgColor index 14
+bgColor index 3
+gridColor index 5
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+showXAxis
+xAxisSrc "AutoScale"
+xMax 1
+xShowLabelGrid
+# Y axis properties
+showYAxis
+yAxisSrc "AutoScale"
+yMax 1
+yShowLabelGrid
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 1
+xPv {
+  0 "$(device):TUNE:CUMSUMI"
+}
+yPv {
+  0 "$(device):TUNE:CUMSUMQ"
+}
+plotStyle {
+  0 "point"
+}
+xSigned {
+  0 1
+}
+ySigned {
+  0 1
+}
+plotColor {
+  0 index 14
+}
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 480
 y 352
-w 80
-h 21
-controlPv "$(device):CUMSUMTUNE"
-font "helvetica-medium-r-18.0"
-fontAlign "right"
-fgColor index 14
-fgAlarm
-bgColor index 0
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "monitors"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 344
-y 352
-w 47
-h 21
-font "helvetica-medium-r-18.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Tune:"
+w 72
+h 24
+fgColor index 43
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "Tune"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/tune.edl"
 }
-autoSize
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 408
-y 376
-w 80
-h 21
-controlPv "$(device):CUMSUMPHASE"
-font "helvetica-medium-r-18.0"
-fontAlign "right"
-fgColor index 14
-fgAlarm
-bgColor index 0
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "monitors"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 344
-y 376
-w 55
-h 21
-font "helvetica-medium-r-18.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Phase:"
-}
-autoSize
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 104
-y 352
-w 80
-h 21
-controlPv "$(device):TUNE"
-font "helvetica-medium-r-18.0"
-fontAlign "right"
-fgColor index 14
-fgAlarm
-bgColor index 0
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "monitors"
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 104
-y 376
-w 80
-h 21
-controlPv "$(device):TUNEPHASE"
-font "helvetica-medium-r-18.0"
-fontAlign "right"
-fgColor index 14
-fgAlarm
-bgColor index 0
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "monitors"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 40
-y 376
-w 55
-h 21
-font "helvetica-medium-r-18.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Phase:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 40
-y 352
-w 47
-h 21
-font "helvetica-medium-r-18.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Tune:"
-}
-autoSize
 endObjectProperties
 

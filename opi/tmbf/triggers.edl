@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1949
-y 631
+x 1171
+y 361
 w 440
 h 361
 font "helvetica-medium-r-18.0"
@@ -176,10 +176,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 80
+x 88
 y 112
-w 96
-h 22
+w 88
+h 24
 fgColor index 14
 bgColor index 3
 inconsistentColor index 0
@@ -1090,5 +1090,31 @@ value {
   "turns"
 }
 autoSize
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 80
+y 112
+w 8
+h 16
+lineColor index 14
+fillColor index 0
+lineWidth 2
+numPoints 3
+xPoints {
+  0 80
+  1 80
+  2 88
+}
+yPoints {
+  0 112
+  1 128
+  2 128
+}
 endObjectProperties
 

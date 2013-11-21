@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1093
-y 120
+x 2676
+y 20
 w 456
 h 417
 font "helvetica-medium-r-8.0"
@@ -411,8 +411,8 @@ release 0
 x 152
 y 352
 w 72
-h 24
-controlPv "$(device):TUNE"
+h 21
+controlPv "$(device):TUNE:TUNE"
 font "helvetica-medium-r-18.0"
 fgColor index 14
 fgAlarm
@@ -456,8 +456,8 @@ release 0
 x 304
 y 352
 w 72
-h 24
-controlPv "$(device):TUNEPHASE"
+h 21
+controlPv "$(device):TUNE:PHASE"
 font "helvetica-medium-r-18.0"
 fontAlign "right"
 fgColor index 14
@@ -492,10 +492,7 @@ invisible
 numPvs 4
 numDsps 1
 displayFileName {
-  0 "tmbf/tune_monitor.edl"
-}
-setPosition {
-  0 "button"
+  0 "tmbf/tune.edl"
 }
 endObjectProperties
 
@@ -519,9 +516,6 @@ numPvs 4
 numDsps 1
 displayFileName {
   0 "tmbf/iq_monitor.edl"
-}
-setPosition {
-  0 "button"
 }
 endObjectProperties
 
@@ -777,7 +771,7 @@ invisible
 numPvs 4
 numDsps 1
 displayFileName {
-  0 "tmbf/detector.edl"
+  0 "tmbf/tune.edl"
 }
 setPosition {
   0 "button"

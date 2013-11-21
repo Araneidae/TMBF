@@ -27,10 +27,24 @@ Trigger('TUNE',
     Waveform('TUNE:Q', TUNE_LENGTH, 'SHORT', DESC = 'Tune Q'),
     Waveform('TUNE:POWER', TUNE_LENGTH, 'LONG', DESC = 'Tune power'),
 
+    # Cumsum waveforms for easy viewing of phase information
+    Waveform('TUNE:CUMSUMI', TUNE_LENGTH, 'LONG', DESC = 'Cumsum I'),
+    Waveform('TUNE:CUMSUMQ', TUNE_LENGTH, 'LONG', DESC = 'Cumsum Q'),
+
     # Tune measurement
     aIn('TUNE:TUNE', 0, 1, PREC = 4, DESC = 'Measured tune'),
     aIn('TUNE:PHASE', -180, 180, 'deg', PREC = 1, DESC = 'Measured tune phase'),
     mbbIn('TUNE:STATUS',
-        ('Invalid', 0,  'INVALID'),
-        ('Ok',      1,  'NO_ALARM'))
+        ('Invalid',     0,  'INVALID'),
+        ('Ok',          1,  'NO_ALARM'),
+        ('No peak',     2,  'MINOR'),
+        ('Extra peaks', 3,  'MINOR'),
+        ('Bad fit',     4,  'MINOR'),
+        ('Overflow',    5,  'MAJOR'),
+        DESC = 'Status of last tune measurement')
 )
+
+# Controls for tune peak finding
+aOut('TUNE:THRESHOLD', 0, 1, PREC = 2, DESC = 'Peak fraction threshold')
+longOut('TUNE:BLK:SEP', DESC = 'Minimum block separation')
+longOut('TUNE:BLK:LEN', DESC = 'Minimum block length')
