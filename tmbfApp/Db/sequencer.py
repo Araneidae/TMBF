@@ -45,7 +45,8 @@ for state in range(1, 8):
         FLNK = update, DESC = 'Detector holdoff')
 
     # This fellow is treated a little differently and is processed internally.
-    aOut('SEQ:%d:END_FREQ' % state, EGU = 'tune', PREC = 5,
+    aOut('SEQ:%d:END_FREQ' % state,
+        -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 5,
         PINI = 'NO', DESC = 'Sweep NCO start frequency')
 
 # This is the only valid control in state 0.

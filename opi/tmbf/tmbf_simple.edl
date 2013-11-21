@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2676
-y 20
+x 2694
+y 58
 w 456
 h 417
 font "helvetica-medium-r-8.0"
@@ -528,7 +528,7 @@ release 0
 x 400
 y 80
 w 40
-h 16
+h 20
 controlPv "$(device):FIR:0:PHASE_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -537,11 +537,13 @@ bgColor index 0
 useDisplayBg
 editable
 autoHeight
+motifWidget
 limitsFromDb
 nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 endObjectProperties
 
 # (Text Monitor)
@@ -745,7 +747,7 @@ invisible
 numPvs 4
 numDsps 1
 displayFileName {
-  0 "tmbf/control.edl"
+  0 "tmbf/tmbf_overview.edl"
 }
 setPosition {
   0 "button"

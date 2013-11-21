@@ -1304,6 +1304,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 endObjectProperties
 
 # (Static Text)

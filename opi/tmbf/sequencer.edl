@@ -399,6 +399,7 @@ smartRefresh
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 

@@ -160,6 +160,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -231,6 +232,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -302,6 +304,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -373,6 +376,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -496,6 +500,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 

@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 58
-y 297
+x 59
+y 298
 w 641
 h 545
 font "helvetica-medium-r-18.0"
@@ -517,6 +517,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -544,6 +545,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -571,6 +573,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -598,6 +601,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -956,6 +960,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
