@@ -605,10 +605,9 @@ void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT])
             (entry->hom_gain & 0x7) << 14 |         //      16:14
             entry->hom_enable << 17 |               //      17
             entry->enable_window << 18 |            //      18
-            entry->write_enable << 19 |             //      19
-            (entry->holdoff & 0xFF) << 20;          //      27:20
+            entry->write_enable << 19;              //      19
         config_space->sequencer_write = entry->window_rate;
-        config_space->sequencer_write = 0;
+        config_space->sequencer_write = entry->holdoff & 0xFFFF;
         config_space->sequencer_write = 0;
         config_space->sequencer_write = 0;
     }
