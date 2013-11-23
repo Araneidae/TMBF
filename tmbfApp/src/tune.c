@@ -285,6 +285,7 @@ static int harmonic;            // Base frequency for tune sweep
 static double centre_tune;      // Centre of tune sweep
 static double half_range;       // Min/max tune setting
 static double alarm_range;      // Alarm range to test
+static bool reverse_tune;       // Set to sweep tune backwards
 static int selected_bunch;      // Selected single bunch
 
 /* Waveforms from last detector sweep. */
@@ -415,8 +416,10 @@ static void set_tune_settings(void)
     /* Configure the sequencer with the selected tune range.  Force count and
      * capture to sensible values and set the sequencer PC to 1. */
     double centre = harmonic + centre_tune;
-    WRITE_NAMED_RECORD(ao,       "SEQ:1:START_FREQ", centre - half_range);
-    WRITE_NAMED_RECORD(ao,       "SEQ:1:END_FREQ", centre + half_range);
+    WRITE_NAMED_RECORD(ao, "SEQ:1:START_FREQ",
+        centre + (reverse_tune ? + half_range : - half_range));
+    WRITE_NAMED_RECORD(ao, "SEQ:1:END_FREQ",
+        centre + (reverse_tune ? - half_range : + half_range));
     WRITE_NAMED_RECORD(bo,       "SEQ:1:CAPTURE", true);
     WRITE_NAMED_RECORD(mbbo,     "SEQ:1:BANK", 1);
     WRITE_NAMED_RECORD(ulongout, "SEQ:1:COUNT", 4096);
@@ -437,6 +440,7 @@ bool initialise_tune(void)
     PUBLISH_WRITE_VAR_P(longout, "TUNE:HARMONIC", harmonic);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:CENTRE", centre_tune);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:RANGE", half_range);
+    PUBLISH_WRITE_VAR_P(bo, "TUNE:DIRECTION", reverse_tune);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:ALARM", alarm_range);
     PUBLISH_WRITE_VAR_P(longout, "TUNE:BUNCH", selected_bunch);
 

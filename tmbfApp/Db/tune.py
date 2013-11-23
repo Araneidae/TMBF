@@ -11,6 +11,8 @@ aOut('TUNE:CENTRE', 0, 1, PREC = 4,
     FLNK = setting_changed, DESC = 'Centre tune frequency')
 aOut('TUNE:RANGE', 0, 0.5, PREC = 4,
     FLNK = setting_changed, DESC = 'Tune sweep range')
+boolOut('TUNE:DIRECTION', 'Forwards', 'Backwards',
+    FLNK = setting_changed, DESC = 'Sweep direction')
 longOut('TUNE:BUNCH', 0, BUNCHES_PER_TURN-1,
     FLNK = setting_changed, DESC = 'Single bunch selection')
 aOut('TUNE:ALARM', 0, 0.5, PREC = 4, DESC = 'Set tune alarm range')
