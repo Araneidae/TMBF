@@ -23,7 +23,7 @@ for bunch in range(4):
 
 # This will be reprocessed when necessary, basically when the sequencer settings
 # change and a detector trigger occurs.
-Waveform('DET:SCALE', TUNE_LENGTH, 'FLOAT',
+Waveform('DET:SCALE', TUNE_LENGTH, 'DOUBLE',
     SCAN = 'I/O Intr', DESC = 'Scale for frequency sweep')
 
 # Two overflow detection bits are generated

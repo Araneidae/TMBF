@@ -26,15 +26,26 @@ static double threshold_fraction = 0.3;
 static int min_block_separation = 20;
 static int min_block_length = 20;
 
+
+static double interpolate(double ix, const short wf[])
+{
+    double base;
+    double frac = modf(ix, &base);
+    int ix0 = (int) base;
+    return (1 - frac) * wf[ix0] + frac * wf[ix0];
+}
+
+
 /* Converts a tune, detected as an index into the tune sweep waveform, into the
  * corresponding tune frequency offset and phase. */
 static void index_to_tune(
-    const struct channel_sweep *sweep, const float *tune_scale,
-    int ix, double *tune, double *phase)
+    const struct channel_sweep *sweep, const double *tune_scale,
+    double ix, double *tune, double *phase)
 {
     double harmonic;
-    *tune = modf(tune_scale[ix], &harmonic);
-    *phase = 180.0 / M_PI * atan2(sweep->wf_q[ix], sweep->wf_i[ix]);
+    *tune = modf(tune_scale[(int) round(ix)], &harmonic);
+    *phase = 180.0 / M_PI * atan2(
+        interpolate(ix, sweep->wf_q), interpolate(ix, sweep->wf_i));
 }
 
 
@@ -216,12 +227,12 @@ static bool fit_quadratic(int length, const int wf[], double *result)
 }
 
 static enum tune_status find_peak(
-    const int wf[], struct block *block, int *peak_ix)
+    const int wf[], struct block *block, double *peak_ix)
 {
     double result;
     if (fit_quadratic(block->end - block->start, wf + block->start, &result))
     {
-        *peak_ix = block->start + (int) round(result);
+        *peak_ix = block->start + result;
         return TUNE_OK;
     }
     else
@@ -231,7 +242,7 @@ static enum tune_status find_peak(
 
 static epicsAlarmSeverity measure_tune(
     int length, const struct channel_sweep *sweep,
-    const float *tune_scale, bool overflow,
+    const double *tune_scale, bool overflow,
     unsigned int *tune_status, double *tune, double *phase)
 {
     /* Very crude algorithm:
@@ -248,7 +259,7 @@ static epicsAlarmSeverity measure_tune(
     struct block blocks[MAX_BLOCKS];
     int block_count = find_blocks(length, sweep->power, threshold, blocks);
 
-    int tune_ix = -1;
+    double tune_ix;
     switch (block_count)
     {
         case 0:

@@ -14,7 +14,7 @@ struct channel_sweep {
 struct sweep_info {
     int sweep_length;
     bool single_bunch_mode;
-    float tune_scale[TUNE_LENGTH];
+    double tune_scale[TUNE_LENGTH];
     /* Aggregate sweep info for the four individual channels below. */
     struct channel_sweep mean;
     /* Channel specific sweep info. */

@@ -134,9 +134,15 @@ static void compute_delay(void)
         BUNCHES_PER_TURN * loop_delay + compensation);
 }
 
+static void unsigned_fixed_to_double(
+    uint32_t input, double *result, uint32_t scaling, int scaling_shift)
+{
+    *result = ldexp((double) input * scaling, scaling_shift);
+}
+
 static void store_one_tune_freq(unsigned int freq, int ix)
 {
-    unsigned_fixed_to_single(
+    unsigned_fixed_to_double(
         freq, &sweep_info.tune_scale[ix], wf_scaling, wf_shift);
     cos_sin(-freq * compensated_delay, &rotate_I[ix], &rotate_Q[ix]);
 }
@@ -410,7 +416,7 @@ bool initialise_detector(void)
     iq_trigger = create_interlock("DET:TRIG", "DET:DONE", false);
 
     tune_scale_pv = PUBLISH_WF_READ_VAR_I(
-        float, "DET:SCALE", TUNE_LENGTH, sweep_info.tune_scale);
+        double, "DET:SCALE", TUNE_LENGTH, sweep_info.tune_scale);
 
     PUBLISH_WRITER_P(ao,   "NCO:FREQ", write_nco_freq);
     PUBLISH_WRITER_P(mbbo, "NCO:GAIN", hw_write_nco_gain);
