@@ -32,6 +32,7 @@ static bool detector_mode;
 /* Each time a sequencer setting changes we'll need to recompute the scale. */
 static bool tune_scale_needs_refresh = true;
 static struct epics_record *tune_scale_pv;
+static int linear_scale[TUNE_LENGTH];
 
 /* Overflow status from the last sweep. */
 static bool overflows[OVERFLOW_BIT_COUNT];
@@ -417,6 +418,7 @@ bool initialise_detector(void)
 
     tune_scale_pv = PUBLISH_WF_READ_VAR_I(
         double, "DET:SCALE", TUNE_LENGTH, sweep_info.tune_scale);
+    PUBLISH_WF_READ_VAR(int, "DET:LINEAR", TUNE_LENGTH, linear_scale);
 
     PUBLISH_WRITER_P(ao,   "NCO:FREQ", write_nco_freq);
     PUBLISH_WRITER_P(mbbo, "NCO:GAIN", hw_write_nco_gain);
@@ -425,6 +427,9 @@ bool initialise_detector(void)
      *  wf_scaling * 2^wf_shift = 936 * 2^-32. */
     compute_scaling(BUNCHES_PER_TURN, &wf_scaling, &wf_shift);
     wf_shift -= 32;     // Divide by 2^32.
+    /* Initialise the linear scale. */
+    for (int i = 0; i < TUNE_LENGTH; i ++)
+        linear_scale[i] = i;
 
     /* Program the sequencer window. */
     PUBLISH_WAVEFORM(

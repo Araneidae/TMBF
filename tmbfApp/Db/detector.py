@@ -25,6 +25,8 @@ for bunch in range(4):
 # change and a detector trigger occurs.
 Waveform('DET:SCALE', TUNE_LENGTH, 'DOUBLE',
     SCAN = 'I/O Intr', DESC = 'Scale for frequency sweep')
+# A linear scale for convenience
+Waveform('DET:LINEAR', TUNE_LENGTH, 'LONG', DESC = 'Linear scale')
 
 # Two overflow detection bits are generated
 overflows = [

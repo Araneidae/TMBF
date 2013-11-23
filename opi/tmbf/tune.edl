@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1065
-y 410
+x 1067
+y 435
 w 641
 h 597
 font "helvetica-medium-r-18.0"
@@ -242,57 +242,6 @@ value {
   "Detector input:"
 }
 autoSize
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 8
-y 40
-w 624
-h 184
-# Appearance
-autoScaleBothDirections
-graphTitle "Tune Power"
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-showXAxis
-xAxisSrc "AutoScale"
-xMin 0
-xMax 17000
-# Y axis properties
-showYAxis
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-xPv {
-  0 "$(device):DET:SCALE"
-}
-yPv {
-  0 "$(device):TUNE:POWER"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 26
-}
 endObjectProperties
 
 # (Rectangle)
@@ -1403,5 +1352,92 @@ topShadowColor index 1
 botShadowColor index 11
 controlPv "$(device):TUNE:DIRECTION_S"
 font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Menu Mux)
+object menuMuxClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 288
+y 328
+w 104
+h 24
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-medium-r-12.0"
+numItems 2
+symbolTag {
+  0 "Linear"
+  1 "Log"
+}
+symbol0 {
+  0 "y_axis"
+  1 "y_axis"
+}
+value0 {
+  0 "linear"
+  1 "log"
+}
+endObjectProperties
+
+# (Embedded Window)
+object activePipClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 40
+w 624
+h 184
+fgColor index 14
+bgColor index 3
+topShadowColor index 0
+botShadowColor index 14
+displaySource "menu"
+filePv "LOC\\menu0=i:0"
+sizeOfs 5
+numDsps 1
+displayFileName {
+  0 "tmbf/tune_waveform_$(y_axis).edl"
+}
+symbols {
+  0 "x_axis=$(x_axis)"
+}
+noScroll
+endObjectProperties
+
+# (Menu Mux)
+object menuMuxClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 288
+y 360
+w 104
+h 24
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-medium-r-12.0"
+numItems 2
+symbolTag {
+  0 "Frequency"
+  1 "Points"
+}
+symbol0 {
+  0 "x_axis"
+  1 "x_axis"
+}
+value0 {
+  0 "SCALE"
+  1 "LINEAR"
+}
 endObjectProperties
 
