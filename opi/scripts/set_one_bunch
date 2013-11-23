@@ -44,12 +44,12 @@ else:
     assert False, 'Unknown action: %s' % action
 
 
-def check(wf, max_val):
-    return (0 <= wf).all() and (wf < max_val).all()
+def check(wf, min_val, max_val):
+    return (min_val <= wf).all() and (wf < max_val).all()
 
-assert check(fir_wf, 4), 'Invalid FIR value'
-assert check(output_wf, 8), 'Invalid output valie'
-assert check(gain_wf, 1024), 'Invalid gain value'
+assert check(fir_wf, 0, 4), 'Invalid FIR value'
+assert check(output_wf, 0, 8), 'Invalid output valie'
+assert check(gain_wf, -1024, 1024), 'Invalid gain value'
 caput(wf_pvs, [fir_wf, output_wf, gain_wf])
 
 # vim: set filetype=python:

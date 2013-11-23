@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 246
-y 85
+x 248
+y 110
 w 599
 h 26
 font "helvetica-medium-r-18.0"
@@ -31,7 +31,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 0
 y 0
 w 32
@@ -50,7 +50,7 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
 x 424
 y 0
@@ -92,7 +92,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 16
 y 0
@@ -120,7 +120,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 72
 y 0
@@ -149,7 +149,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 56
 y 0
 w 4
@@ -168,7 +168,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 264
 y 0
@@ -212,7 +212,7 @@ controlPv "$(device):FIR:$(fir):PHASE_S"
 controlLabel "$(device):FIRPHASE_S"
 controlLabelType "pvName"
 font "helvetica-medium-r-8.0"
-scaleMin 0
+scaleMin -360
 scaleMax 360
 endObjectProperties
 

@@ -45,7 +45,7 @@ Trigger('TUNE',
         ('Extra peaks', 3,  'MINOR'),
         ('Bad fit',     4,  'MINOR'),
         ('Overflow',    5,  'MAJOR'),
-        ('Out of range', 6, 'MINOR'),
+        ('Out of range', 6, 'NO_ALARM'),
         DESC = 'Status of last tune measurement')
 )
 
