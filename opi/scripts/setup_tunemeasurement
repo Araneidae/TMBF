@@ -60,6 +60,7 @@ tune=0.$tune
 dac_output=0                # By default DAC output is off
 bunch_mode='All Bunches'    # By default detect on all bunches
 detector_input=FIR
+min_block_len=20
 
 # Mode specific settings
 case $MODE in
@@ -78,6 +79,7 @@ case $MODE in
         sweep_range=0.245
         alarm_range=0.245
         detector_input=ADC
+        min_block_len=5
         ;;
     *)  Error Mode must be one of TUNE, AP or SBFB.
         ;;
@@ -132,6 +134,10 @@ put TUNE:RANGE_S $sweep_range
 put TUNE:ALARM_S $alarm_range
 put TUNE:BUNCH_S $BUNCH
 put TUNE:SET_S.PROC 0
+
+put TUNE:BLK:LEN_S $min_block_len
+put TUNE:BLK:SEP_S 20
+put TUNE:THRESHOLD_S 0.3
 
 # Trigger on external trigger.
 put TRG:BUF:SEL_S External
