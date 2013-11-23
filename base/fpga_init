@@ -17,12 +17,16 @@ sleep()
 }
 
 
+# Sleep after fp load
+sleep 1
+
+devmem 0x1403c01c 32 0x4
+
+
 # FPGA design must be loaded before this script.
 # This is done elsewhere (/etc/init.d/libera)
 
-# Sleep after fp load
-sleep 2
-
+sleep 1
 
 ### ./init_AD9510_analog_bs.scr
 devmem  0x1400C004 32 0x0000BD
@@ -65,16 +69,22 @@ devmem  0x1400C004 32 0x005300  # 01 dela za 500MHz
 
 ######### Fine delay on ########
 devmem  0x1400C004 32 0x003401  #01 Bypass
+#sleep 0.1
 ######### Delay full scale #####
 devmem  0x1400C004 32 0x003500
+#sleep 0.1
 ######### Fine delay adjust ####
 devmem  0x1400C004 32 0x003607       #07
+#sleep 0.1
 
 devmem  0x1400C004 32 0x005805
 devmem  0x1400C004 32 0x005a01
+#sleep 0.5
+
 
 devmem  0x1400C004 32 0x005801
 devmem  0x1400C004 32 0x005a01
+#sleep 0.1
 
 
 sleep 1
@@ -88,6 +98,104 @@ devmem  0x1400C000 32 0xE000  #E2->out=0  #E4->out=1  #E6->out=010101
 sleep 0.1
 ######### PDN P###############
 devmem  0x1400C000 32 0xF000
+sleep 0.1
+
+
+devmem 0x1403c01c 32 0xc
+sleep 0.5
+
+### ./init_AD9510_digital.scr
+# Data register address: 0x1403c004
+# Control register address: 0x1403c008
+#    -write to control register 0x1 to start transfer the data register
+
+
+devmem  0x1403c004 32 0x0000BD
+devmem  0x1403c008 32 0x1
+sleep 0.1
+devmem  0x1403c004 32 0x000099
+devmem  0x1403c008 32 0x1
+sleep 0.1
+devmem  0x1403c004 32 0x005a01
+devmem  0x1403c008 32 0x1
+sleep 0.1
+devmem  0x1403c004 32 0x000099
+devmem  0x1403c008 32 0x1
+sleep 0.1
+
+
+######### OUT1 off #############
+devmem  0x1403c004 32 0x003d0a
+devmem  0x1403c008 32 0x1
+sleep 0.1
+######### OUT2 off #############
+devmem  0x1403c004 32 0x003e0a
+devmem  0x1403c008 32 0x1
+sleep 0.1
+######### OUT3 off #############
+devmem  0x1403c004 32 0x003f0a
+devmem  0x1403c008 32 0x1
+sleep 0.1
+######### OUT4 off #############
+devmem  0x1403c004 32 0x004003
+devmem  0x1403c008 32 0x1
+sleep 0.1
+######### OUT5 term #############
+devmem  0x1403c004 32 0x004102
+devmem  0x1403c008 32 0x1
+sleep 0.1
+######### CLK select ###########
+devmem  0x1403c004 32 0x00451d
+devmem  0x1403c008 32 0x1
+sleep 0.1
+######### Divider 5 config #####
+devmem  0x1403c004 32 0x005200
+devmem  0x1403c008 32 0x1
+sleep 0.1
+devmem  0x1403c004 32 0x005380
+devmem  0x1403c008 32 0x1
+sleep 0.1
+
+
+######### Delay full scale #####
+devmem  0x1403c004 32 0x00353f   # 3f @ 500Mhz  3c @ 352Mhz
+devmem  0x1403c008 32 0x1
+sleep 0.1
+######### Fine delay on/off ####
+devmem  0x1403c004 32 0x003400 #01 Bypass
+devmem  0x1403c008 32 0x1
+sleep 0.1
+######### Fine delay adjust ####
+devmem  0x1403c004 32 0x003630 #00
+devmem  0x1403c008 32 0x1
+sleep 0.1
+
+######### Update registers #####
+devmem  0x1403c004 32 0x005a01
+devmem  0x1403c008 32 0x1
+sleep 0.1
+
+
+####################### Update registers #####
+##############devmem  0x1403c004 32 0x005801
+##############devmem  0x1403c008 32 0x1
+##############sleep 0.1
+##############devmem  0x1403c004 32 0x005805
+##############devmem  0x1403c008 32 0x1
+##############sleep 0.5
+##############devmem  0x1403c004 32 0x005a01
+##############devmem  0x1403c008 32 0x1
+##############sleep 0.1
+devmem  0x1403c004 32 0x005801
+devmem  0x1403c008 32 0x1
+sleep 0.1
+devmem  0x1403c004 32 0x005805
+devmem  0x1403c008 32 0x1
+sleep 0.1
+devmem  0x1403c004 32 0x005801
+devmem  0x1403c008 32 0x1
+sleep 0.1
+
 
 
 sleep 1
@@ -95,6 +203,13 @@ devmem 0x1400c00c 32 0x01
 devmem 0x1400c008 32 0x0
 sleep 1
 devmem 0x1400c00c 32 0x0
+
+sleep 1
+
+
+sleep 0.5
+
+sleep 0.5
 
 sleep 2
 
@@ -109,3 +224,71 @@ done
 
 sleep 1
 devmem  0x1400C008 32 0x0001
+
+
+### ./init_dac.scr
+# Data register address: 0x1403c004
+# Control register address: 0x1403c008
+#    -write to control register 0x2 to start transfer the data register
+
+#DAC HW RESET
+devmem 0x1403c01c 32 0x8
+sleep 0.5
+
+
+
+######### Reset the DAC ######
+devmem  0x1403c004 32 0x0020
+devmem  0x1403c008 32 0x2
+sleep 2
+devmem  0x1403c004 32 0x0000
+devmem  0x1403c008 32 0x2
+sleep 0.5
+
+######### MODE ###############
+devmem  0x1403c004 32 0x0002   #00 non-straight binary #02 straight binary   #03 -> PD
+devmem  0x1403c008 32 0x2
+sleep 0.1
+######### SCALE ##############
+devmem  0x1403c004 32 0x0203  #03   scale
+devmem  0x1403c008 32 0x2
+sleep 0.1
+devmem  0x1403c004 32 0x03ff  #ff   scale
+devmem  0x1403c008 32 0x2
+sleep 0.1
+######### LVDS_CNT2 ##########
+devmem  0x1403c004 32 0x0590
+devmem  0x1403c008 32 0x2
+sleep 0.1
+######### LVDS_CNT3 ##########
+devmem  0x1403c004 32 0x0600 ##dc  ##c0
+devmem  0x1403c008 32 0x2
+sleep 0.1
+######### MODE - FIFO ##########!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#devmem  0x1403c004 32 0x0006
+#devmem  0x1403c008 32 0x2
+sleep 0.1
+###########################
+devmem  0x1403c004 32 0x0800
+devmem  0x1403c008 32 0x2
+sleep 0.1
+######### CCLK_DIV  ##########
+devmem  0x1403c004 32 0x1603
+devmem  0x1403c008 32 0x2
+sleep 0.1
+
+
+
+##devmem  0x1403c004 32 0x0500
+##devmem  0x1403c008 32 0x2
+##
+##
+##devmem  0x1403c004 32 0x8400
+##devmem  0x1403c008 32 0x2
+##devmem  0x1403c00c w
+
+
+
+
+# Driver should be loaded next.
+# This is done elsewhere (/etc/init.d/libera)
