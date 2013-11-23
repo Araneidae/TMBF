@@ -39,7 +39,7 @@ SVN_TRUNK="$SVN_ROOT/diamond/trunk/ioc/TMBF"
 SVN_RELEASE="$SVN_ROOT/$RELEASE_PATH"
 
 # This is where the released software will be finally published and built.
-PROD_ROOT="/dls_sw/prod/R3.14.11/ioc/TMBF"
+PROD_ROOT="/dls_sw/prod/R3.14.12.3/ioc/TMBF"
 
 
 cd "$(dirname "$0")/.."
@@ -68,7 +68,7 @@ svn cp -m "TMBF: Release $VERSION" "$SVN_TRUNK" "$SVN_RELEASE/$VERSION" ||
 # done by the release builder, so we prepare its instructions here.
 
 QUEUE_DIR=/dls_sw/work/etc/build/queue
-RELEASE_JOB=Release-TMBF-$VERSION.sh5
+RELEASE_JOB=Release-TMBF-$VERSION.redhat6-x86_64
 
 # Create the release job as a hidden file (so the builder doesn't start it
 # prematurely) and then rename it make it happen.
