@@ -125,7 +125,10 @@ static void compute_delay(void)
 {
     int adc_delay, fir_delay;
     hw_read_det_delays(&adc_delay, &fir_delay);
-    double loop_delay = detector_input ? adc_loop_delay : fir_loop_delay;
+    double loop_delay = adc_loop_delay;
+    if (!detector_input)
+        /* If input is FIR then add on FIR loop delay. */
+        loop_delay += fir_loop_delay;
     int compensation = detector_input ? adc_delay : fir_delay;
     compensated_delay = (int) round(
         BUNCHES_PER_TURN * loop_delay + compensation);
