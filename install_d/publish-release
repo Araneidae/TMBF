@@ -30,6 +30,7 @@ function CheckSvnCurrent()
 }
 
 
+EPICS_VERSION=R3.14.12.3
 
 # We have to separate the release path from the SVN_ROOT because the builder
 # has a different SVN_ROOT configured!
@@ -39,7 +40,7 @@ SVN_TRUNK="$SVN_ROOT/diamond/trunk/ioc/TMBF"
 SVN_RELEASE="$SVN_ROOT/$RELEASE_PATH"
 
 # This is where the released software will be finally published and built.
-PROD_ROOT="/dls_sw/prod/R3.14.12.3/ioc/TMBF"
+PROD_ROOT="/dls_sw/prod/$EPICS_VERSION/ioc/TMBF"
 
 
 cd "$(dirname "$0")/.."
@@ -74,6 +75,8 @@ RELEASE_JOB=Release-TMBF-$VERSION.redhat6-x86_64
 # prematurely) and then rename it make it happen.
 cd "$QUEUE_DIR"  &&
 cat <<EOF  >.$RELEASE_JOB  &&
+SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
+export HOST_ARCH=linux-x86_64
 cd "$PROD_ROOT"  &&
 svn co "\$SVN_ROOT/$RELEASE_PATH/$VERSION"  &&
 cd $VERSION  &&
