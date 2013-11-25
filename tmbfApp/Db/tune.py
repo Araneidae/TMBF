@@ -23,6 +23,7 @@ boolIn('TUNE:SETTING', 'Changed', 'As Set',
     ZSV = 'MINOR', OSV = 'NO_ALARM', SCAN = 'I/O Intr',
     DESC = 'Tune setup state check')
 
+tune_measurement = aIn('TUNE:TUNE', 0, 1, PREC = 4, DESC = 'Measured tune')
 Trigger('TUNE',
     # Readouts for the selected tune control.  These are copies of the
     # appropriate detector waveforms.
@@ -36,7 +37,7 @@ Trigger('TUNE',
     Waveform('TUNE:CUMSUMQ', TUNE_LENGTH, 'LONG', DESC = 'Cumsum Q'),
 
     # Tune measurement
-    aIn('TUNE:TUNE', 0, 1, PREC = 4, DESC = 'Measured tune'),
+    tune_measurement,
     aIn('TUNE:PHASE', -180, 180, 'deg', PREC = 1, DESC = 'Measured tune phase'),
     mbbIn('TUNE:STATUS',
         ('Invalid',     0,  'INVALID'),
@@ -53,3 +54,7 @@ Trigger('TUNE',
 aOut('TUNE:THRESHOLD', 0, 1, PREC = 2, DESC = 'Peak fraction threshold')
 longOut('TUNE:BLK:SEP', DESC = 'Minimum block separation')
 longOut('TUNE:BLK:LEN', DESC = 'Minimum block length')
+
+
+# Tune measurement alias for backwards compatibility
+tune_measurement.add_alias('$(DEVICE):TUNE')

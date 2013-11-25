@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1067
-y 435
+x 554
+y 150
 w 641
-h 597
+h 593
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -25,6 +25,21 @@ snapToGrid
 gridSize 8
 disableScroll
 endScreenProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 400
+y 240
+w 232
+h 48
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
 
 # (Rectangle)
 object activeRectangleClass
@@ -63,9 +78,9 @@ major 4
 minor 0
 release 0
 x 400
-y 240
+y 304
 w 232
-h 184
+h 168
 lineColor index 14
 fill
 fillColor index 4
@@ -115,12 +130,12 @@ x 568
 y 560
 w 64
 h 24
-fgColor index 25
+fgColor index 46
 bgColor index 3
 topShadowColor index 1
 botShadowColor index 11
 label "EXIT"
-font "helvetica-medium-r-12.0"
+font "helvetica-bold-r-12.0"
 3d
 endObjectProperties
 
@@ -154,7 +169,7 @@ major 4
 minor 0
 release 0
 x 496
-y 256
+y 320
 w 104
 h 24
 fgColor index 14
@@ -173,7 +188,7 @@ major 4
 minor 1
 release 1
 x 408
-y 288
+y 352
 w 79
 h 14
 font "helvetica-bold-r-12.0"
@@ -193,7 +208,7 @@ major 4
 minor 0
 release 0
 x 552
-y 312
+y 376
 w 72
 h 24
 fgColor index 14
@@ -212,7 +227,7 @@ major 4
 minor 0
 release 0
 x 504
-y 344
+y 408
 w 96
 h 22
 fgColor index 14
@@ -231,7 +246,7 @@ major 4
 minor 1
 release 1
 x 408
-y 344
+y 408
 w 89
 h 14
 font "helvetica-bold-r-12.0"
@@ -407,7 +422,7 @@ major 4
 minor 0
 release 0
 x 448
-y 312
+y 376
 w 96
 h 24
 fgColor index 14
@@ -425,9 +440,9 @@ beginObjectProperties
 major 4
 minor 4
 release 0
-x 560
+x 544
 y 528
-w 72
+w 88
 h 24
 fgColor index 43
 bgColor index 4
@@ -449,7 +464,7 @@ major 4
 minor 6
 release 0
 x 496
-y 288
+y 352
 w 56
 h 20
 controlPv "$(device):TUNE:BUNCH_S"
@@ -561,7 +576,7 @@ major 4
 minor 0
 release 0
 x 240
-y 240
+y 232
 w 16
 h 16
 lineColor index 14
@@ -578,7 +593,7 @@ major 4
 minor 1
 release 0
 x 240
-y 264
+y 256
 w 104
 h 24
 fgColor index 25
@@ -601,7 +616,7 @@ major 4
 minor 1
 release 1
 x 408
-y 256
+y 320
 w 77
 h 14
 font "helvetica-bold-r-12.0"
@@ -621,7 +636,7 @@ major 4
 minor 1
 release 1
 x 408
-y 312
+y 376
 w 31
 h 14
 font "helvetica-bold-r-12.0"
@@ -689,7 +704,7 @@ major 4
 minor 1
 release 1
 x 400
-y 232
+y 296
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -708,7 +723,7 @@ major 4
 minor 0
 release 0
 x 400
-y 232
+y 296
 w 120
 h 16
 lineColor index 14
@@ -815,7 +830,7 @@ major 4
 minor 6
 release 0
 x 264
-y 240
+y 232
 w 112
 h 16
 controlPv "$(device):TUNE:SETTING"
@@ -1051,7 +1066,7 @@ major 4
 minor 0
 release 0
 x 504
-y 376
+y 440
 w 96
 h 24
 fgColor index 14
@@ -1070,7 +1085,7 @@ major 4
 minor 1
 release 1
 x 408
-y 376
+y 440
 w 52
 h 28
 font "helvetica-bold-r-12.0"
@@ -1115,9 +1130,9 @@ beginObjectProperties
 major 4
 minor 4
 release 0
-x 240
-y 296
-w 72
+x 544
+y 496
+w 88
 h 24
 fgColor index 43
 bgColor index 4
@@ -1360,9 +1375,9 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 288
-y 328
-w 104
+x 544
+y 256
+w 80
 h 24
 fgColor index 14
 bgColor index 3
@@ -1417,9 +1432,9 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 288
-y 360
-w 104
+x 424
+y 256
+w 96
 h 24
 fgColor index 14
 bgColor index 3
@@ -1429,7 +1444,7 @@ font "helvetica-medium-r-12.0"
 numItems 2
 symbolTag {
   0 "Frequency"
-  1 "Points"
+  1 "Timebase"
 }
 symbol0 {
   0 "x_axis"
@@ -1437,7 +1452,80 @@ symbol0 {
 }
 value0 {
   0 "SCALE"
-  1 "LINEAR"
+  1 "TIMEBASE"
 }
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 400
+y 232
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Axis Selection"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 400
+y 232
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 408
+y 256
+w 24
+h 16
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "X:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 528
+y 256
+w 32
+h 16
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Y:"
+}
+autoSize
 endObjectProperties
 

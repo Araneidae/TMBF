@@ -125,14 +125,14 @@ static void write_seq_state(void)
         struct seq_entry *entry = &current_sequencer[i];
         entry->start_freq = tune_to_freq(bank->start_freq);
         entry->delta_freq = tune_to_freq(bank->delta_freq);
-        entry->dwell_time = bank->dwell_time - 1;
-        entry->capture_count = bank->capture_count - 1;
+        entry->dwell_time = bank->dwell_time;
+        entry->capture_count = bank->capture_count;
         entry->bunch_bank = bank->bunch_bank;
         entry->hom_gain = bank->hom_gain;
         entry->hom_enable = bank->hom_gain < HOM_GAIN_OFF;
         entry->enable_window = bank->enable_window;
         entry->write_enable = bank->write_enable;
-        entry->holdoff = bank->holdoff - 1;
+        entry->holdoff = bank->holdoff;
         entry->window_rate =
             (unsigned int) lround((pow(2, 32) / 234) / bank->dwell_time);
     }

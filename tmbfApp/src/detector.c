@@ -31,8 +31,8 @@ static bool detector_mode;
 
 /* Each time a sequencer setting changes we'll need to recompute the scale. */
 static bool tune_scale_needs_refresh = true;
-static struct epics_record *tune_scale_pv;
-static int linear_scale[TUNE_LENGTH];
+static int timebase[TUNE_LENGTH];
+static struct epics_interlock *tune_scale_trigger;
 
 /* Overflow status from the last sweep. */
 static bool overflows[OVERFLOW_BIT_COUNT];
@@ -158,20 +158,29 @@ static void update_det_scale(void)
     compute_delay();
 
     int ix = 0;
+    int total_time = 0;     // Accumulates captured timebase
+    int gap_time = 0;       // Accumulates non captured time
     unsigned int f0 = 0;
     for ( ; state > 0  &&  ix < TUNE_LENGTH; state --)
     {
         const struct seq_entry *entry = &sequencer_table[state];
+        int dwell_time = entry->dwell_time + entry->holdoff;
         if (entry->write_enable)
         {
             f0 = entry->start_freq;
+            total_time += gap_time;
+            gap_time = 0;
             for (unsigned int i = 0;
-                 i < entry->capture_count + 1  &&  ix < TUNE_LENGTH; i ++)
+                 i < entry->capture_count  &&  ix < TUNE_LENGTH; i ++, ix ++)
             {
-                store_one_tune_freq(f0, ix++);
+                store_one_tune_freq(f0, ix);
                 f0 += entry->delta_freq;
+                total_time += dwell_time;
+                timebase[ix] = total_time;
             }
         }
+        else
+            gap_time += dwell_time * entry->capture_count;
     }
 
     /* Record how many points will actually be captured. */
@@ -179,8 +188,12 @@ static void update_det_scale(void)
 
     /* Pad the rest of the scale.  The last frequency is a good a choice as any,
      * anything that goes here is invalid. */
-    while (ix < TUNE_LENGTH)
-        store_one_tune_freq(f0, ix++);
+    for ( ; ix < TUNE_LENGTH; ix ++)
+    {
+        store_one_tune_freq(f0, ix);
+        timebase[ix] = total_time;
+    }
+
 
     tune_scale_needs_refresh = false;
 }
@@ -310,8 +323,9 @@ void update_iq(const short buffer_low[], const short buffer_high[])
 {
     if (tune_scale_needs_refresh)
     {
+        interlock_wait(tune_scale_trigger);
         update_det_scale();
-        trigger_record(tune_scale_pv, 0, NULL);
+        interlock_signal(tune_scale_trigger, NULL);
     }
 
     interlock_wait(iq_trigger);
@@ -416,9 +430,11 @@ bool initialise_detector(void)
     publish_channel("M", &sweep_info.mean);
     iq_trigger = create_interlock("DET:TRIG", "DET:DONE", false);
 
-    tune_scale_pv = PUBLISH_WF_READ_VAR_I(
+    PUBLISH_WF_READ_VAR(
         double, "DET:SCALE", TUNE_LENGTH, sweep_info.tune_scale);
-    PUBLISH_WF_READ_VAR(int, "DET:LINEAR", TUNE_LENGTH, linear_scale);
+    PUBLISH_WF_READ_VAR(int, "DET:TIMEBASE", TUNE_LENGTH, timebase);
+    tune_scale_trigger =
+        create_interlock("DET:SCALE:TRIG", "DET:SCALE:DONE", false);
 
     PUBLISH_WRITER_P(ao,   "NCO:FREQ", write_nco_freq);
     PUBLISH_WRITER_P(mbbo, "NCO:GAIN", hw_write_nco_gain);
@@ -427,9 +443,6 @@ bool initialise_detector(void)
      *  wf_scaling * 2^wf_shift = 936 * 2^-32. */
     compute_scaling(BUNCHES_PER_TURN, &wf_scaling, &wf_shift);
     wf_shift -= 32;     // Divide by 2^32.
-    /* Initialise the linear scale. */
-    for (int i = 0; i < TUNE_LENGTH; i ++)
-        linear_scale[i] = i;
 
     /* Program the sequencer window. */
     PUBLISH_WAVEFORM(

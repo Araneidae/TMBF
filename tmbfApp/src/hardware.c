@@ -598,16 +598,16 @@ void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT])
         struct seq_entry *entry = &entries[i];
         config_space->sequencer_write = entry->start_freq;
         config_space->sequencer_write = entry->delta_freq;
-        config_space->sequencer_write = entry->dwell_time;
+        config_space->sequencer_write = entry->dwell_time - 1;
         config_space->sequencer_write =
-            (entry->capture_count & 0xFFF) |        // bits 11:0
+            ((entry->capture_count - 1) & 0xFFF) |  // bits 11:0
             (entry->bunch_bank & 0x3) << 12 |       //      13:12
             (entry->hom_gain & 0x7) << 14 |         //      16:14
             entry->hom_enable << 17 |               //      17
             entry->enable_window << 18 |            //      18
             entry->write_enable << 19;              //      19
         config_space->sequencer_write = entry->window_rate;
-        config_space->sequencer_write = entry->holdoff & 0xFFFF;
+        config_space->sequencer_write = (entry->holdoff - 1) & 0xFFFF;
         config_space->sequencer_write = 0;
         config_space->sequencer_write = 0;
     }

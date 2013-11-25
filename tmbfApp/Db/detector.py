@@ -21,12 +21,12 @@ for bunch in range(4):
         DESC = 'Selected bunch #%d' % bunch)
 
 
-# This will be reprocessed when necessary, basically when the sequencer settings
-# change and a detector trigger occurs.
-Waveform('DET:SCALE', TUNE_LENGTH, 'DOUBLE',
-    SCAN = 'I/O Intr', DESC = 'Scale for frequency sweep')
-# A linear scale for convenience
-Waveform('DET:LINEAR', TUNE_LENGTH, 'LONG', DESC = 'Linear scale')
+# The frequency and timebase scales will be reprocessed when necessary,
+# basically when the sequencer settings change and a detector trigger occurs.
+Trigger('DET:SCALE',
+    Waveform('DET:SCALE', TUNE_LENGTH, 'DOUBLE',
+        DESC = 'Scale for frequency sweep'),
+    Waveform('DET:TIMEBASE', TUNE_LENGTH, 'LONG', DESC = 'Timebase scale'))
 
 # Two overflow detection bits are generated
 overflows = [
