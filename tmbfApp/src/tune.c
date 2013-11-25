@@ -350,18 +350,23 @@ void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow)
     update_cumsum();
     epicsAlarmSeverity severity;
     if (overflow)
-        severity = TUNE_OVERFLOW;
+    {
+        severity = epicsSevMajor;
+        tune_status = TUNE_OVERFLOW;
+    }
     else
+    {
         severity = measure_tune(
             sweep_info->sweep_length, &sweep, sweep_info->tune_scale, overflow,
             &tune_status, &measured_tune, &measured_phase);
-    if (severity == epicsSevNone)
-        /* Check for measured tune within given alarm range. */
-        if (fabs(measured_tune - centre_tune) >= alarm_range)
+        if (severity == epicsSevNone  &&
+            /* Check for measured tune within given alarm range. */
+            fabs(measured_tune - centre_tune) >= alarm_range)
         {
             severity = epicsSevMinor;
             tune_status = TUNE_RANGE;
         }
+    }
     trigger_record(measured_tune_rec, severity, NULL);
     trigger_record(measured_phase_rec, severity, NULL);
     interlock_signal(tune_trigger, NULL);
