@@ -5,6 +5,35 @@
 
 set -e      # Exit immediately if any command fails
 
+HERE="$(dirname "$0")"
+
+# Validate input parameters.
+DEVICE="${1:?Specify device}"
+MODE="${2:?Specify mode}"
+CONFIG="${3:-/home/ops/diagnostics/concentrator/TMBF_tune.config}"
+
+
+# ------------------------------------------------------------------------------
+# Set up defaults before loading config file.
+
+HARMONIC=80
+BUNCH=450
+
+tune_threshold=0.3
+min_block_sep=20
+min_block_len=20
+sweep_dwell_time=100
+
+sweep_range=0.05
+alarm_range=0.01
+
+# Pull in configured tune settings.  The config file contains settings for tune
+# and FIR fraction cycles/length for each ring mode and axis and may optionally
+# contain overrides for the defaults above.
+. "$CONFIG"
+
+# ------------------------------------------------------------------------------
+
 
 Error()
 {
@@ -19,19 +48,8 @@ put()
 }
 
 
-HERE="$(dirname "$0")"
-
-DEVICE="${1:?Specify device}"
-MODE="${2:?Specify mode}"
-CONFIG="${3:-/home/ops/diagnostics/concentrator/TMBF_tune.config}"
-
-
-HARMONIC=80
-BUNCH=450
-
-# Determine the nominal tune
-sweep_range=0.05
-alarm_range=0.01
+# Extract the tune settings appropriate to our device, determine the nominal
+# tune and FIR shape.
 
 case $DEVICE in
     SR21C-DI-TMBF-01)   AXIS=X ;;
@@ -40,12 +58,6 @@ case $DEVICE in
     *)                  Error Unknown device $DEVICE ;;
 esac
 
-
-# Pull in configured tune settings.  The config file contains settings for tune
-# and FIR fraction cycles/length for each ring mode and axis.
-. "$CONFIG"
-
-# Extract the tune settings appropriate to our device
 ring_mode=$(caget -t SR-CS-RING-01:MODE | sed 's/ $//')
 eval tune=\$${AXIS}_tune_$ring_mode
 eval cycles=\$${AXIS}_cycles_$ring_mode
@@ -60,7 +72,6 @@ tune=0.$tune
 dac_output=0                # By default DAC output is off
 bunch_mode='All Bunches'    # By default detect on all bunches
 detector_input=FIR
-min_block_len=20
 
 # Mode specific settings
 case $MODE in
@@ -112,11 +123,12 @@ put FIR:0:USEWF_S Settings
 put FIR:GAIN_S -42dB
 
 # Configure bunch bank #0 for FIR and selected operation
-set_one_bunch $DEVICE 0 all 0 $dac_output 1023
+echo set_one_bunch $DEVICE 0 all 0 $dac_output 1023
+"$HERE"/set_one_bunch $DEVICE 0 all 0 $dac_output 1023
 
 # Configure sequencer
 put SEQ:1:HOLDOFF_S 2
-put SEQ:1:DWELL_S 100
+put SEQ:1:DWELL_S $sweep_dwell_time
 put SEQ:1:GAIN_S $sweep_gain
 put SEQ:1:ENWIN_S Windowed
 
@@ -136,8 +148,8 @@ put TUNE:BUNCH_S $BUNCH
 put TUNE:SET_S.PROC 0
 
 put TUNE:BLK:LEN_S $min_block_len
-put TUNE:BLK:SEP_S 20
-put TUNE:THRESHOLD_S 0.3
+put TUNE:BLK:SEP_S $min_block_sep
+put TUNE:THRESHOLD_S $tune_threshold
 
 # Trigger on external trigger.
 put TRG:BUF:SEL_S External
