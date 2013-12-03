@@ -739,6 +739,7 @@ static bool process_in_record(dbCommon *pr, void *result)
  * driver provided values. */
 static void post_init_process(dbCommon *pr)
 {
+    pr->udf = false;
     recGblResetAlarms(pr);
     struct timespec timestamp;
     clock_gettime(CLOCK_REALTIME, &timestamp);
