@@ -96,8 +96,7 @@ struct tmbf_config_space
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
     //  1       Enable DDR capture (must be done before triggering)
-    //  2       (unused)
-    //  3       Enable internal loopback (testing only!)
+    //  3:2     Detector input select
     //  4       Arm DDR (must be pulsed, works on rising edge)
     //  5       Soft trigger DDR (pulsed)
     //  6       Arm buffer and sequencer
@@ -107,11 +106,11 @@ struct tmbf_config_space
     //  11:10   Buffer data select (FIR+ADC/IQ/FIR+DAC/ADC+DAC)
     //  13:12   Buffer readback channel select
     //  14      Detector bunch mode enable
-    //  15      Detector input select
+    //  15      (unused)
     //  18:16   HOM gain select (in 6dB steps)
     //  19      Disarm buffer, pulsed
     //  22:20   FIR gain select (in 6dB steps)
-    //  23      (unused)
+    //  23      Enable internal loopback (testing only!)
     //  26:24   Detector gain select (in 6dB steps)
     //  27      Front panel LED
     //  29:28   DDR input select (0 => ADC, 1 => DAC, 2 => FIR, 3 => 0)
@@ -260,7 +259,7 @@ void hw_read_overflows(
 
 void hw_write_loopback_enable(bool loopback)
 {
-    WRITE_CONTROL_BITS(3, 1, loopback);
+    WRITE_CONTROL_BITS(23, 1, loopback);
 }
 
 
@@ -302,7 +301,8 @@ void hw_write_adc_offsets(short offsets[4])
     config_space->adc_offset_cd = combine_offsets(offsets[2], offsets[3]);
 }
 
-void hw_read_adc_minmax(short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN])
+void hw_read_adc_minmax(
+    short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN])
 {
     read_minmax(
         adc_minmax, &config_space->adc_minmax_channel,
@@ -343,7 +343,8 @@ int hw_read_fir_length(void)
 /* * * * * * * * * * * * * */
 /* DAC: Data Output Stage */
 
-void hw_read_dac_minmax(short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN])
+void hw_read_dac_minmax(
+    short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN])
 {
     read_minmax(
         dac_minmax, &config_space->dac_minmax_channel,
@@ -536,8 +537,13 @@ static void update_det_bunch_select(void)
     int offset = 0;
     switch (det_input)
     {
-        case 0: offset = DET_FIR_OFFSET;    break;
-        case 1: offset = DET_ADC_OFFSET;    break;
+        case DET_IN_ADC:
+            offset = DET_ADC_OFFSET;
+            break;
+        case DET_IN_FIR_LOW:
+        case DET_IN_FIR_HIGH:
+            offset = DET_FIR_OFFSET;
+            break;
     }
     unsigned int bunch[4];
     for (int i = 0; i < 4; i ++)
@@ -552,7 +558,7 @@ static void update_det_bunch_select(void)
 void hw_write_det_input_select(unsigned int input)
 {
     det_input = input;
-    WRITE_CONTROL_BITS(15, 1, input);
+    WRITE_CONTROL_BITS(2, 2, input);
     /* As bunch offset compensation depends on which source we have to rewrite
      * the bunches when the input changes. */
     update_det_bunch_select();

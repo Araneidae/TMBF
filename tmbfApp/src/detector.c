@@ -47,6 +47,9 @@ static struct epics_record *gain_setting;
  * to be a factor of at least 4 below the maximum signal of 32767, and there's a
  * further factor of around 3/4 to avoid premature switching and bouncing. */
 #define GAIN_UP_THRESHOLD   6100
+/* The minimum gain has a huge jump (7 bits) so we use a different threshold in
+ * this case.  Shift by an extra 5 bits on top of the 2 bits already counted. */
+#define MIN_GAIN_UP_THRESHOLD   (GAIN_UP_THRESHOLD >> 5)
 
 /* Completely analysed data from a successful detector sweep. */
 static struct sweep_info sweep_info;
@@ -68,7 +71,6 @@ static struct epics_interlock *iq_trigger;
  * integers so that the final computation can be a simple integer
  * multiplication (one instruction when the compiler is in the right mood). */
 static double adc_loop_delay;       // Base ADC loop delay as input by user
-static double fir_loop_delay;       // Extra FIR loop delay
 static int rotate_I[TUNE_LENGTH];   // 2**30 * cos(phase)
 static int rotate_Q[TUNE_LENGTH];   // 2**30 * sin(phase)
 
@@ -92,8 +94,11 @@ static void update_autogain(int abs_max)
         if (overflows[OVERFLOW_IQ_SCALE])
             /* Push gain down on overflow. */
             new_gain += 1;
-        else if (abs_max < GAIN_UP_THRESHOLD)
+        else if (detector_gain < MAX_DET_GAIN  &&  abs_max < GAIN_UP_THRESHOLD)
             /* Push gain up if signal too low. */
+            new_gain -= 1;
+        else if (detector_gain == MAX_DET_GAIN  &&
+                 abs_max < MIN_GAIN_UP_THRESHOLD)
             new_gain -= 1;
 
         /* Only write new gain if in range and changed.  Push the update
@@ -126,13 +131,13 @@ static void compute_delay(void)
 {
     int adc_delay, fir_delay;
     hw_read_det_delays(&adc_delay, &fir_delay);
-    double loop_delay = adc_loop_delay;
-    if (!detector_input)
-        /* If input is FIR then add on FIR loop delay. */
-        loop_delay += fir_loop_delay;
-    int compensation = detector_input ? adc_delay : fir_delay;
-    compensated_delay = (int) round(
-        BUNCHES_PER_TURN * loop_delay + compensation);
+    compensated_delay = detector_input == DET_IN_ADC ? adc_delay : fir_delay;
+    /* In ADC input mode we compensate for the overall configured loop delay
+     * because what we want is a measurement of the machine in isolation.  In
+     * FIR input mode, however, we're interested in the closed loop system
+     * response so we ignore this. */
+    if (detector_input == DET_IN_ADC)
+        compensated_delay += (int) round(BUNCHES_PER_TURN * adc_loop_delay);
 }
 
 static void unsigned_fixed_to_double(
@@ -200,12 +205,6 @@ static void update_det_scale(
 static void set_adc_loop_delay(double delay)
 {
     adc_loop_delay = delay;
-    tune_scale_needs_refresh = true;
-}
-
-static void set_fir_loop_delay(double delay)
-{
-    fir_loop_delay = delay;
     tune_scale_needs_refresh = true;
 }
 
@@ -414,7 +413,6 @@ bool initialise_detector(void)
     PUBLISH_WRITER_P(mbbo, "DET:INPUT", write_det_input_select);
     PUBLISH_WRITE_VAR_P(bo, "DET:MODE", detector_mode);
     PUBLISH_WRITER_P(ao, "DET:LOOP:ADC", set_adc_loop_delay);
-    PUBLISH_WRITER_P(ao, "DET:LOOP:FIR", set_fir_loop_delay);
 
     PUBLISH_READ_VAR(bi, "DET:OVF:ACC", overflows[OVERFLOW_IQ_ACC]);
     PUBLISH_READ_VAR(bi, "DET:OVF:IQ",  overflows[OVERFLOW_IQ_SCALE]);

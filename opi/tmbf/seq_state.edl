@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2408
-y 24
+x 1931
+y 1
 w 599
 h 64
 font "helvetica-medium-r-18.0"
@@ -30,7 +30,7 @@ endScreenProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 24
 y 0
@@ -58,7 +58,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 104
 y 0
@@ -86,7 +86,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 192
 y 24
@@ -114,7 +114,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 24
 y 24
@@ -181,7 +181,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 0
 y 0
 w 52
@@ -219,7 +219,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 192
 y 0
@@ -236,6 +236,7 @@ autoHeight
 motifWidget
 limitsFromDb
 nullColor index 0
+smartRefresh
 useHexPrefix
 newPos
 objType "controls"
@@ -266,7 +267,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 104
 y 24

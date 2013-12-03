@@ -367,10 +367,9 @@ def measure_detector_bunch(tmbf, results):
     print >>sys.stderr, 'Measuring Detector Bunch Offsets'
 
     # Configure detector for narrow band sweep and soft trigger
-#     setup_detector_single_bunch(tmbf)
     setup_tune_sweep(tmbf, 1.31, 1e-5, 20, '0dB')
     configure.detector_bunches(tmbf, 0)
-    configure.detector_gain(tmbf, '0dB')
+    configure.detector_gain(tmbf, '-24dB')
 
     configure.fir_wf(tmbf, 0, 32767)
     configure.bank_wf(tmbf, 1, DAC_OUT.MAX_GAIN, 0, DAC_OUT.SWEEP)
@@ -388,18 +387,20 @@ def measure_detector_delay(tmbf, results):
 
     setup_tune_sweep(tmbf, 1, 0.1, 20, '0dB')
     configure.detector_bunches(tmbf)
-    configure.detector_gain(tmbf, '-36dB')
+    configure.detector_gain(tmbf, '-72dB')
 
     configure.fir_wf(tmbf, 0, 32767)
     configure.bank(tmbf, 1, DAC_OUT.MAX_GAIN, 0, DAC_OUT.SWEEP)
 
-    tmbf.set('DET:LOOP_S', 1)
+    tmbf.set('DET:LOOP:ADC_S', 1)
 
     det_i = tmbf.PV('DET:I:M')
     det_q = tmbf.PV('DET:Q:M')
 
-    results.set('DET_ADC_DELAY', search_det_delay(tmbf, det_i, det_q, 'ADC'))
-    results.set('DET_FIR_DELAY', search_det_delay(tmbf, det_i, det_q, 'FIR'))
+    results.set('DET_ADC_DELAY',
+        search_det_delay(tmbf, det_i, det_q, 'ADC'))
+    results.set('DET_FIR_DELAY',
+        search_det_delay(tmbf, det_i, det_q, 'FIR +18dB') - 936)
 
     det_i.close()
     det_q.close()

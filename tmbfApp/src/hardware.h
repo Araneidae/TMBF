@@ -62,7 +62,8 @@ bool hw_read_clock_dropout(void);
 void hw_write_adc_offsets(short offsets[4]);
 
 /* Reads ADC minimum and maximum values since last reading. */
-void hw_read_adc_minmax(short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN]);
+void hw_read_adc_minmax(
+    short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN]);
 
 /* Sets low level initial ADC delay. */
 void hw_write_adc_skew(unsigned int skew);
@@ -85,7 +86,8 @@ int hw_read_fir_length(void);
 /* DAC: Data Output Stage */
 
 /* Reads DAC minimum and maximum values since last reading. */
-void hw_read_dac_minmax(short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN]);
+void hw_read_dac_minmax(
+    short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN]);
 
 /* Output enable. */
 void hw_write_dac_enable(unsigned int enable);
@@ -167,6 +169,9 @@ void hw_write_nco_gain(unsigned int gain);
 
 /* * * * * * * * * * * * * */
 /* DET: Frequency Detector */
+
+
+enum { DET_IN_ADC = 0, DET_IN_FIR_LOW = 2, DET_IN_FIR_HIGH = 3 };
 
 /* Switches detector between all bunch detection or individual bunch mode. */
 void hw_write_det_mode(bool bunch_mode);

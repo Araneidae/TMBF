@@ -96,9 +96,6 @@ case $MODE in
         ;;
 esac
 
-# FIR loop delay adds an extra half FIR length
-fir_loop_delay=$(echo 1 k $length 2 / p | dc)
-
 
 # First a bunch of sanity settings, in case somebody has been messing with
 # stuff.
@@ -137,7 +134,6 @@ put DET:MODE_S "$bunch_mode"
 put DET:AUTOGAIN_S Autogain
 put DET:INPUT_S $detector_input
 put DET:LOOP:ADC_S 1
-put DET:LOOP:FIR_S $fir_loop_delay
 
 # Configure tune measurement
 put TUNE:HARMONIC_S $HARMONIC
