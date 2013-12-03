@@ -24,7 +24,7 @@ min_block_sep=20
 min_block_len=20
 sweep_dwell_time=100
 
-blanking_interval=1000
+blanking_interval=5000
 
 sweep_range=0.05
 alarm_range=0.01
