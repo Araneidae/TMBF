@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1171
-y 361
+x 694
+y 456
 w 440
-h 361
+h 393
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -33,7 +33,7 @@ major 4
 minor 0
 release 0
 x 8
-y 272
+y 304
 w 424
 h 80
 lineColor index 14
@@ -50,7 +50,7 @@ release 0
 x 8
 y 160
 w 424
-h 96
+h 128
 lineColor index 14
 fill
 fillColor index 4
@@ -76,7 +76,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 0
 y 0
 w 440
@@ -113,7 +113,7 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 2
+minor 3
 release 0
 x 4
 y 4
@@ -194,7 +194,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
 y 64
 w 31
@@ -214,7 +214,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
 y 88
 w 25
@@ -234,7 +234,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
 y 112
 w 27
@@ -253,7 +253,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 184
 y 64
@@ -278,7 +278,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 184
 y 88
@@ -303,7 +303,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 184
 y 112
@@ -386,7 +386,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
 y 176
 w 41
@@ -406,7 +406,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
 y 200
 w 41
@@ -426,7 +426,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
 y 224
 w 53
@@ -445,7 +445,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 184
 y 176
@@ -470,7 +470,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 184
 y 200
@@ -495,7 +495,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 184
 y 224
@@ -520,7 +520,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 240
 y 176
@@ -543,7 +543,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 240
 y 200
@@ -566,7 +566,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 240
 y 224
@@ -590,7 +590,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 40
 w 120
@@ -623,7 +623,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 152
 w 120
@@ -655,10 +655,10 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 112
-y 288
+y 320
 w 88
 h 24
 fgColor index 14
@@ -679,9 +679,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
-y 296
+y 328
 w 88
 h 14
 font "helvetica-bold-r-12.0"
@@ -698,10 +698,10 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 352
-y 288
+y 320
 w 56
 h 20
 controlPv "$(device):BUN:OFFSET_S"
@@ -726,10 +726,10 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 96
-y 320
+y 352
 w 32
 h 16
 controlPv "$(device):BUN:PHASE"
@@ -753,10 +753,10 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 224
-y 320
+y 352
 w 32
 h 16
 controlPv "$(device):TRG:RAWPHASE"
@@ -780,9 +780,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
-y 264
+y 296
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -801,7 +801,7 @@ major 4
 minor 0
 release 0
 x 8
-y 264
+y 296
 w 120
 h 16
 lineColor index 14
@@ -815,7 +815,7 @@ major 4
 minor 0
 release 0
 x 344
-y 320
+y 352
 w 64
 h 24
 fgColor index 14
@@ -832,9 +832,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 272
-y 320
+y 352
 w 65
 h 14
 font "helvetica-bold-r-12.0"
@@ -852,9 +852,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 272
-y 296
+y 328
 w 70
 h 14
 font "helvetica-bold-r-12.0"
@@ -872,9 +872,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
-y 320
+y 352
 w 74
 h 14
 font "helvetica-bold-r-12.0"
@@ -892,9 +892,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 136
-y 320
+y 352
 w 85
 h 14
 font "helvetica-bold-r-12.0"
@@ -911,7 +911,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 240
 y 112
@@ -934,7 +934,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 328
 y 176
@@ -957,7 +957,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 328
 y 200
@@ -980,7 +980,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 328
 y 224
@@ -1003,7 +1003,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 240
 y 64
@@ -1031,7 +1031,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 240
 y 88
@@ -1060,7 +1060,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 328
 y 72
 w 27
@@ -1080,7 +1080,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 328
 y 96
 w 27
@@ -1119,5 +1119,73 @@ yPoints {
   1 128
   2 128
 }
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 264
+w 54
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Blanking:"
+}
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 80
+y 256
+w 80
+h 20
+controlPv "$(device):TRG:BLANKING_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 168
+y 264
+w 27
+h 14
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "turns"
+}
+autoSize
 endObjectProperties
 

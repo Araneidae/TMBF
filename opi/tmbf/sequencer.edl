@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 329
-y 507
+x 330
+y 508
 w 545
 h 586
 font "helvetica-medium-r-18.0"
@@ -31,7 +31,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 0
 y 0
 w 544
@@ -68,7 +68,7 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 2
+minor 3
 release 0
 x 4
 y 4
@@ -107,7 +107,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 40
 w 120
@@ -354,7 +354,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 88
 y 520
@@ -378,7 +378,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 56
 y 520
@@ -408,7 +408,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
 y 520
 w 35
@@ -427,7 +427,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 32
 y 544
@@ -451,7 +451,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 392
 y 544
 w 43
@@ -471,7 +471,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 304
 y 520
@@ -497,7 +497,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 208
 y 520
 w 87
@@ -516,7 +516,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 272
 y 536
@@ -543,7 +543,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 208
 y 536
 w 54
@@ -562,7 +562,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 272
 y 552
@@ -589,7 +589,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 256
 y 552
 w 7
@@ -608,7 +608,7 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
 x 120
 y 520
@@ -634,7 +634,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 120
 y 544
@@ -658,7 +658,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 40
 y 72
 w 74
@@ -678,7 +678,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 120
 y 72
 w 71
@@ -698,7 +698,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 328
 y 72
 w 61
@@ -718,7 +718,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 440
 y 72
 w 69
@@ -738,7 +738,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 208
 y 72
 w 66
@@ -753,13 +753,27 @@ value {
 autoSize
 endObjectProperties
 
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 32
+y 64
+w 496
+h 48
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 208
+release 1
+x 184
 y 96
 w 63
 h 14
@@ -778,7 +792,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 40
 y 96
 w 46
@@ -798,7 +812,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 120
 y 96
 w 43
@@ -818,8 +832,8 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 328
+release 1
+x 360
 y 96
 w 78
 h 14
@@ -838,8 +852,8 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 440
+release 1
+x 448
 y 96
 w 77
 h 14
@@ -853,17 +867,23 @@ value {
 autoSize
 endObjectProperties
 
-# (Rectangle)
-object activeRectangleClass
+# (Static Text)
+object activeXTextClass
 beginObjectProperties
 major 4
-minor 0
-release 0
-x 32
-y 64
-w 496
-h 48
-lineColor index 14
-fillColor index 0
+minor 1
+release 1
+x 280
+y 96
+w 50
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Blanking"
+}
+autoSize
 endObjectProperties
 

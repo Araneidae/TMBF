@@ -209,6 +209,7 @@ struct seq_entry {
     bool enable_window;             // Enable detector windowing
     bool hom_enable;                // Enable HOM
     bool write_enable;              // Enable data capture of sequence
+    bool enable_blanking;           // Observe trigger holdoff control
     unsigned int holdoff;           // Detector holdoff
 };
 
@@ -244,6 +245,9 @@ void hw_write_trg_disarm(bool ddr, bool buf);
 
 /* Configure trigger delays. */
 void hw_write_trg_delays(int ddr_delay, int buf_delay);
+
+/* Configure blanking interval after external trigger in turns. */
+void hw_write_trg_blanking(int trigger_blanking);
 
 /* Returns raw phase bits from trigger. */
 int hw_read_trg_raw_phase(void);

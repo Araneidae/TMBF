@@ -24,6 +24,8 @@ min_block_sep=20
 min_block_len=20
 sweep_dwell_time=100
 
+blanking_interval=1000
+
 sweep_range=0.05
 alarm_range=0.01
 
@@ -128,6 +130,7 @@ put SEQ:1:HOLDOFF_S 2
 put SEQ:1:DWELL_S $sweep_dwell_time
 put SEQ:1:GAIN_S $sweep_gain
 put SEQ:1:ENWIN_S Windowed
+put SEQ:1:BLANK_S Blanking
 
 # Configure detector
 put DET:MODE_S "$bunch_mode"
@@ -151,6 +154,7 @@ put TUNE:THRESHOLD_S $tune_threshold
 put TRG:BUF:SEL_S External
 put TRG:SEQ:ENA_S Enabled
 put TRG:EXT:MODE_S Retrigger
+put TRG:BLANKING_S $blanking_interval
 
 # Now we can go!
 put DAC:ENABLE_S On

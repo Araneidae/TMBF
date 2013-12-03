@@ -41,8 +41,10 @@ for state in range(1, 8):
         FLNK = update, DESC = 'Enable detector window')
     boolOut('SEQ:%d:CAPTURE' % state, 'Discard', 'Capture',
         FLNK = update, DESC = 'Enable data capture')
-    longOut('SEQ:%d:HOLDOFF' % state, 1, 1<<16,
+    longOut('SEQ:%d:HOLDOFF' % state, 0, 65535,
         FLNK = update, DESC = 'Detector holdoff')
+    boolOut('SEQ:%d:BLANK' % state, 'Off', 'Blanking',
+        FLNK = update, DESC = 'Detector blanking control')
 
     # This fellow is treated a little differently and is processed internally.
     aOut('SEQ:%d:END_FREQ' % state,

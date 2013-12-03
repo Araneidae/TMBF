@@ -127,7 +127,8 @@ struct tmbf_config_space
     uint32_t bunch_zero_offset;     // 11  Bunch zero offset
     uint32_t ddr_trigger_delay;     // 12  DDR Trigger delay control
     uint32_t buf_trigger_delay;     // 13  BUF Trigger delay control
-    uint32_t padding[2];            // 14-15    (unused)
+    uint32_t trigger_blanking;      // 14  Trigger blanking length in turns
+    uint32_t padding[1];            // 15    (unused)
 
     uint32_t fir_bank;              // 16  Select FIR bank
     uint32_t fir_write;             // 17  Write FIR coefficients
@@ -623,9 +624,10 @@ void hw_write_seq_entries(
             (entry->hom_gain & 0x7) << 14 |         //      16:14
             entry->hom_enable << 17 |               //      17
             entry->enable_window << 18 |            //      18
-            entry->write_enable << 19;              //      19
+            entry->write_enable << 19 |             //      19
+            entry->enable_blanking << 20;           //      20
         config_space->sequencer_write = entry->window_rate;
-        config_space->sequencer_write = (entry->holdoff - 1) & 0xFFFF;
+        config_space->sequencer_write = entry->holdoff & 0xFFFF;
         config_space->sequencer_write = 0;
         config_space->sequencer_write = 0;
     }
@@ -683,6 +685,11 @@ void hw_write_trg_delays(int ddr_delay, int buf_delay)
 {
     config_space->ddr_trigger_delay = ddr_delay;
     config_space->buf_trigger_delay = buf_delay;
+}
+
+void hw_write_trg_blanking(int trigger_blanking)
+{
+    config_space->trigger_blanking = trigger_blanking;
 }
 
 int hw_read_trg_raw_phase(void)

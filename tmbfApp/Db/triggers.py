@@ -39,6 +39,11 @@ TriggerStatus('SEQ', 'Sequencer')
 
 longIn('TRG:RAWPHASE', DESC = 'Raw trigger phase bits', SCAN = '.2 second')
 
+
+longOut('TRG:BLANKING', 0, 65535, EGU = 'turns',
+    DESC = 'Sequencer blanking window after trigger')
+
+
 # A simple device to toggle the front panel LED at 1Hz to show life.
 fp_led = boolOut('FPLED', DESC = 'Front panel LED control')
 fp_led_control = records.calcout('FPLED:TOGGLE',

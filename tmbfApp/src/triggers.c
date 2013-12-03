@@ -387,6 +387,7 @@ bool initialise_triggers(void)
 
     PUBLISH_READER(longin, "TRG:RAWPHASE", hw_read_trg_raw_phase);
     PUBLISH_WRITER(bo, "FPLED", hw_write_front_panel_led);
+    PUBLISH_WRITER_P(longout, "TRG:BLANKING", hw_write_trg_blanking);
 
     pthread_t thread_id;
     return TEST_0(pthread_create(&thread_id, NULL, monitor_events, NULL));
