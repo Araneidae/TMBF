@@ -432,13 +432,13 @@ static void set_tune_settings(void)
     /* Configure the sequencer with the selected tune range.  Force count and
      * capture to sensible values and set the sequencer PC to 1. */
     double centre = harmonic + centre_tune;
+    WRITE_NAMED_RECORD(ulongout, "SEQ:1:COUNT", 4096);
     WRITE_NAMED_RECORD(ao, "SEQ:1:START_FREQ",
         centre + (reverse_tune ? + half_range : - half_range));
     WRITE_NAMED_RECORD(ao, "SEQ:1:END_FREQ",
         centre + (reverse_tune ? - half_range : + half_range));
     WRITE_NAMED_RECORD(bo,       "SEQ:1:CAPTURE", true);
     WRITE_NAMED_RECORD(mbbo,     "SEQ:1:BANK", 1);
-    WRITE_NAMED_RECORD(ulongout, "SEQ:1:COUNT", 4096);
     WRITE_NAMED_RECORD(ulongout, "SEQ:PC", 1);
 
     /* Configure the bunch control as a copy of bank 0, but with sweep enabled
