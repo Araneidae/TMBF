@@ -35,4 +35,6 @@ unsigned int tune_to_freq(double tune);
 
 /* Called on completion of buffer processing in IQ mode.  The packed I and Q
  * components are passed through for processing by the detector. */
-void update_iq(const short buffer_low[], const short buffer_high[]);
+void update_iq(
+    const short buffer_low[], const short buffer_high[],
+    unsigned int sequencer_pc, const struct seq_entry *sequencer_table);

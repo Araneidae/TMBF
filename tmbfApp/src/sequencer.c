@@ -37,7 +37,8 @@ struct sequencer_bank {
 };
 
 /* Sequencer state as currently seen through EPICS. */
-static struct sequencer_bank banks[MAX_SEQUENCER_COUNT - 1];
+static struct sequencer_bank banks[MAX_SEQUENCER_COUNT];
+static unsigned int bank0;
 
 /* Sequencer state as currently written to hardware, or as will be written at
  * start of next trigger. */
@@ -119,9 +120,9 @@ static void update_capture_count(void)
  * hardware and updates hardware. */
 static void write_seq_state(void)
 {
-    for (int i = 1; i < MAX_SEQUENCER_COUNT; i ++)
+    for (int i = 0; i < MAX_SEQUENCER_COUNT; i ++)
     {
-        const struct sequencer_bank *bank = &banks[i - 1];
+        const struct sequencer_bank *bank = &banks[i];
         struct seq_entry *entry = &current_sequencer[i];
         entry->start_freq = tune_to_freq(bank->start_freq);
         entry->delta_freq = tune_to_freq(bank->delta_freq);
@@ -136,16 +137,16 @@ static void write_seq_state(void)
         entry->window_rate =
             (unsigned int) lround((pow(2, 32) / 234) / bank->dwell_time);
     }
-    hw_write_seq_entries(current_sequencer);
+    hw_write_seq_entries(bank0, current_sequencer);
 }
 
 
 static void update_seq_state(void)
 {
     /* Update all the end frequencies. */
-    for (int i = 1; i < MAX_SEQUENCER_COUNT; i ++)
+    for (int i = 0; i < MAX_SEQUENCER_COUNT; i ++)
     {
-        struct sequencer_bank *bank = &banks[i - 1];
+        struct sequencer_bank *bank = &banks[i];
         double end_freq =
             bank->start_freq + bank->capture_count * bank->delta_freq;
         WRITE_OUT_RECORD(ao, bank->end_freq_rec, end_freq, false);
@@ -174,15 +175,8 @@ void prepare_sequencer(bool enable_sequencer)
 
 static void set_state0_bunch_bank(unsigned int bank)
 {
-    current_sequencer[0].bunch_bank = bank;
-    hw_write_seq_entries(current_sequencer);
-}
-
-
-const struct seq_entry *read_sequencer_table(unsigned int *state_count)
-{
-    *state_count = sequencer_pc;
-    return current_sequencer;
+    bank0 = bank;
+    hw_write_seq_entries(bank0, current_sequencer);
 }
 
 
@@ -196,7 +190,7 @@ void process_fast_buffer(void)
     interlock_signal(buffer_trigger, NULL);
 
     if (capture_iq)
-        update_iq(buffer_low, buffer_high);
+        update_iq(buffer_low, buffer_high, sequencer_pc, current_sequencer);
 }
 
 

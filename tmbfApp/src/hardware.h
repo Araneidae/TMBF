@@ -8,7 +8,7 @@
 /* Some standard array size definitions. */
 #define BUNCHES_PER_TURN    936     // Bunches in a single turn
 #define RAW_BUF_DATA_LENGTH 16384   // Points in internal fast buffer
-#define MAX_SEQUENCER_COUNT 8       // Steps in sequencer
+#define MAX_SEQUENCER_COUNT 7       // Steps in sequencer, not counting state 0
 #define FIR_BANKS           4
 #define BUNCH_BANKS         4
 
@@ -208,7 +208,8 @@ struct seq_entry {
 };
 
 /* Rewrites the sequencer table.  All entries must be present. */
-void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT]);
+void hw_write_seq_entries(
+    unsigned int bank0, struct seq_entry entries[MAX_SEQUENCER_COUNT]);
 
 /* Programs sequencer program counter.  The sequencer will run the next time the
  * buffer is armed. */

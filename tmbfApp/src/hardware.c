@@ -589,10 +589,23 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay)
 /* * * * * * * * * * * * * * * * * * * * * */
 /* SEQ: Programmed Bunch and Sweep Control */
 
-void hw_write_seq_entries(struct seq_entry entries[MAX_SEQUENCER_COUNT])
+void hw_write_seq_entries(
+    unsigned int bank0, struct seq_entry entries[MAX_SEQUENCER_COUNT])
 {
     LOCK();
     config_space->sequencer_start_write = 0;    // Select seq state file
+    /* State zero is special: everything except the bank selection must be
+     * written as zero.  Unfortunately, these aren't the zeros in the seq_entry,
+     * so we have to write this out. */
+    config_space->sequencer_write = 0;
+    config_space->sequencer_write = 0;
+    config_space->sequencer_write = 0;
+    config_space->sequencer_write = (bank0 & 0x3) << 12;
+    config_space->sequencer_write = 0;
+    config_space->sequencer_write = 0;
+    config_space->sequencer_write = 0;
+    config_space->sequencer_write = 0;
+
     for (int i = 0; i < MAX_SEQUENCER_COUNT; i ++)
     {
         struct seq_entry *entry = &entries[i];

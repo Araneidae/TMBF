@@ -150,11 +150,9 @@ static void store_one_tune_freq(unsigned int freq, int ix)
 
 /* Computes frequency scale directly from sequencer settings.  Triggered
  * whenever the sequencer state changes. */
-static void update_det_scale(void)
+static void update_det_scale(
+    unsigned int state, const struct seq_entry *sequencer_table)
 {
-    unsigned int state;
-    const struct seq_entry *sequencer_table = read_sequencer_table(&state);
-
     compute_delay();
 
     int ix = 0;
@@ -163,7 +161,7 @@ static void update_det_scale(void)
     unsigned int f0 = 0;
     for ( ; state > 0  &&  ix < TUNE_LENGTH; state --)
     {
-        const struct seq_entry *entry = &sequencer_table[state];
+        const struct seq_entry *entry = &sequencer_table[state - 1];
         int dwell_time = entry->dwell_time + entry->holdoff;
         if (entry->write_enable)
         {
@@ -319,12 +317,14 @@ static bool update_overflow(void)
  * according to our current configuration into separate IQ wavforms.  One
  * separate I/Q value is extracted from each channel and rotated to compensate
  * for the precomputed group delay, and an average is also stored. */
-void update_iq(const short buffer_low[], const short buffer_high[])
+void update_iq(
+    const short buffer_low[], const short buffer_high[],
+    unsigned int sequencer_pc, const struct seq_entry *sequencer_table)
 {
     if (tune_scale_needs_refresh)
     {
         interlock_wait(tune_scale_trigger);
-        update_det_scale();
+        update_det_scale(sequencer_pc, sequencer_table);
         interlock_signal(tune_scale_trigger, NULL);
     }
 
