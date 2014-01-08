@@ -304,6 +304,8 @@ static struct channel_sweep sweep;
 static float phase_waveform[TUNE_LENGTH];
 static int cumsum_i[TUNE_LENGTH];
 static int cumsum_q[TUNE_LENGTH];
+static double mean_power;
+static int max_power;
 
 /* Tune measurements. */
 static double measured_tune;    // Tune measurement
@@ -319,6 +321,18 @@ static void update_iq_power(const struct sweep_info *sweep_info)
         &sweep_info->channels[selected_bunch % 4] :
         &sweep_info->mean;
     memcpy(&sweep, channel, sizeof(sweep));
+
+    /* Update the total and max power statistics. */
+    double total_power = 0;
+    max_power = 0;
+    for (int i = 0; i < sweep_info->sweep_length; i ++)
+    {
+        int power = sweep.power[i];
+        total_power += power;
+        if (power > max_power)
+            max_power = power;
+    }
+    mean_power = total_power / sweep_info->sweep_length;
 }
 
 
@@ -348,6 +362,7 @@ void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow)
     update_iq_power(sweep_info);
     update_phase_wf();
     update_cumsum();
+
     epicsAlarmSeverity severity;
     if (overflow)
     {
@@ -464,6 +479,8 @@ bool initialise_tune(void)
     PUBLISH_WF_READ_VAR(short, "TUNE:Q", TUNE_LENGTH, sweep.wf_q);
     PUBLISH_WF_READ_VAR(int, "TUNE:POWER", TUNE_LENGTH, sweep.power);
     PUBLISH_WF_READ_VAR(float, "TUNE:PHASEWF", TUNE_LENGTH, phase_waveform);
+    PUBLISH_READ_VAR(ai, "TUNE:MEANPOWER", mean_power);
+    PUBLISH_READ_VAR(longin, "TUNE:MAXPOWER", max_power);
     PUBLISH_WF_READ_VAR(int, "TUNE:CUMSUMI", TUNE_LENGTH, cumsum_i);
     PUBLISH_WF_READ_VAR(int, "TUNE:CUMSUMQ", TUNE_LENGTH, cumsum_q);
 

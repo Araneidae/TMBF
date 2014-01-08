@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 211
-y 34
+x 2040
+y 30
 w 641
 h 656
 font "helvetica-medium-r-18.0"
@@ -19,7 +19,7 @@ ctlBgColor1 index 0
 ctlBgColor2 index 14
 topShadowColor index 0
 botShadowColor index 14
-title "ADC data statistics"
+title "DDR long buffer"
 showGrid
 snapToGrid
 gridSize 8
