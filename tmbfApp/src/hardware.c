@@ -77,40 +77,56 @@ static const char *hardware_config_file;
 
 struct tmbf_config_space
 {
-    uint32_t fpga_version;          //  0  Version and FIR count
-    //  15:0    Version code
-    //  19:16   Number of taps in FIR
+    /* The first two registers are completely different for reading and writing,
+     * so we overlay two completely different register definitions. */
+    union {
+        // Read only registers
+        struct {
+            uint32_t fpga_version;  //  0  Version and FIR count
+            //  15:0    Version code
+            //  19:16   Number of taps in FIR
 
-    uint32_t system_status;         //  1  Status register
-    //  3:0     Trigger phase bits
-    //  7:4     Bunch trigger phase bits
-    //  15:8    Overflow bits
-    //          0   FIR gain overflow
-    //          1   DAC mux output overflow
-    //          2   DAC pre-emphasis filter overflow
-    //          4   IQ FIR input overflow
-    //          5   IQ accumulator overflow
-    //          6   IQ readout overflow
-    //  18:16   Current sequencer state ("program counter")
-    //  19      (unused)
-    //  20      Buffer trigger armed
-    //  21      Set if buffer busy
-    //  22      Set if sequencer busy
-    //  23      DDR trigger armed
-    //  24      ADC clock dropout detect.
-    //  31:25   (unused)
+            uint32_t system_status; //  1  Status register
+            //  3:0     Trigger phase bits
+            //  7:4     Bunch trigger phase bits
+            //  15:8    Overflow bits
+            //          0   FIR gain overflow
+            //          1   DAC mux output overflow
+            //          2   DAC pre-emphasis filter overflow
+            //          4   IQ FIR input overflow
+            //          5   IQ accumulator overflow
+            //          6   IQ readout overflow
+            //  18:16   Current sequencer state ("program counter")
+            //  19      (unused)
+            //  20      Buffer trigger armed
+            //  21      Set if buffer busy
+            //  22      Set if sequencer busy
+            //  23      DDR trigger armed
+            //  24      ADC clock dropout detect.
+            //  31:25   (unused)
+        };
+
+        // Write only registers
+        struct {
+            uint32_t pulse;         //  0  Pulse event register
+            //  0       Arm DDR (must be pulsed, works on rising edge)
+            //  1       Soft trigger DDR (pulsed)
+            //  2       Arm buffer and sequencer
+            //  3       Soft trigger buffer and sequencer (pulsed)
+            //  4       Arm bunch counter sync (pulsed)
+            //  5       Disarm DDR, pulsed
+            //  7       Abort sequencer operation
+            //  8       Enable DDR capture (must be done before triggering)
+
+            uint32_t write_select;  //  1  Initiate write register
+        };
+    };
 
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
-    //  1       Enable DDR capture (must be done before triggering)
     //  2       Detector input select
-    //  3       (unused)
-    //  4       Arm DDR (must be pulsed, works on rising edge)
-    //  5       Soft trigger DDR (pulsed)
-    //  6       Arm buffer and sequencer
-    //  7       Soft trigger buffer and sequencer (pulsed)
-    //  8       Arm bunch counter sync (pulsed)
-    //  9       Disarm DDR, pulsed
+    //  5:3     Sequencer starting state
+    //  9:6     (unused)
     //  11:10   Buffer data select (FIR+ADC/IQ/FIR+DAC/ADC+DAC)
     //  13:12   Buffer readback channel select
     //  14      Detector bunch mode enable
@@ -136,15 +152,11 @@ struct tmbf_config_space
     uint32_t ddr_trigger_delay;     // 12  DDR Trigger delay control
     uint32_t buf_trigger_delay;     // 13  BUF Trigger delay control
     uint32_t trigger_blanking;      // 14  Trigger blanking length in turns
-    uint32_t padding[1];            // 15    (unused)
-
-    uint32_t fir_bank;              // 16  Select FIR bank
+    uint32_t unused_1[2];           // 15-16 (unused)
     uint32_t fir_write;             // 17  Write FIR coefficients
-    uint32_t bunch_bank;            // 18  Select bunch config bank
+    uint32_t unused_2;              // 16    (unused)
     uint32_t bunch_write;           // 19  Write bunch configuration
-    uint32_t sequencer_abort;       // 20  Abort sequencer operation
-    uint32_t sequencer_pc;          // 21  Sequencer starting state
-    uint32_t sequencer_start_write; // 22  Starts write sequence
+    uint32_t unused_3[3];           // 20-22 (unused)
     uint32_t sequencer_write;       // 23  Write sequencer data
     uint32_t adc_minmax_channel;    // 24  Select ADC min/max readout channel
     uint32_t dac_minmax_channel;    // 25  Select DAC min/max readout channel
@@ -212,14 +224,11 @@ static void write_control_bit_field(
         (config_space->control & ~mask) | ((value << start) & mask);
 }
 
-/* Sets and the clears all the bits in the given mask. */
+/* Writes mask to the pulse register.  This generates simultaneous pulse events
+ * for all selected bits. */
 static void pulse_mask(uint32_t mask)
 {
-    LOCK();
-    uint32_t state = config_space->control;
-    config_space->control = state | mask;
-    config_space->control = state & ~mask;
-    UNLOCK();
+    config_space->pulse = mask;
 }
 
 /* Sets the selected bit and resets it back to zero. */
@@ -337,7 +346,7 @@ void hw_write_fir_gain(unsigned int gain)
 void hw_write_fir_taps(int bank, int taps[])
 {
     LOCK();
-    config_space->fir_bank = (uint32_t) bank;
+    config_space->write_select = (uint32_t) bank;
     for (int i = 0; i < fir_filter_length; i++)
         config_space->fir_write = taps[fir_filter_length - i - 1];
     UNLOCK();
@@ -392,7 +401,7 @@ void hw_write_ddr_select(unsigned int selection)
 
 void hw_write_ddr_enable(void)
 {
-    pulse_control_bit(1);
+    pulse_control_bit(8);
 }
 
 int hw_read_ddr_delay(void)
@@ -414,7 +423,7 @@ int hw_read_ddr_delay(void)
 void hw_write_bun_entry(int bank, struct bunch_entry entries[BUNCHES_PER_TURN])
 {
     LOCK();
-    config_space->bunch_bank = (uint32_t) bank;
+    config_space->write_select = (uint32_t) bank;
     for (int i = 0; i < BUNCHES_PER_TURN; i ++)
     {
         /* Take bunch offsets into account when writing the bunch entry. */
@@ -434,7 +443,7 @@ void hw_write_bun_entry(int bank, struct bunch_entry entries[BUNCHES_PER_TURN])
 
 void hw_write_bun_sync(void)
 {
-    pulse_control_bit(8);
+    pulse_control_bit(4);
 }
 
 void hw_write_bun_zero_bunch(int bunch)
@@ -582,7 +591,7 @@ void hw_write_det_gain(unsigned int gain)
 void hw_write_det_window(uint16_t window[DET_WINDOW_LENGTH])
 {
     LOCK();
-    config_space->sequencer_start_write = 1;    // Select sequencer window
+    config_space->write_select = 1;    // Select sequencer window
     for (int i = 0; i < DET_WINDOW_LENGTH; i ++)
         config_space->sequencer_write = window[i];
     UNLOCK();
@@ -602,7 +611,7 @@ void hw_write_seq_entries(
     unsigned int bank0, struct seq_entry entries[MAX_SEQUENCER_COUNT])
 {
     LOCK();
-    config_space->sequencer_start_write = 0;    // Select seq state file
+    config_space->write_select = 0;    // Select seq state file
     /* State zero is special: everything except the bank selection must be
      * written as zero.  Unfortunately, these aren't the zeros in the seq_entry,
      * so we have to write this out. */
@@ -639,7 +648,7 @@ void hw_write_seq_entries(
 
 void hw_write_seq_count(unsigned int sequencer_pc)
 {
-    config_space->sequencer_pc = sequencer_pc;
+    WRITE_CONTROL_BITS(3, 3, sequencer_pc);
 }
 
 unsigned int hw_read_seq_state(void)
@@ -654,7 +663,7 @@ bool hw_read_seq_status(void)
 
 void hw_write_seq_reset(void)
 {
-    config_space->sequencer_abort = 1;
+    pulse_control_bit(7);
 }
 
 
@@ -671,17 +680,17 @@ static uint32_t make_mask2(int ddr_bit, int buf_bit, bool ddr, bool buf)
 
 void hw_write_trg_arm(bool ddr, bool buf)
 {
-    pulse_mask(make_mask2(4, 6, ddr, buf));
+    pulse_mask(make_mask2(0, 2, ddr, buf));
 }
 
 void hw_write_trg_soft_trigger(bool ddr, bool buf)
 {
-    pulse_mask(make_mask2(5, 7, ddr, buf));
+    pulse_mask(make_mask2(1, 3, ddr, buf));
 }
 
 void hw_write_trg_disarm(bool ddr, bool buf)
 {
-    pulse_mask(make_mask2(9, 19, ddr, buf));
+    pulse_mask(make_mask2(5, 6, ddr, buf));
 }
 
 void hw_write_trg_delays(int ddr_delay, int buf_delay)
