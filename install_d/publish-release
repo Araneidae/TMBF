@@ -8,27 +8,6 @@ function Error()
     exit 1
 }
 
-# Checks that the given directory is completely in step with svn.  Unknown
-# files (flagged by ?) are ignored.
-#
-#   CheckSvnCurrent <working-dir>
-#
-function CheckSvnCurrent()
-{
-    svn status -u "$1" |
-    # We ignore both lines beginning with '?' (these are files that haven't
-    # been added: it can be a bit much to insist on adding these) and the
-    # 'Status against revision' line that comes from the -u flag.
-    sed '/^\?/d
-        /^Status against revision:/d
-        /^$/d' |
-    wc -l |
-    { read count && ((count == 0)); }
-    # Return success only if the svn status command succeeded and no lines
-    # were reported as unresolved.
-    ((${PIPESTATUS[0]}==0 && ${PIPESTATUS[3]}==0))
-}
-
 
 EPICS_VERSION=R3.14.12.3
 
@@ -47,17 +26,15 @@ cd "$(dirname "$0")/.."
 
 
 # First check that we're publishing the version we expect.
-VERSION="$(sed -n '/^VERSION=/{s///;p;q;}' install_d/CONFIG)"
+VERSION="$(
+    svn cat "$SVN_TRUNK"/install_d/CONFIG |
+    sed -n '/^VERSION=/{s///;p;q;}')"
 [ "$VERSION" = "${1?Specify release version}" ]  ||
     Error "Release version mismatch: $1 != $VERSION"
 
 # Check the version doesn't already exist!
 svn ls "$SVN_RELEASE/$VERSION"  >/dev/null 2>&1  &&
     Error "Release $VERSION already published to subversion"
-
-# Check that we're up to date with subversion.
-CheckSvnCurrent . ||
-    Error "TMBF files not checked in"
 
 
 # Make the release into subversion.
@@ -75,8 +52,9 @@ RELEASE_JOB=Release-TMBF-$VERSION.redhat6-x86_64
 # prematurely) and then rename it make it happen.
 cd "$QUEUE_DIR"  &&
 cat <<EOF  >.$RELEASE_JOB  &&
+export DLS_EPICS_RELEASE=$EPICS_VERSION
+. /dls_sw/etc/profile
 SVN_ROOT=http://serv0002.cs.diamond.ac.uk/repos/controls
-export HOST_ARCH=linux-x86_64
 cd "$PROD_ROOT"  &&
 svn co "\$SVN_ROOT/$RELEASE_PATH/$VERSION"  &&
 cd $VERSION  &&
