@@ -697,6 +697,11 @@ void hw_write_trg_blanking(int trigger_blanking)
     config_space->trigger_blanking = trigger_blanking;
 }
 
+void hw_write_trg_arm_raw_phase(void)
+{
+    pulse_control_bit(11);
+}
+
 int hw_read_trg_raw_phase(void)
 {
     return READ_STATUS_BITS(0, 4);

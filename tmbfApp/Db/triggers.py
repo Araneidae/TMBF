@@ -37,8 +37,6 @@ TriggerTarget('BUF', 'Fast buffer')
 boolOut('TRG:SEQ:ENA', 'Disabled', 'Enabled', DESC = 'Sequencer trigger enable')
 TriggerStatus('SEQ', 'Sequencer')
 
-longIn('TRG:RAWPHASE', DESC = 'Raw trigger phase bits', SCAN = '.2 second')
-
 
 longOut('TRG:BLANKING', 0, 65535, EGU = 'turns',
     DESC = 'Sequencer blanking window after trigger')
@@ -50,3 +48,27 @@ fp_led_control = records.calcout('FPLED:TOGGLE',
     CALC = '!A', SCAN = '1 second',
     OUT  = PP(fp_led), OOPT = 'Every Time', DOPT = 'Use CALC')
 fp_led_control.INPA = fp_led_control
+
+
+# Trigger monitoring and status.  We show seconds since the last trigger, the
+# raw phase bits from the last trigger, and a count of phase discrepancies.
+# Age since last trigger
+tick = records.calc('TRG:AGE',
+    SCAN = '.5 second', CALC = 'A+0.5',
+    EGU  = 's', PREC = 1, HIGH = 1,   HSV  = 'MINOR',
+    DESC = 'Seconds since last trigger')
+tick.INPA = tick
+
+trigger_count = longIn('TRG:COUNT', DESC = 'Total trigger count')
+jitter = longIn('TRG:JITTER', DESC = 'Trigger jitter count')
+Trigger('TRG:TICK',
+    longIn('TRG:RAWPHASE', DESC = 'Raw trigger phase bits'),
+    records.calcout('TRG:RESET_TICK',
+        CALC = '0', OUT  = tick, OOPT = 'Every Time', DOPT = 'Use CALC',
+        DESC = 'Reset trigger count'),
+    trigger_count, jitter,
+    records.calc('TRG:JITTERPC',
+        CALC = 'B?100*A/B:0', EGU = '%', PREC = 3,
+        INPA = jitter, INPB = trigger_count, HIGH = 0.001, HSV = 'MAJOR',
+        DESC = 'Jitter count percentage'))
+Action('TRG:RESET_COUNT', DESC = 'Reset trigger count')

@@ -12,6 +12,7 @@
 #include "error.h"
 #include "hardware.h"
 #include "epics_device.h"
+#include "epics_extra.h"
 #include "ddr.h"
 #include "ddr_epics.h"
 #include "sequencer.h"
@@ -342,6 +343,38 @@ static void publish_sources(void)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Event processing and polling. */
 
+static struct epics_interlock *trigger_tick;
+static int last_trig_phase;
+static int raw_trig_phase;
+static int trigger_count;
+static int jitter_count;
+
+/* Reset trigger and jitter counts. */
+static void reset_trigger_count(void)
+{
+    trigger_count = 0;
+    jitter_count = 0;
+}
+
+/* Probes the trigger phase so that we can observe the frequency of external
+ * triggers.  We also watch for and record phase changes. */
+static void poll_trigger_phase(void)
+{
+    int phase = hw_read_trg_raw_phase();
+    if (phase != 0)
+    {
+        hw_write_trg_arm_raw_phase();
+        interlock_wait(trigger_tick);
+        raw_trig_phase = phase;
+        trigger_count += 1;
+        if (last_trig_phase  &&  last_trig_phase != raw_trig_phase)
+            jitter_count += 1;
+        interlock_signal(trigger_tick, NULL);
+
+        last_trig_phase = raw_trig_phase;
+    }
+}
+
 
 /* This thread monitors the hardware for events and dispatches them as
  * appropriate.  The following events and states are recognised and updated:
@@ -371,6 +404,8 @@ static void *monitor_events(void *context)
         /* Let the trigger sources update their status and maybe retrigger. */
         update_source_status();
 
+        poll_trigger_phase();
+
         UNLOCK();
         /* Now sleep for a bit; 50ms seems responsive enough (20Hz). */
         usleep(50000);
@@ -385,7 +420,12 @@ bool initialise_triggers(void)
     publish_sources();
     publish_targets();
 
-    PUBLISH_READER(longin, "TRG:RAWPHASE", hw_read_trg_raw_phase);
+    trigger_tick = create_interlock("TRG:TICK:TRIG", "TRG:TICK:DONE", false);
+    PUBLISH_READ_VAR(longin, "TRG:RAWPHASE", raw_trig_phase);
+    PUBLISH_READ_VAR(longin, "TRG:COUNT", trigger_count);
+    PUBLISH_READ_VAR(longin, "TRG:JITTER", jitter_count);
+    PUBLISH_ACTION("TRG:RESET_COUNT", reset_trigger_count);
+
     PUBLISH_WRITER(bo, "FPLED", hw_write_front_panel_led);
     PUBLISH_WRITER_P(longout, "TRG:BLANKING", hw_write_trg_blanking);
 

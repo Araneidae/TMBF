@@ -251,5 +251,8 @@ void hw_write_trg_delays(int ddr_delay, int buf_delay);
 /* Configure blanking interval after external trigger in turns. */
 void hw_write_trg_blanking(int trigger_blanking);
 
+/* Arms next capture of trigger. */
+void hw_write_trg_arm_raw_phase(void);
+
 /* Returns raw phase bits from trigger. */
 int hw_read_trg_raw_phase(void);
