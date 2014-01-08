@@ -5,7 +5,7 @@ from common import *
 import tune
 
 
-mbbOut('DET:GAIN', DESC = 'Detector gain', *dBrange(7, -12) + ['-114dB'])
+mbbOut('DET:GAIN', DESC = 'Detector gain', *dBrange(7, -12) + ['-120dB'])
 boolOut('DET:MODE', 'All Bunches', 'Single Bunch',
     FLNK = tune.setting_changed, DESC = 'Detector mode')
 mbbOut('DET:INPUT', 'ADC', 'FIR',

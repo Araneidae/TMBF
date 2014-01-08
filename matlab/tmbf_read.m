@@ -26,6 +26,11 @@ function data = tmbf_read(tmbf, turns, start)
     turn_length = 936;
     window_length = lcaGet([longwf '.NELM']) / turn_length;
 
+    wh = waitbar(0, 'Fetching data', ...
+        'CreateCancelBtn', 'setappdata(gcbf,''cancelling'',1)');
+    onCleanup(@() delete(wh));
+    setappdata(wh, 'cancelling', 0);
+
     data = zeros(turns * turn_length, 1);
     turns_read = 0;
     while turns_read < turns;
@@ -41,11 +46,15 @@ function data = tmbf_read(tmbf, turns, start)
         % Read selected window into buffer
         bunches_size  = turn_length * min(window_length, turns - turns_read);
         bunches_start = turn_length * turns_read;
+        bunches_end = bunches_start + bunches_size;
         wf = lcaGet(longwf);
-        data(bunches_start + 1 : bunches_start + bunches_size) = ...
-            wf(1 : bunches_size);
+        data(bunches_start + 1 : bunches_end) = wf(1 : bunches_size);
 
         turns_read = turns_read + window_length;
-        fprintf('.');
+        waitbar(turns_read/turns, wh);
+        if getappdata(wh, 'cancelling')
+            data = data(1:bunches_end);
+            break
+        end
     end
 end

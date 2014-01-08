@@ -47,9 +47,9 @@ static struct epics_record *gain_setting;
  * to be a factor of at least 4 below the maximum signal of 32767, and there's a
  * further factor of around 3/4 to avoid premature switching and bouncing. */
 #define GAIN_UP_THRESHOLD   6100
-/* The minimum gain has a huge jump (7 bits) so we use a different threshold in
- * this case.  Shift by an extra 5 bits on top of the 2 bits already counted. */
-#define MIN_GAIN_UP_THRESHOLD   (GAIN_UP_THRESHOLD >> 5)
+/* The minimum gain has a huge jump (8 bits) so we use a different threshold in
+ * this case.  Shift by an extra 6 bits on top of the 2 bits already counted. */
+#define MIN_GAIN_UP_THRESHOLD   (GAIN_UP_THRESHOLD >> 6)
 
 /* Completely analysed data from a successful detector sweep. */
 static struct sweep_info sweep_info;
