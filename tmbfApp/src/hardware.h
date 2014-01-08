@@ -29,13 +29,15 @@ int hw_read_version(void);
 /* All bits will be read into overflow_bits[], but only those bits selected in
  * read_bits[] will be updated and correctly reset. */
 enum OVERFLOW_BITS {
-    OVERFLOW_FIR,           // Overflow in FIR gain control output
-    OVERFLOW_DAC,           // Overflow in DAC multiplexor and scaling
-    OVERFLOW_IQ_ACC,        // Overflow in IQ detector accumulator
-    OVERFLOW_IQ_SCALE,      // Overflow in IQ detector readout scaling
-    OVERFLOW_DAC_COMP,      // Overflow in DAC precompensation filter
+    OVERFLOW_FIR        = 0,    // Overflow in FIR gain control output
+    OVERFLOW_DAC        = 1,    // Overflow in DAC multiplexor and scaling
+    OVERFLOW_DAC_COMP   = 2,    // Overflow in DAC pre-emphasis filter
 
-    OVERFLOW_BIT_COUNT = 5
+    OVERFLOW_IQ_FIR     = 4,    // Overflow in IQ detector FIR input
+    OVERFLOW_IQ_ACC     = 5,    // Overflow in IQ detector accumulator
+    OVERFLOW_IQ_SCALE   = 6,    // Overflow in IQ detector readout scaling
+
+    OVERFLOW_BIT_COUNT = 8
 };
 void hw_read_overflows(
     const bool read_bits[OVERFLOW_BIT_COUNT],

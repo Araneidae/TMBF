@@ -82,16 +82,23 @@ struct tmbf_config_space
     //  19:16   Number of taps in FIR
 
     uint32_t system_status;         //  1  Status register
-    //  2:0     Current sequencer state ("program counter")
-    //  3       Set if buffer busy
-    //  4       Set if sequencer busy
-    //  9:5     Overflow bits (IQ/ACC/DAC/FIR)
-    //  13:10   Trigger phase bits
-    //  14      Trigger armed
-    //  15      DDR armed
-    //  19:16   Bunch trigger phase bits
-    //  20      ADC clock dropout detect.
-    //  31:21   (unused)
+    //  3:0     Trigger phase bits
+    //  7:4     Bunch trigger phase bits
+    //  15:8    Overflow bits
+    //          0   FIR gain overflow
+    //          1   DAC mux output overflow
+    //          2   DAC pre-emphasis filter overflow
+    //          4   IQ FIR input overflow
+    //          5   IQ accumulator overflow
+    //          6   IQ readout overflow
+    //  18:16   Current sequencer state ("program counter")
+    //  19      (unused)
+    //  20      Buffer trigger armed
+    //  21      Set if buffer busy
+    //  22      Set if sequencer busy
+    //  23      DDR trigger armed
+    //  24      ADC clock dropout detect.
+    //  31:25   (unused)
 
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
@@ -252,7 +259,7 @@ void hw_read_overflows(
 
     /* Latch the selected overflow bits and read back the associated status. */
     config_space->latch_overflow = read_mask;
-    uint32_t status = READ_STATUS_BITS(5, OVERFLOW_BIT_COUNT);
+    uint32_t status = READ_STATUS_BITS(8, OVERFLOW_BIT_COUNT);
 
     for (int i = 0; i < OVERFLOW_BIT_COUNT; i ++)
         overflow_bits[i] = (status >> i) & 1;
@@ -285,7 +292,7 @@ void hw_write_front_panel_led(bool enable)
 
 bool hw_read_clock_dropout(void)
 {
-    return READ_STATUS_BITS(20, 1);
+    return READ_STATUS_BITS(24, 1);
 }
 
 
@@ -437,7 +444,7 @@ void hw_write_bun_zero_bunch(int bunch)
 
 int hw_read_bun_trigger_phase(void)
 {
-    return READ_STATUS_BITS(16, 4);
+    return READ_STATUS_BITS(4, 4);
 }
 
 
@@ -455,7 +462,7 @@ void hw_write_buf_select(unsigned int selection)
 
 bool hw_read_buf_status(void)
 {
-    return READ_STATUS_BITS(3, 1) || READ_STATUS_BITS(14, 1);   // Separate out?
+    return READ_STATUS_BITS(20, 1) || READ_STATUS_BITS(21, 1); // Separate out?
 }
 
 bool hw_read_buf_busy(void)
@@ -637,12 +644,12 @@ void hw_write_seq_count(unsigned int sequencer_pc)
 
 unsigned int hw_read_seq_state(void)
 {
-    return READ_STATUS_BITS(0, 3);
+    return READ_STATUS_BITS(16, 3);
 }
 
 bool hw_read_seq_status(void)
 {
-    return READ_STATUS_BITS(4, 1) || READ_STATUS_BITS(14, 1);   // Separate out
+    return READ_STATUS_BITS(20, 1) || READ_STATUS_BITS(22, 1); // Separate out?
 }
 
 void hw_write_seq_reset(void)
@@ -690,7 +697,7 @@ void hw_write_trg_blanking(int trigger_blanking)
 
 int hw_read_trg_raw_phase(void)
 {
-    return READ_STATUS_BITS(10, 4);
+    return READ_STATUS_BITS(0, 4);
 }
 
 
