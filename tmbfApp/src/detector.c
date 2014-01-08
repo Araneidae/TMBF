@@ -304,11 +304,15 @@ static void update_sweep_info(
 static bool update_overflow(void)
 {
     const bool read_mask[OVERFLOW_BIT_COUNT] = {
+        [OVERFLOW_IQ_FIR] = true,
         [OVERFLOW_IQ_ACC] = true,
         [OVERFLOW_IQ_SCALE] = true,
     };
     hw_read_overflows(read_mask, overflows);
-    return overflows[OVERFLOW_IQ_ACC] || overflows[OVERFLOW_IQ_SCALE];
+    return
+        overflows[OVERFLOW_IQ_FIR] ||
+        overflows[OVERFLOW_IQ_ACC] ||
+        overflows[OVERFLOW_IQ_SCALE];
 }
 
 
@@ -414,6 +418,7 @@ bool initialise_detector(void)
     PUBLISH_WRITE_VAR_P(bo, "DET:MODE", detector_mode);
     PUBLISH_WRITER_P(ao, "DET:LOOP:ADC", set_adc_loop_delay);
 
+    PUBLISH_READ_VAR(bi, "DET:OVF:INP", overflows[OVERFLOW_IQ_FIR]);
     PUBLISH_READ_VAR(bi, "DET:OVF:ACC", overflows[OVERFLOW_IQ_ACC]);
     PUBLISH_READ_VAR(bi, "DET:OVF:IQ",  overflows[OVERFLOW_IQ_SCALE]);
 

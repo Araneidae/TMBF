@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1921
-y 1
+x 51
+y 51
 w 641
 h 593
 font "helvetica-medium-r-18.0"
@@ -266,7 +266,7 @@ major 4
 minor 0
 release 0
 x 312
-y 504
+y 528
 w 16
 h 16
 lineColor index 14
@@ -283,7 +283,7 @@ major 4
 minor 6
 release 0
 x 336
-y 504
+y 528
 w 184
 h 14
 controlPv "$(device):DET:OVF:ACC.DESC"
@@ -307,48 +307,7 @@ major 4
 minor 6
 release 0
 x 336
-y 560
-w 184
-h 14
-controlPv "$(device):DET:OVF.DESC"
-font "helvetica-medium-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 312
-y 560
-w 16
-h 16
-lineColor index 14
-fill
-fillColor index 16
-fillAlarm
-alarmPv "$(device):DET:OVF"
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 336
-y 528
+y 552
 w 184
 h 14
 controlPv "$(device):DET:OVF:IQ.DESC"
@@ -372,7 +331,7 @@ major 4
 minor 0
 release 0
 x 312
-y 528
+y 552
 w 16
 h 16
 lineColor index 14
@@ -1537,8 +1496,8 @@ minor 1
 release 1
 x 16
 y 544
-w 104
-h 16
+w 106
+h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -1599,5 +1558,46 @@ useHexPrefix
 showUnits
 newPos
 objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 336
+y 504
+w 176
+h 14
+controlPv "$(device):DET:OVF:INP.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 312
+y 504
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):DET:OVF:INP"
 endObjectProperties
 

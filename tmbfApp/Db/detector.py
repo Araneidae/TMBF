@@ -31,6 +31,8 @@ Trigger('DET:SCALE',
 
 # Two overflow detection bits are generated
 overflows = [
+    boolIn('DET:OVF:INP', 'Ok', 'Overflow', OSV = 'MAJOR',
+        DESC = 'Detector input overflow'),
     boolIn('DET:OVF:ACC', 'Ok', 'Overflow', OSV = 'MAJOR',
         DESC = 'Detector accumulator overflow'),
     boolIn('DET:OVF:IQ',  'Ok', 'Overflow', OSV = 'MAJOR',
