@@ -8,8 +8,7 @@ import tune
 mbbOut('DET:GAIN', DESC = 'Detector gain', *dBrange(7, -12) + ['-114dB'])
 boolOut('DET:MODE', 'All Bunches', 'Single Bunch',
     FLNK = tune.setting_changed, DESC = 'Detector mode')
-mbbOut('DET:INPUT',
-    ('ADC', 0), ('FIR +18dB', 2), ('FIR', 3),
+mbbOut('DET:INPUT', 'ADC', 'FIR',
     DESC = 'Detector input selection')
 boolOut('DET:AUTOGAIN', 'Fixed Gain', 'Autogain',
     DESC = 'Detector automatic gain')

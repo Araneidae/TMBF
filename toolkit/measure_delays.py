@@ -400,7 +400,7 @@ def measure_detector_delay(tmbf, results):
     results.set('DET_ADC_DELAY',
         search_det_delay(tmbf, det_i, det_q, 'ADC'))
     results.set('DET_FIR_DELAY',
-        search_det_delay(tmbf, det_i, det_q, 'FIR +18dB') - 936)
+        search_det_delay(tmbf, det_i, det_q, 'FIR') - 936)
 
     det_i.close()
     det_q.close()
@@ -409,11 +409,17 @@ def measure_detector_delay(tmbf, results):
 # ------------------------------------------------------------------------------
 
 
-tmbf = configure.TMBF('TS-DI-TMBF-01')
+if len(sys.argv) > 1:
+    tmbf_name = sys.argv[1]
+else:
+    tmbf_name = 'TS-DI-TMBF-01'
+
+
+tmbf = configure.TMBF(tmbf_name)
 results = Results()
 
 
-compensate = len(sys.argv) > 1
+compensate = len(sys.argv) > 2
 
 
 configure_timing_test(tmbf, compensate)

@@ -343,13 +343,20 @@ static void update_phase_wf(void)
 }
 
 
-static void update_cumsum(void)
+static void update_cumsum(const struct sweep_info *sweep_info)
 {
     int sum_i = 0, sum_q = 0;
-    for (int i = 0; i < TUNE_LENGTH; i ++)
+    for (int i = 0; i < sweep_info->sweep_length; i ++)
     {
         sum_i += sweep.wf_i[i];
         sum_q += sweep.wf_q[i];
+        cumsum_i[i] = sum_i;
+        cumsum_q[i] = sum_q;
+    }
+
+    /* Pad the rest of the waveform with repeats of the last point. */
+    for (int i = sweep_info->sweep_length; i < TUNE_LENGTH; i ++)
+    {
         cumsum_i[i] = sum_i;
         cumsum_q[i] = sum_q;
     }
@@ -361,7 +368,7 @@ void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow)
     interlock_wait(tune_trigger);
     update_iq_power(sweep_info);
     update_phase_wf();
-    update_cumsum();
+    update_cumsum(sweep_info);
 
     epicsAlarmSeverity severity;
     if (overflow)

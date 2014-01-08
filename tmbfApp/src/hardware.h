@@ -171,7 +171,7 @@ void hw_write_nco_gain(unsigned int gain);
 /* DET: Frequency Detector */
 
 
-enum { DET_IN_ADC = 0, DET_IN_FIR_LOW = 2, DET_IN_FIR_HIGH = 3 };
+enum { DET_IN_ADC = 0, DET_IN_FIR = 1 };
 
 /* Switches detector between all bunch detection or individual bunch mode. */
 void hw_write_det_mode(bool bunch_mode);

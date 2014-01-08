@@ -96,7 +96,8 @@ struct tmbf_config_space
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
     //  1       Enable DDR capture (must be done before triggering)
-    //  3:2     Detector input select
+    //  2       Detector input select
+    //  3       (unused)
     //  4       Arm DDR (must be pulsed, works on rising edge)
     //  5       Soft trigger DDR (pulsed)
     //  6       Arm buffer and sequencer
@@ -538,13 +539,8 @@ static void update_det_bunch_select(void)
     int offset = 0;
     switch (det_input)
     {
-        case DET_IN_ADC:
-            offset = DET_ADC_OFFSET;
-            break;
-        case DET_IN_FIR_LOW:
-        case DET_IN_FIR_HIGH:
-            offset = DET_FIR_OFFSET;
-            break;
+        case DET_IN_ADC: offset = DET_ADC_OFFSET; break;
+        case DET_IN_FIR: offset = DET_FIR_OFFSET; break;
     }
     unsigned int bunch[4];
     for (int i = 0; i < 4; i ++)
@@ -559,7 +555,7 @@ static void update_det_bunch_select(void)
 void hw_write_det_input_select(unsigned int input)
 {
     det_input = input;
-    WRITE_CONTROL_BITS(2, 2, input);
+    WRITE_CONTROL_BITS(2, 1, input);
     /* As bunch offset compensation depends on which source we have to rewrite
      * the bunches when the input changes. */
     update_det_bunch_select();

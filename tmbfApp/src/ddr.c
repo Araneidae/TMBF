@@ -32,15 +32,13 @@
 /* To be mapped at 0x14004000.  The following registers allow access to the
  * internally generated FPGA events. */
 struct clk_interface {
-    uint32_t lst_event_capture_lsb0;    // 00: LST event id and fifo
-    uint32_t lst_event_capture_lsb1;    // 04: LST event timestamp
-    uint32_t lst_event_capture_msb;     // 08: LST event id, advance fifo
+    uint32_t unused1[3];                // 00-08
     uint32_t lmt_event_capture_lsb0;    // 0C: LMT event id and fifo
     uint32_t lmt_event_capture_lsb1;    // 10: LMT timestamp
     uint32_t lmt_event_capture_msb;     // 14: LMT advance fifo
-    uint32_t lst_event_control_lsb;     // 18: LST event control
+    uint32_t unused2;                   // 18
     uint32_t lmt_event_control_lsb;     // 1C: LMT event control
-    uint32_t lst_event_control_msb;     // 20: LST event control
+    uint32_t unused3;                   // 20
     uint32_t lmt_event_control_msb;     // 24: LMT event control
     uint32_t interrupt_status;          // 28:
 };
