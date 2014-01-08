@@ -21,9 +21,6 @@
 #define DATA_AREA_SIZE          (1 << 14)
 #define CONTROL_AREA_SIZE       (1 << 12)
 
-#define ADC_MINMAX_OFFSET       (4 * 256)
-#define DAC_MINMAX_OFFSET       (4 * 512)
-
 
 /* Definition of hardware offsets.  These all define internal delays in the FPGA
  * which we compensate for when reading and writing data.  In all cases the
@@ -117,6 +114,8 @@ struct tmbf_config_space
             //  5       Disarm DDR, pulsed
             //  7       Abort sequencer operation
             //  8       Enable DDR capture (must be done before triggering)
+            //  9       Initiate ADC min/max readout
+            //  10      Initiate DAC min/max readout
 
             uint32_t write_select;  //  1  Initiate write register
         };
@@ -156,17 +155,16 @@ struct tmbf_config_space
     uint32_t fir_write;             // 17  Write FIR coefficients
     uint32_t unused_2;              // 16    (unused)
     uint32_t bunch_write;           // 19  Write bunch configuration
-    uint32_t unused_3[3];           // 20-22 (unused)
+    uint32_t adc_minmax_read;       // 20  Read ADC min/max data
+    uint32_t dac_minmax_read;       // 21  Read DAC min/max data
+    uint32_t unused_3;              // 22    (unused)
     uint32_t sequencer_write;       // 23  Write sequencer data
-    uint32_t adc_minmax_channel;    // 24  Select ADC min/max readout channel
-    uint32_t dac_minmax_channel;    // 25  Select DAC min/max readout channel
+    uint32_t unused_4[2];           // 24-25 (unused)
     uint32_t latch_overflow;        // 26  Latch new overflow status
 };
 
 /* These three pointers directly overlay the FF memory. */
 static volatile struct tmbf_config_space *config_space;
-static volatile uint32_t *adc_minmax;       // ADC min/max readout area
-static volatile uint32_t *dac_minmax;       // DAC min/max readout area
 static volatile uint32_t *buffer_data;      // Fast buffer readout area
 
 
@@ -178,40 +176,6 @@ static pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
 
 #define LOCK()      pthread_mutex_lock(&global_lock);
 #define UNLOCK()    pthread_mutex_unlock(&global_lock);
-
-
-/* Used to compensate a value by subtracting a bunch count offset. */
-static int subtract_offset(int value, int offset, int max_count)
-{
-    value -= offset;
-    if (value < 0)
-        value += max_count;
-    return value;
-}
-
-
-/* Reads packed array of min/max values using readout selector.  Used for ADC
- * and DAC readouts. */
-static void read_minmax(
-    volatile uint32_t *minmax, volatile uint32_t *channel,
-    int delay, short *min_out, short *max_out)
-{
-    LOCK();
-    for (int n = 0; n < 4; n++)
-    {
-        /* Channel select and read enable for buffer. */
-        *channel = 2*n + 1;
-        for (int i = 0; i < BUNCHES_PER_TURN/4; i++)
-        {
-            uint32_t data = minmax[i];
-            int out_ix = subtract_offset(i, delay, BUNCHES_PER_TURN/4);
-            min_out[4*out_ix + n] = (short) (data & 0xFFFF);
-            max_out[4*out_ix + n] = (short) (data >> 16);
-        }
-    }
-    *channel = 0;
-    UNLOCK();
-}
 
 
 /* Writes to a sub field of a register by reading the register and writing
@@ -244,6 +208,39 @@ static void pulse_control_bit(unsigned int bit)
 
 #define READ_STATUS_BITS(start, length) \
     ((config_space->system_status >> (start)) & ((1 << (length)) - 1))
+
+
+/* Used to compensate a value by subtracting a bunch count offset. */
+static int subtract_offset(int value, int offset, int max_count)
+{
+    value -= offset;
+    if (value < 0)
+        value += max_count;
+    return value;
+}
+
+
+/* Reads packed array of min/max values using readout selector.  Used for ADC
+ * and DAC readouts. */
+static void read_minmax(
+    int pulse_bit, volatile uint32_t *read_register,
+    int delay, short *min_out, short *max_out)
+{
+    LOCK();
+    pulse_control_bit(pulse_bit);
+    int out_ix = subtract_offset(0, 4*delay, BUNCHES_PER_TURN);
+    for (int i = 0; i < BUNCHES_PER_TURN; i++)
+    {
+        uint32_t data = *read_register;
+        min_out[out_ix] = (short) (data & 0xFFFF);
+        max_out[out_ix] = (short) (data >> 16);
+
+        out_ix += 1;
+        if (out_ix >= BUNCHES_PER_TURN)
+            out_ix = 0;
+    }
+    UNLOCK();
+}
 
 
 /******************************************************************************/
@@ -322,9 +319,7 @@ void hw_write_adc_offsets(short offsets[4])
 void hw_read_adc_minmax(
     short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN])
 {
-    read_minmax(
-        adc_minmax, &config_space->adc_minmax_channel,
-        MINMAX_ADC_DELAY, min, max);
+    read_minmax(9, &config_space->adc_minmax_read, MINMAX_ADC_DELAY, min, max);
 }
 
 void hw_write_adc_skew(unsigned int skew)
@@ -364,9 +359,7 @@ int hw_read_fir_length(void)
 void hw_read_dac_minmax(
     short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN])
 {
-    read_minmax(
-        dac_minmax, &config_space->dac_minmax_channel,
-        MINMAX_DAC_DELAY, min, max);
+    read_minmax(10, &config_space->dac_minmax_read, MINMAX_DAC_DELAY, min, max);
 }
 
 void hw_write_dac_enable(unsigned int enable)
@@ -716,7 +709,7 @@ bool initialise_hardware(const char *config_file)
 {
     hardware_config_file = config_file;
     int mem;
-    bool ok =
+    return
         config_parse_file(
             config_file, hardware_config_defs,
             ARRAY_SIZE(hardware_config_defs))  &&
@@ -726,12 +719,6 @@ bool initialise_hardware(const char *config_file)
             mem, TMBF_CONFIG_ADDRESS))  &&
         TEST_IO(buffer_data = mmap(
             0, DATA_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-            mem, TMBF_DATA_ADDRESS));
-    if (ok)
-    {
-        adc_minmax = (volatile void *) config_space + ADC_MINMAX_OFFSET;
-        dac_minmax = (volatile void *) config_space + DAC_MINMAX_OFFSET;
-        fir_filter_length = (config_space->fpga_version >> 16) & 0xF;
-    }
-    return ok;
+            mem, TMBF_DATA_ADDRESS))  &&
+        DO_(fir_filter_length = (config_space->fpga_version >> 16) & 0xF);
 }
