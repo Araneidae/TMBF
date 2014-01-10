@@ -23,6 +23,16 @@ for bank in range(4):
 
 # Bunch synchronisation.
 Action('BUN:SYNC', DESC = 'Bunch synchronisation enable')
-longOut('BUN:OFFSET', 0, 233, DESC = 'Zero bunch offset')
-longIn('BUN:PHASE', SCAN = 'I/O Intr', LOW = 0, LSV = 'MINOR', MDEL = 0,
-    DESC = 'Bunch phase detect')
+Action('BUN:RESET', DESC = 'Reset bunch synchronisation')
+longOut('BUN:OFFSET', 0, BUNCHES_PER_TURN-1, DESC = 'Zero bunch offset')
+Trigger('BUN:SYNC',
+    longIn('BUN:PHASE', LOW = 0, LSV = 'MINOR', MDEL = 0,
+        DESC = 'Bunch phase detect'),
+    mbbIn('BUN:STATUS',
+        ('Not synchronised',    0, 'MAJOR'),    # Synchronisation needed
+        ('Zero bunch sync',     1, 'MINOR'),    # Synchronised to zero bunch
+        ('Waiting trigger',     2, 'MINOR'),    # Waiting for first trigger
+        ('First trigger',       3, 'MINOR'),    # Waiting for second trigger
+        ('Synchronised',        4, 'NO_ALARM'), # This is where we want to be!
+        ('Inconsistent phase',  5, 'MAJOR'),    # Whoops
+        DESC = 'Bunch synchronisation status'))

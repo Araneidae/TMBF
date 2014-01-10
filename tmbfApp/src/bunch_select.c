@@ -13,6 +13,7 @@
 #include "error.h"
 #include "hardware.h"
 #include "epics_device.h"
+#include "epics_extra.h"
 #include "adc_dac.h"
 
 #include "bunch_select.h"
@@ -226,9 +227,46 @@ static void publish_bank_control(void)
  * thread who's only purpose in life is to poll the bunch trigger status until a
  * trigger occurs. */
 
-static sem_t bunch_sync_sem;
-static struct epics_record *sync_phase_pv;
+static struct epics_interlock *sync_interlock;
+static int zero_bunch_offset;
 static int sync_phase;
+enum sync_status {
+    SYNC_NO_SYNC,   // Initial startup state, need to synchronise
+    SYNC_ZERO,      // Bunch reset to sync on bunch zero
+    SYNC_WAITING,   // Waiting for first synchronisation trigger
+    SYNC_FIRST,     // First trigger seen, waiting for second trigger
+    SYNC_OK,        // Synchronisation completed ok
+    SYNC_FAILED     // Synchronisation failed
+};
+static unsigned int sync_status = SYNC_NO_SYNC;
+
+static sem_t bunch_sync_sem;
+enum { SYNC_ACTION_RESET, SYNC_ACTION_SYNC } sync_action;
+
+
+/* Updates reported phase and status. */
+static void update_status(int phase, enum sync_status status)
+{
+    interlock_wait(sync_interlock);
+    sync_phase = phase;
+    sync_status = status;
+    interlock_signal(sync_interlock, NULL);
+}
+
+/* Triggers bunch synchronisation and busy waits for completion.  Returns
+ * measured phase after successful synchronisation. */
+static int wait_for_bunch_sync(void)
+{
+    /* Configure selected zero bunch offset and request synchronisation. */
+    hw_write_bun_sync();
+
+    /* Busy loop until trigger seen. */
+    int phase;
+    while (phase = hw_read_bun_trigger_phase(),
+           phase == 0)
+        usleep(20000);     // 20 ms
+    return phase;
+}
 
 /* Each valid phase bit pattern corresponds to a clock skew in bunches. */
 static bool phase_to_skew(int phase, unsigned int *skew)
@@ -244,35 +282,116 @@ static bool phase_to_skew(int phase, unsigned int *skew)
     return true;
 }
 
+/* Reset bunch synchronisation so that bunch zero corresponds to the trigger.
+ * We don't care about any constant offsets between the trigger and the bunch,
+ * but we want reliable identification of bunch zero. */
+static void do_reset_bunch_sync(void)
+{
+    update_status(0, SYNC_WAITING);
+    hw_write_bun_zero_bunch(0);
+    int phase = wait_for_bunch_sync();
+
+    unsigned int skew;
+    if (phase_to_skew(phase, &skew))
+    {
+        set_adc_skew(skew);
+        update_status(phase, SYNC_ZERO);
+    }
+    else
+        update_status(phase, SYNC_FAILED);
+}
+
+/* Use double triggering to discover the trigger skew and then offset the bunch
+ * zero so the selected bunch becomes bunch zero. */
+static void do_sync_bunch_sync(void)
+{
+    /* Discover trigger skew.  At this stage we leave the bunch offset alone, we
+     * need the skew to determine the final offset. */
+    update_status(0, SYNC_WAITING);
+    int phase = wait_for_bunch_sync();
+
+    /* Decode the skew and set up for the second trigger. */
+    unsigned int base_skew;
+    if (phase_to_skew(phase, &base_skew))
+    {
+        /* Figure out the right skew and whether we need to adjust the bin
+         * offset and retrigger.  We always retrigger, even if the bin offset
+         * hasn't changed, for consistency and a sanity check on the phase. */
+
+        /* Compute adc skew and figure out corresponding offset. */
+        int offset = (BUNCHES_PER_TURN - zero_bunch_offset) / 4;
+        int skew = 4 - zero_bunch_offset % 4 + base_skew;
+        offset += skew / 4;
+        skew = skew % 4;
+        printf("(%d, %d) => (%d, %d)\n",
+            zero_bunch_offset, base_skew, offset, skew);
+        set_adc_skew(skew);
+        hw_write_bun_zero_bunch(offset);
+
+        update_status(phase, SYNC_FIRST);
+        int second_phase = wait_for_bunch_sync();
+
+        /* We expect the trigger phases to be identical between the two
+         * triggers, if not there is a problem. */
+        if (phase == second_phase)
+            update_status(phase, SYNC_OK);
+        else
+        {
+            print_error(
+                "Bunch sync phase discrepancy: %d != %d\n",
+                phase, second_phase);
+            update_status(second_phase, SYNC_FAILED);
+        }
+    }
+    else
+        /* Invalid skew, fail right away. */
+        update_status(phase, SYNC_FAILED);
+}
+
 static void *bunch_sync_thread(void *context)
 {
-    sync_phase = hw_read_bun_trigger_phase();
-    trigger_record(sync_phase_pv, 0, NULL);
+    /* Read phase and update initial status on startup. */
+    update_status(hw_read_bun_trigger_phase(), SYNC_NO_SYNC);
 
     while (true)
     {
-        /* Block until sync button pressed, then request sync operation. */
+        /* Block until sync button pressed, perform requested action. */
         sem_wait(&bunch_sync_sem);
-        hw_write_bun_sync();
-
-        /* Now loop until trigger seen. */
-        do {
-            sync_phase = hw_read_bun_trigger_phase();
-            trigger_record(sync_phase_pv, 0, NULL);
-            usleep(100000);
-        } while (sync_phase == 0);
-
-        /* Finally use the measured phase to update the ADC skew. */
-        unsigned int skew;
-        if (phase_to_skew(sync_phase, &skew))
-            set_adc_skew(skew);
+        switch (sync_action)
+        {
+            case SYNC_ACTION_RESET: do_reset_bunch_sync(); break;
+            case SYNC_ACTION_SYNC:  do_sync_bunch_sync();  break;
+        }
     }
     return NULL;
 }
 
-static void write_bun_sync(void)
+static void reset_bunch_sync(void)
 {
+    sync_action = SYNC_ACTION_RESET;
     sem_post(&bunch_sync_sem);
+}
+
+static void sync_bunch_sync(void)
+{
+    sync_action = SYNC_ACTION_SYNC;
+    sem_post(&bunch_sync_sem);
+}
+
+static bool publish_bunch_sync(void)
+{
+    PUBLISH_WRITE_VAR_P(longout, "BUN:OFFSET", zero_bunch_offset);
+    PUBLISH_ACTION("BUN:RESET", reset_bunch_sync);
+    PUBLISH_ACTION("BUN:SYNC", sync_bunch_sync);
+
+    sync_interlock = create_interlock("BUN:SYNC:TRIG", "BUN:SYNC:DONE", false);
+    PUBLISH_READ_VAR(longin, "BUN:PHASE", sync_phase);
+    PUBLISH_READ_VAR(mbbi, "BUN:STATUS", sync_status);
+
+    pthread_t thread_id;
+    return
+        TEST_IO(sem_init(&bunch_sync_sem, 0, 0))  &&
+        TEST_0(pthread_create(&thread_id, NULL, bunch_sync_thread, NULL));
 }
 
 
@@ -282,13 +401,5 @@ static void write_bun_sync(void)
 bool initialise_bunch_select(void)
 {
     publish_bank_control();
-
-    PUBLISH_WRITER_P(longout, "BUN:OFFSET", hw_write_bun_zero_bunch);
-    PUBLISH_ACTION("BUN:SYNC", write_bun_sync);
-    sync_phase_pv = PUBLISH_READ_VAR_I(longin, "BUN:PHASE", sync_phase);
-
-    pthread_t thread_id;
-    return
-        TEST_IO(sem_init(&bunch_sync_sem, 0, 0))  &&
-        TEST_0(pthread_create(&thread_id, NULL, bunch_sync_thread, NULL));
+    return publish_bunch_sync();
 }

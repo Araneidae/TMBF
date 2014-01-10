@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 644
-y 385
+x 704
+y 319
 w 440
-h 472
+h 488
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -33,7 +33,7 @@ major 4
 minor 0
 release 0
 x 8
-y 400
+y 416
 w 424
 h 64
 lineColor index 14
@@ -50,7 +50,7 @@ release 0
 x 8
 y 304
 w 424
-h 80
+h 96
 lineColor index 14
 fill
 fillColor index 4
@@ -675,7 +675,7 @@ release 0
 x 112
 y 320
 w 88
-h 24
+h 22
 fgColor index 14
 onColor index 4
 offColor index 3
@@ -715,7 +715,7 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 352
+x 304
 y 320
 w 56
 h 20
@@ -744,7 +744,7 @@ major 4
 minor 6
 release 0
 x 96
-y 352
+y 376
 w 32
 h 16
 controlPv "$(device):BUN:PHASE"
@@ -770,8 +770,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 224
-y 352
+x 64
+y 432
 w 32
 h 16
 controlPv "$(device):TRG:RAWPHASE"
@@ -790,47 +790,14 @@ objType "monitors"
 noExecuteClipMask
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 8
-y 296
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "Synchronisation"
-}
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 296
-w 120
-h 16
-lineColor index 14
-fillColor index 0
-endObjectProperties
-
 # (Menu Button)
 object activeMenuButtonClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 344
-y 352
+x 360
+y 344
 w 64
 h 24
 fgColor index 14
@@ -848,16 +815,16 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 272
+x 320
 y 352
-w 65
-h 14
+w 32
+h 16
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "ADC skew:"
+  "ADC:"
 }
 autoSize
 endObjectProperties
@@ -868,7 +835,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 272
+x 224
 y 328
 w 70
 h 14
@@ -889,7 +856,7 @@ major 4
 minor 1
 release 1
 x 16
-y 352
+y 376
 w 74
 h 14
 font "helvetica-bold-r-12.0"
@@ -908,16 +875,16 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 136
-y 352
-w 85
+x 16
+y 432
+w 40
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Trigger phase:"
+  "Phase:"
 }
 autoSize
 endObjectProperties
@@ -1204,39 +1171,6 @@ value {
 autoSize
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 8
-y 392
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "Trigger Status"
-}
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 392
-w 120
-h 16
-lineColor index 14
-fillColor index 0
-endObjectProperties
-
 # (Message Button)
 object activeMessageButtonClass
 beginObjectProperties
@@ -1244,7 +1178,7 @@ major 4
 minor 1
 release 0
 x 336
-y 432
+y 448
 w 88
 h 24
 fgColor index 14
@@ -1266,8 +1200,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 96
-y 416
+x 256
+y 432
 w 88
 h 16
 controlPv "$(device):TRG:COUNT"
@@ -1293,16 +1227,16 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 16
-y 416
-w 64
+x 208
+y 432
+w 38
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Trig count:"
+  "Count:"
 }
 autoSize
 endObjectProperties
@@ -1314,7 +1248,7 @@ major 4
 minor 6
 release 0
 x 96
-y 440
+y 456
 w 72
 h 16
 controlPv "$(device):TRG:JITTER"
@@ -1341,7 +1275,7 @@ major 4
 minor 1
 release 1
 x 16
-y 440
+y 456
 w 73
 h 14
 font "helvetica-bold-r-12.0"
@@ -1361,7 +1295,7 @@ major 4
 minor 6
 release 0
 x 184
-y 440
+y 456
 w 88
 h 16
 controlPv "$(device):TRG:JITTERPC"
@@ -1388,7 +1322,7 @@ major 4
 minor 1
 release 1
 x 168
-y 440
+y 456
 w 7
 h 14
 font "helvetica-bold-r-12.0"
@@ -1407,8 +1341,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 288
-y 416
+x 144
+y 432
 w 56
 h 16
 controlPv "$(device):TRG:AGE"
@@ -1434,16 +1368,188 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 200
-y 416
-w 82
+x 112
+y 432
+w 26
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Trigger delay:"
+  "Age:"
+}
+autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 296
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):BUN:STATUS"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 408
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Trigger Status"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 408
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 136
+y 376
+w 44
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Status:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 192
+y 376
+w 96
+h 16
+controlPv "$(device):BUN:STATUS"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 5
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 112
+y 344
+w 88
+h 22
+fgColor index 14
+onColor index 4
+offColor index 3
+topShadowColor index 1
+botShadowColor index 14
+controlPv "$(device):BUN:RESET_S.PROC"
+pressValue "0"
+onLabel "Reset"
+offLabel "Reset"
+3d
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 24
+y 296
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Synchronisation"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 24
+y 296
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 352
+w 72
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Reset sync:"
 }
 autoSize
 endObjectProperties

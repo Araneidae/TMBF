@@ -22,7 +22,7 @@ Trigger('DDR:SHORT',
     Waveform('DDR:SHORTWF', SHORT_TURN_WF_LENGTH, 'SHORT',
         DESC = 'Short turn by turn waveform'))
 # Updating BUNCHSEL will always update BUNCHWF
-longOut('DDR:BUNCHSEL', 0, 935,
+longOut('DDR:BUNCHSEL', 0, BUNCHES_PER_TURN-1,
     FLNK = ddr_bunch_buffer,
     DESC = 'Select bunch for DDR readout')
 
