@@ -145,7 +145,7 @@ struct tmbf_config_space
     //  29:28   DDR input select (0 => ADC, 1 => DAC, 2 => FIR, 3 => 0)
     //  31:30   ACD input fine delay (2ns steps)
 
-    uint32_t nco_frequency;         //  3  Fixed NCO generator frequency
+    uint32_t latch_overflow;        //  3  Latch new overflow status
     union {                         //  4
         const uint32_t ddr_status;  // DDR status and offset
         //  23:0    Trigger offset into DDR buffer
@@ -163,30 +163,38 @@ struct tmbf_config_space
     uint32_t ddr_trigger_delay;     // 12  DDR Trigger delay control
     uint32_t buf_trigger_delay;     // 13  BUF Trigger delay control
     uint32_t trigger_blanking;      // 14  Trigger blanking length in turns
-    uint32_t unused_15;             // 15
+    uint32_t unused_15;             // 15   (unused)
     uint32_t unused_16;             // 16   (unused)
     uint32_t fir_write;             // 17  Write FIR coefficients
-    uint32_t unused_18;             // 18    (unused)
+    uint32_t unused_18;             // 18   (unused)
     uint32_t bunch_write;           // 19  Write bunch configuration
     uint32_t adc_minmax_read;       // 20  Read ADC min/max data
     uint32_t dac_minmax_read;       // 21  Read DAC min/max data
     uint32_t unused_22;             // 22    (unused)
     uint32_t sequencer_write;       // 23  Write sequencer data
-    uint32_t unused_24;             // 24    (unused)
-    uint32_t unused_25;             // 25    (unused)
-    uint32_t latch_overflow;        // 26  Latch new overflow status
-    uint32_t ftune_control;         // 27  Tune following master control
-    // For writing supports the following fields:
-    //  15:0    Dwell time in turns
-    //  16      Blanking enable
-    //  17      Multibunch enable
-    //  19:18   Channel selection
-    //  27:20   Single bunch selection
-    //  28      Input selection
-    //  31:29   Detector gain
-    // For reading returns the following fields:
-    //  ..
-    uint32_t ftune_readout;         // 28  Tune following readout
+    union {                         // 24
+        const uint32_t ftune_status;    // Tune following status
+        // Status bits:
+        //  0       Set if integrated frequency out of range
+        //  1       Set if signal magnitude too small
+        //  2       Set on detector output overflow
+        //  3       Set on detector accumulator overflow
+        //  4       Set on FIR input overflow
+        //  5       Set if tune following feedback running
+        //  7:6     (unused)
+        //  12:8    Zero when feedback running, set to a copy of bits 4:0 when
+        //          feedback halted.
+        uint32_t ftune_control;         // 24  Tune following master control
+        // For writing supports the following fields:
+        //  15:0    Dwell time in turns
+        //  16      Blanking enable
+        //  17      Multibunch enable
+        //  19:18   Channel selection
+        //  27:20   Single bunch selection
+        //  28      Input selection
+        //  31:29   Detector gain
+    };
+    uint32_t ftune_readout;         // 25  Tune following readout
     // For writing supports these fields:
     //  17:0    Target phase
     //  20:18   IIR scaling
@@ -195,9 +203,12 @@ struct tmbf_config_space
     //  17:0    Frequency offset
     //  30:21   Number of samples in buffer (including value being read)
     //  31      Set of FIFO overflow has occurred
-    uint32_t ftune_scaling;         // 29  Tune following feedback scaling
-    uint32_t ftune_min_magnitude;   // 30  Magnitude threshold for feedback
-    uint32_t ftune_max_offset;      // 31  Frequency offset limit for feedback
+    uint32_t ftune_scaling;         // 26  Tune following feedback scaling
+    uint32_t ftune_min_magnitude;   // 27  Magnitude threshold for feedback
+    uint32_t ftune_max_offset;      // 28  Frequency offset limit for feedback
+    uint32_t nco_frequency;         // 29  Fixed NCO generator frequency
+    uint32_t unused_30;             // 30    (unused)
+    uint32_t unused_31;             // 31    (unused)
 };
 
 /* These two pointers directly overlay the FF memory. */
@@ -697,7 +708,7 @@ void hw_write_ftun_stop(void)
 
 void hw_read_ftun_status(bool *status)
 {
-    uint32_t status_word = config_space->ftune_control;
+    uint32_t status_word = config_space->ftune_status;
     for (int i = 0; i < FTUN_BIT_COUNT; i ++)
         status[i] = (status_word >> i) & 1;
 }
