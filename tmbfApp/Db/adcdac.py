@@ -46,7 +46,7 @@ mbbOut('ADC:DELAY', '0 ns', '2 ns', '4 ns', '6 ns', DESC = 'Input skew')
 
 minmax_pvs('DAC')
 longOut('DAC:DELAY', 0, BUNCHES_PER_TURN-1, DESC = 'DAC output delay')
-mbbOut('DAC:ENABLE', 'Off', 'On', DESC = 'DAC output enable')
+boolOut('DAC:ENABLE', 'Off', 'On', ZSV = 'MAJOR', DESC = 'DAC output enable')
 
 WaveformOut('DAC:PREEMPH', 3, 'SHORT', DESC = 'DAC output pre-emphasis')
 mbbOut('DAC:PREEMPH:DELAY', '-2 ns', '0 ns', '+2 ns',

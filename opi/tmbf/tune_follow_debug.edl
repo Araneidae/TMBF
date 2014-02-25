@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 670
-y 95
+x 2533
+y 36
 w 649
 h 601
 font "helvetica-medium-r-18.0"
@@ -302,6 +302,7 @@ plotUpdateMode {
 }
 ySigned {
   0 1
+  1 1
 }
 plotColor {
   0 index 25

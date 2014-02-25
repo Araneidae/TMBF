@@ -20,7 +20,7 @@
 #include "tune_follow.h"
 
 
-#define FTUN_FREQ_LENGTH 1024
+#define FTUN_FREQ_LENGTH 4096
 
 
 /* Control parameters written through EPICS. */
@@ -65,7 +65,20 @@ static int freq_scaling_shift;
 /* Status readback data. */
 static bool status_array[FTUN_BIT_COUNT];
 static double current_angle;
+static double delta_angle;
 static int current_magnitude;
+
+/* Running status.  This is set under a lock when starting tune following and
+ * updated, also under the same lock, when the status array above is read.  This
+ * is used to ensure we read a complete buffer at the end of a run. */
+static bool ftun_running;
+static bool ftun_stopped;   // Used to trigger final buffer update
+static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
+#define LOCK_RUNNING()      pthread_mutex_lock(&running_mutex)
+#define UNLOCK_RUNNING()    pthread_mutex_unlock(&running_mutex)
+
+/* Frequency dependent phase offset adjustment. */
+static double adc_loop_delay = 1;
 
 
 void update_tune_follow_debug(const int *buffer_raw)
@@ -110,8 +123,29 @@ static void write_ftun_control(void)
 static void write_ftun_start(void)
 {
     hw_write_nco_freq(nco_freq);
+
+    LOCK_RUNNING();
+    ftun_running = true;
     hw_write_ftun_start();
+    UNLOCK_RUNNING();
 }
+
+
+#if 0
+/* Computes compensated delay (in bunches) from user entered loop delay (in
+ * turns together with input specific delay. */
+static int compute_delay(void)
+{
+    int adc_delay, fir_delay;
+    hw_read_ftun_delays(&adc_delay, &fir_delay);
+    int delay =
+        ftun_control.input_select == FTUN_IN_ADC ? adc_delay : fir_delay;
+    /* Just as for the detector, we treat ADC and FIR delays differently. */
+    if (ftun_control.input_select == FTUN_IN_ADC)
+        delay += (int) round(BUNCHES_PER_TURN * adc_loop_delay);
+    return delay;
+}
+#endif
 
 
 static void write_nco_freq(double tune)
@@ -126,16 +160,46 @@ static double read_nco_freq(void)
     return BUNCHES_PER_TURN / pow(2, 32) * hw_read_nco_freq();
 }
 
+
 static void read_ftun_status(void)
 {
+    LOCK_RUNNING();
     hw_read_ftun_status(status_array);
+    /* On transition from running to stopped set the ftun_stopped flag to
+     * trigger a flush of the read buffer. */
+    if (ftun_running  &&  !status_array[FTUN_STAT_RUNNING])
+        ftun_stopped = true;
+    ftun_running = status_array[FTUN_STAT_RUNNING];
+    UNLOCK_RUNNING();
+
     int angle;
     hw_read_ftun_angle_mag(&angle, &current_magnitude);
     current_angle = 360.0 / pow(2, 18) * angle;
+    int delta = ((angle - ftun_control.target_phase) << 14) >> 14;
+    delta_angle = 360.0 / pow(2, 18) * delta;
 }
 
 
-static void process_ftun_buffer(int *buffer, size_t read_count, bool dropout)
+static void update_ftun_buffer(void)
+{
+    interlock_wait(ftun_interlock);
+    memcpy(raw_freq_wf, freq_wf_buffer, FTUN_FREQ_LENGTH * sizeof(int));
+    for (size_t i = 0; i < buffer_wf_length; i ++)
+        fixed_to_single(nco_freq_fraction + freq_wf_buffer[i],
+            &freq_wf[i], freq_scaling, freq_scaling_shift);
+    for (size_t i = buffer_wf_length; i < FTUN_FREQ_LENGTH; i ++)
+        freq_wf[i] = freq_wf[buffer_wf_length - 1];
+    data_dropout = dropout_seen;
+    interlock_signal(ftun_interlock, NULL);
+
+    buffer_wf_length = 0;
+
+    dropout_seen = false;
+}
+
+
+static void process_ftun_buffer(
+    int *buffer, size_t read_count, bool dropout, bool empty)
 {
     /* Copy what we can to the raw buffer. */
     size_t copied = FTUN_FREQ_LENGTH - buffer_wf_length;
@@ -148,20 +212,9 @@ static void process_ftun_buffer(int *buffer, size_t read_count, bool dropout)
         dropout_seen = true;
 
     /* If the raw buffer is full then we can transfer it and update. */
-    if (buffer_wf_length == FTUN_FREQ_LENGTH)
-    {
-        interlock_wait(ftun_interlock);
-        memcpy(raw_freq_wf, freq_wf_buffer, FTUN_FREQ_LENGTH * sizeof(int));
-        for (size_t i = 0; i < FTUN_FREQ_LENGTH; i ++)
-            fixed_to_single(nco_freq_fraction + freq_wf_buffer[i],
-                &freq_wf[i], freq_scaling, freq_scaling_shift);
-        data_dropout = dropout_seen;
-        interlock_signal(ftun_interlock, NULL);
-
-        buffer_wf_length = 0;
-
-        dropout_seen = false;
-    }
+    if (buffer_wf_length == FTUN_FREQ_LENGTH  ||
+            (!ftun_running  &&  buffer_wf_length > 0  &&  empty))
+        update_ftun_buffer();
 
     /* Copy any residue into the raw buffer. */
     size_t residue = read_count - copied;
@@ -176,11 +229,18 @@ static void *poll_tune_follow(void *context)
     {
         int ftun_buffer[FTUN_FIFO_SIZE];
         bool dropout;
-        size_t read_count = hw_read_ftun_buffer(ftun_buffer, &dropout);
-        if (read_count > 0)
-            process_ftun_buffer(ftun_buffer, read_count, dropout);
+        bool empty;
+        size_t read_count = hw_read_ftun_buffer(ftun_buffer, &dropout, &empty);
 
-        usleep(100000); // 10 Hz polling
+        LOCK_RUNNING();
+        bool stopped = ftun_stopped;
+        ftun_stopped = false;
+        UNLOCK_RUNNING();
+
+        if (read_count > 0  ||  stopped)
+            process_ftun_buffer(ftun_buffer, read_count, dropout, empty);
+
+        usleep(50000); // 20 Hz polling
     }
     return NULL;
 }
@@ -207,6 +267,8 @@ bool initialise_tune_follow(void)
     PUBLISH_WRITE_VAR_P(longout, "FTUN:SCALE",  ftun_control.feedback_scale);
     PUBLISH_WRITE_VAR_P(longout, "FTUN:MINMAG", ftun_control.min_magnitude);
     PUBLISH_WRITE_VAR_P(ao,      "FTUN:MAXDELTA", max_offset);
+
+    PUBLISH_WRITE_VAR_P(ao,      "FTUN:LOOP:ADC", adc_loop_delay);
 
     /* Tune following action. */
     PUBLISH_ACTION("FTUN:START", write_ftun_start);
@@ -242,6 +304,7 @@ bool initialise_tune_follow(void)
     PUBLISH_READ_VAR(bi, "FTUN:STOP:VAL", status_array[FTUN_STOP_VAL]);
     PUBLISH_READ_VAR(bi, "FTUN:ACTIVE", status_array[FTUN_STAT_RUNNING]);
     PUBLISH_READ_VAR(ai, "FTUN:ANGLE", current_angle);
+    PUBLISH_READ_VAR(ai, "FTUN:ANGLEDELTA", delta_angle);
     PUBLISH_READ_VAR(longin, "FTUN:MAG", current_magnitude);
 
     /* NCO control. */

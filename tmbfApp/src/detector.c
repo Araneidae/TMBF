@@ -79,7 +79,6 @@ static int rotate_Q[TUNE_LENGTH];   // 2**30 * sin(phase)
 static uint32_t wf_scaling;
 static int wf_shift;
 
-static int compensated_delay;       // Compensated delay in bunches
 static unsigned int detector_input; // FIR or ADC, affects compensated delay
 
 
@@ -125,19 +124,20 @@ unsigned int tune_to_freq(double tune)
 }
 
 
-/* Computes compensated_delay (in bunches) from user entered loop delay (in
+/* Computes compensated delay (in bunches) from user entered loop delay (in
  * turns together with input specific delay. */
-static void compute_delay(void)
+static int compute_delay(void)
 {
     int adc_delay, fir_delay;
     hw_read_det_delays(&adc_delay, &fir_delay);
-    compensated_delay = detector_input == DET_IN_ADC ? adc_delay : fir_delay;
+    int delay = detector_input == DET_IN_ADC ? adc_delay : fir_delay;
     /* In ADC input mode we compensate for the overall configured loop delay
      * because what we want is a measurement of the machine in isolation.  In
      * FIR input mode, however, we're interested in the closed loop system
      * response so we ignore this. */
     if (detector_input == DET_IN_ADC)
-        compensated_delay += (int) round(BUNCHES_PER_TURN * adc_loop_delay);
+        delay += (int) round(BUNCHES_PER_TURN * adc_loop_delay);
+    return delay;
 }
 
 static void unsigned_fixed_to_double(
@@ -146,11 +146,11 @@ static void unsigned_fixed_to_double(
     *result = ldexp((double) input * scaling, scaling_shift);
 }
 
-static void store_one_tune_freq(unsigned int freq, int ix)
+static void store_one_tune_freq(int delay, unsigned int freq, int ix)
 {
     unsigned_fixed_to_double(
         freq, &sweep_info.tune_scale[ix], wf_scaling, wf_shift);
-    cos_sin(-freq * compensated_delay, &rotate_I[ix], &rotate_Q[ix]);
+    cos_sin(-freq * delay, &rotate_I[ix], &rotate_Q[ix]);
 }
 
 /* Computes frequency scale directly from sequencer settings.  Triggered
@@ -158,7 +158,7 @@ static void store_one_tune_freq(unsigned int freq, int ix)
 static void update_det_scale(
     unsigned int state, const struct seq_entry *sequencer_table)
 {
-    compute_delay();
+    int delay = compute_delay();
 
     int ix = 0;
     int total_time = 0;     // Accumulates captured timebase
@@ -176,7 +176,7 @@ static void update_det_scale(
             for (unsigned int i = 0;
                  i < entry->capture_count  &&  ix < TUNE_LENGTH; i ++, ix ++)
             {
-                store_one_tune_freq(f0, ix);
+                store_one_tune_freq(delay, f0, ix);
                 f0 += entry->delta_freq;
                 total_time += dwell_time;
                 timebase[ix] = total_time;
@@ -193,10 +193,9 @@ static void update_det_scale(
      * anything that goes here is invalid. */
     for ( ; ix < TUNE_LENGTH; ix ++)
     {
-        store_one_tune_freq(f0, ix);
+        store_one_tune_freq(delay, f0, ix);
         timebase[ix] = total_time;
     }
-
 
     tune_scale_needs_refresh = false;
 }
@@ -233,8 +232,8 @@ static void extract_iq(
 {
     for (int i = 0; i < sweep_info.sweep_length; i ++)
     {
-        int raw_I = buffer_high[4 * i + channel];
-        int raw_Q = buffer_low[4 * i + channel];
+        int raw_I = buffer_low[4 * i + channel];
+        int raw_Q = buffer_high[4 * i + channel];
         if (abs(raw_I) > *abs_max)  *abs_max = abs(raw_I);
         if (abs(raw_Q) > *abs_max)  *abs_max = abs(raw_Q);
 

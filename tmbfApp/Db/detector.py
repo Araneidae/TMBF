@@ -63,5 +63,5 @@ boolOut('DET:RESET_WIN', FLNK = det_window, PINI = 'YES',
     DESC = 'Reset detector window to Hamming')
 
 # Total loop delay in turns.
-aOut('DET:LOOP:ADC', 1,
+aOut('DET:LOOP:ADC',
     EGU = 'turns', PREC = 1, DESC = 'Closed loop delay in turns')

@@ -46,6 +46,11 @@ static int DET_FIR_OFFSET;      // Offset of detector FIR bunch zero
 static int DET_ADC_DELAY;       // Group delay to detector for ADC
 static int DET_FIR_DELAY;       // Group delay to detector for FIR
 
+static int FTUN_ADC_OFFSET;     // Offset of tune following ADC bunch zero
+static int FTUN_FIR_OFFSET;     // Offset of tune following FIR bunch zero
+static int FTUN_ADC_DELAY;      // Group delay to FTUN detector for ADC
+static int FTUN_FIR_DELAY;      // Group delay to FTUN detector for FIR
+
 static const struct config_entry hardware_config_defs[] = {
     CONFIG(DDR_ADC_DELAY),
     CONFIG(DDR_FIR_DELAY),
@@ -66,6 +71,11 @@ static const struct config_entry hardware_config_defs[] = {
     CONFIG(DET_FIR_OFFSET),
     CONFIG(DET_ADC_DELAY),
     CONFIG(DET_FIR_DELAY),
+
+    CONFIG(FTUN_ADC_OFFSET),
+    CONFIG(FTUN_FIR_OFFSET),
+    CONFIG(FTUN_ADC_DELAY),
+    CONFIG(FTUN_FIR_DELAY),
 };
 
 static const char *hardware_config_file;
@@ -391,7 +401,7 @@ void hw_read_dac_minmax(
     read_minmax(10, &config_space->dac_minmax_read, MINMAX_DAC_DELAY, min, max);
 }
 
-void hw_write_dac_enable(unsigned int enable)
+void hw_write_dac_enable(bool enable)
 {
     WRITE_CONTROL_BITS(0, 1, enable);
 }
@@ -646,12 +656,18 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay)
 
 void hw_write_ftun_control(struct ftun_control *control)
 {
+    int offset = control->input_select ? FTUN_FIR_OFFSET : FTUN_ADC_OFFSET;
+    int channel = control->bunch & 3;
+    int bunch = subtract_offset(
+        control->bunch >> 2, offset, BUNCHES_PER_TURN/4);
+
     LOCK();
     config_space->ftune_control =
         ((control->dwell - 1) & 0xFFFF) |       // bits 15:0
         control->blanking << 16 |               //      16
         control->multibunch << 17 |             //      17
-        (control->bunch & 0x3FF) << 18 |        //      27:18
+        (channel & 3) << 18 |                   //      19:18
+        (bunch & 0xFF) << 20 |                  //      27:20
         (control->input_select & 0x1) << 28 |   //      28
         (control->det_gain & 0x7) << 29;        //      31:29
     config_space->ftune_readout =
@@ -688,27 +704,37 @@ void hw_read_ftun_angle_mag(int *angle, int *magnitude)
     *magnitude = angle_mag & 0xFFFF;
 }
 
-size_t hw_read_ftun_buffer(int buffer[FTUN_FIFO_SIZE], bool *dropout)
+size_t hw_read_ftun_buffer(
+    int buffer[FTUN_FIFO_SIZE], bool *dropout, bool *empty)
 {
-    /* Each word read has the following bit fields:
-     *  17:0    Payload (current frequency offset)
-     *  30:21   Words remaining in FIFO
-     *  31      Set if FIFO overrun detected. */
-    uint32_t word = config_space->ftune_readout;
-    size_t read_count = (word >> 21) & 0x3FF;
-    bool dropout_flag = word >> 31;
-    buffer[0] = (int) (word << 14) >> 14;
-
-    /* Simply empty the FIFO as it was when we came. */
-    for (size_t i = 1; i < read_count; i ++)
+    /* Read until the FIFO is empty or our buffer is full. */
+    bool dropout_flag = false;
+    size_t read_count = 0;
+    size_t fifo_entries;
+    for (; read_count < FTUN_FIFO_SIZE; read_count ++)
     {
-        word = config_space->ftune_readout;
+        /* Each word read has the following bit fields:
+         *  17:0    Payload (current frequency offset)
+         *  30:21   Words remaining in FIFO
+         *  31      Set if FIFO overrun detected. */
+        uint32_t word = config_space->ftune_readout;
         dropout_flag |= word >> 31;
-        buffer[i] = (int) (word << 14) >> 14;
+        fifo_entries = (word >> 21) & 0x3FF;
+        if (fifo_entries)
+            buffer[read_count] = (int) (word << 14) >> 14;
+        else
+            break;
     }
 
     *dropout = dropout_flag;
+    *empty = fifo_entries <= 1;
     return read_count;
+}
+
+void hw_read_ftun_delays(int *adc_delay, int *fir_delay)
+{
+    *adc_delay = FTUN_ADC_DELAY;
+    *fir_delay = FTUN_FIR_DELAY;
 }
 
 

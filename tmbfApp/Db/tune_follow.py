@@ -2,7 +2,7 @@
 
 from common import *
 
-FTUN_FREQ_LENGTH = 1024
+FTUN_FREQ_LENGTH = 4096
 
 MAX_DELTA_FREQ = (2**17 - 1) * 2**-32 * 936
 
@@ -12,7 +12,7 @@ ForwardLink('FTUN:CONTROL', 'Update tune follow control settings',
     longOut('FTUN:BUNCH', 0, BUNCHES_PER_TURN-1, DESC = 'Tune following bunch'),
     boolOut('FTUN:BLANKING', 'Off', 'Blanking',
         DESC = 'Respect blanking trigger'),
-    boolOut('FTUN:MULTIBUNCH', 'Single Bunch', 'Multi-Bunch',
+    boolOut('FTUN:MULTIBUNCH', 'Single Bunch', 'All Bunches',
         DESC = 'Tune following bunch mode'),
     mbbOut('FTUN:INPUT', 'ADC', 'FIR', DESC = 'Tune following input selection'),
     mbbOut('FTUN:GAIN',
@@ -25,6 +25,10 @@ ForwardLink('FTUN:CONTROL', 'Update tune follow control settings',
     longOut('FTUN:MINMAG', 0, (1<<15)-1, DESC = 'Minimum signal magnitude'),
     aOut('FTUN:MAXDELTA', 0, MAX_DELTA_FREQ, 'tune', 6,
         DESC = 'Maximum frequency deviation to follow'))
+
+aOut('FTUN:LOOP:ADC',
+    EGU = 'turns', PREC = 1, DESC = 'Closed loop delay in turns')
+
 
 Action('FTUN:START', DESC = 'Start tune following')
 Action('FTUN:STOP', DESC = 'Stop tune following')
@@ -79,6 +83,8 @@ Action('FTUN:STAT:SCAN',
         # Current position and angle readout
         aIn('FTUN:ANGLE', -180, 180, 'deg', 6,
             DESC = 'Current angle from detector'),
+        aIn('FTUN:ANGLEDELTA', -180, 180, 'deg', 6,
+            DESC = 'Relative angle from detector'),
         longIn('FTUN:MAG', 0, 65535, DESC = 'Current magnitude from detector')
     ))
 

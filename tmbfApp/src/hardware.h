@@ -92,7 +92,7 @@ void hw_read_dac_minmax(
     short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN]);
 
 /* Output enable. */
-void hw_write_dac_enable(unsigned int enable);
+void hw_write_dac_enable(bool enable);
 
 /* Output delay in 2ns steps up to 1023 steps for DAC delay and output delay
  * from 0 to 2 (in 2ns steps) for preemphasis filter. */
@@ -206,6 +206,8 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay);
 
 #define FTUN_FIFO_SIZE  1023
 
+enum { FTUN_IN_ADC = 0, FTUN_IN_FIR = 1 };
+
 struct ftun_control {
     int dwell;                  // Dwell time in turns
     bool blanking;              // Blanking enable
@@ -254,8 +256,11 @@ void hw_read_ftun_angle_mag(int *angle, int *magnitude);
 /* Reads up to FTUN_FIFO_SIZE words from the FTUN FIFO into buffer.  Sets the
  * dropout flag if the FTUN buffer overflowed and returns the number of words
  * read. */
-size_t hw_read_ftun_buffer(int buffer[FTUN_FIFO_SIZE], bool *dropout);
+size_t hw_read_ftun_buffer(
+    int buffer[FTUN_FIFO_SIZE], bool *dropout, bool *empty);
 
+/* Returns ADC and FIR detector delays. */
+void hw_read_ftun_delays(int *adc_delay, int *fir_delay);
 
 /* * * * * * * * * * * * * * * * * * * * * */
 /* SEQ: Programmed Bunch and Sweep Control */

@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 54
-y 54
+x 453
+y 40
 w 672
 h 593
 font "helvetica-medium-r-18.0"
@@ -347,7 +347,7 @@ nPts 2
 showXAxis
 xAxisSrc "fromUser"
 xMin 0
-xMax 1024
+xMax 4096
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -412,8 +412,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 200
-y 528
+x 16
+y 552
 w 59
 h 14
 font "helvetica-bold-r-12.0"
@@ -460,8 +460,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 272
-y 528
+x 88
+y 552
 w 96
 h 22
 fgColor index 14
@@ -570,7 +570,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 232
+x 224
 y 408
 w 61
 h 14
@@ -618,7 +618,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 232
+x 224
 y 384
 w 43
 h 14
@@ -666,7 +666,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 232
+x 224
 y 296
 w 60
 h 14
@@ -714,7 +714,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 232
+x 224
 y 320
 w 62
 h 14
@@ -762,7 +762,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 232
+x 224
 y 344
 w 72
 h 14
@@ -783,7 +783,7 @@ major 4
 minor 1
 release 0
 x 16
-y 448
+y 464
 w 80
 h 22
 fgColor index 14
@@ -805,8 +805,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 88
-y 560
+x 200
+y 528
 w 80
 h 16
 controlPv "$(device):NCO:FREQ"
@@ -1222,8 +1222,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 104
-y 472
+x 96
+y 448
 w 80
 h 16
 controlPv "$(device):FTUN:ACTIVE"
@@ -1246,10 +1246,10 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 24
-y 472
-w 72
-h 16
+x 16
+y 448
+w 69
+h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -1290,10 +1290,10 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 232
+x 224
 y 440
-w 40
-h 16
+w 36
+h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -1311,7 +1311,7 @@ major 4
 minor 6
 release 0
 x 312
-y 464
+y 472
 w 80
 h 16
 controlPv "$(device):FTUN:MAG"
@@ -1334,10 +1334,10 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 232
-y 464
-w 64
-h 16
+x 224
+y 472
+w 65
+h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -1355,7 +1355,7 @@ major 4
 minor 1
 release 0
 x 104
-y 448
+y 464
 w 80
 h 22
 fgColor index 14
@@ -1492,6 +1492,50 @@ bgColor index 0
 useDisplayBg
 value {
   "Reason for stopping"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 312
+y 456
+w 80
+h 16
+controlPv "$(device):FTUN:ANGLEDELTA"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 224
+y 456
+w 69
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Angle delta:"
 }
 autoSize
 endObjectProperties

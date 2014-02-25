@@ -239,6 +239,21 @@ def search_det_bunch(tmbf, det_power, source):
 
     return binary_search(0, BUNCH_COUNT, test)
 
+def search_ftun_bunch(tmbf, mag, source):
+    tmbf.set('FTUN:INPUT_S', source)
+
+    outwf = numpy.zeros(BUNCH_COUNT)
+
+    def test(start, end):
+        outwf[:start] = DAC_OUT.OFF
+        outwf[start:end] = DAC_OUT.NCO
+        outwf[end:] = DAC_OUT.OFF
+        tmbf.set('BUN:0:OUTWF_S', outwf)
+
+        return mag.get_new(0.3) > 0
+
+    return binary_search(0, BUNCH_COUNT, test)
+
 
 # Computes group delay from scaled IQ.
 def compute_group_delay(scale, iq):
@@ -263,6 +278,18 @@ def search_det_delay(tmbf, det_i, det_q, source):
     configure.fire_and_wait(tmbf, False, True, True)
     scale = tmbf.get('DET:SCALE')
     iq = numpy.dot([1, 1j], [det_i.get(), det_q.get()])
+    return compute_group_delay(scale, iq)
+
+
+def search_ftun_delay(tmbf, angle, source):
+    tmbf.set('FTUN:INPUT_S', source)
+
+    scale = 10.1 + 0.01 * numpy.arange(20)
+    angles = numpy.zeros(len(scale))
+    for n, f in enumerate(scale):
+        tmbf.set('NCO:FREQ_S', f)
+        angles[n] = angle.get_new(0.3)
+    iq = numpy.exp(1j * numpy.pi * angles / 180.)
     return compute_group_delay(scale, iq)
 
 
@@ -406,28 +433,63 @@ def measure_detector_delay(tmbf, results):
     det_q.close()
 
 
+def measure_tune_follow_bunch(tmbf, results):
+    print >>sys.stderr, 'Measuring Tune Follow Bunch Offset'
+
+    configure.fir_wf(tmbf, 0, 32767)
+    configure.bank(tmbf, 0, DAC_OUT.MAX_GAIN, 0, DAC_OUT.SWEEP)
+
+    tmbf.set('FTUN:DWELL_S', 10)
+    tmbf.set('FTUN:BUNCH_S', 0)
+    tmbf.set('FTUN:MULTIBUNCH_S', 'Single Bunch')
+    tmbf.set('FTUN:GAIN_S', '-24dB')
+    tmbf.set('FTUN:BLANKING_S', 'Off')
+
+    mag = tmbf.PV('FTUN:MAG')
+    results.FTUN_ADC_OFFSET = search_ftun_bunch(tmbf, mag, 'ADC')
+    results.FTUN_FIR_OFFSET = search_ftun_bunch(tmbf, mag, 'FIR')
+    mag.close()
+
+
+def measure_tune_follow_delay(tmbf, results):
+    configure.fir_wf(tmbf, 0, 32767)
+    configure.bank(tmbf, 0, DAC_OUT.MAX_GAIN, 0, DAC_OUT.NCO)
+
+    tmbf.set('FTUN:DWELL_S', 100)
+    tmbf.set('FTUN:BUNCH_S', 0)
+    tmbf.set('FTUN:MULTIBUNCH_S', 'All Bunches')
+    tmbf.set('FTUN:GAIN_S', '-48dB')
+    tmbf.set('FTUN:BLANKING_S', 'Off')
+    tmbf.set('NCO:GAIN_S', '-36dB')
+
+    angle = tmbf.PV('FTUN:ANGLE')
+    results.set('FTUN_ADC_DELAY', search_ftun_delay(tmbf, angle, 'ADC'))
+    results.set('FTUN_FIR_DELAY', search_ftun_delay(tmbf, angle, 'FIR') - 936)
+    angle.close()
+
+
 # ------------------------------------------------------------------------------
 
+import argparse
+parser = argparse.ArgumentParser(description = 'Measure internal TMBF delays')
+parser.add_argument('-t', '--test', action = 'store_true',
+    help = 'Verify current delays')
+parser.add_argument('tmbf', nargs = '?', default = 'TS-DI-TMBF-01',
+    help = 'TMBF machine name to test')
+args = parser.parse_args()
 
-if len(sys.argv) > 1:
-    tmbf_name = sys.argv[1]
-else:
-    tmbf_name = 'TS-DI-TMBF-01'
 
-
-tmbf = configure.TMBF(tmbf_name)
+tmbf = configure.TMBF(args.tmbf)
 results = Results()
 
-
-compensate = len(sys.argv) > 2
-
-
-configure_timing_test(tmbf, compensate)
+configure_timing_test(tmbf, args.test)
 
 measure_maxbuf(tmbf, results)
 measure_buf(tmbf, results)
 measure_ddr(tmbf, results)
 measure_detector_bunch(tmbf, results)
 measure_detector_delay(tmbf, results)
+measure_tune_follow_bunch(tmbf, results)
+measure_tune_follow_delay(tmbf, results)
 
 results.print_results()

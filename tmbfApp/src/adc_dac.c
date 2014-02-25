@@ -138,7 +138,7 @@ bool initialise_adc_dac(void)
     adc_skew_pv = PUBLISH_WRITER_P(mbbo, "ADC:DELAY", write_adc_skew);
 
     /* Direct register control for DAC. */
-    PUBLISH_WRITER_P(mbbo, "DAC:ENABLE", hw_write_dac_enable);
+    PUBLISH_WRITER_P(bo, "DAC:ENABLE", hw_write_dac_enable);
     PUBLISH_WRITER_P(ulongout, "DAC:DELAY", write_dac_delay);
 
     /* Pre-emphasis filter interface. */
