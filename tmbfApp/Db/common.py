@@ -30,8 +30,8 @@ def Trigger(prefix, *pvs):
         SCAN = 'I/O Intr', DESC = '%s processing trigger' % prefix,
         FLNK = create_fanout('%s:TRIG:FAN' % prefix, *pvs + (done,)))
 
-def ForwardLink(name, desc, *pvs):
-    action = Action(name, DESC = desc)
+def ForwardLink(name, desc, *pvs, **kargs):
+    action = Action(name, DESC = desc, **kargs)
     for pv in pvs:
         pv.FLNK = action
 

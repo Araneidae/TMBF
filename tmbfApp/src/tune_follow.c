@@ -28,6 +28,12 @@ static struct ftun_control ftun_control;
 static double target_phase;
 static double max_offset;
 
+/* IIR time constants. */
+static double filter_iir_tc;
+static double mag_iir_tc;
+static double angle_iir_tc;
+static double freq_iir_tc;
+
 /* Tune following. */
 static struct epics_interlock *ftun_interlock;
 /* The following buffers and state are needed to properly fill freq_wf and
@@ -36,6 +42,7 @@ static float freq_wf[FTUN_FREQ_LENGTH];         // Tune fraction PV
 static int raw_freq_wf[FTUN_FREQ_LENGTH];       // Raw integer version of pv
 static int freq_wf_buffer[FTUN_FREQ_LENGTH];    // Data in process of being read
 static size_t buffer_wf_length;                 // Number of samples in buffer
+static double mean_nco_frequency;
 /* Data dropout detection if FTUN FIFO overruns. */
 static bool dropout_seen;
 static bool data_dropout;
@@ -112,11 +119,27 @@ void update_tune_follow_debug(const int *buffer_raw)
 }
 
 
+static double update_iir_tc(unsigned int iir_rate, unsigned int interval)
+{
+    if (iir_rate == 0)
+        return 0;
+    else
+    {
+        double dwell_time = ftun_control.dwell / 533.830;   // One turn in ms
+        return dwell_time / -log(1 - 1./(1 << (iir_rate * interval)));
+    }
+}
+
 static void write_ftun_control(void)
 {
     ftun_control.target_phase = (int) round(pow(2, 18) / 360.0 * target_phase);
     ftun_control.max_offset = tune_to_freq(max_offset);
     hw_write_ftun_control(&ftun_control);
+
+    filter_iir_tc = update_iir_tc(ftun_control.iir_rate, 1);
+    mag_iir_tc    = update_iir_tc(ftun_control.mag_iir_rate, 2);
+    angle_iir_tc  = update_iir_tc(ftun_control.angle_iir_rate, 2);
+    freq_iir_tc   = update_iir_tc(ftun_control.freq_iir_rate, 2);
 }
 
 
@@ -157,7 +180,11 @@ static void write_nco_freq(double tune)
 
 static double read_nco_freq(void)
 {
-    return BUNCHES_PER_TURN / pow(2, 32) * hw_read_nco_freq();
+    int current_nco_freq = nco_freq;
+    int offset;
+    if (hw_read_ftun_frequency(&offset))
+        current_nco_freq += offset;
+    return BUNCHES_PER_TURN / pow(2, 32) * current_nco_freq;
 }
 
 
@@ -180,6 +207,15 @@ static void read_ftun_status(void)
 }
 
 
+static double compute_mean_frequency(void)
+{
+    double mean = 0;
+    for (size_t i = 0; i < buffer_wf_length; i ++)
+        mean += freq_wf[i];
+    return mean / buffer_wf_length;
+}
+
+
 static void update_ftun_buffer(void)
 {
     interlock_wait(ftun_interlock);
@@ -191,7 +227,7 @@ static void update_ftun_buffer(void)
         freq_wf[i] = freq_wf[buffer_wf_length - 1];
     data_dropout = dropout_seen;
     interlock_signal(ftun_interlock, NULL);
-
+    mean_nco_frequency = compute_mean_frequency();
     buffer_wf_length = 0;
 
     dropout_seen = false;
@@ -264,11 +300,21 @@ bool initialise_tune_follow(void)
     PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:GAIN",   ftun_control.det_gain);
     PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:IIR",    ftun_control.iir_rate);
     PUBLISH_WRITE_VAR_P(ao,      "FTUN:TARGET", target_phase);
-    PUBLISH_WRITE_VAR_P(longout, "FTUN:SCALE",  ftun_control.feedback_scale);
+    PUBLISH_WRITE_VAR_P(longout, "FTUN:KI",     ftun_control.i_scale);
+    PUBLISH_WRITE_VAR_P(longout, "FTUN:KP",     ftun_control.p_scale);
     PUBLISH_WRITE_VAR_P(longout, "FTUN:MINMAG", ftun_control.min_magnitude);
     PUBLISH_WRITE_VAR_P(ao,      "FTUN:MAXDELTA", max_offset);
+    PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:MAG:IIR", ftun_control.mag_iir_rate);
+    PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:ANGLE:IIR", ftun_control.angle_iir_rate);
+    PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:FREQ:IIR", ftun_control.freq_iir_rate);
 
     PUBLISH_WRITE_VAR_P(ao,      "FTUN:LOOP:ADC", adc_loop_delay);
+
+    /* IIR time constants updated when IIR controls set. */
+    PUBLISH_READ_VAR(ai, "FTUN:IIR:TC",         filter_iir_tc);
+    PUBLISH_READ_VAR(ai, "FTUN:MAG:IIR:TC",     mag_iir_tc);
+    PUBLISH_READ_VAR(ai, "FTUN:ANGLE:IIR:TC",   angle_iir_tc);
+    PUBLISH_READ_VAR(ai, "FTUN:FREQ:IIR:TC",    freq_iir_tc);
 
     /* Tune following action. */
     PUBLISH_ACTION("FTUN:START", write_ftun_start);
@@ -277,6 +323,7 @@ bool initialise_tune_follow(void)
     PUBLISH_READ_VAR(bi, "FTUN:FREQ:DROPOUT", data_dropout);
     PUBLISH_WF_READ_VAR(float, "FTUN:FREQ", FTUN_FREQ_LENGTH, freq_wf);
     PUBLISH_WF_READ_VAR(int, "FTUN:RAWFREQ", FTUN_FREQ_LENGTH, raw_freq_wf);
+    PUBLISH_READ_VAR(ai, "NCO:FREQ:MEAN", mean_nco_frequency);
     ftun_interlock = create_interlock("FTUN:TRIG", "FTUN:DONE", false);
 
     /* Debug PVs available when fast buffer in debug mode. */

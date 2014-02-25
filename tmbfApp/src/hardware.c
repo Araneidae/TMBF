@@ -203,11 +203,17 @@ struct tmbf_config_space
     //  17:0    Frequency offset
     //  30:21   Number of samples in buffer (including value being read)
     //  31      Set of FIFO overflow has occurred
-    uint32_t ftune_scaling;         // 26  Tune following feedback scaling
-    uint32_t ftune_min_magnitude;   // 27  Magnitude threshold for feedback
+    union {                         // 26
+        const uint32_t ftune_angle_mag; // Angle and magnitude readback
+        uint32_t ftune_i_scale;         // Tune following integral scaling
+    };
+    union {                         // 27
+        const uint32_t ftune_freq_offset;
+        uint32_t ftune_min_magnitude;   // Magnitude threshold for feedback
+    };
     uint32_t ftune_max_offset;      // 28  Frequency offset limit for feedback
     uint32_t nco_frequency;         // 29  Fixed NCO generator frequency
-    uint32_t unused_30;             // 30    (unused)
+    uint32_t ftune_p_scale;         // 30  Feedback proportional scale
     uint32_t unused_31;             // 31    (unused)
 };
 
@@ -589,11 +595,6 @@ void hw_write_nco_freq(uint32_t freq)
     config_space->nco_frequency = freq;
 }
 
-uint32_t hw_read_nco_freq(void)
-{
-    return config_space->nco_frequency;
-}
-
 void hw_write_nco_gain(unsigned int gain)
 {
     WRITE_CONTROL_BITS(16, 4, gain);
@@ -689,9 +690,14 @@ void hw_write_ftun_control(struct ftun_control *control)
     config_space->ftune_readout =
         (control->target_phase & 0x3FFFF) |     // bits 17:0
         (control->iir_rate & 0x7) << 18;        //      20:18
-    config_space->ftune_scaling = control->feedback_scale;
-    config_space->ftune_min_magnitude = control->min_magnitude;
+    config_space->ftune_i_scale = -control->i_scale;
+    config_space->ftune_min_magnitude =
+        (control->min_magnitude & 0xFFFF) |
+        (control->mag_iir_rate & 0x7) << 16 |
+        (control->angle_iir_rate & 0x7) << 19 |
+        (control->freq_iir_rate & 0x7) << 22;
     config_space->ftune_max_offset = control->max_offset;
+    config_space->ftune_p_scale = -control->p_scale;
     UNLOCK();
 }
 
@@ -715,9 +721,16 @@ void hw_read_ftun_status(bool *status)
 
 void hw_read_ftun_angle_mag(int *angle, int *magnitude)
 {
-    int angle_mag = config_space->ftune_scaling;
+    int angle_mag = config_space->ftune_angle_mag;
     *angle = (angle_mag >> 16) << 2;
     *magnitude = angle_mag & 0xFFFF;
+}
+
+bool hw_read_ftun_frequency(int *frequency)
+{
+    int freq_word = config_space->ftune_freq_offset;
+    *frequency = (freq_word << 14) >> 14;
+    return (freq_word >> 31) & 1;
 }
 
 size_t hw_read_ftun_buffer(

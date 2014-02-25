@@ -169,9 +169,6 @@ void hw_read_buf_data(
 /* Sets fixed NCO generator frequency. */
 void hw_write_nco_freq(uint32_t freq);
 
-/* Reads back current NCO generator frequency. */
-uint32_t hw_read_nco_freq(void);
-
 /* Sets fixed NCO generator output gain. */
 void hw_write_nco_gain(unsigned int gain);
 
@@ -220,9 +217,14 @@ struct ftun_control {
     unsigned int det_gain;      // Detector gain
     int target_phase;           // Target phase for feedback
     unsigned int iir_rate;      // IIR feedback factor (1-2^N)
-    int feedback_scale;         // Scaling factor from phase to frequency
+    int i_scale;                // Integral Scaling factor
+    int p_scale;                // Proportional scaling factor
     int min_magnitude;          // Minimum magnitude for feedback
     int max_offset;             // Maximum frequency offset for feedback
+
+    unsigned int mag_iir_rate;  // IIR rate for magnitude readback
+    unsigned int angle_iir_rate;
+    unsigned int freq_iir_rate;
 };
 
 /* Writes given settings to FTUN. */
@@ -258,6 +260,10 @@ void hw_read_ftun_status(bool status[FTUN_BIT_COUNT]);
 
 /* Reads snapshot of current angle and magnitude. */
 void hw_read_ftun_angle_mag(int *angle, int *magnitude);
+
+/* Reads current frequency offset.  Returns true if frequency offset active,
+ * false if NCO set to programmed frequency. */
+bool hw_read_ftun_frequency(int *frequency);
 
 /* Reads up to FTUN_FIFO_SIZE words from the FTUN FIFO into buffer.  Sets the
  * dropout flag if the FTUN buffer overflowed and returns the number of words

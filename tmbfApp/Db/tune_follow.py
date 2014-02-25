@@ -6,6 +6,9 @@ FTUN_FREQ_LENGTH = 4096
 
 MAX_DELTA_FREQ = (2**17 - 1) * 2**-32 * 936
 
+def IIR(count, step = 1):
+    return ['2^%d' % (n * step) for n in range(count)]
+
 # Tune following settings.
 ForwardLink('FTUN:CONTROL', 'Update tune follow control settings',
     longOut('FTUN:DWELL', 1, 1<<16, DESC = 'Tune following dwell time'),
@@ -17,14 +20,27 @@ ForwardLink('FTUN:CONTROL', 'Update tune follow control settings',
     mbbOut('FTUN:INPUT', 'ADC', 'FIR', DESC = 'Tune following input selection'),
     mbbOut('FTUN:GAIN',
         DESC = 'Tune following detector gain', *dBrange(8, -12)),
-    mbbOut('FTUN:IIR', DESC = 'IIR half life', *['2^%d' % n for n in range(8)]),
-    aOut('FTUN:TARGET', -180, 180, 'deg', 1,
+    mbbOut('FTUN:IIR', DESC = 'IIR half life', *IIR(8)),
+    aOut('FTUN:TARGET', -360, 360, 'deg', 1,
         DESC = 'Target phase for tune following'),
-    longOut('FTUN:SCALE', -(1<<17), (1<<17)-1,
-        DESC = 'Tune following feedback scale'),
+    longOut('FTUN:KI', -(1<<17), (1<<17)-1,
+        DESC = 'Tune following integral scale'),
+    longOut('FTUN:KP', -(1<<17), (1<<17)-1,
+        DESC = 'Tune following proportional scale'),
     longOut('FTUN:MINMAG', 0, (1<<15)-1, DESC = 'Minimum signal magnitude'),
     aOut('FTUN:MAXDELTA', 0, MAX_DELTA_FREQ, 'tune', 6,
-        DESC = 'Maximum frequency deviation to follow'))
+        DESC = 'Maximum frequency deviation to follow'),
+
+    mbbOut('FTUN:MAG:IIR', DESC = 'Magnitude readback IIR', *IIR(8, 2)),
+    mbbOut('FTUN:ANGLE:IIR', DESC = 'Angle readback IIR', *IIR(8, 2)),
+    mbbOut('FTUN:FREQ:IIR', DESC = 'Frequency readback IIR', *IIR(8, 2)),
+
+    FLNK = create_fanout('FTUN:IIR:FAN',
+        aIn('FTUN:IIR:TC', EGU = 'ms', PREC = 1),
+        aIn('FTUN:MAG:IIR:TC', EGU = 'ms', PREC = 1),
+        aIn('FTUN:ANGLE:IIR:TC', EGU = 'ms', PREC = 1),
+        aIn('FTUN:FREQ:IIR:TC', EGU = 'ms', PREC = 1))
+)
 
 aOut('FTUN:LOOP:ADC',
     EGU = 'turns', PREC = 1, DESC = 'Closed loop delay in turns')
@@ -56,7 +72,9 @@ Trigger('FTUN',
     Waveform('FTUN:FREQ', FTUN_FREQ_LENGTH, 'FLOAT',
         DESC = 'Tune following frequency'),
     Waveform('FTUN:RAWFREQ', FTUN_FREQ_LENGTH, 'LONG',
-        DESC = 'Tune following frequency (raw units)'))
+        DESC = 'Tune following frequency (raw units)'),
+    aIn('NCO:FREQ:MEAN', 0, BUNCHES_PER_TURN, 'tune', 5,
+        DESC = 'Mean NCO frequency'))
 
 # Status
 def status(name, desc):
@@ -92,6 +110,6 @@ Action('FTUN:STAT:SCAN',
 # Fixed NCO control
 aOut('NCO:FREQ', -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 5,
     DESC = 'Fixed NCO frequency')
-aIn('NCO:FREQ',  -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 5,
+aIn('NCO:FREQ',  0, BUNCHES_PER_TURN, 'tune', 5,
     DESC = 'Current fixed NCO frequency', SCAN = '.1 second')
 mbbOut('NCO:GAIN', DESC = 'Fixed NCO gain', *dBrange(14, -6) + ['Off'])

@@ -10,7 +10,7 @@ HERE="$(dirname "$0")"
 # Validate input parameters.
 DEVICE="${1:?Specify device}"
 MODE="${2:?Specify mode}"
-CONFIG="${3:-/home/ops/diagnostics/concentrator/TMBF_tune.config}"
+CONFIG="${3:-/home/ops/diagnostics/config/TMBF_tune.config}"
 
 
 # ------------------------------------------------------------------------------
