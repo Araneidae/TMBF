@@ -25,8 +25,8 @@ BUNCH_GAIN_OFFSET = 0
 
 # Detector single bunch offsets and phase skews
 DET_ADC_OFFSET = 1
-DET_FIR_OFFSET = 233
+DET_FIR_OFFSET = 232
 # These two values represent actual phase delays in bunches relative to an
 # aligned single turn.
 DET_ADC_DELAY = -4
-DET_FIR_DELAY = 4
+DET_FIR_DELAY = 8
