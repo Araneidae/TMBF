@@ -209,7 +209,6 @@ struct seq_entry {
     unsigned int hom_gain;          // HOM output gain
     unsigned int window_rate;       // Detector window advance frequency
     bool enable_window;             // Enable detector windowing
-    bool hom_enable;                // Enable HOM
     bool write_enable;              // Enable data capture of sequence
     bool enable_blanking;           // Observe trigger holdoff control
     unsigned int holdoff;           // Detector holdoff

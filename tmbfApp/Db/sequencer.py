@@ -36,7 +36,7 @@ for state in range(1, 8):
     mbbOut('SEQ:%d:BANK' % state, 'Bank 0', 'Bank 1', 'Bank 2', 'Bank 3',
         FLNK = update, DESC = 'Bunch bank selection')
     mbbOut('SEQ:%d:GAIN' % state, DESC = 'Sweep NCO gain', FLNK = update,
-        *dBrange(8, -6) + ['Off'])
+        *dBrange(14, -6) + ['Off'])
     boolOut('SEQ:%d:ENWIN' % state, 'Disabled', 'Windowed',
         FLNK = update, DESC = 'Enable detector window')
     boolOut('SEQ:%d:CAPTURE' % state, 'Discard', 'Capture',

@@ -130,8 +130,7 @@ struct tmbf_config_space
     //  13:12   Buffer readback channel select
     //  14      Detector bunch mode enable
     //  15      (unused)
-    //  18:16   HOM gain select (in 6dB steps)
-    //  19      Disarm buffer, pulsed
+    //  19:16   HOM gain select (in 6dB steps)
     //  22:20   FIR gain select (in 6dB steps)
     //  23      Enable internal loopback (testing only!)
     //  26:24   Detector gain select (in 6dB steps)
@@ -526,7 +525,7 @@ void hw_write_nco_freq(uint32_t freq)
 
 void hw_write_nco_gain(unsigned int gain)
 {
-    WRITE_CONTROL_BITS(16, 3, gain);
+    WRITE_CONTROL_BITS(16, 4, gain);
 }
 
 
@@ -611,7 +610,8 @@ void hw_write_seq_entries(
     config_space->sequencer_write = 0;
     config_space->sequencer_write = 0;
     config_space->sequencer_write = 0;
-    config_space->sequencer_write = (bank0 & 0x3) << 12;
+    /* Set bank0 as requested and disable NCO output in state zero. */
+    config_space->sequencer_write = (bank0 & 0x3) << 12 | 0xF << 14;
     config_space->sequencer_write = 0;
     config_space->sequencer_write = 0;
     config_space->sequencer_write = 0;
@@ -626,8 +626,7 @@ void hw_write_seq_entries(
         config_space->sequencer_write =
             ((entry->capture_count - 1) & 0xFFF) |  // bits 11:0
             (entry->bunch_bank & 0x3) << 12 |       //      13:12
-            (entry->hom_gain & 0x7) << 14 |         //      16:14
-            entry->hom_enable << 17 |               //      17
+            (entry->hom_gain & 0xF) << 14 |         //      17:14
             entry->enable_window << 18 |            //      18
             entry->write_enable << 19 |             //      19
             entry->enable_blanking << 20;           //      20

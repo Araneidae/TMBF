@@ -18,8 +18,6 @@
 #include "sequencer.h"
 
 
-enum { HOM_GAIN_OFF = 8 };
-
 /* These are the sequencer states for states 1 to 7.  State 0 is special and
  * is not handled in this array. */
 struct sequencer_bank {
@@ -132,7 +130,6 @@ static void write_seq_state(void)
         entry->capture_count = bank->capture_count;
         entry->bunch_bank = bank->bunch_bank;
         entry->hom_gain = bank->hom_gain;
-        entry->hom_enable = bank->hom_gain < HOM_GAIN_OFF;
         entry->enable_window = bank->enable_window;
         entry->write_enable = bank->write_enable;
         entry->enable_blanking = bank->enable_blanking;

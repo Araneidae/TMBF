@@ -323,8 +323,6 @@ static void do_sync_bunch_sync(void)
         int skew = 4 - zero_bunch_offset % 4 + base_skew;
         offset += skew / 4;
         skew = skew % 4;
-        printf("(%d, %d) => (%d, %d)\n",
-            zero_bunch_offset, base_skew, offset, skew);
         set_adc_skew(skew);
         hw_write_bun_zero_bunch(offset);
 
