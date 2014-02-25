@@ -170,7 +170,7 @@ struct tmbf_config_space
     uint32_t ftune_control;         // 27  Tune following master control
     // For writing supports the following fields:
     //  15:0    Dwell time in turns
-    //  16      (unused)
+    //  16      Blanking enable
     //  17      Multibunch enable
     //  19:18   Channel selection
     //  27:20   Single bunch selection
@@ -649,6 +649,7 @@ void hw_write_ftun_control(struct ftun_control *control)
     LOCK();
     config_space->ftune_control =
         ((control->dwell - 1) & 0xFFFF) |       // bits 15:0
+        control->blanking << 16 |               //      16
         control->multibunch << 17 |             //      17
         (control->bunch & 0x3FF) << 18 |        //      27:18
         (control->input_select & 0x1) << 28 |   //      28
@@ -664,12 +665,27 @@ void hw_write_ftun_control(struct ftun_control *control)
 
 void hw_write_ftun_start(void)
 {
+    WRITE_CONTROL_BITS(1, 1, 1);
     pulse_control_bit(12);
 }
 
-uint32_t hw_read_ftun_status(void)
+void hw_write_ftun_stop(void)
 {
-    return config_space->ftune_control;
+    WRITE_CONTROL_BITS(1, 1, 0);
+}
+
+void hw_read_ftun_status(bool *status)
+{
+    uint32_t status_word = config_space->ftune_control;
+    for (int i = 0; i < FTUN_BIT_COUNT; i ++)
+        status[i] = (status_word >> i) & 1;
+}
+
+void hw_read_ftun_angle_mag(int *angle, int *magnitude)
+{
+    int angle_mag = config_space->ftune_scaling;
+    *angle = (angle_mag >> 16) << 2;
+    *magnitude = angle_mag & 0xFFFF;
 }
 
 size_t hw_read_ftun_buffer(int buffer[FTUN_FIFO_SIZE], bool *dropout)

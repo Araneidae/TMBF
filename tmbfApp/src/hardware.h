@@ -208,8 +208,9 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay);
 
 struct ftun_control {
     int dwell;                  // Dwell time in turns
-    int bunch;                  // Bunch and channel selection for detector
+    bool blanking;              // Blanking enable
     bool multibunch;            // Single or multibunch selector
+    int bunch;                  // Bunch and channel selection for detector
     unsigned int input_select;  // ADC or FIR input (0 for ADC input)
     unsigned int det_gain;      // Detector gain
     int target_phase;           // Target phase for feedback
@@ -225,8 +226,30 @@ void hw_write_ftun_control(struct ftun_control *control);
 /* Initiates tune following. */
 void hw_write_ftun_start(void);
 
-/* Read current tune following status. */
-uint32_t hw_read_ftun_status(void);
+/* Halts tune following if active. */
+void hw_write_ftun_stop(void);
+
+/* Read current tune following status into an array of bool. */
+enum {
+    FTUN_STAT_VAL,
+    FTUN_STAT_MAG,
+    FTUN_STAT_DET,
+    FTUN_STAT_ACC,
+    FTUN_STAT_INP,
+
+    FTUN_STAT_RUNNING,
+
+    FTUN_STOP_VAL = FTUN_STAT_RUNNING + 3,
+    FTUN_STOP_MAG,
+    FTUN_STOP_DET,
+    FTUN_STOP_ACC,
+    FTUN_STOP_INP,
+    FTUN_BIT_COUNT = FTUN_STOP_INP + 1
+};
+void hw_read_ftun_status(bool *status);
+
+/* Reads snapshot of current angle and magnitude. */
+void hw_read_ftun_angle_mag(int *angle, int *magnitude);
 
 /* Reads up to FTUN_FIFO_SIZE words from the FTUN FIFO into buffer.  Sets the
  * dropout flag if the FTUN buffer overflowed and returns the number of words

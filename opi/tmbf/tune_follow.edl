@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2140
-y 124
-w 649
-h 622
+x 54
+y 54
+w 672
+h 593
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -32,10 +32,25 @@ beginObjectProperties
 major 4
 minor 0
 release 0
+x 416
+y 320
+w 248
+h 176
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
 x 8
 y 280
-w 464
-h 232
+w 400
+h 216
 lineColor index 14
 fill
 fillColor index 4
@@ -49,7 +64,7 @@ minor 1
 release 1
 x 0
 y 0
-w 648
+w 672
 h 32
 font "helvetica-medium-r-18.0"
 fontAlign "center"
@@ -66,8 +81,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 576
-y 584
+x 600
+y 560
 w 64
 h 24
 fgColor index 46
@@ -110,8 +125,8 @@ minor 6
 release 0
 x 112
 y 296
-w 56
-h 20
+w 72
+h 24
 controlPv "$(device):FTUN:DWELL_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -230,8 +245,8 @@ minor 6
 release 0
 x 112
 y 320
-w 56
-h 20
+w 72
+h 24
 controlPv "$(device):FTUN:BUNCH_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -278,7 +293,7 @@ minor 0
 release 0
 x 112
 y 344
-w 96
+w 104
 h 22
 fgColor index 14
 bgColor index 3
@@ -318,7 +333,7 @@ release 0
 # Geometry
 x 8
 y 40
-w 632
+w 656
 h 224
 # Appearance
 graphTitle "Tune Following Frequency"
@@ -363,7 +378,7 @@ major 4
 minor 0
 release 0
 x 8
-y 528
+y 512
 w 368
 h 72
 lineColor index 14
@@ -378,7 +393,7 @@ major 4
 minor 1
 release 1
 x 16
-y 544
+y 528
 w 59
 h 14
 font "helvetica-bold-r-12.0"
@@ -398,7 +413,7 @@ major 4
 minor 1
 release 1
 x 200
-y 544
+y 528
 w 59
 h 14
 font "helvetica-bold-r-12.0"
@@ -418,7 +433,7 @@ major 4
 minor 6
 release 0
 x 88
-y 544
+y 528
 w 96
 h 20
 controlPv "$(device):NCO:FREQ_S"
@@ -446,7 +461,7 @@ major 4
 minor 0
 release 0
 x 272
-y 544
+y 528
 w 96
 h 22
 fgColor index 14
@@ -465,7 +480,7 @@ major 4
 minor 1
 release 1
 x 8
-y 520
+y 504
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -484,7 +499,7 @@ major 4
 minor 0
 release 0
 x 8
-y 520
+y 504
 w 120
 h 16
 lineColor index 14
@@ -536,9 +551,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 112
-y 456
-w 96
+x 304
+y 408
+w 88
 h 22
 fgColor index 14
 bgColor index 3
@@ -555,8 +570,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 16
-y 456
+x 232
+y 408
 w 61
 h 14
 font "helvetica-bold-r-12.0"
@@ -575,9 +590,9 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 112
-y 432
-w 56
+x 304
+y 384
+w 88
 h 20
 controlPv "$(device):FTUN:TARGET_S"
 font "helvetica-medium-r-14.0"
@@ -603,16 +618,16 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 16
-y 432
-w 82
+x 232
+y 384
+w 43
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Target phase:"
+  "Target:"
 }
 autoSize
 endObjectProperties
@@ -623,10 +638,10 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 376
-y 304
-w 56
-h 20
+x 304
+y 296
+w 88
+h 24
 controlPv "$(device):FTUN:SCALE_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -651,16 +666,16 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 272
-y 304
-w 95
+x 232
+y 296
+w 60
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Feedback scale:"
+  "Feedback:"
 }
 autoSize
 endObjectProperties
@@ -671,10 +686,10 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 376
-y 336
-w 56
-h 20
+x 304
+y 320
+w 88
+h 24
 controlPv "$(device):FTUN:MINMAG_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -699,8 +714,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 272
-y 336
+x 232
+y 320
 w 62
 h 14
 font "helvetica-bold-r-12.0"
@@ -719,10 +734,10 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 376
-y 368
-w 56
-h 20
+x 304
+y 344
+w 88
+h 24
 controlPv "$(device):FTUN:MAXDELTA_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -747,8 +762,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 272
-y 368
+x 232
+y 344
 w 72
 h 14
 font "helvetica-bold-r-12.0"
@@ -767,8 +782,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 312
-y 456
+x 16
+y 448
 w 80
 h 22
 fgColor index 14
@@ -791,7 +806,7 @@ major 4
 minor 6
 release 0
 x 88
-y 576
+y 560
 w 80
 h 16
 controlPv "$(device):NCO:FREQ"
@@ -814,8 +829,8 @@ beginObjectProperties
 major 4
 minor 4
 release 0
-x 480
-y 584
+x 504
+y 560
 w 88
 h 24
 fgColor index 43
@@ -837,8 +852,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 408
-y 520
+x 440
+y 272
 w 184
 h 14
 controlPv "$(device):FTUN:FREQ:DROPOUT.DESC"
@@ -861,8 +876,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 384
-y 520
+x 416
+y 272
 w 16
 h 16
 lineColor index 14
@@ -870,5 +885,614 @@ fill
 fillColor index 16
 fillAlarm
 alarmPv "$(device):FTUN:FREQ:DROPOUT"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 112
+y 416
+w 96
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):FTUN:BLANKING_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 416
+w 54
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Blanking:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 472
+y 336
+w 184
+h 14
+controlPv "$(device):FTUN:STAT:INP.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 448
+y 336
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):FTUN:STAT:INP"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 472
+y 360
+w 184
+h 14
+controlPv "$(device):FTUN:STAT:ACC.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 448
+y 360
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):FTUN:STAT:ACC"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 472
+y 384
+w 184
+h 14
+controlPv "$(device):FTUN:STAT:DET.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 448
+y 384
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):FTUN:STAT:DET"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 472
+y 408
+w 184
+h 14
+controlPv "$(device):FTUN:STAT:MAG.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 448
+y 408
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):FTUN:STAT:MAG"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 472
+y 432
+w 184
+h 14
+controlPv "$(device):FTUN:STAT:VAL.DESC"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 448
+y 432
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):FTUN:STAT:VAL"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 424
+y 336
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):FTUN:STOP:INP"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 424
+y 360
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):FTUN:STOP:ACC"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 424
+y 384
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):FTUN:STOP:DET"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 424
+y 408
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):FTUN:STOP:MAG"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 424
+y 432
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):FTUN:STOP:VAL"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 104
+y 472
+w 80
+h 16
+controlPv "$(device):FTUN:ACTIVE"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 24
+y 472
+w 72
+h 16
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Run status:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 312
+y 440
+w 80
+h 16
+controlPv "$(device):FTUN:ANGLE"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 232
+y 440
+w 40
+h 16
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Angle:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 312
+y 464
+w 80
+h 16
+controlPv "$(device):FTUN:MAG"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 232
+y 464
+w 64
+h 16
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Magnitude:"
+}
+autoSize
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 104
+y 448
+w 80
+h 22
+fgColor index 14
+onColor index 4
+offColor index 3
+topShadowColor index 1
+botShadowColor index 14
+controlPv "$(device):FTUN:STOP_S.PROC"
+pressValue "0"
+onLabel "Stopping"
+offLabel "Stop"
+3d
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 416
+y 312
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Status"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 416
+y 312
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 456
+y 456
+w 8
+h 8
+lineColor index 14
+fillColor index 0
+lineWidth 2
+numPoints 3
+xPoints {
+  0 456
+  1 456
+  2 464
+}
+yPoints {
+  0 456
+  1 464
+  2 464
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 432
+y 456
+w 32
+h 24
+lineColor index 14
+fillColor index 0
+lineWidth 2
+numPoints 3
+xPoints {
+  0 432
+  1 432
+  2 464
+}
+yPoints {
+  0 456
+  1 480
+  2 480
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 472
+y 456
+w 77
+h 14
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Current status"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 472
+y 472
+w 111
+h 14
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Reason for stopping"
+}
+autoSize
 endObjectProperties
 
