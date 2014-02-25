@@ -123,14 +123,14 @@ struct tmbf_config_space
 
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
+    //  1       (unused)
     //  2       Detector input select
     //  5:3     Sequencer starting state
-    //  8:6     (unused)
-    //  9       Select debug data for IQ buffer input
+    //  9:6     (unused)
     //  11:10   Buffer data select (FIR+ADC/IQ/FIR+DAC/ADC+DAC)
     //  13:12   Buffer readback channel select
     //  14      Detector bunch mode enable
-    //  15      (unused)
+    //  15      Select debug data for IQ buffer input
     //  19:16   HOM gain select (in 6dB steps)
     //  22:20   FIR gain select (in 6dB steps)
     //  23      Enable internal loopback (testing only!)
@@ -466,13 +466,15 @@ static int buf_selection;
 
 void hw_write_buf_select(unsigned int selection)
 {
+    LOCK();
     buf_selection = selection;
     /* The buffer selection is a bit weird.  The bottom bit selects whether
      * debug data is routed to IQ, the top two bits are the actual selection,
      * and debug is only available on IQ. */
-    int select_out = selection == BUF_SELECT_DEBUG ?
-        1 | BUF_SELECT_IQ << 1 : selection << 1;
-    WRITE_CONTROL_BITS(9, 3, select_out);
+    bool enable_debug = selection == BUF_SELECT_DEBUG;
+    write_control_bit_field(10, 2, enable_debug ? BUF_SELECT_IQ : selection);
+    write_control_bit_field(15, 1, enable_debug);
+    UNLOCK();
 }
 
 
