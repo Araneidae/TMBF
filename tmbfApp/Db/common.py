@@ -30,6 +30,12 @@ def Trigger(prefix, *pvs):
         SCAN = 'I/O Intr', DESC = '%s processing trigger' % prefix,
         FLNK = create_fanout('%s:TRIG:FAN' % prefix, *pvs + (done,)))
 
+def ForwardLink(name, desc, *pvs):
+    action = Action(name, DESC = desc)
+    for pv in pvs:
+        pv.FLNK = action
+
+
 # Aggregates the severity of all the given records into a single record.  The
 # value of the record is constant, but its SEVR value reflects the maximum
 # severity of all of the given records.

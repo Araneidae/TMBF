@@ -201,24 +201,23 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay);
 /* * * * * * * * * * * * * * * * * * * * * */
 /* FTUN: Fast Tune Following and Detector  */
 
-/* Programs dwell time for tune following. */
-void hw_write_ftun_dwell(int dwell_time);
+struct ftun_control {
+    int dwell;                  // Dwell time in turns
+    int bunch;                  // Bunch and channel selection for detector
+    bool multibunch;            // Single or multibunch selector
+    unsigned int input_select;  // ADC or FIR input (0 for ADC input)
+    unsigned int det_gain;      // Detector gain
+};
 
-/* Select bunch to following in single bunch mode. */
-void hw_write_ftun_bunch(int bunch);
+/* Writes given settings to FTUN. */
+void hw_write_ftun_control(struct ftun_control *control);
 
-/* Switch between single bunch and multibunch detection.  In multibunch mode the
- * channel used for detection is determined by the single bunch selection. */
-void hw_write_ftun_multibunch(bool multibunch);
+/* Write FTUN feedback IIR taps. */
+void hw_write_ftun_iir_taps(const int *forward, const int *feedback);
 
-/* Select between ADC and FIR input. */
-void hw_write_ftun_input_select(unsigned int input);
-
-/* Select detector scaling. */
-void hw_write_ftun_det_gain(unsigned int gain);
-
-/* Enable tune following. */
-void hw_write_ftun_enable(bool enable);
+/* Returns order of feedback IIR.  If this is N then there are N+1 forward taps
+ * and N feedback taps. */
+int hw_read_ftun_iir_order(void);
 
 
 /* * * * * * * * * * * * * * * * * * * * * */

@@ -14,6 +14,7 @@
 #include "epics_device.h"
 #include "epics_extra.h"
 #include "detector.h"
+#include "tune_follow.h"
 
 #include "sequencer.h"
 
@@ -46,6 +47,7 @@ static struct seq_entry current_sequencer[MAX_SEQUENCER_COUNT];
 /* Fast buffer interface. */
 static unsigned int buf_select;
 static bool capture_iq;     // Set from buf_select when written to hardware
+static bool capture_debug;
 
 /* Sequencer program counter. */
 static unsigned int sequencer_pc;
@@ -159,6 +161,8 @@ static void update_seq_state(void)
 void prepare_sequencer(bool enable_sequencer)
 {
     capture_iq = buf_select == BUF_SELECT_IQ  &&  capture_count > 0;
+    capture_debug = buf_select == BUF_SELECT_DEBUG  &&  capture_count > 0;
+
     hw_write_buf_select(buf_select);
     hw_write_seq_count(enable_sequencer ? sequencer_pc : 0);
     if (enable_sequencer)
@@ -193,6 +197,8 @@ void process_fast_buffer(void)
 
     if (capture_iq)
         update_iq(buffer_low, buffer_high, sequencer_pc, current_sequencer);
+    else if (capture_debug)
+        update_tune_follow_debug(buffer_raw);
 }
 
 

@@ -619,39 +619,44 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay)
 /* * * * * * * * * * * * * * * * * * * * * */
 /* FTUN: Fast Tune Following and Detector  */
 
-static int ftun_dwell;
-static int ftun_bunch;
-static bool ftun_multibunch;
-static unsigned int ftun_input_select;
-static unsigned int ftun_det_gain;
-static bool ftun_enable;
+static int ftun_iir_order;
 
-static void update_ftune_state(void)
+/* Sub regions of FTUN control. */
+enum {
+    FTUN_SELECT_CONTROL = 0,        // For writing control register
+    FTUN_SELECT_FORWARD_TAPS = 2,   // For writing IIR forward taps
+    FTUN_SELECT_FEEDBACK_TAPS = 3   // For writing IIR feedback taps
+};
+
+void hw_write_ftun_control(struct ftun_control *control)
 {
+    LOCK();
+    config_space->write_select = FTUN_SELECT_CONTROL;
     config_space->ftune_control =
-        ((ftun_dwell - 1) & 0xFFFF) |       // bits 15:0
-        ftun_enable << 16 |                 //      16
-        ftun_multibunch << 17 |             //      17
-        (ftun_bunch & 0x3FF) << 18 |        //      27:18
-        (ftun_input_select & 0x1) << 28 |   //      28
-        (ftun_det_gain & 0x7) << 29;        //      31:29
+        ((control->dwell - 1) & 0xFFFF) |       // bits 15:0
+        control->multibunch << 17 |             //      17
+        (control->bunch & 0x3FF) << 18 |        //      27:18
+        (control->input_select & 0x1) << 28 |   //      28
+        (control->det_gain & 0x7) << 29;        //      31:29
+    UNLOCK();
 }
 
-#define DEFINE_FTUN_WRITE(name) \
-    void hw_write_ftun_##name(typeof(ftun_##name) name) \
-    { \
-        LOCK(); \
-        ftun_##name = name; \
-        update_ftune_state(); \
-        UNLOCK(); \
-    }
+void hw_write_ftun_iir_taps(const int *forward, const int *feedback)
+{
+    LOCK();
+    config_space->write_select = FTUN_SELECT_FORWARD_TAPS;
+    for (int i = 0; i <= ftun_iir_order; i ++)
+        config_space->ftune_control = forward[i];
+    config_space->write_select = FTUN_SELECT_FEEDBACK_TAPS;
+    for (int i = 0; i < ftun_iir_order; i ++)
+        config_space->ftune_control = feedback[i];
+    UNLOCK();
+}
 
-DEFINE_FTUN_WRITE(dwell)
-DEFINE_FTUN_WRITE(bunch)
-DEFINE_FTUN_WRITE(multibunch)
-DEFINE_FTUN_WRITE(input_select)
-DEFINE_FTUN_WRITE(enable)
-DEFINE_FTUN_WRITE(det_gain)
+int hw_read_ftun_iir_order(void)
+{
+    return ftun_iir_order;
+}
 
 
 /* * * * * * * * * * * * * * * * * * * * * */
@@ -771,7 +776,7 @@ bool initialise_hardware(const char *config_file)
 {
     hardware_config_file = config_file;
     int mem;
-    return
+    bool ok =
         config_parse_file(
             config_file, hardware_config_defs,
             ARRAY_SIZE(hardware_config_defs))  &&
@@ -781,6 +786,12 @@ bool initialise_hardware(const char *config_file)
             mem, TMBF_CONFIG_ADDRESS))  &&
         TEST_IO(buffer_data = mmap(
             0, DATA_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-            mem, TMBF_DATA_ADDRESS))  &&
-        DO_(fir_filter_length = (config_space->fpga_version >> 16) & 0xF);
+            mem, TMBF_DATA_ADDRESS));
+    if (ok)
+    {
+        fir_filter_length = (config_space->fpga_version >> 16) & 0xF;
+        ftun_iir_order = 3; // Read this from config space
+//         ftun_iir_order = (config_space->fpga_version >> 20) & 0xF;
+    }
+    return ok;
 }
