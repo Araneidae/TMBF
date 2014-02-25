@@ -220,9 +220,6 @@ void hw_write_ftun_det_gain(unsigned int gain);
 /* Enable tune following. */
 void hw_write_ftun_enable(bool enable);
 
-/* Write rotation control bits in CORDIC rotation fragments. */
-void hw_write_ftun_rotation(uint32_t rotation);
-
 
 /* * * * * * * * * * * * * * * * * * * * * */
 /* SEQ: Programmed Bunch and Sweep Control */

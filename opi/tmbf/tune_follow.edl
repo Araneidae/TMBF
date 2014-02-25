@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 15
-y 571
+x 16
+y 572
 w 641
 h 593
 font "helvetica-medium-r-18.0"
@@ -190,7 +190,7 @@ major 4
 minor 1
 release 1
 x 16
-y 352
+y 328
 w 34
 h 14
 font "helvetica-bold-r-12.0"
@@ -210,7 +210,7 @@ major 4
 minor 0
 release 0
 x 112
-y 352
+y 328
 w 96
 h 22
 fgColor index 14
@@ -229,7 +229,7 @@ major 4
 minor 6
 release 0
 x 112
-y 304
+y 280
 w 56
 h 20
 controlPv "$(device):FTUN:BUNCH_S"
@@ -257,7 +257,7 @@ major 4
 minor 1
 release 1
 x 16
-y 304
+y 280
 w 41
 h 14
 font "helvetica-bold-r-12.0"
@@ -277,7 +277,7 @@ major 4
 minor 0
 release 0
 x 112
-y 328
+y 304
 w 96
 h 22
 fgColor index 14
@@ -296,7 +296,7 @@ major 4
 minor 1
 release 1
 x 16
-y 328
+y 304
 w 77
 h 14
 font "helvetica-bold-r-12.0"
@@ -316,7 +316,7 @@ major 4
 minor 0
 release 0
 x 112
-y 400
+y 376
 w 96
 h 22
 fgColor index 14
@@ -335,7 +335,7 @@ major 4
 minor 1
 release 1
 x 16
-y 400
+y 376
 w 43
 h 14
 font "helvetica-bold-r-12.0"
@@ -411,54 +411,6 @@ topShadowColor index 1
 botShadowColor index 11
 controlPv "$(device):BUF:SELECT_S"
 font "helvetica-medium-r-14.0"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 16
-y 280
-w 40
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Phase:"
-}
-autoSize
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 112
-y 280
-w 56
-h 20
-controlPv "$(device):FTUN:ANGLE_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-clipToDspLimits
-noExecuteClipMask
 endObjectProperties
 
 # (Rectangle)
@@ -603,7 +555,7 @@ major 4
 minor 0
 release 0
 x 112
-y 376
+y 352
 w 96
 h 22
 fgColor index 14
@@ -622,7 +574,7 @@ major 4
 minor 1
 release 1
 x 16
-y 376
+y 352
 w 56
 h 14
 font "helvetica-bold-r-12.0"

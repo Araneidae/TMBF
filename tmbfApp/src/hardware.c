@@ -159,16 +159,16 @@ struct tmbf_config_space
     //  27:20   Single bunch selection
     //  28      Input selection
     //  31:29   Detector gain
-    uint32_t ftune_control2;        // 16  Extra tune following control
-    //  15:0    Cordic rotation angle
+    uint32_t unused_16;             // 16   (unused)
     uint32_t fir_write;             // 17  Write FIR coefficients
-    uint32_t unused_2;              // 16    (unused)
+    uint32_t unused_18;             // 18    (unused)
     uint32_t bunch_write;           // 19  Write bunch configuration
     uint32_t adc_minmax_read;       // 20  Read ADC min/max data
     uint32_t dac_minmax_read;       // 21  Read DAC min/max data
-    uint32_t unused_3;              // 22    (unused)
+    uint32_t unused_22;             // 22    (unused)
     uint32_t sequencer_write;       // 23  Write sequencer data
-    uint32_t unused_4[2];           // 24-25 (unused)
+    uint32_t unused_24;             // 24    (unused)
+    uint32_t unused_25;             // 25    (unused)
     uint32_t latch_overflow;        // 26  Latch new overflow status
 };
 
@@ -652,12 +652,6 @@ DEFINE_FTUN_WRITE(multibunch)
 DEFINE_FTUN_WRITE(input_select)
 DEFINE_FTUN_WRITE(enable)
 DEFINE_FTUN_WRITE(det_gain)
-
-
-void hw_write_ftun_rotation(uint32_t rotation)
-{
-    config_space->ftune_control2 = rotation & 0xFFFF;
-}
 
 
 /* * * * * * * * * * * * * * * * * * * * * */
