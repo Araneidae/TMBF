@@ -84,55 +84,47 @@ static const char *hardware_config_file;
 
 struct tmbf_config_space
 {
-    /* The first two registers are completely different for reading and writing,
-     * so we overlay two completely different register definitions. */
-    union {
-        // Read only registers
-        struct {
-            uint32_t fpga_version;  //  0  Version and FIR count
-            //  15:0    Version code
-            //  19:16   Number of taps in FIR
+    /* Some registers have completely different read and write meanings, in
+     * these cases we use anonymous unions to overlay two different names. */
 
-            uint32_t system_status; //  1  Status register
-            //  3:0     Trigger phase bits
-            //  7:4     Bunch trigger phase bits
-            //  15:8    Overflow bits
-            //          0   FIR gain overflow
-            //          1   DAC mux output overflow
-            //          2   DAC pre-emphasis filter overflow
-            //          4   IQ FIR input overflow
-            //          5   IQ accumulator overflow
-            //          6   IQ readout overflow
-            //  18:16   Current sequencer state ("program counter")
-            //  19      (unused)
-            //  20      Buffer trigger armed
-            //  21      Set if buffer busy
-            //  22      Set if sequencer busy
-            //  23      DDR trigger armed
-            //  24      ADC clock dropout detect.
-            //  31:25   (unused)
-        };
-
-        // Write only registers
-        struct {
-            uint32_t pulse;         //  0  Pulse event register
-            // All writes to this register generate single clock pulses for all
-            // written bits with the following effect:
-            //  0       Arm DDR
-            //  1       Soft trigger DDR
-            //  2       Arm buffer and sequencer
-            //  3       Soft trigger buffer and sequencer
-            //  4       Arm bunch counter sync
-            //  5       Disarm DDR, pulsed
-            //  7       Abort sequencer operation
-            //  8       Enable DDR capture (must be done before triggering)
-            //  9       Initiate ADC min/max readout
-            //  10      Initiate DAC min/max readout
-            //  11      Arm trigger phase capture
-            //  12      Enable tune following start
-
-            uint32_t write_select;  //  1  Initiate write register
-        };
+    union {                         // 0
+        const uint32_t fpga_version; // Version and FIR count
+        uint32_t pulse;             // Pulse event register
+        // All writes to this register generate single clock pulses for all
+        // written bits with the following effect:
+        //  0       Arm DDR
+        //  1       Soft trigger DDR
+        //  2       Arm buffer and sequencer
+        //  3       Soft trigger buffer and sequencer
+        //  4       Arm bunch counter sync
+        //  5       Disarm DDR, pulsed
+        //  7       Abort sequencer operation
+        //  8       Enable DDR capture (must be done before triggering)
+        //  9       Initiate ADC min/max readout
+        //  10      Initiate DAC min/max readout
+        //  11      Arm trigger phase capture
+        //  12      Enable tune following start
+    };
+    union {                         // 1
+        const uint32_t system_status;   // Status register
+        //  3:0     Trigger phase bits
+        //  7:4     Bunch trigger phase bits
+        //  15:8    Overflow bits
+        //          0   FIR gain overflow
+        //          1   DAC mux output overflow
+        //          2   DAC pre-emphasis filter overflow
+        //          4   IQ FIR input overflow
+        //          5   IQ accumulator overflow
+        //          6   IQ readout overflow
+        //  18:16   Current sequencer state ("program counter")
+        //  19      (unused)
+        //  20      Buffer trigger armed
+        //  21      Set if buffer busy
+        //  22      Set if sequencer busy
+        //  23      DDR trigger armed
+        //  24      ADC clock dropout detect.
+        //  31:25   (unused)
+        uint32_t write_select;      // Initiate write register
     };
 
     uint32_t control;               //  2  System control register
@@ -154,9 +146,15 @@ struct tmbf_config_space
     //  31:30   ACD input fine delay (2ns steps)
 
     uint32_t nco_frequency;         //  3  Fixed NCO generator frequency
-    uint32_t dac_delay;             //  4  DAC output delay (2ns steps)
-    //  9:0     DAC output delay in 2ns steps
-    //  11:10   DAC pre-emphasis filter group delay in 2ns steps
+    union {                         //  4
+        const uint32_t ddr_status;  // DDR status and offset
+        //  23:0    Trigger offset into DDR buffer
+        //  31      Set if DDR waiting for trigger
+        uint32_t dac_delay;         // DAC output delay (2ns steps)
+        //  9:0     DAC output delay in 2ns steps
+        //  11:10   DAC pre-emphasis filter group delay in 2ns steps
+    };
+
     uint32_t bunch_select;          //  5  Detector bunch selections
     uint32_t adc_offset_ab;         //  6  ADC channel offsets (channels A/B)
     uint32_t adc_offset_cd;         //  7  ADC channel offsets (channels C/D)
@@ -446,6 +444,13 @@ int hw_read_ddr_delay(void)
         case 3: return DDR_DAC_DELAY;
         default: ASSERT_FAIL();
     }
+}
+
+bool hw_read_ddr_status(int *offset)
+{
+    uint32_t ddr_status = config_space->ddr_status;
+    *offset = ddr_status & 0xFFFFFF;
+    return ddr_status >> 31;
 }
 
 

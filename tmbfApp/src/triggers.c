@@ -385,17 +385,20 @@ static void *monitor_events(void *context)
 {
     while (true)
     {
-        /* Capture hardware status. */
-        bool ddr_ready = poll_ddr_trigger();
-
         LOCK();
 
+        int ddr_offset;
+        bool ddr_ready =
+            ddr_target.armed.armed  &&  !hw_read_ddr_status(&ddr_offset);
         bool buf_ready = buf_target.armed.armed  &&  !hw_read_buf_busy();
         bool seq_ready = seq_target.armed.armed  &&  !hw_read_seq_status();
 
         /* Allow all the corresponding targets to be processed. */
         if (ddr_ready)
+        {
+            set_ddr_offset(ddr_offset);
             process_ddr_buffer(ddr_target.one_shot);
+        }
         if (buf_ready)
             process_fast_buffer();
 

@@ -24,24 +24,9 @@
 
 #define PAGE_SIZE               0x00001000      // 4K
 
-#define CLK_IOBASE              0x14004000
 #define HISTORY_IOBASE          0x14018000
 #define HISTORY_FIFO_IOBASE     0x14019000
 
-
-/* To be mapped at 0x14004000.  The following registers allow access to the
- * internally generated FPGA events. */
-struct clk_interface {
-    uint32_t unused1[3];                // 00-08
-    uint32_t lmt_event_capture_lsb0;    // 0C: LMT event id and fifo
-    uint32_t lmt_event_capture_lsb1;    // 10: LMT timestamp
-    uint32_t lmt_event_capture_msb;     // 14: LMT advance fifo
-    uint32_t unused2;                   // 18
-    uint32_t lmt_event_control_lsb;     // 1C: LMT event control
-    uint32_t unused3;                   // 20
-    uint32_t lmt_event_control_msb;     // 24: LMT event control
-    uint32_t interrupt_status;          // 28:
-};
 
 /* To be mapped at 0x14018000.  The following registers provide access to and
  * control of the DDR history buffer. */
@@ -63,7 +48,6 @@ struct history_buffer_fifo {
 
 
 /* Pointers into FPGA control registers. */
-static volatile struct clk_interface *clk_interface;
 static volatile struct history_buffer_interface *history_buffer;
 static volatile struct history_buffer_fifo *fifo;
 
@@ -72,9 +56,7 @@ static volatile struct history_buffer_fifo *fifo;
 /* DDR buffer readout. */
 
 
-/* Record of current trigger state. */
-static uint32_t arm_timestamp;
-static uint32_t trigger_timestamp;
+static uint32_t ddr_trigger_offset;
 
 
 /* Ensures data transfer FIFO is empty on startup. */
@@ -111,7 +93,7 @@ static void start_buffer_transfer(ssize_t offset, size_t interval, size_t count)
     int ddr_delay = hw_read_ddr_delay();
     history_buffer->post_filtering = 0;
     history_buffer->start_address =
-        (offset + ddr_delay + trigger_timestamp - arm_timestamp) & 0xFFFFFF;
+        (offset + ddr_delay + ddr_trigger_offset) & 0xFFFFFF;
     history_buffer->address_step = interval;
     history_buffer->transfer_size = 1;
     /* Writing to this register initiates transfer.  count is in "atoms". */
@@ -196,72 +178,15 @@ void read_ddr_bunch(ssize_t start, size_t bunch, size_t turns, int16_t *result)
 }
 
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Event handling and dispatch. */
-
-/* We're only interested in the trigger received immediately after arming the
- * FIFO. */
-static bool fifo_armed = false;
-
-
-/* Ensures any residual FIFO events are purged on startup. */
-static void purge_fifo(void)
+void set_ddr_offset(int ddr_offset)
 {
-    while ((clk_interface->lmt_event_capture_lsb0 & 0x1FF) > 0)
-        clk_interface->lmt_event_capture_msb;
-}
+    ddr_trigger_offset = ddr_offset;
 
-
-static void initialise_ddr_events(void)
-{
-    /* Enable the history buffer enable and trigger events, ensure all other
-     * events are disabled. */
-    clk_interface->lmt_event_control_lsb = 0x60000000;
-    clk_interface->lmt_event_control_msb = 0;
-
-    /* Consume all events in buffer. */
-    purge_fifo();
-}
-
-
-/* Consumes all events in the FIFO and updates timestamps as appropriate.
- * Returns true if a trigger has been seen. */
-bool poll_ddr_trigger(void)
-{
-    bool triggered = false;
-    uint32_t lsb0;
-    while (
-        lsb0 = clk_interface->lmt_event_capture_lsb0,
-        (lsb0 & 0x1FF) > 0)
-    {
-        unsigned int event = lsb0 >> 16;
-        uint32_t timestamp = clk_interface->lmt_event_capture_lsb1;
-        clk_interface->lmt_event_capture_msb;
-
-        if (event & 0x2000)
-        {
-            /* ARM event tells us when data capture begins.  This timestamp
-             * corresponds to zero offset into DDR buffer. */
-            arm_timestamp = timestamp;
-            fifo_armed = true;
-        }
-        if (fifo_armed  &&  (event & 0x4000))
-        {
-            /* We're only interested in the first trigger after arming; this
-             * tells us from where to read data. */
-            trigger_timestamp = timestamp;
-            fifo_armed = false;
-            triggered = true;
-        }
-    }
-
-    if (triggered)
-        /* After seeing a trigger we need to wait for capture to complete before
-         * trying to read the buffer (there doesn't seem to be an event for
-         * this, surprisingly enough).  We have to wait for 32M samples at
-         * 500MHz, or around 64ms. */
-        usleep(64000);
-    return triggered;
+    /* After seeing a trigger we need to wait for capture to complete before
+     * trying to read the buffer (there doesn't seem to be an event for this,
+     * surprisingly enough).  We have to wait for 32M samples at 500MHz, or
+     * around 64ms. */
+    usleep(64000);
 }
 
 
@@ -273,15 +198,11 @@ bool initialise_ddr(void)
     int mem;
     return
         TEST_IO(mem = open("/dev/mem", O_RDWR | O_SYNC))  &&
-        TEST_IO(clk_interface = mmap(
-            0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-            mem, CLK_IOBASE))  &&
         TEST_IO(history_buffer = mmap(
             0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
             mem, HISTORY_IOBASE))  &&
         TEST_IO(fifo = mmap(
             0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
             mem, HISTORY_FIFO_IOBASE))  &&
-        DO_(purge_read_buffer())  &&
-        DO_(initialise_ddr_events());
+        DO_(purge_read_buffer());
 }

@@ -115,6 +115,9 @@ void hw_write_ddr_enable(void);
  * This depends on the currently selected data source. */
 int hw_read_ddr_delay(void);
 
+/* Returns DDR trigger status together with current buffer offset. */
+bool hw_read_ddr_status(int *offset);
+
 
 /* * * * * * * * * * * * * * * * * * * * */
 /* BUN: Bunch by Bunch Banked Selection */
@@ -233,22 +236,25 @@ void hw_write_ftun_stop(void);
 
 /* Read current tune following status into an array of bool. */
 enum {
-    FTUN_STAT_VAL,
-    FTUN_STAT_MAG,
-    FTUN_STAT_DET,
-    FTUN_STAT_ACC,
-    FTUN_STAT_INP,
+    // These five status bits record the current status
+    FTUN_STAT_VAL,              // Integrated frequency offset out of range
+    FTUN_STAT_MAG,              // Magnitude of signal too small
+    FTUN_STAT_DET,              // Detector output overflow
+    FTUN_STAT_ACC,              // Detector accumulator overflow
+    FTUN_STAT_INP,              // FIR detector input overflow
 
-    FTUN_STAT_RUNNING,
+    FTUN_STAT_RUNNING,          // Set if tune following is running
 
+    // These five bits record the status when tune following was halted
     FTUN_STOP_VAL = FTUN_STAT_RUNNING + 3,
     FTUN_STOP_MAG,
     FTUN_STOP_DET,
     FTUN_STOP_ACC,
     FTUN_STOP_INP,
-    FTUN_BIT_COUNT = FTUN_STOP_INP + 1
+
+    FTUN_BIT_COUNT = FTUN_STOP_INP + 1  // Number of bits in array
 };
-void hw_read_ftun_status(bool *status);
+void hw_read_ftun_status(bool status[FTUN_BIT_COUNT]);
 
 /* Reads snapshot of current angle and magnitude. */
 void hw_read_ftun_angle_mag(int *angle, int *magnitude);
