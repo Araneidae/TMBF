@@ -30,6 +30,7 @@
 #include "sensors.h"
 #include "detector.h"
 #include "tune.h"
+#include "tune_follow.h"
 #include "pvlogging.h"
 #include "persistence.h"
 
@@ -327,7 +328,8 @@ static bool initialise_subsystems(void)
         initialise_triggers()  &&
         initialise_sensors()  &&
         initialise_detector()  &&
-        initialise_tune();
+        initialise_tune()  &&
+        initialise_tune_follow();
 }
 
 

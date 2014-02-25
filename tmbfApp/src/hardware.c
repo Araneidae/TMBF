@@ -151,7 +151,16 @@ struct tmbf_config_space
     uint32_t ddr_trigger_delay;     // 12  DDR Trigger delay control
     uint32_t buf_trigger_delay;     // 13  BUF Trigger delay control
     uint32_t trigger_blanking;      // 14  Trigger blanking length in turns
-    uint32_t unused_1[2];           // 15-16 (unused)
+    uint32_t ftune_control;         // 15  Tune following control
+    //  15:0    Dwell time in turns
+    //  16      Tune following enable
+    //  17      Multibunch enable
+    //  19:18   Channel selection
+    //  27:20   Single bunch selection
+    //  28      Input selection
+    //  31:29   (unused)
+    uint32_t ftune_control2;        // 16  Extra tune following control
+    //  15:0    Cordic rotation angle
     uint32_t fir_write;             // 17  Write FIR coefficients
     uint32_t unused_2;              // 16    (unused)
     uint32_t bunch_write;           // 19  Write bunch configuration
@@ -602,6 +611,47 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay)
 {
     *adc_delay = DET_ADC_DELAY;
     *fir_delay = DET_FIR_DELAY;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * */
+/* FTUN: Fast Tune Following and Detector  */
+
+static int ftun_dwell;
+static int ftun_bunch;
+static bool ftun_multibunch;
+static unsigned int ftun_input_select;
+static bool ftun_enable;
+
+static void update_ftune_state(void)
+{
+    config_space->ftune_control =
+        ((ftun_dwell - 1) & 0xFFFF) |       // bits 15:0
+        ftun_enable << 16 |                 //      16
+        ftun_multibunch << 17 |             //      17
+        (ftun_bunch & 0x3FF) << 18 |        //      27:18
+        (ftun_input_select & 0x1) << 28;    //      28
+}
+
+#define DEFINE_FTUN_WRITE(name) \
+    void hw_write_ftun_##name(typeof(ftun_##name) name) \
+    { \
+        LOCK(); \
+        ftun_##name = name; \
+        update_ftune_state(); \
+        UNLOCK(); \
+    }
+
+DEFINE_FTUN_WRITE(dwell)
+DEFINE_FTUN_WRITE(bunch)
+DEFINE_FTUN_WRITE(multibunch)
+DEFINE_FTUN_WRITE(input_select)
+DEFINE_FTUN_WRITE(enable)
+
+
+void hw_write_ftun_rotation(uint32_t rotation)
+{
+    config_space->ftune_control2 = rotation & 0xFFFF;
 }
 
 

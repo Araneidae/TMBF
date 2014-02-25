@@ -199,6 +199,29 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay);
 
 
 /* * * * * * * * * * * * * * * * * * * * * */
+/* FTUN: Fast Tune Following and Detector  */
+
+/* Programs dwell time for tune following. */
+void hw_write_ftun_dwell(int dwell_time);
+
+/* Select bunch to following in single bunch mode. */
+void hw_write_ftun_bunch(int bunch);
+
+/* Switch between single bunch and multibunch detection.  In multibunch mode the
+ * channel used for detection is determined by the single bunch selection. */
+void hw_write_ftun_multibunch(bool multibunch);
+
+/* Select between ADC and FIR input. */
+void hw_write_ftun_input_select(unsigned int input);
+
+/* Enable tune following. */
+void hw_write_ftun_enable(bool enable);
+
+/* Write rotation control bits in CORDIC rotation fragments. */
+void hw_write_ftun_rotation(uint32_t rotation);
+
+
+/* * * * * * * * * * * * * * * * * * * * * */
 /* SEQ: Programmed Bunch and Sweep Control */
 
 struct seq_entry {
