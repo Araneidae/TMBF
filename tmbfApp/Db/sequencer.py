@@ -70,11 +70,12 @@ Action('SEQ:RESET', DESC = 'Halt detector if busy')
 
 
 Trigger('BUF',
+    Waveform('BUF:WF', BUF_DATA_LENGTH, 'LONG', DESC = 'Raw fast buffer'),
     Waveform('BUF:WFA', BUF_DATA_LENGTH, 'SHORT',
         DESC = 'Fast buffer first half'),
     Waveform('BUF:WFB', BUF_DATA_LENGTH, 'SHORT',
         DESC = 'Fast buffer second half'))
 
-mbbOut('BUF:SELECT', 'FIR+ADC', 'IQ', 'FIR+DAC', 'ADC+DAC',
+mbbOut('BUF:SELECT', 'FIR+ADC', 'IQ', 'FIR+DAC', 'ADC+DAC', 'Debug',
     FLNK = tune.setting_changed,
     DESC = 'Select buffer capture source')

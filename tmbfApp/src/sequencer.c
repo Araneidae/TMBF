@@ -44,9 +44,6 @@ static unsigned int bank0;
 static struct seq_entry current_sequencer[MAX_SEQUENCER_COUNT];
 
 /* Fast buffer interface. */
-static struct epics_interlock *buffer_trigger;
-static short buffer_low[RAW_BUF_DATA_LENGTH];
-static short buffer_high[RAW_BUF_DATA_LENGTH];
 static unsigned int buf_select;
 static bool capture_iq;     // Set from buf_select when written to hardware
 
@@ -161,7 +158,7 @@ static void update_seq_state(void)
  * for operation. */
 void prepare_sequencer(bool enable_sequencer)
 {
-    capture_iq = buf_select == SELECT_IQ  &&  capture_count > 0;
+    capture_iq = buf_select == BUF_SELECT_IQ  &&  capture_count > 0;
     hw_write_buf_select(buf_select);
     hw_write_seq_count(enable_sequencer ? sequencer_pc : 0);
     if (enable_sequencer)
@@ -182,11 +179,16 @@ static void set_state0_bunch_bank(unsigned int bank)
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+static struct epics_interlock *buffer_trigger;
+static int buffer_raw[RAW_BUF_DATA_LENGTH];
+static short buffer_low[RAW_BUF_DATA_LENGTH];
+static short buffer_high[RAW_BUF_DATA_LENGTH];
+
 /* This will be called when the fast buffer is triggered. */
 void process_fast_buffer(void)
 {
     interlock_wait(buffer_trigger);
-    hw_read_buf_data(buffer_low, buffer_high);
+    hw_read_buf_data(buffer_raw, buffer_low, buffer_high);
     interlock_signal(buffer_trigger, NULL);
 
     if (capture_iq)
@@ -222,6 +224,7 @@ bool initialise_sequencer(void)
 
     /* Fast buffer configuration settings. */
     buffer_trigger = create_interlock("BUF:TRIG", "BUF:DONE", false);
+    PUBLISH_WF_READ_VAR(int, "BUF:WF", BUF_DATA_LENGTH, buffer_raw);
     PUBLISH_WF_READ_VAR(short, "BUF:WFA", BUF_DATA_LENGTH, buffer_low);
     PUBLISH_WF_READ_VAR(short, "BUF:WFB", BUF_DATA_LENGTH, buffer_high);
     PUBLISH_WRITE_VAR_P(mbbo, "BUF:SELECT", buf_select);

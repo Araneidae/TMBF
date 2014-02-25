@@ -142,7 +142,7 @@ int hw_read_bun_trigger_phase(void);
 /* * * * * * * * * * * * * * * * * */
 /* BUF: High Speed Internal Buffer */
 
-enum { SELECT_IQ = 1 };     // Special treatment for buffer select 1.
+enum { BUF_SELECT_IQ = 1, BUF_SELECT_DEBUG = 4 };
 
 /* Selects data for capture to buffer. */
 void hw_write_buf_select(unsigned int selection);
@@ -156,6 +156,7 @@ bool hw_read_buf_busy(void);
 
 /* Reads buffer into two separate 16-bit arrays. */
 void hw_read_buf_data(
+    int raw[RAW_BUF_DATA_LENGTH],
     short low[RAW_BUF_DATA_LENGTH], short high[RAW_BUF_DATA_LENGTH]);
 
 

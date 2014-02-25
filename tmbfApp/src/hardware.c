@@ -125,7 +125,8 @@ struct tmbf_config_space
     //  0       Global DAC output enable (1 => enabled)
     //  2       Detector input select
     //  5:3     Sequencer starting state
-    //  9:6     (unused)
+    //  8:6     (unused)
+    //  9       Select debug data for IQ buffer input
     //  11:10   Buffer data select (FIR+ADC/IQ/FIR+DAC/ADC+DAC)
     //  13:12   Buffer readback channel select
     //  14      Detector bunch mode enable
@@ -162,7 +163,7 @@ struct tmbf_config_space
     uint32_t latch_overflow;        // 26  Latch new overflow status
 };
 
-/* These three pointers directly overlay the FF memory. */
+/* These two pointers directly overlay the FF memory. */
 static volatile struct tmbf_config_space *config_space;
 static volatile uint32_t *buffer_data;      // Fast buffer readout area
 
@@ -457,7 +458,12 @@ static int buf_selection;
 void hw_write_buf_select(unsigned int selection)
 {
     buf_selection = selection;
-    WRITE_CONTROL_BITS(10, 2, selection);
+    /* The buffer selection is a bit weird.  The bottom bit selects whether
+     * debug data is routed to IQ, the top two bits are the actual selection,
+     * and debug is only available on IQ. */
+    int select_out = selection == BUF_SELECT_DEBUG ?
+        1 | BUF_SELECT_IQ << 1 : selection << 1;
+    WRITE_CONTROL_BITS(9, 3, select_out);
 }
 
 
@@ -468,7 +474,7 @@ bool hw_read_buf_status(void)
 
 bool hw_read_buf_busy(void)
 {
-    if (buf_selection == SELECT_IQ)
+    if (buf_selection == BUF_SELECT_IQ)
         return hw_read_buf_status()  &&  hw_read_seq_status();
     else
         return hw_read_buf_status();
@@ -485,6 +491,7 @@ static void get_buf_delays(int *low_delay, int *high_delay)
         case 1: *low_delay = 0;             *high_delay = 0;             break;
         case 2: *low_delay = BUF_FIR_DELAY; *high_delay = BUF_DAC_DELAY; break;
         case 3: *low_delay = BUF_ADC_DELAY; *high_delay = BUF_DAC_DELAY; break;
+        case 4: *low_delay = 0;             *high_delay = 0;             break;
         default: ASSERT_FAIL();
     }
 }
@@ -492,6 +499,7 @@ static void get_buf_delays(int *low_delay, int *high_delay)
 /* Annoyingly close to identical to min/max readout, but different channel
  * control. */
 void hw_read_buf_data(
+    int raw[RAW_BUF_DATA_LENGTH],
     short low[RAW_BUF_DATA_LENGTH], short high[RAW_BUF_DATA_LENGTH])
 {
     LOCK();
@@ -505,6 +513,7 @@ void hw_read_buf_data(
         for (int i = 0; i < RAW_BUF_DATA_LENGTH/4; i++)
         {
             uint32_t data = buffer_data[i];
+            raw [4*i + n] = data;
             low [4*((i - low_delay)  & (RAW_BUF_DATA_LENGTH/4 - 1)) + n] =
                 (short) (data & 0xFFFF);
             high[4*((i - high_delay) & (RAW_BUF_DATA_LENGTH/4 - 1)) + n] =

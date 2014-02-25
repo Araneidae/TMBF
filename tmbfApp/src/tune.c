@@ -448,7 +448,7 @@ static void set_tune_settings(void)
     WRITE_NAMED_RECORD(ulongout, bunch_channel, selected_bunch / 4);
 
     /* Force buffer to IQ and ensure the buffer is enabled. */
-    WRITE_NAMED_RECORD(mbbo, "BUF:SELECT", SELECT_IQ);
+    WRITE_NAMED_RECORD(mbbo, "BUF:SELECT", BUF_SELECT_IQ);
     WRITE_NAMED_RECORD(bo,   "TRG:SEQ:ENA", true);
 
     /* Configure the sequencer with the selected tune range.  Force count and
