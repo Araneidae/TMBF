@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 658
-y 206
+x 2140
+y 124
 w 649
-h 911
+h 622
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -33,8 +33,8 @@ major 4
 minor 0
 release 0
 x 8
-y 576
-w 352
+y 280
+w 464
 h 232
 lineColor index 14
 fill
@@ -67,7 +67,7 @@ major 4
 minor 1
 release 0
 x 576
-y 880
+y 584
 w 64
 h 24
 fgColor index 46
@@ -109,7 +109,7 @@ major 4
 minor 6
 release 0
 x 112
-y 592
+y 296
 w 56
 h 20
 controlPv "$(device):FTUN:DWELL_S"
@@ -137,7 +137,7 @@ major 4
 minor 1
 release 1
 x 8
-y 568
+y 272
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -156,7 +156,7 @@ major 4
 minor 0
 release 0
 x 8
-y 568
+y 272
 w 120
 h 16
 lineColor index 14
@@ -170,7 +170,7 @@ major 4
 minor 1
 release 1
 x 16
-y 592
+y 296
 w 67
 h 14
 font "helvetica-bold-r-12.0"
@@ -190,7 +190,7 @@ major 4
 minor 1
 release 1
 x 16
-y 664
+y 368
 w 34
 h 14
 font "helvetica-bold-r-12.0"
@@ -210,7 +210,7 @@ major 4
 minor 0
 release 0
 x 112
-y 664
+y 368
 w 96
 h 22
 fgColor index 14
@@ -229,7 +229,7 @@ major 4
 minor 6
 release 0
 x 112
-y 616
+y 320
 w 56
 h 20
 controlPv "$(device):FTUN:BUNCH_S"
@@ -257,7 +257,7 @@ major 4
 minor 1
 release 1
 x 16
-y 616
+y 320
 w 41
 h 14
 font "helvetica-bold-r-12.0"
@@ -277,7 +277,7 @@ major 4
 minor 0
 release 0
 x 112
-y 640
+y 344
 w 96
 h 22
 fgColor index 14
@@ -296,7 +296,7 @@ major 4
 minor 1
 release 1
 x 16
-y 640
+y 344
 w 77
 h 14
 font "helvetica-bold-r-12.0"
@@ -318,10 +318,10 @@ release 0
 # Geometry
 x 8
 y 40
-w 408
-h 168
+w 632
+h 224
 # Appearance
-graphTitle "Debug I/Q"
+graphTitle "Tune Following Frequency"
 fgColor index 14
 bgColor index 3
 gridColor index 14
@@ -332,7 +332,7 @@ nPts 2
 showXAxis
 xAxisSrc "fromUser"
 xMin 0
-xMax 4096
+xMax 1024
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -341,42 +341,19 @@ yMax 1
 y2AxisSrc "AutoScale"
 y2Max 1
 # Trace Properties
-numTraces 2
+numTraces 1
 yPv {
-  0 "$(device):FTUN:DEBUG:I"
-  1 "$(device):FTUN:DEBUG:Q"
+  0 "$(device):FTUN:FREQ"
 }
 plotUpdateMode {
   0 "y"
-  1 "y"
 }
 ySigned {
   0 1
-  1 1
 }
 plotColor {
   0 index 25
-  1 index 20
 }
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 368
-y 656
-w 120
-h 24
-fgColor index 14
-bgColor index 4
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):BUF:SELECT_S"
-font "helvetica-medium-r-14.0"
 endObjectProperties
 
 # (Rectangle)
@@ -386,9 +363,9 @@ major 4
 minor 0
 release 0
 x 8
-y 824
+y 528
 w 368
-h 48
+h 72
 lineColor index 14
 fill
 fillColor index 4
@@ -401,7 +378,7 @@ major 4
 minor 1
 release 1
 x 16
-y 840
+y 544
 w 59
 h 14
 font "helvetica-bold-r-12.0"
@@ -421,7 +398,7 @@ major 4
 minor 1
 release 1
 x 200
-y 840
+y 544
 w 59
 h 14
 font "helvetica-bold-r-12.0"
@@ -441,7 +418,7 @@ major 4
 minor 6
 release 0
 x 88
-y 840
+y 544
 w 96
 h 20
 controlPv "$(device):NCO:FREQ_S"
@@ -469,7 +446,7 @@ major 4
 minor 0
 release 0
 x 272
-y 840
+y 544
 w 96
 h 22
 fgColor index 14
@@ -488,7 +465,7 @@ major 4
 minor 1
 release 1
 x 8
-y 816
+y 520
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -507,7 +484,7 @@ major 4
 minor 0
 release 0
 x 8
-y 816
+y 520
 w 120
 h 16
 lineColor index 14
@@ -521,7 +498,7 @@ major 4
 minor 0
 release 0
 x 112
-y 688
+y 392
 w 96
 h 22
 fgColor index 14
@@ -540,7 +517,7 @@ major 4
 minor 1
 release 1
 x 16
-y 688
+y 392
 w 56
 h 14
 font "helvetica-bold-r-12.0"
@@ -553,310 +530,345 @@ value {
 autoSize
 endObjectProperties
 
-# (X-Y Graph)
-object xyGraphClass
+# (Menu Button)
+object activeMenuButtonClass
 beginObjectProperties
 major 4
-minor 8
+minor 0
 release 0
-# Geometry
-x 8
-y 216
-w 312
-h 168
-# Appearance
-graphTitle "Debug Magnitude"
+x 112
+y 456
+w 96
+h 22
 fgColor index 14
 bgColor index 3
-gridColor index 14
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):FTUN:IIR_S"
 font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-showXAxis
-xAxisSrc "fromUser"
-xMin 0
-xMax 4096
-# Y axis properties
-showYAxis
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-yPv {
-  0 "$(device):FTUN:DEBUG:MAG"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 456
+w 61
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "IIR decay:"
 }
-plotUpdateMode {
-  0 "y"
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 112
+y 432
+w 56
+h 20
+controlPv "$(device):FTUN:TARGET_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 432
+w 82
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Target phase:"
 }
-ySigned {
-  0 1
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 376
+y 304
+w 56
+h 20
+controlPv "$(device):FTUN:SCALE_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 272
+y 304
+w 95
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Feedback scale:"
 }
-plotColor {
-  0 index 25
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 376
+y 336
+w 56
+h 20
+controlPv "$(device):FTUN:MINMAG_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 272
+y 336
+w 62
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Mag. limit:"
+}
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 376
+y 368
+w 56
+h 20
+controlPv "$(device):FTUN:MAXDELTA_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 272
+y 368
+w 72
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Offset limit:"
+}
+autoSize
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 312
+y 456
+w 80
+h 22
+fgColor index 14
+onColor index 4
+offColor index 3
+topShadowColor index 1
+botShadowColor index 14
+controlPv "$(device):FTUN:START_S.PROC"
+pressValue "0"
+onLabel "Starting"
+offLabel "Start"
+3d
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 88
+y 576
+w 80
+h 16
+controlPv "$(device):NCO:FREQ"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 480
+y 584
+w 88
+h 24
+fgColor index 43
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "Debug"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/tune_follow_debug.edl"
 }
 endObjectProperties
 
-# (X-Y Graph)
-object xyGraphClass
+# (Text Monitor)
+object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 8
+minor 6
 release 0
-# Geometry
-x 424
-y 40
-w 216
-h 168
-# Appearance
-graphTitle "Debug I/Q"
-fgColor index 14
-bgColor index 3
-gridColor index 14
+x 408
+y 520
+w 184
+h 14
+controlPv "$(device):FTUN:FREQ:DROPOUT.DESC"
 font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-showXAxis
-xAxisSrc "AutoScale"
-xMin -200
-xMax 15500
-# Y axis properties
-showYAxis
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-xPv {
-  0 "$(device):FTUN:DEBUG:I"
-}
-yPv {
-  0 "$(device):FTUN:DEBUG:Q"
-}
-plotStyle {
-  0 "point"
-}
-plotUpdateMode {
-  0 "y"
-}
-xSigned {
-  0 1
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 25
-}
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
 endObjectProperties
 
-# (X-Y Graph)
-object xyGraphClass
+# (Rectangle)
+object activeRectangleClass
 beginObjectProperties
 major 4
-minor 8
+minor 0
 release 0
-# Geometry
-x 328
-y 216
-w 312
-h 168
-# Appearance
-graphTitle "Debug Angle"
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-showXAxis
-xAxisSrc "fromUser"
-xMin 0
-xMax 4096
-# Y axis properties
-showYAxis
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-yPv {
-  0 "$(device):FTUN:DEBUG:ANGLE"
-}
-plotUpdateMode {
-  0 "y"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 25
-}
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 8
-y 392
-w 312
-h 168
-# Appearance
-graphTitle "Debug Filtered"
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-showXAxis
-xAxisSrc "fromUser"
-xMin 0
-xMax 4096
-# Y axis properties
-showYAxis
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-yPv {
-  0 "$(device):FTUN:DEBUG:FILTER"
-}
-plotUpdateMode {
-  0 "y"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 25
-}
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 328
-y 392
-w 200
-h 80
-# Appearance
-graphTitle "IIR forward taps"
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "fromUser"
-xMin -0.5
-xMax 3
-# Y axis properties
-showYAxis
-yAxisSrc "AutoScale"
-yMax 1
-yLabelIntervals 2
-yUserSpecScaleDiv 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Min 8300
-y2Max 16600
-# Trace Properties
-numTraces 1
-yPv {
-  0 "$(device):FTUN:TAPS:A_S"
-}
-plotStyle {
-  0 "needle"
-}
-plotUpdateMode {
-  0 "y"
-}
-plotSymbolType {
-  0 "circle"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 27
-}
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 328
-y 480
-w 200
-h 80
-# Appearance
-graphTitle "IIR feedback taps"
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "fromUser"
-xMin -0.5
-xMax 3
-# Y axis properties
-showYAxis
-yAxisSrc "AutoScale"
-yMax 1
-yLabelIntervals 2
-yUserSpecScaleDiv 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Min 8300
-y2Max 16600
-# Trace Properties
-numTraces 1
-yPv {
-  0 "$(device):FTUN:TAPS:B_S"
-}
-plotStyle {
-  0 "needle"
-}
-plotUpdateMode {
-  0 "y"
-}
-plotSymbolType {
-  0 "circle"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 27
-}
+x 384
+y 520
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):FTUN:FREQ:DROPOUT"
 endObjectProperties
 

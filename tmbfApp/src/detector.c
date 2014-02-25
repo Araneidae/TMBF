@@ -347,12 +347,6 @@ void update_iq(
 }
 
 
-static void write_nco_freq(double tune)
-{
-    hw_write_nco_freq(tune_to_freq(tune));
-}
-
-
 void prepare_detector(bool settings_changed)
 {
     /* We don't want the following states to change during a detector sweep, so
@@ -438,9 +432,6 @@ bool initialise_detector(void)
     PUBLISH_WF_READ_VAR(int, "DET:TIMEBASE", TUNE_LENGTH, timebase);
     tune_scale_trigger =
         create_interlock("DET:SCALE:TRIG", "DET:SCALE:DONE", false);
-
-    PUBLISH_WRITER_P(ao,   "NCO:FREQ", write_nco_freq);
-    PUBLISH_WRITER_P(mbbo, "NCO:GAIN", hw_write_nco_gain);
 
     /* Initialise the scaling constants so that
      *  wf_scaling * 2^wf_shift = 936 * 2^-32. */

@@ -106,16 +106,20 @@ struct tmbf_config_space
         // Write only registers
         struct {
             uint32_t pulse;         //  0  Pulse event register
-            //  0       Arm DDR (must be pulsed, works on rising edge)
-            //  1       Soft trigger DDR (pulsed)
+            // All writes to this register generate single clock pulses for all
+            // written bits with the following effect:
+            //  0       Arm DDR
+            //  1       Soft trigger DDR
             //  2       Arm buffer and sequencer
-            //  3       Soft trigger buffer and sequencer (pulsed)
-            //  4       Arm bunch counter sync (pulsed)
+            //  3       Soft trigger buffer and sequencer
+            //  4       Arm bunch counter sync
             //  5       Disarm DDR, pulsed
             //  7       Abort sequencer operation
             //  8       Enable DDR capture (must be done before triggering)
             //  9       Initiate ADC min/max readout
             //  10      Initiate DAC min/max readout
+            //  11      Arm trigger phase capture
+            //  12      Enable tune following start
 
             uint32_t write_select;  //  1  Initiate write register
         };
@@ -151,14 +155,7 @@ struct tmbf_config_space
     uint32_t ddr_trigger_delay;     // 12  DDR Trigger delay control
     uint32_t buf_trigger_delay;     // 13  BUF Trigger delay control
     uint32_t trigger_blanking;      // 14  Trigger blanking length in turns
-    uint32_t ftune_control;         // 15  Tune following control
-    //  15:0    Dwell time in turns
-    //  16      Tune following enable
-    //  17      Multibunch enable
-    //  19:18   Channel selection
-    //  27:20   Single bunch selection
-    //  28      Input selection
-    //  31:29   Detector gain
+    uint32_t unused_15;             // 15
     uint32_t unused_16;             // 16   (unused)
     uint32_t fir_write;             // 17  Write FIR coefficients
     uint32_t unused_18;             // 18    (unused)
@@ -170,6 +167,29 @@ struct tmbf_config_space
     uint32_t unused_24;             // 24    (unused)
     uint32_t unused_25;             // 25    (unused)
     uint32_t latch_overflow;        // 26  Latch new overflow status
+    uint32_t ftune_control;         // 27  Tune following master control
+    // For writing supports the following fields:
+    //  15:0    Dwell time in turns
+    //  16      (unused)
+    //  17      Multibunch enable
+    //  19:18   Channel selection
+    //  27:20   Single bunch selection
+    //  28      Input selection
+    //  31:29   Detector gain
+    // For reading returns the following fields:
+    //  ..
+    uint32_t ftune_readout;         // 28  Tune following readout
+    // For writing supports these fields:
+    //  17:0    Target phase
+    //  20:18   IIR scaling
+    // For reading returns frequency offset values from FIFO with status and
+    // buffer info:
+    //  17:0    Frequency offset
+    //  30:21   Number of samples in buffer (including value being read)
+    //  31      Set of FIFO overflow has occurred
+    uint32_t ftune_scaling;         // 29  Tune following feedback scaling
+    uint32_t ftune_min_magnitude;   // 30  Magnitude threshold for feedback
+    uint32_t ftune_max_offset;      // 31  Frequency offset limit for feedback
 };
 
 /* These two pointers directly overlay the FF memory. */
@@ -543,6 +563,11 @@ void hw_write_nco_freq(uint32_t freq)
     config_space->nco_frequency = freq;
 }
 
+uint32_t hw_read_nco_freq(void)
+{
+    return config_space->nco_frequency;
+}
+
 void hw_write_nco_gain(unsigned int gain)
 {
     WRITE_CONTROL_BITS(16, 4, gain);
@@ -619,43 +644,55 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay)
 /* * * * * * * * * * * * * * * * * * * * * */
 /* FTUN: Fast Tune Following and Detector  */
 
-static int ftun_iir_order;
-
-/* Sub regions of FTUN control. */
-enum {
-    FTUN_SELECT_CONTROL = 0,        // For writing control register
-    FTUN_SELECT_FORWARD_TAPS = 2,   // For writing IIR forward taps
-    FTUN_SELECT_FEEDBACK_TAPS = 3   // For writing IIR feedback taps
-};
-
 void hw_write_ftun_control(struct ftun_control *control)
 {
     LOCK();
-    config_space->write_select = FTUN_SELECT_CONTROL;
     config_space->ftune_control =
         ((control->dwell - 1) & 0xFFFF) |       // bits 15:0
         control->multibunch << 17 |             //      17
         (control->bunch & 0x3FF) << 18 |        //      27:18
         (control->input_select & 0x1) << 28 |   //      28
         (control->det_gain & 0x7) << 29;        //      31:29
+    config_space->ftune_readout =
+        (control->target_phase & 0x3FFFF) |     // bits 17:0
+        (control->iir_rate & 0x7) << 18;        //      20:18
+    config_space->ftune_scaling = control->feedback_scale;
+    config_space->ftune_min_magnitude = control->min_magnitude;
+    config_space->ftune_max_offset = control->max_offset;
     UNLOCK();
 }
 
-void hw_write_ftun_iir_taps(const int *forward, const int *feedback)
+void hw_write_ftun_start(void)
 {
-    LOCK();
-    config_space->write_select = FTUN_SELECT_FORWARD_TAPS;
-    for (int i = 0; i <= ftun_iir_order; i ++)
-        config_space->ftune_control = forward[i];
-    config_space->write_select = FTUN_SELECT_FEEDBACK_TAPS;
-    for (int i = 0; i < ftun_iir_order; i ++)
-        config_space->ftune_control = feedback[i];
-    UNLOCK();
+    pulse_control_bit(12);
 }
 
-int hw_read_ftun_iir_order(void)
+uint32_t hw_read_ftun_status(void)
 {
-    return ftun_iir_order;
+    return config_space->ftune_control;
+}
+
+size_t hw_read_ftun_buffer(int buffer[FTUN_FIFO_SIZE], bool *dropout)
+{
+    /* Each word read has the following bit fields:
+     *  17:0    Payload (current frequency offset)
+     *  30:21   Words remaining in FIFO
+     *  31      Set if FIFO overrun detected. */
+    uint32_t word = config_space->ftune_readout;
+    size_t read_count = (word >> 21) & 0x3FF;
+    bool dropout_flag = word >> 31;
+    buffer[0] = (int) (word << 14) >> 14;
+
+    /* Simply empty the FIFO as it was when we came. */
+    for (size_t i = 1; i < read_count; i ++)
+    {
+        word = config_space->ftune_readout;
+        dropout_flag |= word >> 31;
+        buffer[i] = (int) (word << 14) >> 14;
+    }
+
+    *dropout = dropout_flag;
+    return read_count;
 }
 
 
@@ -790,8 +827,6 @@ bool initialise_hardware(const char *config_file)
     if (ok)
     {
         fir_filter_length = (config_space->fpga_version >> 16) & 0xF;
-        ftun_iir_order = 3; // Read this from config space
-//         ftun_iir_order = (config_space->fpga_version >> 20) & 0xF;
     }
     return ok;
 }

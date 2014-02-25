@@ -166,6 +166,9 @@ void hw_read_buf_data(
 /* Sets fixed NCO generator frequency. */
 void hw_write_nco_freq(uint32_t freq);
 
+/* Reads back current NCO generator frequency. */
+uint32_t hw_read_nco_freq(void);
+
 /* Sets fixed NCO generator output gain. */
 void hw_write_nco_gain(unsigned int gain);
 
@@ -201,23 +204,34 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay);
 /* * * * * * * * * * * * * * * * * * * * * */
 /* FTUN: Fast Tune Following and Detector  */
 
+#define FTUN_FIFO_SIZE  1023
+
 struct ftun_control {
     int dwell;                  // Dwell time in turns
     int bunch;                  // Bunch and channel selection for detector
     bool multibunch;            // Single or multibunch selector
     unsigned int input_select;  // ADC or FIR input (0 for ADC input)
     unsigned int det_gain;      // Detector gain
+    int target_phase;           // Target phase for feedback
+    unsigned int iir_rate;      // IIR feedback factor (1-2^N)
+    int feedback_scale;         // Scaling factor from phase to frequency
+    int min_magnitude;          // Minimum magnitude for feedback
+    int max_offset;             // Maximum frequency offset for feedback
 };
 
 /* Writes given settings to FTUN. */
 void hw_write_ftun_control(struct ftun_control *control);
 
-/* Write FTUN feedback IIR taps. */
-void hw_write_ftun_iir_taps(const int *forward, const int *feedback);
+/* Initiates tune following. */
+void hw_write_ftun_start(void);
 
-/* Returns order of feedback IIR.  If this is N then there are N+1 forward taps
- * and N feedback taps. */
-int hw_read_ftun_iir_order(void);
+/* Read current tune following status. */
+uint32_t hw_read_ftun_status(void);
+
+/* Reads up to FTUN_FIFO_SIZE words from the FTUN FIFO into buffer.  Sets the
+ * dropout flag if the FTUN buffer overflowed and returns the number of words
+ * read. */
+size_t hw_read_ftun_buffer(int buffer[FTUN_FIFO_SIZE], bool *dropout);
 
 
 /* * * * * * * * * * * * * * * * * * * * * */

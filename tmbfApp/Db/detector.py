@@ -65,9 +65,3 @@ boolOut('DET:RESET_WIN', FLNK = det_window, PINI = 'YES',
 # Total loop delay in turns.
 aOut('DET:LOOP:ADC', 1,
     EGU = 'turns', PREC = 1, DESC = 'Closed loop delay in turns')
-
-
-# Also put the fixed NCO control here
-aOut('NCO:FREQ', -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 5,
-    DESC = 'Fixed NCO frequency')
-mbbOut('NCO:GAIN', DESC = 'Fixed NCO gain', *dBrange(14, -6) + ['Off'])

@@ -228,9 +228,8 @@ static bool load_database(const char *database)
 {
     char macros[1024];
     snprintf(macros, sizeof(macros),
-        "DEVICE=%s,FIR_LENGTH=%d,IIR_ORDER=%d,IIR_LENGTH=%d",
-        device_name, hw_read_fir_length(),
-        hw_read_ftun_iir_order(), hw_read_ftun_iir_order() + 1);
+        "DEVICE=%s,FIR_LENGTH=%d",
+        device_name, hw_read_fir_length());
     return TEST_EPICS(dbLoadRecords(database, macros));
 }
 
