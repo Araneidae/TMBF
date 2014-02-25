@@ -214,6 +214,9 @@ void hw_write_ftun_multibunch(bool multibunch);
 /* Select between ADC and FIR input. */
 void hw_write_ftun_input_select(unsigned int input);
 
+/* Select detector scaling. */
+void hw_write_ftun_det_gain(unsigned int gain);
+
 /* Enable tune following. */
 void hw_write_ftun_enable(bool enable);
 

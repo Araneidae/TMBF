@@ -158,7 +158,7 @@ struct tmbf_config_space
     //  19:18   Channel selection
     //  27:20   Single bunch selection
     //  28      Input selection
-    //  31:29   (unused)
+    //  31:29   Detector gain
     uint32_t ftune_control2;        // 16  Extra tune following control
     //  15:0    Cordic rotation angle
     uint32_t fir_write;             // 17  Write FIR coefficients
@@ -623,6 +623,7 @@ static int ftun_dwell;
 static int ftun_bunch;
 static bool ftun_multibunch;
 static unsigned int ftun_input_select;
+static unsigned int ftun_det_gain;
 static bool ftun_enable;
 
 static void update_ftune_state(void)
@@ -632,7 +633,8 @@ static void update_ftune_state(void)
         ftun_enable << 16 |                 //      16
         ftun_multibunch << 17 |             //      17
         (ftun_bunch & 0x3FF) << 18 |        //      27:18
-        (ftun_input_select & 0x1) << 28;    //      28
+        (ftun_input_select & 0x1) << 28 |   //      28
+        (ftun_det_gain & 0x7) << 29;        //      31:29
 }
 
 #define DEFINE_FTUN_WRITE(name) \
@@ -649,6 +651,7 @@ DEFINE_FTUN_WRITE(bunch)
 DEFINE_FTUN_WRITE(multibunch)
 DEFINE_FTUN_WRITE(input_select)
 DEFINE_FTUN_WRITE(enable)
+DEFINE_FTUN_WRITE(det_gain)
 
 
 void hw_write_ftun_rotation(uint32_t rotation)
