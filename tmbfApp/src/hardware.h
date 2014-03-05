@@ -262,7 +262,8 @@ void hw_read_ftun_status(bool status[FTUN_BIT_COUNT]);
 void hw_read_ftun_angle_mag(int *angle, int *magnitude);
 
 /* Reads current frequency offset.  Returns true if frequency offset active,
- * false if NCO set to programmed frequency. */
+ * false if NCO set to programmed frequency.  The frequency returned is filtered
+ * with 12 extra bits of precision. */
 bool hw_read_ftun_frequency(int *frequency);
 
 /* Reads up to FTUN_FIFO_SIZE words from the FTUN FIFO into buffer.  Sets the

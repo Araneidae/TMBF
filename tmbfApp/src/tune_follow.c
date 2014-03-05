@@ -98,9 +98,8 @@ void update_tune_follow_debug(const int *buffer_raw)
         debug_i[i]      = buffer_raw[j] & 0xFFFF;
         debug_q[i]      = buffer_raw[j] >> 16;
         /* IQ angle in degrees. */
-        int angle = ((buffer_raw[j+1] >> 16) << 2) - ftun_control.target_phase;
         fixed_to_single(
-            (angle << 14) >> 14,
+            (int) (buffer_raw[j+1] & 0xFFFF0000) >> 14,
             &debug_angle[i], angle_scaling, angle_scaling_shift);
         /* IQ magnitude. */
         debug_mag[i]    = buffer_raw[j+1] & 0xFFFF;
@@ -180,11 +179,14 @@ static void write_nco_freq(double tune)
 
 static double read_nco_freq(void)
 {
-    int current_nco_freq = nco_freq;
+    double result = BUNCHES_PER_TURN / pow(2, 32) * nco_freq;
     int offset;
     if (hw_read_ftun_frequency(&offset))
-        current_nco_freq += offset;
-    return BUNCHES_PER_TURN / pow(2, 32) * current_nco_freq;
+    {
+        result += BUNCHES_PER_TURN / pow(2, 44) * offset;
+    }
+
+    return result;
 }
 
 
@@ -199,11 +201,12 @@ static void read_ftun_status(void)
     ftun_running = status_array[FTUN_STAT_RUNNING];
     UNLOCK_RUNNING();
 
-    int angle;
-    hw_read_ftun_angle_mag(&angle, &current_magnitude);
-    current_angle = 360.0 / pow(2, 18) * angle;
-    int delta = ((angle - ftun_control.target_phase) << 14) >> 14;
+    int delta;
+    hw_read_ftun_angle_mag(&delta, &current_magnitude);
     delta_angle = 360.0 / pow(2, 18) * delta;
+
+    int angle = ftun_control.target_phase + delta;
+    current_angle = 360.0 / pow(2, 18) * angle;
 }
 
 

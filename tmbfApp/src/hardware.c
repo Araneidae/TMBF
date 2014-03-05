@@ -729,7 +729,7 @@ void hw_read_ftun_angle_mag(int *angle, int *magnitude)
 bool hw_read_ftun_frequency(int *frequency)
 {
     int freq_word = config_space->ftune_freq_offset;
-    *frequency = (freq_word << 14) >> 14;
+    *frequency = (freq_word << 2) >> 2;
     return (freq_word >> 31) & 1;
 }
 
