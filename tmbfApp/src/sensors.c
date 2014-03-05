@@ -621,6 +621,7 @@ static void read_overflows(void)
         [OVERFLOW_FIR] = true,
         [OVERFLOW_DAC] = true,
         [OVERFLOW_DAC_COMP] = true,
+        [OVERFLOW_ADC_LIMIT] = true,
     };
     hw_read_overflows(read_mask, overflows);
 }
@@ -653,6 +654,7 @@ bool initialise_sensors(void)
     PUBLISH_READ_VAR(bi, "SE:OVF:FIR", overflows[OVERFLOW_FIR]);
     PUBLISH_READ_VAR(bi, "SE:OVF:DAC", overflows[OVERFLOW_DAC]);
     PUBLISH_READ_VAR(bi, "SE:OVF:COMP", overflows[OVERFLOW_DAC_COMP]);
+    PUBLISH_READ_VAR(bi, "SE:OVF:ADC", overflows[OVERFLOW_ADC_LIMIT]);
 
     InitialiseUptime();
     initialise_fan_control();

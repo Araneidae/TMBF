@@ -166,7 +166,7 @@ struct tmbf_config_space
     uint32_t unused_15;             // 15   (unused)
     uint32_t unused_16;             // 16   (unused)
     uint32_t fir_write;             // 17  Write FIR coefficients
-    uint32_t unused_18;             // 18   (unused)
+    uint32_t adc_limit;             // 18  Configure ADC limit threshold
     uint32_t bunch_write;           // 19  Write bunch configuration
     uint32_t adc_minmax_read;       // 20  Read ADC min/max data
     uint32_t dac_minmax_read;       // 21  Read DAC min/max data
@@ -379,6 +379,11 @@ void hw_read_adc_minmax(
 void hw_write_adc_skew(unsigned int skew)
 {
     WRITE_CONTROL_BITS(30, 2, skew);
+}
+
+void hw_write_adc_limit(int limit)
+{
+    config_space->adc_limit = limit;
 }
 
 
@@ -867,9 +872,19 @@ void hw_write_trg_blanking(int trigger_blanking)
     config_space->trigger_blanking = trigger_blanking;
 }
 
+void hw_write_trg_blanking_source(unsigned int source)
+{
+    WRITE_CONTROL_BITS(9, 1, source);
+}
+
 void hw_write_trg_arm_raw_phase(void)
 {
     pulse_control_bit(11);
+}
+
+void hw_write_trg_ddr_source(unsigned int source)
+{
+    WRITE_CONTROL_BITS(6, 2, source);
 }
 
 int hw_read_trg_raw_phase(void)

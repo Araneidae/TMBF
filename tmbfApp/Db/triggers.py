@@ -37,9 +37,15 @@ TriggerTarget('BUF', 'Fast buffer')
 boolOut('TRG:SEQ:ENA', 'Disabled', 'Enabled', DESC = 'Sequencer trigger enable')
 TriggerStatus('SEQ', 'Sequencer')
 
+mbbOut('TRG:DDR:SOURCE', 'Trigger', 'Postmortem', 'ADC Overflow', 'Seq State',
+    DESC = 'Configure DDR trigger source')
+
+
 
 longOut('TRG:BLANKING', 0, 65535, EGU = 'turns',
     DESC = 'Sequencer blanking window after trigger')
+mbbOut('TRG:BLANKING:SOURCE', 'Trigger', 'SCLK Input',
+    DESC = 'Configure blanking window source')
 
 
 # A simple device to toggle the front panel LED at 1Hz to show life.

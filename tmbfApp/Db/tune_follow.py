@@ -36,10 +36,14 @@ ForwardLink('FTUN:CONTROL', 'Update tune follow control settings',
     mbbOut('FTUN:FREQ:IIR', DESC = 'Frequency readback IIR', *IIR(8, 2)),
 
     FLNK = create_fanout('FTUN:IIR:FAN',
-        aIn('FTUN:IIR:TC', EGU = 'ms', PREC = 1),
-        aIn('FTUN:MAG:IIR:TC', EGU = 'ms', PREC = 1),
-        aIn('FTUN:ANGLE:IIR:TC', EGU = 'ms', PREC = 1),
-        aIn('FTUN:FREQ:IIR:TC', EGU = 'ms', PREC = 1))
+        aIn('FTUN:IIR:TC', EGU = 'ms', PREC = 1,
+            DESC = 'Time constant for feedback IIR'),
+        aIn('FTUN:MAG:IIR:TC', EGU = 'ms', PREC = 1,
+            DESC = 'Time constant for magnitude IIR'),
+        aIn('FTUN:ANGLE:IIR:TC', EGU = 'ms', PREC = 1,
+            DESC = 'Time constant for angle IIR'),
+        aIn('FTUN:FREQ:IIR:TC', EGU = 'ms', PREC = 1,
+            DESC = 'Time constant for frequency IIR'))
 )
 
 aOut('FTUN:LOOP:ADC',
@@ -110,6 +114,6 @@ Action('FTUN:STAT:SCAN',
 # Fixed NCO control
 aOut('NCO:FREQ', -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 5,
     DESC = 'Fixed NCO frequency')
-aIn('NCO:FREQ',  0, BUNCHES_PER_TURN, 'tune', 5,
+aIn('NCO:FREQ',  0, BUNCHES_PER_TURN, 'tune', 6,
     DESC = 'Current fixed NCO frequency', SCAN = '.1 second')
 mbbOut('NCO:GAIN', DESC = 'Fixed NCO gain', *dBrange(14, -6) + ['Off'])

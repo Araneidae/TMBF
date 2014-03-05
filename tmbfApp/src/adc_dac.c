@@ -136,6 +136,7 @@ bool initialise_adc_dac(void)
     /* Offset control for ADC. */
     PUBLISH_WF_ACTION_P(short, "ADC:OFFSET", 4, hw_write_adc_offsets);
     adc_skew_pv = PUBLISH_WRITER_P(mbbo, "ADC:DELAY", write_adc_skew);
+    PUBLISH_WRITER_P(longout, "ADC:LIMIT", hw_write_adc_limit);
 
     /* Direct register control for DAC. */
     PUBLISH_WRITER_P(bo, "DAC:ENABLE", hw_write_dac_enable);

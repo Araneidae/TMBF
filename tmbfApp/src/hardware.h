@@ -32,6 +32,7 @@ enum OVERFLOW_BITS {
     OVERFLOW_FIR        = 0,    // Overflow in FIR gain control output
     OVERFLOW_DAC        = 1,    // Overflow in DAC multiplexor and scaling
     OVERFLOW_DAC_COMP   = 2,    // Overflow in DAC pre-emphasis filter
+    OVERFLOW_ADC_LIMIT  = 3,    // ADC input exceeds configured limit
 
     OVERFLOW_IQ_FIR     = 4,    // Overflow in IQ detector FIR input
     OVERFLOW_IQ_ACC     = 5,    // Overflow in IQ detector accumulator
@@ -69,6 +70,9 @@ void hw_read_adc_minmax(
 
 /* Sets low level initial ADC delay. */
 void hw_write_adc_skew(unsigned int skew);
+
+/* Writes limit for triggering ADC limit event. */
+void hw_write_adc_limit(int limit);
 
 
 /* * * * * * * * * * * * * * * */
@@ -328,8 +332,14 @@ void hw_write_trg_delays(int ddr_delay, int buf_delay);
 /* Configure blanking interval after external trigger in turns. */
 void hw_write_trg_blanking(int trigger_blanking);
 
+/* Configure trigger or SCLK connector as blanking source. */
+void hw_write_trg_blanking_source(unsigned int source);
+
 /* Arms next capture of trigger. */
 void hw_write_trg_arm_raw_phase(void);
+
+/* Configure DDR trigger source. */
+void hw_write_trg_ddr_source(unsigned int source);
 
 /* Returns raw phase bits from trigger. */
 int hw_read_trg_raw_phase(void);

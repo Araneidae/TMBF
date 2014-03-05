@@ -431,6 +431,8 @@ bool initialise_triggers(void)
 
     PUBLISH_WRITER(bo, "FPLED", hw_write_front_panel_led);
     PUBLISH_WRITER_P(longout, "TRG:BLANKING", hw_write_trg_blanking);
+    PUBLISH_WRITER_P(mbbo, "TRG:BLANKING:SOURCE", hw_write_trg_blanking_source);
+    PUBLISH_WRITER_P(mbbo, "TRG:DDR:SOURCE", hw_write_trg_ddr_source);
 
     pthread_t thread_id;
     return TEST_0(pthread_create(&thread_id, NULL, monitor_events, NULL));
