@@ -302,7 +302,10 @@ void hw_write_seq_entries(
 
 /* Programs sequencer program counter.  The sequencer will run the next time the
  * buffer is armed. */
-void hw_write_seq_count(unsigned int sequencer_pc);
+void hw_write_seq_count(int sequencer_pc);
+
+/* Configure sequencer state which will generate trigger. */
+void hw_write_seq_trig_state(int state);
 
 /* Returns current sequencer state. */
 unsigned int hw_read_seq_state(void);

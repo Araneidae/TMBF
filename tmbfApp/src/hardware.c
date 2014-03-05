@@ -104,6 +104,7 @@ struct tmbf_config_space
         //  10      Initiate DAC min/max readout
         //  11      Arm trigger phase capture
         //  12      Enable tune following start
+        //  13      Initiate fast buffer readout
     };
     union {                         // 1
         const uint32_t system_status;   // Status register
@@ -129,13 +130,14 @@ struct tmbf_config_space
 
     uint32_t control;               //  2  System control register
     //  0       Global DAC output enable (1 => enabled)
-    //  1       (unused)
+    //  1       Enable tune following feedback
     //  2       Detector input select
     //  5:3     Sequencer starting state
-    //  9:6     (unused)
+    //  7:6     Select DDR trigger source
+    //  8       Detector bunch mode enable
+    //  9       Select blanking source
     //  11:10   Buffer data select (FIR+ADC/IQ/FIR+DAC/ADC+DAC)
-    //  13:12   Buffer readback channel select
-    //  14      Detector bunch mode enable
+    //  14:12   Select sequencer state for trigger generation
     //  15      Select debug data for IQ buffer input
     //  19:16   HOM gain select (in 6dB steps)
     //  22:20   FIR gain select (in 6dB steps)
@@ -170,7 +172,7 @@ struct tmbf_config_space
     uint32_t bunch_write;           // 19  Write bunch configuration
     uint32_t adc_minmax_read;       // 20  Read ADC min/max data
     uint32_t dac_minmax_read;       // 21  Read DAC min/max data
-    uint32_t unused_22;             // 22    (unused)
+    uint32_t fast_buffer_read;      // 22  Read fast buffer data
     uint32_t sequencer_write;       // 23  Write sequencer data
     union {                         // 24
         const uint32_t ftune_status;    // Tune following status
@@ -574,19 +576,14 @@ void hw_read_buf_data(
     int low_delay, high_delay;
     get_buf_delays(&low_delay, &high_delay);
 
-    for (int n = 0; n < 4; n++)
+    pulse_control_bit(13);
+    for (int i = 0; i < RAW_BUF_DATA_LENGTH; i++)
     {
-        /* Channel select and read enable for buffer. */
-        write_control_bit_field(12, 2, n);
-        for (int i = 0; i < RAW_BUF_DATA_LENGTH/4; i++)
-        {
-            uint32_t data = buffer_data[i];
-            raw [4*i + n] = data;
-            low [4*((i - low_delay)  & (RAW_BUF_DATA_LENGTH/4 - 1)) + n] =
-                (short) (data & 0xFFFF);
-            high[4*((i - high_delay) & (RAW_BUF_DATA_LENGTH/4 - 1)) + n] =
-                (short) (data >> 16);
-        }
+        uint32_t data = config_space->fast_buffer_read;
+
+        raw[i] = data;
+        low [(i - 4*low_delay ) % RAW_BUF_DATA_LENGTH] = data & 0xFFFF;
+        high[(i - 4*high_delay) % RAW_BUF_DATA_LENGTH] = data >> 16;
     }
     UNLOCK();
 }
@@ -614,7 +611,7 @@ static unsigned int det_bunches[4];
 
 void hw_write_det_mode(bool bunch_mode)
 {
-    WRITE_CONTROL_BITS(14, 1, bunch_mode);
+    WRITE_CONTROL_BITS(8, 1, bunch_mode);
 }
 
 /* Applies the appropriate bunch selection offset to the detector bunch
@@ -814,9 +811,14 @@ void hw_write_seq_entries(
     UNLOCK();
 }
 
-void hw_write_seq_count(unsigned int sequencer_pc)
+void hw_write_seq_count(int sequencer_pc)
 {
     WRITE_CONTROL_BITS(3, 3, sequencer_pc);
+}
+
+void hw_write_seq_trig_state(int state)
+{
+    WRITE_CONTROL_BITS(12, 3, state);
 }
 
 unsigned int hw_read_seq_state(void)

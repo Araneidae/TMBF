@@ -68,6 +68,8 @@ Trigger('SEQ:INFO',
 longIn('SEQ:PC', DESC = 'Current sequencer state', SCAN = '.1 second')
 Action('SEQ:RESET', DESC = 'Halt detector if busy')
 
+longOut('SEQ:TRIGGER', 0, 7, DESC = 'State to generate sequencer trigger')
+
 
 Trigger('BUF',
     Waveform('BUF:WF', BUF_DATA_LENGTH, 'LONG', DESC = 'Raw fast buffer'),

@@ -223,6 +223,7 @@ bool initialise_sequencer(void)
     PUBLISH_WRITER_P(ulongout, "SEQ:PC", write_seq_count);
     PUBLISH_READER(ulongin, "SEQ:PC", hw_read_seq_state);
     PUBLISH_ACTION("SEQ:RESET", hw_write_seq_reset);
+    PUBLISH_WRITER_P(longout, "SEQ:TRIGGER", hw_write_seq_trig_state);
 
     info_trigger = create_interlock("SEQ:INFO:TRIG", "SEQ:INFO:DONE", false);
     PUBLISH_READ_VAR(longin, "SEQ:LENGTH", capture_count);

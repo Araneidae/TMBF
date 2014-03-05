@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 61
-y 141
+x 533
+y 649
 w 641
 h 512
 font "helvetica-medium-r-18.0"
@@ -45,7 +45,7 @@ endObjectProperties
 object xyGraphClass
 beginObjectProperties
 major 4
-minor 6
+minor 8
 release 0
 # Geometry
 x 8
@@ -97,7 +97,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 0
 y 0
 w 648
@@ -134,7 +134,7 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 2
+minor 3
 release 0
 x 4
 y 4
@@ -157,7 +157,7 @@ endObjectProperties
 object xyGraphClass
 beginObjectProperties
 major 4
-minor 6
+minor 8
 release 0
 # Geometry
 x 8
@@ -205,7 +205,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 80
 y 464
@@ -233,7 +233,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
 y 464
 w 40
@@ -253,7 +253,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
 y 480
 w 27
@@ -272,7 +272,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 80
 y 480
@@ -299,7 +299,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 80
 y 440
@@ -328,7 +328,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 16
 y 440
 w 66
@@ -348,7 +348,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 152
 y 440
 w 4
@@ -367,7 +367,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 168
 y 440
@@ -395,7 +395,7 @@ endObjectProperties
 object xyGraphClass
 beginObjectProperties
 major 4
-minor 6
+minor 8
 release 0
 # Geometry
 x 240
@@ -451,7 +451,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 416
 w 120
@@ -486,7 +486,7 @@ major 4
 minor 0
 release 0
 x 512
-y 416
+y 448
 w 120
 h 24
 fgColor index 14
@@ -496,5 +496,53 @@ topShadowColor index 1
 botShadowColor index 11
 controlPv "$(device):ADC:SCAN_S.SCAN"
 font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 400
+y 416
+w 58
+h 14
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Max ADC:"
+}
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 464
+y 416
+w 72
+h 20
+controlPv "$(device):ADC:LIMIT_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
 endObjectProperties
 
