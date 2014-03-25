@@ -22,39 +22,30 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Experimental peak measurement code. */
 
-#define MAX_EDGES   20
 #define MAX_PEAKS   4
 
-struct edge_info {
-    bool up;
-    int start;
-    int end;
-};
-
 struct peak_info {
-    size_t length;      // Length of waveform
-    int min_threshold;
-    int max_threshold;
-    int edge_count;
+    int length;      // Length of waveform
+    int peak_floor;
     int peak_count;
-    struct edge_info edges[MAX_EDGES];
-    int edge_wf[MAX_EDGES];
     int peak_ix_wf[MAX_PEAKS];
     int peak_val_wf[MAX_PEAKS];
-    float peak_q[MAX_PEAKS];
-    int wf[];           // Smoothed power waveform
+    int peak_left_wf[MAX_PEAKS];
+    int peak_right_wf[MAX_PEAKS];
+    float peak_quality[MAX_PEAKS];
+    int *power;            // Smoothed power waveform
+    int *power_dd;
 };
 
 static struct peak_info *peak_info_4;
 static struct peak_info *peak_info_16;
 static struct peak_info *peak_info_64;
 
-static double peak_threshold_min;
-static double peak_threshold_max;
+static double peak_floor;
 
 
 /* Returns index of maximum element of array. */
-static int find_max(int length, const int *array)
+static int find_max_ix(int length, const int *array)
 {
     int max_val = array[0];
     int max_ix = 0;
@@ -68,141 +59,135 @@ static int find_max(int length, const int *array)
 }
 
 
-static void emit_edge(struct peak_info *info, int start, int end, bool up)
+/* Searches for point of highest downwards curvature not enclosed by a peak
+ * already found. */
+static int find_peak_ix(struct peak_info *info)
 {
-    if (info->edge_count < MAX_EDGES)
+    int min_val = 0;
+    int peak_ix = 0;
+    for (int ix = 1; ix < info->length; ix ++)
     {
-        struct edge_info *edge = &info->edges[info->edge_count];
-        edge->up = up;
-        edge->start = start;
-        edge->end = end;
-        info->edge_wf[info->edge_count] = info->wf[end] - info->wf[start];
-        info->edge_count += 1;
+        /* Scan for ix inside an already discovered peak. */
+        for (int p = 0; p < info->peak_count; p ++)
+            if (info->peak_left_wf[p] <= ix &&  ix <= info->peak_right_wf[p])
+                ix = info->peak_right_wf[p] + 1;
+        if (info->power_dd[ix] < min_val)
+        {
+            peak_ix = ix;
+            min_val = info->power_dd[ix];
+        }
     }
+    return peak_ix;
 }
 
-/* Scan for peaks. */
-static void scan_edges(struct peak_info *info)
+static void find_peak_limits(struct peak_info *info, int peak_ix)
 {
-    info->edge_count = 0;
-    memset(info->edges, 0, sizeof(info->edges));
-    memset(info->edge_wf, 0, sizeof(info->edge_wf));
+    int left = peak_ix;
+    while (left > 0  &&  info->power[left] >= info->peak_floor)
+        left -= 1;
+    int right = peak_ix;
+    while (right < info->length - 1  &&  info->power[right] >= info->peak_floor)
+        right += 1;
 
-    for (size_t ix = 1; ix < info->length; )
-    {
-        size_t start_ix = ix - 1;
-        while (ix < info->length  &&  info->wf[ix] >= info->wf[ix - 1])
-            ix ++;
-        size_t end_ix = ix - 1;
-        int step_up = info->wf[end_ix] - info->wf[start_ix];
-        if (step_up >= info->max_threshold)
-            emit_edge(info, start_ix, end_ix, true);
-
-        start_ix = ix - 1;
-        while (ix < info->length  &&  info->wf[ix] <= info->wf[ix - 1])
-            ix ++;
-        end_ix = ix - 1;
-        int step_dn = info->wf[start_ix] - info->wf[end_ix];
-        if (step_dn >= info->max_threshold)
-            emit_edge(info, start_ix, end_ix, false);
-    }
+    int p = info->peak_count;
+    info->peak_ix_wf[p] = peak_ix;
+    info->peak_val_wf[p] = info->power[peak_ix];
+    info->peak_left_wf[p] = left;
+    info->peak_right_wf[p] = right;
 }
-
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-static void emit_peak(struct peak_info *info, int edge_ix)
+static void assess_peak_quality(struct peak_info *info, int peak_ix)
 {
-    if (info->peak_count < MAX_PEAKS)
-    {
-        int left_ix = info->edges[edge_ix-1].start;
-        int middle_ix = info->edges[edge_ix].start;
-        int right_ix = info->edges[edge_ix].end;
-        int left = info->wf[left_ix];
-        int middle = info->wf[middle_ix];
-        int right = info->wf[right_ix];
-
-        info->peak_ix_wf[info->peak_count] = middle_ix;
-        info->peak_val_wf[info->peak_count] = middle;
-
-        /* Compute a simple peak quality factor. */
-        info->peak_q[info->peak_count] =
-            (middle - MAX(left, right)) / (float) info->max_threshold;
-
-        info->peak_count += 1;
-    }
+    int left = peak_ix;
+    while (left > 0  &&  info->power_dd[left] <= 0)
+        left -= 1;
+    int right = peak_ix;
+    while (right < info->length - 1  &&  info->power_dd[right] <= 0)
+        right += 1;
+    info->peak_quality[info->peak_count] =
+        (info->power[peak_ix] - MAX(info->power[left], info->power[right])) /
+        (float) info->power[peak_ix];
 }
 
 static void find_peaks(struct peak_info *info)
 {
-    info->peak_count = 0;
-    for (int ix = 0; ix < info->edge_count; ix ++)
+    for (info->peak_count = 0; info->peak_count < MAX_PEAKS;
+         info->peak_count ++)
     {
-        while (ix < info->edge_count  &&  info->edges[ix].up)
-            ix += 1;
-        if (0 < ix  &&  ix < info->edge_count)
-            emit_peak(info, ix);
-        while (ix < info->edge_count  &&  !info->edges[ix].up)
-            ix += 1;
+        int peak_ix = find_peak_ix(info);
+        find_peak_limits(info, peak_ix);
+        assess_peak_quality(info, peak_ix);
     }
-    for (int ix = info->peak_count; ix < MAX_PEAKS; ix ++)
-    {
-        info->peak_ix_wf[ix] = 0;
-        info->peak_val_wf[ix] = 0;
-        info->peak_q[ix] = 0;
-    }
-}
-
-
-static void process_peak(struct peak_info *info)
-{
-    int max_val = info->wf[find_max(info->length, info->wf)];
-    info->min_threshold = (int) round(peak_threshold_min * max_val);
-    info->max_threshold = (int) round(peak_threshold_max * max_val);
-    scan_edges(info);
-    find_peaks(info);
 }
 
 
 /* Smooths input waveform by taking means of 4 bins at a time. */
-static void smooth_waveform(size_t length, const int *wf_in, int *wf_out)
+static void smooth_waveform(int length, const int *wf_in, int *wf_out)
 {
-    for (size_t i = 0; i < length / 4; i ++)
+    for (int i = 0; i < length / 4; i ++)
     {
         int64_t accum = 0;
-        for (size_t j = 0; j < 4; j ++)
+        for (int j = 0; j < 4; j ++)
             accum += wf_in[4*i + j];
         wf_out[i] = (int) (accum / 4);
     }
 }
 
+/* Computes second derivative of curve. */
+static void compute_dd(int length, const int *wf_in, int *wf_out)
+{
+    wf_out[0] = 0;
+    for (int i = 0; i < length - 1; i ++)
+    {
+        int64_t accum =
+            (int64_t) wf_in[i-1] -
+            (int64_t) 2 * wf_in[i] +
+            (int64_t) wf_in[i+1];
+        wf_out[i] = (int) (accum / 4);
+    }
+    wf_out[length - 1] = 0;
+}
+
+
+static void process_peak(struct peak_info *info)
+{
+    int max_ix = find_max_ix(info->length, info->power);
+    info->peak_floor = (int) (peak_floor * info->power[max_ix]);
+    compute_dd(info->length, info->power, info->power_dd);
+    find_peaks(info);
+}
+
 
 static void process_peaks(const int power[TUNE_LENGTH])
 {
-    smooth_waveform(TUNE_LENGTH,    power,            peak_info_4->wf);
-    smooth_waveform(TUNE_LENGTH/4,  peak_info_4->wf,  peak_info_16->wf);
-    smooth_waveform(TUNE_LENGTH/16, peak_info_16->wf, peak_info_64->wf);
+    smooth_waveform(TUNE_LENGTH,    power,               peak_info_4->power);
+    smooth_waveform(TUNE_LENGTH/4,  peak_info_4->power,  peak_info_16->power);
+    smooth_waveform(TUNE_LENGTH/16, peak_info_16->power, peak_info_64->power);
     process_peak(peak_info_4);
     process_peak(peak_info_16);
     process_peak(peak_info_64);
 }
 
 
-static struct peak_info *publish_peak_info(size_t length, const char *suffix)
+static struct peak_info *publish_peak_info(int length, const char *suffix)
 {
-    struct peak_info *info =
-        malloc(sizeof(struct peak_info) + length * sizeof(int));
+    struct peak_info *info = malloc(sizeof(struct peak_info));
     info->length = length;
+    info->power = malloc(length * sizeof(int));
+    info->power_dd = malloc(length * sizeof(int));
 
     char buffer[20];
 #define FORMAT(name) \
     (sprintf(buffer, "TUNE:%s:%s", name, suffix), buffer)
-    PUBLISH_WF_READ_VAR(int, FORMAT("POWER"), length, info->wf);
-    PUBLISH_WF_READ_VAR(int, FORMAT("EDGE"), MAX_EDGES, info->edge_wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("POWER"), length, info->power);
+    PUBLISH_WF_READ_VAR(int, FORMAT("PDD"), length, info->power_dd);
     PUBLISH_WF_READ_VAR(int, FORMAT("PEAKIX"), MAX_PEAKS, info->peak_ix_wf);
     PUBLISH_WF_READ_VAR(int, FORMAT("PEAKV"), MAX_PEAKS, info->peak_val_wf);
-    PUBLISH_WF_READ_VAR(float, FORMAT("PEAKQ"), MAX_PEAKS, info->peak_q);
-    PUBLISH_READ_VAR(longin, FORMAT("ECOUNT"), info->edge_count);
+    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKL"), MAX_PEAKS, info->peak_left_wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKR"), MAX_PEAKS, info->peak_right_wf);
+    PUBLISH_WF_READ_VAR(float, FORMAT("PEAKQ"), MAX_PEAKS, info->peak_quality);
 #undef FORMAT
     return info;
 }
@@ -213,8 +198,7 @@ static void publish_peaks(void)
     peak_info_16 = publish_peak_info(TUNE_LENGTH/16, "16");
     peak_info_64 = publish_peak_info(TUNE_LENGTH/64, "64");
 
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MIN", peak_threshold_min);
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MAX", peak_threshold_max);
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:FLOOR", peak_floor);
 }
 
 
@@ -440,7 +424,7 @@ static epicsAlarmSeverity measure_tune(
      *  -   Median filter on incoming data
      *  -   Quadratic fit for peak detect
      *  -   Knockout waveform for spike removal. */
-    int peak_ix = find_max(length, sweep->power);
+    int peak_ix = find_max_ix(length, sweep->power);
     int threshold = (int) (threshold_fraction * sweep->power[peak_ix]);
     struct block blocks[MAX_BLOCKS];
     int block_count = find_blocks(length, sweep->power, threshold, blocks);

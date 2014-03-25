@@ -31,15 +31,18 @@ def peak_readbacks(suffix):
     return [
         Waveform('TUNE:POWER:%d' % suffix, TUNE_LENGTH/suffix, 'LONG',
             DESC = 'Smoothed tune'),
-        Waveform('TUNE:EDGE:%d' % suffix, MAX_EDGES, 'LONG',
-            DESC = 'Detected edges'),
-        longIn('TUNE:ECOUNT:%d' % suffix, DESC = 'Number of edges'),
         Waveform('TUNE:PEAKIX:%d' % suffix, MAX_PEAKS, 'LONG',
             DESC = 'Peak indexes'),
         Waveform('TUNE:PEAKV:%d' % suffix, MAX_PEAKS, 'LONG',
             DESC = 'Peak values'),
+        Waveform('TUNE:PEAKL:%d' % suffix, MAX_PEAKS, 'LONG',
+            DESC = 'Peak left'),
+        Waveform('TUNE:PEAKR:%d' % suffix, MAX_PEAKS, 'LONG',
+            DESC = 'Peak right'),
         Waveform('TUNE:PEAKQ:%d' % suffix, MAX_PEAKS, 'FLOAT',
             DESC = 'Peak quality'),
+        Waveform('TUNE:PDD:%d' % suffix, TUNE_LENGTH/suffix, 'LONG',
+            DESC = 'Second derivative of power'),
     ]
 
 
@@ -80,8 +83,7 @@ aOut('TUNE:THRESHOLD', 0, 1, PREC = 2, DESC = 'Peak fraction threshold')
 longOut('TUNE:BLK:SEP', DESC = 'Minimum block separation')
 longOut('TUNE:BLK:LEN', DESC = 'Minimum block length')
 
-aOut('TUNE:PEAK:MIN', 0, 1, PREC = 2, DESC = 'Peak fraction threshold')
-aOut('TUNE:PEAK:MAX', 0, 1, PREC = 2, DESC = 'Peak fraction threshold')
+aOut('TUNE:PEAK:FLOOR', 0, 1, PREC = 2, DESC = 'Peak floor')
 
 
 # Tune measurement alias for backwards compatibility
