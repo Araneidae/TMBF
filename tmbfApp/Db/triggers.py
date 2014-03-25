@@ -3,45 +3,34 @@
 from common import *
 
 
-def TriggerSource(name, external, desc):
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Core trigger configuration
+
+def TriggerTarget(name, extra_sel = ()):
+    mbbOut('TRG:%s:SEL' % name, 'Soft 1', 'Soft 2', 'External',
+        DESC = '%s trigger source' % name, *extra_sel)
     boolOut('TRG:%s:MODE' % name, 'One Shot', 'Retrigger',
-        DESC = 'Mode select for %s' % desc)
-    Action('TRG:%s:%s' % (name, 'ARM' if external else 'FIRE'),
-        DESC = '%s %s' % ('Arm' if external else 'Fire', desc))
-    Action('TRG:%s:RESET' % name, DESC = 'Reset %s' % desc)
-    boolIn('TRG:%s:STATUS' % name, 'Ready', 'Busy',
-        SCAN = 'I/O Intr', DESC = 'Status for %s' % desc)
-
-
-def TriggerStatus(name, desc):
-    boolIn('TRG:%s:STATUS' % name, 'Ready', 'Busy',
-        SCAN = 'I/O Intr', DESC = '%s status' % desc)
-
-def TriggerTarget(name, desc):
-    mbbOut('TRG:%s:SEL' % name, 'Disabled', 'Soft 1', 'Soft 2', 'External',
-        DESC = '%s trigger source' % desc)
-    TriggerStatus(name, desc)
+        DESC = 'Mode select for %s' % name)
+    Action('TRG:%s:ARM' % name, DESC = 'Arm or fire %s' % name)
     longOut('TRG:%s:DELAY' % name, 0, (1<<24)-1, EGU = 'turns',
-        DESC = 'Trigger delay in turns')
-
-
-# Three trigger sources including two soft triggers
-TriggerSource('S1', False, 'soft trigger 1')
-TriggerSource('S2', False, 'soft trigger 2')
-TriggerSource('EXT', True, 'external trigger')
+        DESC = '%s trigger delay' % name)
+    Action('TRG:%s:RESET' % name, DESC = 'Reset %s' % name)
+    boolIn('TRG:%s:STATUS' % name, 'Ready', 'Busy',
+        SCAN = 'I/O Intr', DESC = '%s status' % name)
 
 # Trigger source selections for the trigger targets.
-TriggerTarget('DDR', 'Long buffer')
-TriggerTarget('BUF', 'Fast buffer')
+TriggerTarget('DDR', ('Postmortem', 'ADC Overflow', 'Seq State'))
+TriggerTarget('BUF')
 
+# Sequencer control.
 boolOut('TRG:SEQ:ENA', 'Disabled', 'Enabled', DESC = 'Sequencer trigger enable')
-TriggerStatus('SEQ', 'Sequencer')
-
-mbbOut('TRG:DDR:SOURCE', 'Trigger', 'Postmortem', 'ADC Overflow', 'Seq State',
-    DESC = 'Configure DDR trigger source')
+boolIn('TRG:SEQ:STATUS', 'Ready', 'Busy',
+    SCAN = 'I/O Intr', DESC = 'SEQ status')
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# Blanking configuration
 longOut('TRG:BLANKING', 0, 65535, EGU = 'turns',
     DESC = 'Sequencer blanking window after trigger')
 mbbOut('TRG:BLANKING:SOURCE', 'Trigger', 'SCLK Input',

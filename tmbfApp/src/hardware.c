@@ -881,13 +881,17 @@ void hw_write_trg_disarm(bool ddr, bool buf)
     pulse_mask(make_mask2(5, 6, ddr, buf));
 }
 
-void hw_write_trg_delays(int ddr_delay, int buf_delay)
+void hw_write_trg_ddr_delay(unsigned int ddr_delay)
 {
     config_space->ddr_trigger_delay = ddr_delay;
+}
+
+void hw_write_trg_buf_delay(unsigned int buf_delay)
+{
     config_space->buf_trigger_delay = buf_delay;
 }
 
-void hw_write_trg_blanking(int trigger_blanking)
+void hw_write_trg_blanking(unsigned int trigger_blanking)
 {
     config_space->trigger_blanking = trigger_blanking;
 }

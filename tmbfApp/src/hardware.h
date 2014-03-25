@@ -335,11 +335,14 @@ void hw_write_trg_soft_trigger(bool ddr, bool buf);
 /* Disarm pending trigger.  No effect if already triggered or not armed. */
 void hw_write_trg_disarm(bool ddr, bool buf);
 
-/* Configure trigger delays. */
-void hw_write_trg_delays(int ddr_delay, int buf_delay);
+/* Configure DDR trigger delay. */
+void hw_write_trg_ddr_delay(unsigned int ddr_delay);
+
+/* Configure buffer trigger delay. */
+void hw_write_trg_buf_delay(unsigned int buf_delay);
 
 /* Configure blanking interval after external trigger in turns. */
-void hw_write_trg_blanking(int trigger_blanking);
+void hw_write_trg_blanking(unsigned int trigger_blanking);
 
 /* Configure trigger or SCLK connector as blanking source. */
 void hw_write_trg_blanking_source(unsigned int source);
