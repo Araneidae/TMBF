@@ -1,0 +1,38 @@
+#!/usr/bin/env dls-python
+
+from pkg_resources import require
+require('cothread')
+
+import sys
+import numpy
+import cothread
+from cothread.catools import *
+
+
+tmbf = sys.argv[1]
+
+def put(pv, value):
+    caput('%s:%s' % (tmbf, pv), value)
+def get(pv):
+    return caget('%s:%s' % (tmbf, pv))
+
+
+# Configure DDR for software single shot, grab a single shot
+put('TRG:DDR:SEL_S', 'Soft 1')
+put('TRG:S1:MODE_S', 'One Shot')
+put('DDR:INPUT_S', 'ADC')
+put('TRG:S1:FIRE_S.PROC', 0)
+
+print 'Waiting for capture'
+cothread.Sleep(1)
+
+offsets = get('ADC:OFFSET_S')
+adc = get('DDR:LONGWF')
+delta = adc.reshape(4, None).mean(1)
+
+new_offsets = numpy.round(offsets - delta)
+print 'Updating offsets:', offsets, '=>', new_offsets
+put('ADC:OFFSET_S', new_offsets)
+
+
+# vim: set filetype=python:

@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 533
-y 649
+x 382
+y 630
 w 641
 h 512
 font "helvetica-medium-r-18.0"
@@ -544,5 +544,27 @@ newPos
 objType "controls"
 clipToDspLimits
 noExecuteClipMask
+endObjectProperties
+
+# (Shell Command)
+object shellCmdClass
+beginObjectProperties
+major 4
+minor 3
+release 0
+x 400
+y 480
+w 128
+h 24
+fgColor index 25
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "ADC Offsets"
+numCmds 1
+command {
+  0 "xterm -T 'Set ADC offsets' -e 'set_adc_offset $(device) || read -p \"press return\"'"
+}
 endObjectProperties
 
