@@ -226,8 +226,7 @@ struct ftun_control {
     int min_magnitude;          // Minimum magnitude for feedback
     int max_offset;             // Maximum frequency offset for feedback
 
-    unsigned int mag_iir_rate;  // IIR rate for magnitude readback
-    unsigned int angle_iir_rate;
+    unsigned int iq_iir_rate;   // IIR rate for IQ readback
     unsigned int freq_iir_rate;
 };
 
@@ -252,7 +251,7 @@ enum {
     FTUN_STAT_RUNNING,          // Set if tune following is running
 
     // These five bits record the status when tune following was halted
-    FTUN_STOP_VAL = FTUN_STAT_RUNNING + 3,
+    FTUN_STOP_VAL = 8,
     FTUN_STOP_MAG,
     FTUN_STOP_DET,
     FTUN_STOP_ACC,
@@ -262,18 +261,18 @@ enum {
 };
 void hw_read_ftun_status(bool status[FTUN_BIT_COUNT]);
 
-/* Reads snapshot of current angle and magnitude. */
-void hw_read_ftun_angle_mag(int *angle, int *magnitude);
+/* Reads snapshot of current (filtered) IQ value. */
+void hw_read_ftun_iq(int *I, int *Q);
 
 /* Reads current frequency offset.  Returns true if frequency offset active,
  * false if NCO set to programmed frequency.  The frequency returned is filtered
  * with 12 extra bits of precision. */
 bool hw_read_ftun_frequency(int *frequency);
 
-/* Reads minimum and maximum magnitude and angle values since last reading,
- * returns false if no update in the interval. */
-bool hw_read_ftun_mag_minmax(int *min, int *max);
-bool hw_read_ftun_angle_minmax(int *min, int *max);
+/* Reads minimum and maximum IQ angle values since last reading, returns false
+ * if no update in the interval. */
+bool hw_read_ftun_i_minmax(int *min, int *max);
+bool hw_read_ftun_q_minmax(int *min, int *max);
 
 /* Reads up to FTUN_FIFO_SIZE words from the FTUN FIFO into buffer.  Sets the
  * dropout flag if the FTUN buffer overflowed and returns the number of words

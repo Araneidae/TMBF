@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 352
-y 164
+x 198
+y 297
 w 672
 h 689
 font "helvetica-medium-r-18.0"
@@ -1606,25 +1606,6 @@ value {
 autoSize
 endObjectProperties
 
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 472
-y 560
-w 88
-h 22
-fgColor index 14
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):FTUN:MAG:IIR_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
 # (Text Monitor)
 object activeXTextDspClass:noedit
 beginObjectProperties
@@ -1674,8 +1655,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 472
-y 536
+x 552
+y 544
 w 88
 h 22
 fgColor index 14
@@ -1683,7 +1664,7 @@ bgColor index 3
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):FTUN:ANGLE:IIR_S"
+controlPv "$(device):FTUN:IQ:IIR_S"
 font "helvetica-medium-r-12.0"
 endObjectProperties
 
@@ -1718,36 +1699,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 568
-y 560
+x 552
+y 568
 w 80
 h 16
-controlPv "$(device):FTUN:MAG:IIR:TC"
-font "helvetica-medium-r-14.0"
-fgColor index 14
-fgAlarm
-bgColor index 4
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 568
-y 536
-w 80
-h 16
-controlPv "$(device):FTUN:ANGLE:IIR:TC"
+controlPv "$(device):FTUN:IQ:IIR:TC"
 font "helvetica-medium-r-14.0"
 fgColor index 14
 fgAlarm
@@ -1826,11 +1782,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 160
+x 320
 y 544
 w 64
 h 16
-controlPv "$(device):FTUN:ANGLE:MIN"
+controlPv "$(device):FTUN:I:MIN"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1851,11 +1807,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 240
+x 400
 y 544
 w 64
 h 16
-controlPv "$(device):FTUN:ANGLE:MAX"
+controlPv "$(device):FTUN:I:MAX"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1876,11 +1832,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 312
-y 544
+x 472
+y 552
 w 64
 h 16
-controlPv "$(device):FTUN:ANGLE:VAR"
+controlPv "$(device):FTUN:IQ:VAR"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1901,11 +1857,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 312
+x 400
 y 568
 w 64
 h 16
-controlPv "$(device):FTUN:MAG:VAR"
+controlPv "$(device):FTUN:Q:MAX"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1926,36 +1882,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 240
+x 320
 y 568
 w 64
 h 16
-controlPv "$(device):FTUN:MAG:MAX"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-fgAlarm
-bgColor index 4
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 160
-y 568
-w 64
-h 16
-controlPv "$(device):FTUN:MAG:MIN"
+controlPv "$(device):FTUN:Q:MIN"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1976,10 +1907,10 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 200
+x 360
 y 528
-w 24
-h 16
+w 21
+h 14
 font "helvetica-bold-r-12.0"
 fontAlign "right"
 fgColor index 14
@@ -1997,7 +1928,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 280
+x 440
 y 528
 w 25
 h 14
@@ -2018,8 +1949,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 328
-y 528
+x 488
+y 536
 w 52
 h 14
 font "helvetica-bold-r-12.0"
@@ -2039,8 +1970,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 472
-y 520
+x 552
+y 528
 w 58
 h 14
 font "helvetica-bold-r-12.0"
@@ -2049,6 +1980,119 @@ bgColor index 0
 useDisplayBg
 value {
   "Filter rate"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 248
+y 568
+w 64
+h 16
+controlPv "$(device):FTUN:Q"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 248
+y 544
+w 64
+h 16
+controlPv "$(device):FTUN:I"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 216
+y 544
+w 8
+h 14
+font "helvetica-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "I:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 216
+y 568
+w 14
+h 14
+font "helvetica-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Q:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 264
+y 528
+w 44
+h 14
+font "helvetica-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Current"
 }
 autoSize
 endObjectProperties

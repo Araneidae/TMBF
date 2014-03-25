@@ -171,6 +171,8 @@ struct tmbf_config_space
     uint32_t dac_minmax_read;       // 21  Read DAC min/max data
     uint32_t fast_buffer_read;      // 22  Read fast buffer data
     uint32_t sequencer_write;       // 23  Write sequencer data
+
+    // The following block of 8 registers is dedicated to tune following
     union {                         // 24
         const uint32_t ftune_status;    // Tune following status
         // Status bits:
@@ -193,17 +195,20 @@ struct tmbf_config_space
         //  28      Input selection
         //  31:29   Detector gain
     };
-    uint32_t ftune_readout;         // 25  Tune following readout
-    // For writing supports these fields:
-    //  17:0    Target phase
-    //  20:18   IIR scaling
-    // For reading returns frequency offset values from FIFO with status and
-    // buffer info:
-    //  17:0    Frequency offset
-    //  30:21   Number of samples in buffer (including value being read)
-    //  31      Set of FIFO overflow has occurred
+    union {                         // 25
+        const uint32_t ftune_readout;   // Tune following readout
+        // When read returns frequency offset values from FIFO with status and
+        // buffer info:
+        //  17:0    Frequency offset
+        //  30:21   Number of samples in buffer (including value being read)
+        //  31      Set of FIFO overflow has occurred
+        uint32_t ftune_target;          // Target phase and control
+        // For writing supports these fields:
+        //  17:0    Target phase
+        //  20:18   IIR scaling
+    };
     union {                         // 26
-        const uint32_t ftune_angle_mag; // Angle and magnitude readback
+        const uint32_t ftune_iq;        // Filtered IQ readback
         uint32_t ftune_i_scale;         // Tune following integral scaling
     };
     union {                         // 27
@@ -211,11 +216,11 @@ struct tmbf_config_space
         uint32_t ftune_min_magnitude;   // Magnitude threshold for feedback
     };
     union {                         // 28
-        const uint32_t ftune_mag_minmax; // Magnitude min and max
+        const uint32_t ftune_i_minmax;  // I min and max
         uint32_t ftune_max_offset;      // Frequency offset limit for feedback
     };
     union {                         // 29
-        const uint32_t ftune_angle_minmax; // Angle min and max
+        const uint32_t ftune_q_minmax;  // Q min and max
         uint32_t nco_frequency;         // Fixed NCO generator frequency
     };
     uint32_t ftune_p_scale;         // 30  Feedback proportional scale
@@ -691,14 +696,13 @@ void hw_write_ftun_control(struct ftun_control *control)
         (bunch & 0xFF) << 20 |                  //      27:20
         (control->input_select & 0x1) << 28 |   //      28
         (control->det_gain & 0x7) << 29;        //      31:29
-    config_space->ftune_readout =
+    config_space->ftune_target =
         (control->target_phase & 0x3FFFF) |     // bits 17:0
         (control->iir_rate & 0x7) << 18;        //      20:18
     config_space->ftune_i_scale = -control->i_scale;
     config_space->ftune_min_magnitude =
         (control->min_magnitude & 0xFFFF) |
-        (control->mag_iir_rate & 0x7) << 16 |
-        (control->angle_iir_rate & 0x7) << 19 |
+        (control->iq_iir_rate & 0x7) << 16 |
         (control->freq_iir_rate & 0x7) << 22;
     config_space->ftune_max_offset = control->max_offset;
     config_space->ftune_p_scale = -control->p_scale;
@@ -723,11 +727,15 @@ void hw_read_ftun_status(bool *status)
         status[i] = (status_word >> i) & 1;
 }
 
-void hw_read_ftun_angle_mag(int *angle, int *magnitude)
+static void read_signed_pair(uint32_t pair, int *low, int *high)
 {
-    int angle_mag = config_space->ftune_angle_mag;
-    *angle = (angle_mag >> 16) << 2;
-    *magnitude = angle_mag & 0xFFFF;
+    *low = (int) (pair << 16) >> 16;
+    *high = (int) pair >> 16;
+}
+
+void hw_read_ftun_iq(int *I, int *Q)
+{
+    read_signed_pair(config_space->ftune_iq, I, Q);
 }
 
 bool hw_read_ftun_frequency(int *frequency)
@@ -737,19 +745,15 @@ bool hw_read_ftun_frequency(int *frequency)
     return (freq_word >> 31) & 1;
 }
 
-bool hw_read_ftun_mag_minmax(int *min, int *max)
+bool hw_read_ftun_i_minmax(int *min, int *max)
 {
-    uint32_t minmax = config_space->ftune_mag_minmax;
-    *min = minmax & 0xFFFF;
-    *max = minmax >> 16;
+    read_signed_pair(config_space->ftune_i_minmax, min, max);
     return *max >= *min;
 }
 
-bool hw_read_ftun_angle_minmax(int *min, int *max)
+bool hw_read_ftun_q_minmax(int *min, int *max)
 {
-    uint32_t minmax = config_space->ftune_angle_minmax;
-    *min = (int) (minmax << 16) >> 16;
-    *max = (int) minmax >> 16;
+    read_signed_pair(config_space->ftune_q_minmax, min, max);
     return *max >= *min;
 }
 

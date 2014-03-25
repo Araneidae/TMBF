@@ -30,6 +30,8 @@ def Trigger(prefix, *pvs):
         SCAN = 'I/O Intr', DESC = '%s processing trigger' % prefix,
         FLNK = create_fanout('%s:TRIG:FAN' % prefix, *pvs + (done,)))
 
+# Creates an Action with the given name which is triggered every time any of the
+# listed PVs is processed.
 def ForwardLink(name, desc, *pvs, **kargs):
     action = Action(name, DESC = desc, **kargs)
     for pv in pvs:

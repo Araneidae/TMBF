@@ -30,8 +30,7 @@ static double max_offset;
 
 /* IIR time constants. */
 static double filter_iir_tc;
-static double mag_iir_tc;
-static double angle_iir_tc;
+static double iq_iir_tc;
 static double freq_iir_tc;
 
 /* Tune following. */
@@ -71,17 +70,19 @@ static int freq_scaling_shift;
 
 /* Status readback data. */
 static bool status_array[FTUN_BIT_COUNT];
+static int current_i;
+static int current_q;
 static double current_angle;
 static double delta_angle;
 static int current_magnitude;
 
 /* Min/max info. */
-static int minimum_magnitude;
-static int maximum_magnitude;
-static double magnitude_variation;
-static double minimum_angle;
-static double maximum_angle;
-static double angle_variation;
+static int minimum_i;
+static int maximum_i;
+static int minimum_q;
+static int maximum_q;
+static double iq_variation;
+
 
 /* Running status.  This is set under a lock when starting tune following and
  * updated, also under the same lock, when the status array above is read.  This
@@ -144,8 +145,7 @@ static void write_ftun_control(void)
     hw_write_ftun_control(&ftun_control);
 
     filter_iir_tc = update_iir_tc(ftun_control.iir_rate, 1);
-    mag_iir_tc    = update_iir_tc(ftun_control.mag_iir_rate, 2);
-    angle_iir_tc  = update_iir_tc(ftun_control.angle_iir_rate, 2);
+    iq_iir_tc     = update_iir_tc(ftun_control.iq_iir_rate, 2);
     freq_iir_tc   = update_iir_tc(ftun_control.freq_iir_rate, 2);
 }
 
@@ -197,26 +197,44 @@ static double read_nco_freq(void)
     return result;
 }
 
+#define SQR(x)  ((x) * (x))
+
+static void update_iq_angle_mag(void)
+{
+    hw_read_ftun_iq(&current_i, &current_q);
+
+    /* Compute magnitude and angle. */
+    current_angle = 180.0 / M_PI * atan2(current_q, current_i);
+    current_magnitude = (int) sqrt(SQR(current_i) + SQR(current_q));
+
+    delta_angle = current_angle - target_phase;
+    if (delta_angle > 180)
+        delta_angle -= 360;
+    else if (delta_angle < -180)
+        delta_angle += 360;
+}
 
 static void update_minmax(void)
 {
     int min, max;
-    if (hw_read_ftun_mag_minmax(&min, &max))
+    if (hw_read_ftun_i_minmax(&min, &max))
     {
-        minimum_magnitude = min;
-        maximum_magnitude = max;
-        if (current_magnitude > 0)
-            magnitude_variation = (double) (max - min) / current_magnitude;
-        else
-            magnitude_variation = 0;
+        minimum_i = min;
+        maximum_i = max;
+    }
+    if (hw_read_ftun_q_minmax(&min, &max))
+    {
+        minimum_q = min;
+        maximum_q = max;
     }
 
-    if (hw_read_ftun_angle_minmax(&min, &max))
-    {
-        minimum_angle = 360.0 / pow(2, 16) * min;
-        maximum_angle = 360.0 / pow(2, 16) * max;
-        angle_variation = maximum_angle - minimum_angle;
-    }
+    double raw_variation = sqrt(
+        SQR((double) maximum_i - minimum_i) +
+        SQR((double) maximum_q - minimum_q));
+    if (current_magnitude > 0)
+        iq_variation = raw_variation / current_magnitude;
+    else
+        iq_variation = raw_variation;
 }
 
 static void read_ftun_status(void)
@@ -230,13 +248,7 @@ static void read_ftun_status(void)
     ftun_running = status_array[FTUN_STAT_RUNNING];
     UNLOCK_RUNNING();
 
-    int delta;
-    hw_read_ftun_angle_mag(&delta, &current_magnitude);
-    delta_angle = 360.0 / pow(2, 18) * delta;
-
-    int angle = ftun_control.target_phase + delta;
-    current_angle = 360.0 / pow(2, 18) * angle;
-
+    update_iq_angle_mag();
     update_minmax();
 }
 
@@ -310,7 +322,7 @@ static void *poll_tune_follow(void *context)
         if (read_count > 0  ||  stopped)
             process_ftun_buffer(ftun_buffer, read_count, dropout, empty);
 
-        usleep(50000); // 20 Hz polling
+        usleep(10000); // 100 Hz polling
     }
     return NULL;
 }
@@ -338,16 +350,14 @@ bool initialise_tune_follow(void)
     PUBLISH_WRITE_VAR_P(longout, "FTUN:KP",     ftun_control.p_scale);
     PUBLISH_WRITE_VAR_P(longout, "FTUN:MINMAG", ftun_control.min_magnitude);
     PUBLISH_WRITE_VAR_P(ao,      "FTUN:MAXDELTA", max_offset);
-    PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:MAG:IIR", ftun_control.mag_iir_rate);
-    PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:ANGLE:IIR", ftun_control.angle_iir_rate);
+    PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:IQ:IIR", ftun_control.iq_iir_rate);
     PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:FREQ:IIR", ftun_control.freq_iir_rate);
 
     PUBLISH_WRITE_VAR_P(ao,      "FTUN:LOOP:ADC", adc_loop_delay);
 
     /* IIR time constants updated when IIR controls set. */
     PUBLISH_READ_VAR(ai, "FTUN:IIR:TC",         filter_iir_tc);
-    PUBLISH_READ_VAR(ai, "FTUN:MAG:IIR:TC",     mag_iir_tc);
-    PUBLISH_READ_VAR(ai, "FTUN:ANGLE:IIR:TC",   angle_iir_tc);
+    PUBLISH_READ_VAR(ai, "FTUN:IQ:IIR:TC",      iq_iir_tc);
     PUBLISH_READ_VAR(ai, "FTUN:FREQ:IIR:TC",    freq_iir_tc);
 
     /* Tune following action. */
@@ -387,12 +397,14 @@ bool initialise_tune_follow(void)
     PUBLISH_READ_VAR(ai, "FTUN:ANGLE", current_angle);
     PUBLISH_READ_VAR(ai, "FTUN:ANGLEDELTA", delta_angle);
     PUBLISH_READ_VAR(longin, "FTUN:MAG", current_magnitude);
-    PUBLISH_READ_VAR(longin, "FTUN:MAG:MIN", minimum_magnitude);
-    PUBLISH_READ_VAR(longin, "FTUN:MAG:MAX", maximum_magnitude);
-    PUBLISH_READ_VAR(ai, "FTUN:MAG:VAR", magnitude_variation);
-    PUBLISH_READ_VAR(ai, "FTUN:ANGLE:MIN", minimum_angle);
-    PUBLISH_READ_VAR(ai, "FTUN:ANGLE:MAX", maximum_angle);
-    PUBLISH_READ_VAR(ai, "FTUN:ANGLE:VAR", angle_variation);
+
+    PUBLISH_READ_VAR(longin, "FTUN:I", current_i);
+    PUBLISH_READ_VAR(longin, "FTUN:Q", current_q);
+    PUBLISH_READ_VAR(longin, "FTUN:I:MIN", minimum_i);
+    PUBLISH_READ_VAR(longin, "FTUN:I:MAX", maximum_i);
+    PUBLISH_READ_VAR(longin, "FTUN:Q:MIN", minimum_q);
+    PUBLISH_READ_VAR(longin, "FTUN:Q:MAX", maximum_q);
+    PUBLISH_READ_VAR(ai, "FTUN:IQ:VAR", iq_variation);
 
     /* NCO control. */
     PUBLISH_WRITER_P(ao,   "NCO:FREQ", write_nco_freq);

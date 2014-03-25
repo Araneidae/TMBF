@@ -31,17 +31,14 @@ ForwardLink('FTUN:CONTROL', 'Update tune follow control settings',
     aOut('FTUN:MAXDELTA', 0, MAX_DELTA_FREQ, 'tune', 6,
         DESC = 'Maximum frequency deviation to follow'),
 
-    mbbOut('FTUN:MAG:IIR', DESC = 'Magnitude readback IIR', *IIR(8, 2)),
-    mbbOut('FTUN:ANGLE:IIR', DESC = 'Angle readback IIR', *IIR(8, 2)),
+    mbbOut('FTUN:IQ:IIR', DESC = 'IQ readback IIR', *IIR(8, 2)),
     mbbOut('FTUN:FREQ:IIR', DESC = 'Frequency readback IIR', *IIR(8, 2)),
 
     FLNK = create_fanout('FTUN:IIR:FAN',
         aIn('FTUN:IIR:TC', EGU = 'ms', PREC = 1,
             DESC = 'Time constant for feedback IIR'),
-        aIn('FTUN:MAG:IIR:TC', EGU = 'ms', PREC = 1,
-            DESC = 'Time constant for magnitude IIR'),
-        aIn('FTUN:ANGLE:IIR:TC', EGU = 'ms', PREC = 1,
-            DESC = 'Time constant for angle IIR'),
+        aIn('FTUN:IQ:IIR:TC', EGU = 'ms', PREC = 1,
+            DESC = 'Time constant for IQ IIR'),
         aIn('FTUN:FREQ:IIR:TC', EGU = 'ms', PREC = 1,
             DESC = 'Time constant for frequency IIR'))
 )
@@ -103,6 +100,8 @@ Action('FTUN:STAT:SCAN',
             DESC = 'Tune following activity'),
 
         # Current position and angle readout
+        longIn('FTUN:I', -32768, 32767, DESC = 'Current I value'),
+        longIn('FTUN:Q', -32768, 32767, DESC = 'Current Q value'),
         aIn('FTUN:ANGLE', -180, 180, 'deg', 3,
             DESC = 'Current angle from detector'),
         aIn('FTUN:ANGLEDELTA', -180, 180, 'deg', 3,
@@ -110,13 +109,11 @@ Action('FTUN:STAT:SCAN',
         longIn('FTUN:MAG', 0, 65535, DESC = 'Current magnitude from detector'),
 
         # Min/max readouts
-        longIn('FTUN:MAG:MIN', 0, 65535, DESC = 'Minimum magnitude'),
-        longIn('FTUN:MAG:MAX', 0, 65535, DESC = 'Maximum magnitude'),
-        aIn('FTUN:MAG:VAR', PREC = 3, DESC = 'Relative magnitude variation'),
-        aIn('FTUN:ANGLE:MIN', -180, 180, 'deg', 3, DESC = 'Minimum angle'),
-        aIn('FTUN:ANGLE:MAX', -180, 180, 'deg', 3, DESC = 'Maximum angle'),
-        aIn('FTUN:ANGLE:VAR', 0, 360, 'deg', 3,
-            DESC = 'Angle variation (max-min)')
+        longIn('FTUN:I:MIN', -32768, 32767, DESC = 'Minimum I value'),
+        longIn('FTUN:I:MAX', -32768, 32767, DESC = 'Maximum I value'),
+        longIn('FTUN:Q:MIN', -32768, 32767, DESC = 'Minimum Q value'),
+        longIn('FTUN:Q:MAX', -32768, 32767, DESC = 'Maximum Q value'),
+        aIn('FTUN:IQ:VAR', PREC = 3, DESC = 'Relative IQ variation'),
     ))
 
 
