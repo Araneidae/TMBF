@@ -41,7 +41,8 @@ def minmax_pvs(source):
 
 minmax_pvs('ADC')
 WaveformOut('ADC:OFFSET', CHANNEL_COUNT, 'SHORT', DESC = 'ADC offsets')
-mbbOut('ADC:DELAY', '0 ns', '2 ns', '4 ns', '6 ns', DESC = 'Input skew')
+mbbIn('ADC:DELAY', '0 ns', '2 ns', '4 ns', '6 ns',
+    SCAN = 'I/O Intr', DESC = 'Input skew')
 longOut('ADC:LIMIT', 0, (1<<13)-1, DESC = 'ADC error threshold')
 
 

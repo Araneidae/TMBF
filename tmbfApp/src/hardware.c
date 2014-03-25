@@ -15,10 +15,7 @@
 #include "hardware.h"
 
 
-#define TMBF_DATA_ADDRESS       0x14028000
 #define TMBF_CONFIG_ADDRESS     0x1402C000
-
-#define DATA_AREA_SIZE          (1 << 14)
 #define CONTROL_AREA_SIZE       (1 << 12)
 
 
@@ -227,7 +224,6 @@ struct tmbf_config_space
 
 /* These two pointers directly overlay the FF memory. */
 static volatile struct tmbf_config_space *config_space;
-static volatile uint32_t *buffer_data;      // Fast buffer readout area
 
 
 
@@ -923,7 +919,7 @@ bool initialise_hardware(const char *config_file)
 {
     hardware_config_file = config_file;
     int mem;
-    bool ok =
+    return
         config_parse_file(
             config_file, hardware_config_defs,
             ARRAY_SIZE(hardware_config_defs))  &&
@@ -931,12 +927,5 @@ bool initialise_hardware(const char *config_file)
         TEST_IO(config_space = mmap(
             0, CONTROL_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
             mem, TMBF_CONFIG_ADDRESS))  &&
-        TEST_IO(buffer_data = mmap(
-            0, DATA_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-            mem, TMBF_DATA_ADDRESS));
-    if (ok)
-    {
-        fir_filter_length = (config_space->fpga_version >> 16) & 0xF;
-    }
-    return ok;
+        DO_(fir_filter_length = (config_space->fpga_version >> 16) & 0xF);
 }

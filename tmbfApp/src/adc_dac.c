@@ -108,13 +108,6 @@ static void write_dac_delay(unsigned int delay)
     write_dac_delays();
 }
 
-static void write_adc_skew(unsigned int skew)
-{
-    adc_skew = skew;
-    hw_write_adc_skew(skew);
-    write_dac_delays();
-}
-
 static void write_preemph_delay(unsigned int delay)
 {
     preemph_delay = delay;
@@ -123,7 +116,10 @@ static void write_preemph_delay(unsigned int delay)
 
 void set_adc_skew(unsigned int skew)
 {
-    WRITE_OUT_RECORD(mbbo, adc_skew_pv, skew, true);
+    adc_skew = skew;
+    hw_write_adc_skew(skew);
+    write_dac_delays();
+    trigger_record(adc_skew_pv, 0, NULL);
 }
 
 
@@ -135,7 +131,7 @@ bool initialise_adc_dac(void)
 
     /* Offset control for ADC. */
     PUBLISH_WF_ACTION_P(short, "ADC:OFFSET", 4, hw_write_adc_offsets);
-    adc_skew_pv = PUBLISH_WRITER_P(mbbo, "ADC:DELAY", write_adc_skew);
+    adc_skew_pv = PUBLISH_READ_VAR_I(mbbi, "ADC:DELAY", adc_skew);
     PUBLISH_WRITER_P(longout, "ADC:LIMIT", hw_write_adc_limit);
 
     /* Direct register control for DAC. */
