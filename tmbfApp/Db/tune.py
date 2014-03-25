@@ -45,8 +45,25 @@ def peak_readbacks(suffix):
             DESC = 'Second derivative of power'),
     ]
 
+def tune_results(prefix = ''):
+    return [
+        aIn('TUNE%s:TUNE' % prefix, 0, 1, PREC = 4, DESC = 'Measured tune'),
+        aIn('TUNE%s:PHASE' % prefix, -180, 180, 'deg',
+            PREC = 1, DESC = 'Measured tune phase'),
+        mbbIn('TUNE%s:STATUS' % prefix,
+            ('Invalid',     0,  'INVALID'),
+            ('Ok',          1,  'NO_ALARM'),
+            ('No peak',     2,  'MINOR'),
+            ('Extra peaks', 3,  'MINOR'),
+            ('Bad fit',     4,  'MINOR'),
+            ('Overflow',    5,  'MAJOR'),
+            ('Out of range', 6, 'NO_ALARM'),
+            DESC = 'Status of last tune measurement'),
+    ]
 
-tune_measurement = aIn('TUNE:TUNE', 0, 1, PREC = 4, DESC = 'Measured tune')
+
+# tune_measurement = aIn('TUNE:TUNE', 0, 1, PREC = 4, DESC = 'Measured tune')
+tune_measurement = tune_results()
 Trigger('TUNE',
     # Readouts for the selected tune control.  These are copies of the
     # appropriate detector waveforms.
@@ -63,27 +80,21 @@ Trigger('TUNE',
     Waveform('TUNE:CUMSUMQ', TUNE_LENGTH, 'LONG', DESC = 'Cumsum Q'),
 
     # Tune measurement
-    tune_measurement,
-    aIn('TUNE:PHASE', -180, 180, 'deg', PREC = 1, DESC = 'Measured tune phase'),
-    mbbIn('TUNE:STATUS',
-        ('Invalid',     0,  'INVALID'),
-        ('Ok',          1,  'NO_ALARM'),
-        ('No peak',     2,  'MINOR'),
-        ('Extra peaks', 3,  'MINOR'),
-        ('Bad fit',     4,  'MINOR'),
-        ('Overflow',    5,  'MAJOR'),
-        ('Out of range', 6, 'NO_ALARM'),
-        DESC = 'Status of last tune measurement'),
+    *tune_measurement +
 
     # Peak detection support
-    *peak_readbacks(4) + peak_readbacks(16) + peak_readbacks(64))
+     peak_readbacks(4) + peak_readbacks(16) + peak_readbacks(64) +
+     tune_results(':PEAK'))
 
 # Controls for tune peak finding
 aOut('TUNE:THRESHOLD', 0, 1, PREC = 2, DESC = 'Peak fraction threshold')
 longOut('TUNE:BLK:SEP', DESC = 'Minimum block separation')
 longOut('TUNE:BLK:LEN', DESC = 'Minimum block length')
 
-aOut('TUNE:PEAK:FLOOR', 0, 1, PREC = 2, DESC = 'Peak floor')
+# Controls for new peak finding algorithm
+aOut('TUNE:PEAK:MIN', 0, 1, PREC = 2, DESC = 'Minimum relative peak height')
+aOut('TUNE:PEAK:FIT', 0, 1, PREC = 2, DESC = 'Fit threshold')
+mbbOut('TUNE:PEAK:SEL', '/4', '/16', '/64', DESC = 'Select smoothing')
 
 # Waveform for injecting test data into tune measurement.
 WaveformOut('TUNE:INJECT:P', TUNE_LENGTH, 'LONG',
@@ -91,4 +102,4 @@ WaveformOut('TUNE:INJECT:P', TUNE_LENGTH, 'LONG',
 
 
 # Tune measurement alias for backwards compatibility
-tune_measurement.add_alias('$(DEVICE):TUNE')
+tune_measurement[0].add_alias('$(DEVICE):TUNE')

@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1976
-y 106
+x 2282
+y 137
 w 641
-h 773
+h 770
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -161,9 +161,9 @@ minor 8
 release 0
 # Geometry
 x 8
-y 352
+y 144
 w 624
-h 104
+h 88
 # Appearance
 autoScaleBothDirections
 fgColor index 14
@@ -206,9 +206,9 @@ minor 8
 release 0
 # Geometry
 x 8
-y 456
+y 336
 w 624
-h 104
+h 88
 # Appearance
 autoScaleBothDirections
 fgColor index 14
@@ -251,9 +251,9 @@ minor 8
 release 0
 # Geometry
 x 8
-y 560
+y 528
 w 624
-h 104
+h 88
 # Appearance
 autoScaleBothDirections
 fgColor index 14
@@ -298,7 +298,7 @@ x 456
 y 736
 w 72
 h 20
-controlPv "$(device):TUNE:PEAK:FLOOR_S"
+controlPv "$(device):TUNE:PEAK:MIN_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -324,14 +324,14 @@ minor 1
 release 1
 x 368
 y 736
-w 64
+w 84
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Peak floor:"
+  "Min peak size:"
 }
 autoSize
 endObjectProperties
@@ -344,7 +344,7 @@ minor 8
 release 0
 # Geometry
 x 8
-y 144
+y 232
 w 624
 h 104
 # Appearance
@@ -410,7 +410,7 @@ minor 8
 release 0
 # Geometry
 x 8
-y 248
+y 424
 w 624
 h 104
 # Appearance
@@ -466,5 +466,422 @@ plotColor {
   2 index 33
   3 index 33
 }
+endObjectProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 8
+release 0
+# Geometry
+x 8
+y 616
+w 184
+h 56
+# Appearance
+autoScaleBothDirections
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+xAxisSrc "fromUser"
+xMin -1
+xMax 4
+# Y axis properties
+showYAxis
+yAxisSrc "fromUser"
+yMin 0
+yMax 1
+yLabelIntervals 1
+yUserSpecScaleDiv 1
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 1
+yPv {
+  0 "$(device):TUNE:PEAKQ:4"
+}
+plotStyle {
+  0 "needle"
+}
+plotUpdateMode {
+  0 "xOrY"
+}
+plotSymbolType {
+  0 "circle"
+}
+ySigned {
+  0 1
+}
+plotColor {
+  0 index 26
+}
+endObjectProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 8
+release 0
+# Geometry
+x 192
+y 616
+w 184
+h 56
+# Appearance
+autoScaleBothDirections
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+xAxisSrc "fromUser"
+xMin -1
+xMax 4
+# Y axis properties
+showYAxis
+yAxisSrc "fromUser"
+yMin 0
+yMax 1
+yLabelIntervals 1
+yUserSpecScaleDiv 1
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 1
+yPv {
+  0 "$(device):TUNE:PEAKQ:16"
+}
+plotStyle {
+  0 "needle"
+}
+plotUpdateMode {
+  0 "xOrY"
+}
+plotSymbolType {
+  0 "circle"
+}
+ySigned {
+  0 1
+}
+plotColor {
+  0 index 26
+}
+endObjectProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 8
+release 0
+# Geometry
+x 376
+y 616
+w 184
+h 56
+# Appearance
+autoScaleBothDirections
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+xAxisSrc "fromUser"
+xMin -1
+xMax 4
+# Y axis properties
+showYAxis
+yAxisSrc "fromUser"
+yMin 0
+yMax 1
+yLabelIntervals 1
+yUserSpecScaleDiv 1
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 1
+yPv {
+  0 "$(device):TUNE:PEAKQ:64"
+}
+plotStyle {
+  0 "needle"
+}
+plotUpdateMode {
+  0 "xOrY"
+}
+plotSymbolType {
+  0 "circle"
+}
+ySigned {
+  0 1
+}
+plotColor {
+  0 index 26
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 696
+w 288
+h 64
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 688
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Measurement"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 688
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 120
+y 736
+w 104
+h 16
+controlPv "$(device):TUNE:PEAK:STATUS"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 72
+y 712
+w 72
+h 21
+controlPv "$(device):TUNE:PEAK:TUNE"
+font "helvetica-medium-r-18.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 168
+y 712
+w 55
+h 21
+font "helvetica-medium-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Phase:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 712
+w 47
+h 21
+font "helvetica-medium-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Tune:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 224
+y 712
+w 64
+h 21
+controlPv "$(device):TUNE:PEAK:PHASE"
+font "helvetica-medium-r-18.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 736
+w 85
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Measurement:"
+}
+autoSize
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 544
+y 704
+w 80
+h 24
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TUNE:PEAK:SEL_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 456
+y 704
+w 72
+h 20
+controlPv "$(device):TUNE:PEAK:FIT_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 368
+y 704
+w 48
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Fit limit:"
+}
+autoSize
 endObjectProperties
 

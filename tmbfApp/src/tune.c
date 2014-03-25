@@ -20,194 +20,22 @@
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Experimental peak measurement code. */
-
-#define MAX_PEAKS   4
-
-struct peak_info {
-    int length;      // Length of waveform
-    int peak_floor;
-    int peak_count;
-    int peak_ix_wf[MAX_PEAKS];
-    int peak_val_wf[MAX_PEAKS];
-    int peak_left_wf[MAX_PEAKS];
-    int peak_right_wf[MAX_PEAKS];
-    float peak_quality[MAX_PEAKS];
-    int *power;            // Smoothed power waveform
-    int *power_dd;
-};
-
-static struct peak_info *peak_info_4;
-static struct peak_info *peak_info_16;
-static struct peak_info *peak_info_64;
-
-static double peak_floor;
-
-
-/* Returns index of maximum element of array. */
-static int find_max_ix(int length, const int *array)
-{
-    int max_val = array[0];
-    int max_ix = 0;
-    for (int i = 1; i < length; i ++)
-        if (array[i] > max_val)
-        {
-            max_val = array[i];
-            max_ix = i;
-        }
-    return max_ix;
-}
-
-
-/* Searches for point of highest downwards curvature not enclosed by a peak
- * already found. */
-static int find_peak_ix(struct peak_info *info)
-{
-    int min_val = 0;
-    int peak_ix = 0;
-    for (int ix = 1; ix < info->length; ix ++)
-    {
-        /* Scan for ix inside an already discovered peak. */
-        for (int p = 0; p < info->peak_count; p ++)
-            if (info->peak_left_wf[p] <= ix &&  ix <= info->peak_right_wf[p])
-                ix = info->peak_right_wf[p] + 1;
-        if (info->power_dd[ix] < min_val)
-        {
-            peak_ix = ix;
-            min_val = info->power_dd[ix];
-        }
-    }
-    return peak_ix;
-}
-
-static void find_peak_limits(struct peak_info *info, int peak_ix)
-{
-    int left = peak_ix;
-    while (left > 0  &&  info->power[left] >= info->peak_floor)
-        left -= 1;
-    int right = peak_ix;
-    while (right < info->length - 1  &&  info->power[right] >= info->peak_floor)
-        right += 1;
-
-    int p = info->peak_count;
-    info->peak_ix_wf[p] = peak_ix;
-    info->peak_val_wf[p] = info->power[peak_ix];
-    info->peak_left_wf[p] = left;
-    info->peak_right_wf[p] = right;
-}
-
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
-static void assess_peak_quality(struct peak_info *info, int peak_ix)
-{
-    int left = peak_ix;
-    while (left > 0  &&  info->power_dd[left] <= 0)
-        left -= 1;
-    int right = peak_ix;
-    while (right < info->length - 1  &&  info->power_dd[right] <= 0)
-        right += 1;
-    info->peak_quality[info->peak_count] =
-        (info->power[peak_ix] - MAX(info->power[left], info->power[right])) /
-        (float) info->power[peak_ix];
-}
-
-static void find_peaks(struct peak_info *info)
-{
-    for (info->peak_count = 0; info->peak_count < MAX_PEAKS;
-         info->peak_count ++)
-    {
-        int peak_ix = find_peak_ix(info);
-        find_peak_limits(info, peak_ix);
-        assess_peak_quality(info, peak_ix);
-    }
-}
-
-
-/* Smooths input waveform by taking means of 4 bins at a time. */
-static void smooth_waveform(int length, const int *wf_in, int *wf_out)
-{
-    for (int i = 0; i < length / 4; i ++)
-    {
-        int64_t accum = 0;
-        for (int j = 0; j < 4; j ++)
-            accum += wf_in[4*i + j];
-        wf_out[i] = (int) (accum / 4);
-    }
-}
-
-/* Computes second derivative of curve. */
-static void compute_dd(int length, const int *wf_in, int *wf_out)
-{
-    wf_out[0] = 0;
-    for (int i = 0; i < length - 1; i ++)
-    {
-        int64_t accum =
-            (int64_t) wf_in[i-1] -
-            (int64_t) 2 * wf_in[i] +
-            (int64_t) wf_in[i+1];
-        wf_out[i] = (int) (accum / 4);
-    }
-    wf_out[length - 1] = 0;
-}
-
-
-static void process_peak(struct peak_info *info)
-{
-    int max_ix = find_max_ix(info->length, info->power);
-    info->peak_floor = (int) (peak_floor * info->power[max_ix]);
-    compute_dd(info->length, info->power, info->power_dd);
-    find_peaks(info);
-}
-
-
-static void process_peaks(const int power[TUNE_LENGTH])
-{
-    smooth_waveform(TUNE_LENGTH,    power,               peak_info_4->power);
-    smooth_waveform(TUNE_LENGTH/4,  peak_info_4->power,  peak_info_16->power);
-    smooth_waveform(TUNE_LENGTH/16, peak_info_16->power, peak_info_64->power);
-    process_peak(peak_info_4);
-    process_peak(peak_info_16);
-    process_peak(peak_info_64);
-}
-
-
-static struct peak_info *publish_peak_info(int length, const char *suffix)
-{
-    struct peak_info *info = malloc(sizeof(struct peak_info));
-    info->length = length;
-    info->power = malloc(length * sizeof(int));
-    info->power_dd = malloc(length * sizeof(int));
-
-    char buffer[20];
-#define FORMAT(name) \
-    (sprintf(buffer, "TUNE:%s:%s", name, suffix), buffer)
-    PUBLISH_WF_READ_VAR(int, FORMAT("POWER"), length, info->power);
-    PUBLISH_WF_READ_VAR(int, FORMAT("PDD"), length, info->power_dd);
-    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKIX"), MAX_PEAKS, info->peak_ix_wf);
-    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKV"), MAX_PEAKS, info->peak_val_wf);
-    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKL"), MAX_PEAKS, info->peak_left_wf);
-    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKR"), MAX_PEAKS, info->peak_right_wf);
-    PUBLISH_WF_READ_VAR(float, FORMAT("PEAKQ"), MAX_PEAKS, info->peak_quality);
-#undef FORMAT
-    return info;
-}
-
-static void publish_peaks(void)
-{
-    peak_info_4  = publish_peak_info(TUNE_LENGTH/4,  "4");
-    peak_info_16 = publish_peak_info(TUNE_LENGTH/16, "16");
-    peak_info_64 = publish_peak_info(TUNE_LENGTH/64, "64");
-
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:FLOOR", peak_floor);
-}
-
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Tune measurement. */
 
 static double threshold_fraction = 0.3;
 static int min_block_separation = 20;
 static int min_block_length = 20;
+
+
+/* Returns value of maximum element of array. */
+static int find_max_val(int length, const int *array)
+{
+    int max_val = array[0];
+    for (int i = 1; i < length; i ++)
+        if (array[i] > max_val)
+            max_val = array[i];
+    return max_val;
+}
 
 
 static double interpolate(double ix, const short wf[])
@@ -413,8 +241,9 @@ static epicsAlarmSeverity measure_tune(
     const double *tune_scale, bool overflow,
     unsigned int *tune_status, double *tune, double *phase)
 {
-    process_peaks(sweep->power);
-
+#if 0
+return epicsSevMajor;
+#endif
     /* Very crude algorithm:
      *  1.  Find peak
      *  2.  Slice data to 1/3 of peak height and look for contiguous and well
@@ -424,8 +253,8 @@ static epicsAlarmSeverity measure_tune(
      *  -   Median filter on incoming data
      *  -   Quadratic fit for peak detect
      *  -   Knockout waveform for spike removal. */
-    int peak_ix = find_max_ix(length, sweep->power);
-    int threshold = (int) (threshold_fraction * sweep->power[peak_ix]);
+    int peak_val = find_max_val(length, sweep->power);
+    int threshold = (int) (threshold_fraction * peak_val);
     struct block blocks[MAX_BLOCKS];
     int block_count = find_blocks(length, sweep->power, threshold, blocks);
 
@@ -452,6 +281,374 @@ static epicsAlarmSeverity measure_tune(
     }
     else
         return epicsSevInvalid;
+}
+
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Experimental peak measurement code. */
+
+#define MAX_PEAKS   4
+
+struct peak_data {
+    int ix;
+    int left;
+    int right;
+    float quality;
+    bool valid;
+};
+
+struct peak_info {
+    int length;         // Length of waveform
+    int scaling;        // Scaling factor (4 or 16 or 64)
+    struct peak_data peaks[MAX_PEAKS];
+
+    /* Waveforms for EPICS viewing. */
+    int peak_ix_wf[MAX_PEAKS];
+    int peak_val_wf[MAX_PEAKS];
+    int peak_left_wf[MAX_PEAKS];
+    int peak_right_wf[MAX_PEAKS];
+    float peak_quality[MAX_PEAKS];
+
+    int *power;            // Smoothed power waveform
+    int *power_dd;
+};
+
+static struct peak_info peak_info_4;
+static struct peak_info peak_info_16;
+static struct peak_info peak_info_64;
+
+static double min_peak_size;
+static double peak_fit_ratio;
+
+enum { PEAK_4, PEAK_16, PEAK_64 };
+static unsigned int peak_select;
+
+/* Measurement results. */
+static double peak_measured_tune;    // Tune measurement
+static double peak_measured_phase;   // and associated phase
+static struct epics_record *peak_measured_tune_rec;
+static struct epics_record *peak_measured_phase_rec;
+static unsigned int peak_tune_status;
+
+
+/* Searches for point of highest downwards curvature not enclosed by a peak
+ * already found. */
+static int find_peak_ix(struct peak_info *info, int peak_count)
+{
+    int min_val = 0;
+    int peak_ix = 0;
+    for (int ix = 1; ix < info->length; ix ++)
+    {
+        /* Scan for ix inside an already discovered peak. */
+        for (int p = 0; p < peak_count; p ++)
+            if (info->peaks[p].left <= ix &&  ix <= info->peaks[p].right)
+                ix = info->peaks[p].right + 1;
+        if (info->power_dd[ix] < min_val)
+        {
+            peak_ix = ix;
+            min_val = info->power_dd[ix];
+        }
+    }
+    return peak_ix;
+}
+
+static void find_peak_limits(
+    struct peak_info *info, int peak_ix, struct peak_data *peak)
+{
+    // Track up and then down from the putative peak to both left and right.
+    int left = peak_ix;
+    while (left > 0  &&  info->power[left - 1] >= info->power[left])
+        left -= 1;
+    while (left > 0  &&  info->power[left - 1] <= info->power[left])
+        left -= 1;
+    int right = peak_ix;
+    while (right < info->length - 1  &&
+           info->power[right + 1] >= info->power[right])
+        right += 1;
+    while (right < info->length - 1  &&
+           info->power[right + 1] <= info->power[right])
+        right += 1;
+
+    peak->ix = peak_ix;
+    peak->left = left;
+    peak->right = right;
+}
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+static void assess_peak_quality(
+    struct peak_info *info, struct peak_data *peak, int min_height)
+{
+    int left = info->power[peak->left];
+    int middle = info->power[peak->ix];
+    int right = info->power[peak->right];
+
+    peak->valid = middle >= min_height;
+    if (peak->valid)
+        peak->quality = (middle - MAX(left, right)) / (float) middle;
+    else
+        peak->quality = 0;
+}
+
+
+/* Uses the programmed threshold to find sensible left and right boundaries of
+ * the peak for fitting. */
+static void threshold_peak(
+    struct peak_info *info, struct peak_data *peak, int *left, int *right)
+{
+    int max_val = find_max_val(
+        peak->right - peak->left + 1, info->power + peak->left);
+    int threshold = (int) (peak_fit_ratio * max_val);
+
+    *left = peak->left;
+    while (*left < peak->ix  &&  info->power[*left + 1] < threshold)
+        *left += 1;
+    *right = peak->right;
+    while (*right > peak->ix  &&  info->power[*right - 1] < threshold)
+        *right -= 1;
+}
+
+
+/* Simple insertion sort of peak data using index as sort key. */
+static void insert_peak(
+    struct peak_info *info, struct peak_data *peak, int peak_count)
+{
+    int ix = 0;
+    while (ix < peak_count  &&  peak->ix > info->peaks[ix].ix)
+        ix ++;
+    /* Move up the rest to make room. */
+    memmove(info->peaks + ix + 1, info->peaks + ix,
+        sizeof(struct peak_data) * (peak_count - ix));
+    info->peaks[ix] = *peak;
+}
+
+static void compute_waveforms(struct peak_info *info)
+{
+    for (int i = 0; i < MAX_PEAKS; i ++)
+    {
+        struct peak_data *peak = &info->peaks[i];
+        info->peak_ix_wf[i] = peak->ix;
+        info->peak_val_wf[i] = info->power[peak->ix];
+        info->peak_left_wf[i] = peak->left;
+        info->peak_right_wf[i] = peak->right;
+        info->peak_quality[i] = peak->quality;
+    }
+}
+
+static void find_peaks(struct peak_info *info, int min_height)
+{
+    for (int p = 0; p < MAX_PEAKS; p ++)
+    {
+        struct peak_data peak;
+        int peak_ix = find_peak_ix(info, p);
+        find_peak_limits(info, peak_ix, &peak);
+        assess_peak_quality(info, &peak, min_height);
+        insert_peak(info, &peak, p);
+    }
+    compute_waveforms(info);
+}
+
+
+/* Smooths input waveform by taking means of 4 bins at a time. */
+static void smooth_waveform(int length, const int *wf_in, int *wf_out)
+{
+    for (int i = 0; i < length / 4; i ++)
+    {
+        int64_t accum = 0;
+        for (int j = 0; j < 4; j ++)
+            accum += wf_in[4*i + j];
+        wf_out[i] = (int) (accum / 4);
+    }
+}
+
+/* Computes second derivative of curve. */
+static void compute_dd(int length, const int *wf_in, int *wf_out)
+{
+    wf_out[0] = 0;
+    for (int i = 1; i < length - 1; i ++)
+    {
+        int64_t accum =
+            (int64_t) wf_in[i-1] -
+            (int64_t) 2 * wf_in[i] +
+            (int64_t) wf_in[i+1];
+        wf_out[i] = (int) (accum / 4);
+    }
+    wf_out[length - 1] = 0;
+}
+
+
+static void process_peak(struct peak_info *info)
+{
+    compute_dd(info->length, info->power, info->power_dd);
+
+    int max_val = find_max_val(info->length, info->power);
+    int min_height = (int) (max_val * min_peak_size);
+    find_peaks(info, min_height);
+}
+
+
+static int extract_valid_peaks(
+    struct peak_info *info, struct peak_data peaks[3])
+{
+    int peak_count = 0;
+    for (int p = 0; p < MAX_PEAKS; p ++)
+    {
+        struct peak_data *peak = &info->peaks[p];
+        if (peak->valid)
+        {
+            if (peak_count == 3)
+                return 4;
+            else
+                peaks[peak_count++] = *peak;
+        }
+    }
+    return peak_count;
+}
+
+
+/* Returns true if peak1 is larger than peak2, false otherwise. */
+static bool compare_peaks(
+    struct peak_info *info, struct peak_data *peak1, struct peak_data *peak2)
+{
+    /* Compare the heights of the smoothed peaks, we're less trusting of the
+     * original raw data for this. */
+    return info->power[peak1->ix] >= info->power[peak2->ix];
+}
+
+
+static unsigned int compute_peak_tune(
+    const struct channel_sweep *sweep, const double *tune_scale,
+    struct peak_info *info, struct peak_data *peak)
+{
+    /* First compute left and right ranges for the peak. */
+    int left, right;
+    threshold_peak(info, peak, &left, &right);
+    /* Convert ranges into original data ranges. */
+    left  = left  * info->scaling + info->scaling / 2;
+    right = right * info->scaling + info->scaling / 2;
+
+    /* Perform polynomial fit on the data. */
+    double result;
+    if (fit_quadratic(right - left + 1, sweep->power + left, &result))
+    {
+        index_to_tune(sweep, tune_scale, left + result,
+            &peak_measured_tune, &peak_measured_phase);
+        return TUNE_OK;
+    }
+    else
+        return TUNE_BAD_FIT;
+}
+
+
+
+static void process_peak_tune(
+    const struct channel_sweep *sweep, const double *tune_scale,
+    struct peak_info *info)
+{
+    struct peak_data peaks[3];
+    int peak_count = extract_valid_peaks(info, peaks);
+    int peak_ix = -1;
+    switch (peak_count)
+    {
+        case 0:     peak_tune_status = TUNE_NO_PEAK;        break;
+        case 1:     peak_ix = 0;                            break;
+        case 2:
+            peak_ix = compare_peaks(info, &peaks[0], &peaks[1]) ? 0 : 1;
+            break;
+        case 3:     peak_ix = 1;                            break;
+        case 4:     peak_tune_status = TUNE_EXTRA_PEAKS;    break;
+    }
+
+    int severity = epicsSevMajor;
+    if (peak_ix >= 0)
+    {
+        peak_tune_status = compute_peak_tune(
+            sweep, tune_scale, info, &peaks[peak_ix]);
+        if (peak_tune_status == TUNE_OK)
+        {
+#if 0
+            /* Check for measured tune within given alarm range. */
+            if (fabs(peak_measured_tune - centre_tune) >= alarm_range)
+            {
+                severity = epicsSevMinor;
+                peak_tune_status = TUNE_RANGE;
+            }
+            else
+#endif
+                severity = epicsSevNone;
+        }
+    }
+    trigger_record(peak_measured_tune_rec,  severity, NULL);
+    trigger_record(peak_measured_phase_rec, severity, NULL);
+}
+
+
+static struct peak_info *select_peak_info(void)
+{
+    switch (peak_select)
+    {
+        case PEAK_4:    return &peak_info_4;
+        case PEAK_16:   return &peak_info_16;
+        case PEAK_64:   return &peak_info_64;
+        /* Actually, an outside user can force this case by doing an otherwise
+         * invalid caput to an mbbo.  Because this case is just stupid, but
+         * dying is probably a bit extreme, just return something sensible. */
+        default:        return &peak_info_16;
+    }
+}
+
+static void process_peaks(
+    const struct channel_sweep *sweep, const double *tune_scale)
+{
+    smooth_waveform(TUNE_LENGTH,    sweep->power,       peak_info_4.power);
+    smooth_waveform(TUNE_LENGTH/4,  peak_info_4.power,  peak_info_16.power);
+    smooth_waveform(TUNE_LENGTH/16, peak_info_16.power, peak_info_64.power);
+    process_peak(&peak_info_4);
+    process_peak(&peak_info_16);
+    process_peak(&peak_info_64);
+
+    process_peak_tune(sweep, tune_scale, select_peak_info());
+}
+
+
+static struct peak_info *publish_peak_info(struct peak_info *info, int ratio)
+{
+    int length = TUNE_LENGTH / ratio;
+    info->scaling = ratio;
+    info->length = length;
+    info->power = malloc(length * sizeof(int));
+    info->power_dd = malloc(length * sizeof(int));
+
+    char buffer[20];
+#define FORMAT(name) \
+    (sprintf(buffer, "TUNE:%s:%d", name, ratio), buffer)
+    PUBLISH_WF_READ_VAR(int, FORMAT("POWER"), length, info->power);
+    PUBLISH_WF_READ_VAR(int, FORMAT("PDD"), length, info->power_dd);
+    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKIX"), MAX_PEAKS, info->peak_ix_wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKV"), MAX_PEAKS, info->peak_val_wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKL"), MAX_PEAKS, info->peak_left_wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKR"), MAX_PEAKS, info->peak_right_wf);
+    PUBLISH_WF_READ_VAR(float, FORMAT("PEAKQ"), MAX_PEAKS, info->peak_quality);
+#undef FORMAT
+    return info;
+}
+
+static void publish_peaks(void)
+{
+    publish_peak_info(&peak_info_4, 4);
+    publish_peak_info(&peak_info_16, 16);
+    publish_peak_info(&peak_info_64, 64);
+
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MIN", min_peak_size);
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:FIT", peak_fit_ratio);
+    PUBLISH_WRITE_VAR_P(mbbo, "TUNE:PEAK:SEL", peak_select);
+
+    PUBLISH_READ_VAR(mbbi, "TUNE:PEAK:STATUS", peak_tune_status);
+    peak_measured_tune_rec  =
+        PUBLISH_READ_VAR(ai, "TUNE:PEAK:TUNE",  peak_measured_tune);
+    peak_measured_phase_rec =
+        PUBLISH_READ_VAR(ai, "TUNE:PEAK:PHASE", peak_measured_phase);
 }
 
 
@@ -551,6 +748,8 @@ void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow)
     }
     else
     {
+        process_peaks(&sweep, sweep_info->tune_scale);
+
         severity = measure_tune(
             sweep_info->sweep_length, &sweep, sweep_info->tune_scale, overflow,
             &tune_status, &measured_tune, &measured_phase);
