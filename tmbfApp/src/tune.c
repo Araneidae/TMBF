@@ -270,7 +270,7 @@ struct peak_data {
     int left;
     int right;
     float quality;
-    float height;
+    float ratio;
     bool valid;
 };
 
@@ -288,7 +288,7 @@ struct peak_info {
     int peak_left_wf[MAX_PEAKS];
     int peak_right_wf[MAX_PEAKS];
     float peak_quality[MAX_PEAKS];
-    float peak_height[MAX_PEAKS];
+    float peak_ratio[MAX_PEAKS];
 
     int valid_peak_count;
 };
@@ -299,6 +299,7 @@ static struct peak_info peak_info_64;
 
 static double min_peak_quality;
 static double min_peak_height;
+static double min_peak_ratio;
 static double peak_fit_ratio;
 
 enum { PEAK_4, PEAK_16, PEAK_64 };
@@ -432,8 +433,8 @@ static float compute_dd_variance(struct peak_info *info, int peak_count)
 }
 
 
-/* Peak height relative to the peak floor, used for quality assessment. */
-static float peak_height(struct peak_info *info, struct peak_data *peak)
+/* Peak ratio relative to the peak floor, used for quality assessment. */
+static float peak_ratio(struct peak_info *info, struct peak_data *peak)
 {
     int height = info->power[peak->ix];
     int left   = info->power[peak->left];
@@ -453,6 +454,9 @@ static void assess_peak_quality(struct peak_info *info)
     if (deviation == 0)
         deviation = 0.1;
 
+    int max_height = find_max_val(info->length, info->power);
+    int min_height = (int) (min_peak_height * max_height);
+
     info->valid_peak_count = 0;
     for (int p = 0; p < MAX_PEAKS; p ++)
     {
@@ -460,10 +464,11 @@ static void assess_peak_quality(struct peak_info *info)
         if (peak->valid)
         {
             peak->quality = -info->power_dd[peak->ix] / deviation;
-            peak->height = peak_height(info, peak);
+            peak->ratio = peak_ratio(info, peak);
             peak->valid =
                 peak->quality >= min_peak_quality  &&
-                peak->height >= min_peak_height;
+                peak->ratio >= min_peak_ratio  &&
+                info->power[peak->ix] >= min_height;
         }
         else
             peak->quality = 0;
@@ -484,7 +489,7 @@ static void compute_waveforms(struct peak_info *info)
         info->peak_left_wf[i] = peak->left;
         info->peak_right_wf[i] = peak->right;
         info->peak_quality[i] = peak->quality;
-        info->peak_height[i] = peak->height;
+        info->peak_ratio[i] = peak->ratio;
     }
 }
 
@@ -681,7 +686,7 @@ static struct peak_info *publish_peak_info(struct peak_info *info, int ratio)
     PUBLISH_WF_READ_VAR(int, FORMAT("PEAKL"), MAX_PEAKS, info->peak_left_wf);
     PUBLISH_WF_READ_VAR(int, FORMAT("PEAKR"), MAX_PEAKS, info->peak_right_wf);
     PUBLISH_WF_READ_VAR(float, FORMAT("PEAKQ"), MAX_PEAKS, info->peak_quality);
-    PUBLISH_WF_READ_VAR(float, FORMAT("PEAKH"), MAX_PEAKS, info->peak_height);
+    PUBLISH_WF_READ_VAR(float, FORMAT("PEAKH"), MAX_PEAKS, info->peak_ratio);
     PUBLISH_READ_VAR(longin, FORMAT("PEAKC"), info->valid_peak_count);
 #undef FORMAT
     return info;
@@ -695,6 +700,7 @@ static void publish_peaks(void)
 
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINQ", min_peak_quality);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINH", min_peak_height);
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINR", min_peak_ratio);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:FIT", peak_fit_ratio);
     PUBLISH_WRITE_VAR_P(mbbo, "TUNE:PEAK:SEL", peak_select);
 

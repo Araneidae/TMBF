@@ -42,7 +42,7 @@ def peak_readbacks(suffix):
         Waveform('TUNE:PEAKQ:%d' % suffix, MAX_PEAKS, 'FLOAT',
             DESC = 'Peak quality'),
         Waveform('TUNE:PEAKH:%d' % suffix, MAX_PEAKS, 'FLOAT',
-            DESC = 'Peak height'),
+            DESC = 'Peak height ratio'),
         Waveform('TUNE:PDD:%d' % suffix, TUNE_LENGTH/suffix, 'LONG',
             DESC = 'Second derivative of power'),
         longIn('TUNE:PEAKC:%d' % suffix, DESC = 'Peaks detected'),
@@ -96,7 +96,8 @@ longOut('TUNE:BLK:LEN', DESC = 'Minimum block length')
 
 # Controls for new peak finding algorithm
 aOut('TUNE:PEAK:MINQ', 0, 100, PREC = 1, DESC = 'Minimum peak quality')
-aOut('TUNE:PEAK:MINH', 0, 100, PREC = 1, DESC = 'Minimum peak height')
+aOut('TUNE:PEAK:MINH', 0, 1, PREC = 1, DESC = 'Minimum peak height')
+aOut('TUNE:PEAK:MINR', 0, 100, PREC = 1, DESC = 'Minimum peak ratio')
 aOut('TUNE:PEAK:FIT', 0, 1, PREC = 2, DESC = 'Fit threshold')
 mbbOut('TUNE:PEAK:SEL', '/4', '/16', '/64', DESC = 'Select smoothing')
 

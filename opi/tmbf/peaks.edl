@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 537
-y 391
+x 614
+y 60
 w 641
 h 770
 font "helvetica-medium-r-18.0"
@@ -294,7 +294,7 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 360
+x 344
 y 704
 w 56
 h 24
@@ -322,10 +322,10 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 304
+x 288
 y 704
-w 48
-h 16
+w 47
+h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -656,7 +656,7 @@ minor 0
 release 0
 x 8
 y 696
-w 288
+w 264
 h 64
 lineColor index 14
 fill
@@ -729,8 +729,8 @@ minor 6
 release 0
 x 72
 y 712
-w 72
-h 21
+w 56
+h 24
 controlPv "$(device):TUNE:PEAK:TUNE"
 font "helvetica-medium-r-18.0"
 fontAlign "right"
@@ -753,7 +753,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 168
+x 144
 y 712
 w 55
 h 21
@@ -793,7 +793,7 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 224
+x 200
 y 712
 w 64
 h 21
@@ -859,7 +859,7 @@ major 4
 minor 6
 release 0
 x 488
-y 728
+y 736
 w 48
 h 24
 controlPv "$(device):TUNE:PEAK:FIT_S"
@@ -887,7 +887,7 @@ major 4
 minor 1
 release 1
 x 432
-y 728
+y 736
 w 48
 h 14
 font "helvetica-bold-r-12.0"
@@ -981,11 +981,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 360
-y 736
+x 472
+y 704
 w 56
-h 24
-controlPv "$(device):TUNE:PEAK:MINH_S"
+h 20
+controlPv "$(device):TUNE:PEAK:MINR_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1009,7 +1009,27 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 304
+x 416
+y 704
+w 35
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Ratio:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 288
 y 736
 w 42
 h 14
@@ -1021,5 +1041,33 @@ value {
   "Height:"
 }
 autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 344
+y 736
+w 56
+h 20
+controlPv "$(device):TUNE:PEAK:MINH_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
 endObjectProperties
 
