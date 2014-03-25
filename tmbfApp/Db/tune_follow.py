@@ -103,11 +103,20 @@ Action('FTUN:STAT:SCAN',
             DESC = 'Tune following activity'),
 
         # Current position and angle readout
-        aIn('FTUN:ANGLE', -180, 180, 'deg', 6,
+        aIn('FTUN:ANGLE', -180, 180, 'deg', 3,
             DESC = 'Current angle from detector'),
-        aIn('FTUN:ANGLEDELTA', -180, 180, 'deg', 6,
+        aIn('FTUN:ANGLEDELTA', -180, 180, 'deg', 3,
             DESC = 'Relative angle from detector'),
-        longIn('FTUN:MAG', 0, 65535, DESC = 'Current magnitude from detector')
+        longIn('FTUN:MAG', 0, 65535, DESC = 'Current magnitude from detector'),
+
+        # Min/max readouts
+        longIn('FTUN:MAG:MIN', 0, 65535, DESC = 'Minimum magnitude'),
+        longIn('FTUN:MAG:MAX', 0, 65535, DESC = 'Maximum magnitude'),
+        aIn('FTUN:MAG:VAR', PREC = 3, DESC = 'Relative magnitude variation'),
+        aIn('FTUN:ANGLE:MIN', -180, 180, 'deg', 3, DESC = 'Minimum angle'),
+        aIn('FTUN:ANGLE:MAX', -180, 180, 'deg', 3, DESC = 'Maximum angle'),
+        aIn('FTUN:ANGLE:VAR', 0, 360, 'deg', 3,
+            DESC = 'Angle variation (max-min)')
     ))
 
 

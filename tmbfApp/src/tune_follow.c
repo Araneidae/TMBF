@@ -75,6 +75,14 @@ static double current_angle;
 static double delta_angle;
 static int current_magnitude;
 
+/* Min/max info. */
+static int minimum_magnitude;
+static int maximum_magnitude;
+static double magnitude_variation;
+static double minimum_angle;
+static double maximum_angle;
+static double angle_variation;
+
 /* Running status.  This is set under a lock when starting tune following and
  * updated, also under the same lock, when the status array above is read.  This
  * is used to ensure we read a complete buffer at the end of a run. */
@@ -190,6 +198,27 @@ static double read_nco_freq(void)
 }
 
 
+static void update_minmax(void)
+{
+    int min, max;
+    if (hw_read_ftun_mag_minmax(&min, &max))
+    {
+        minimum_magnitude = min;
+        maximum_magnitude = max;
+        if (current_magnitude > 0)
+            magnitude_variation = (double) (max - min) / current_magnitude;
+        else
+            magnitude_variation = 0;
+    }
+
+    if (hw_read_ftun_angle_minmax(&min, &max))
+    {
+        minimum_angle = 360.0 / pow(2, 16) * min;
+        maximum_angle = 360.0 / pow(2, 16) * max;
+        angle_variation = maximum_angle - minimum_angle;
+    }
+}
+
 static void read_ftun_status(void)
 {
     LOCK_RUNNING();
@@ -207,6 +236,8 @@ static void read_ftun_status(void)
 
     int angle = ftun_control.target_phase + delta;
     current_angle = 360.0 / pow(2, 18) * angle;
+
+    update_minmax();
 }
 
 
@@ -356,6 +387,12 @@ bool initialise_tune_follow(void)
     PUBLISH_READ_VAR(ai, "FTUN:ANGLE", current_angle);
     PUBLISH_READ_VAR(ai, "FTUN:ANGLEDELTA", delta_angle);
     PUBLISH_READ_VAR(longin, "FTUN:MAG", current_magnitude);
+    PUBLISH_READ_VAR(longin, "FTUN:MAG:MIN", minimum_magnitude);
+    PUBLISH_READ_VAR(longin, "FTUN:MAG:MAX", maximum_magnitude);
+    PUBLISH_READ_VAR(ai, "FTUN:MAG:VAR", magnitude_variation);
+    PUBLISH_READ_VAR(ai, "FTUN:ANGLE:MIN", minimum_angle);
+    PUBLISH_READ_VAR(ai, "FTUN:ANGLE:MAX", maximum_angle);
+    PUBLISH_READ_VAR(ai, "FTUN:ANGLE:VAR", angle_variation);
 
     /* NCO control. */
     PUBLISH_WRITER_P(ao,   "NCO:FREQ", write_nco_freq);

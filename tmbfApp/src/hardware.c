@@ -213,8 +213,14 @@ struct tmbf_config_space
         const uint32_t ftune_freq_offset;
         uint32_t ftune_min_magnitude;   // Magnitude threshold for feedback
     };
-    uint32_t ftune_max_offset;      // 28  Frequency offset limit for feedback
-    uint32_t nco_frequency;         // 29  Fixed NCO generator frequency
+    union {                         // 28
+        const uint32_t ftune_mag_minmax; // Magnitude min and max
+        uint32_t ftune_max_offset;      // Frequency offset limit for feedback
+    };
+    union {                         // 29
+        const uint32_t ftune_angle_minmax; // Angle min and max
+        uint32_t nco_frequency;         // Fixed NCO generator frequency
+    };
     uint32_t ftune_p_scale;         // 30  Feedback proportional scale
     uint32_t unused_31;             // 31    (unused)
 };
@@ -733,6 +739,22 @@ bool hw_read_ftun_frequency(int *frequency)
     int freq_word = config_space->ftune_freq_offset;
     *frequency = (freq_word << 2) >> 2;
     return (freq_word >> 31) & 1;
+}
+
+bool hw_read_ftun_mag_minmax(int *min, int *max)
+{
+    uint32_t minmax = config_space->ftune_mag_minmax;
+    *min = minmax & 0xFFFF;
+    *max = minmax >> 16;
+    return *max >= *min;
+}
+
+bool hw_read_ftun_angle_minmax(int *min, int *max)
+{
+    uint32_t minmax = config_space->ftune_angle_minmax;
+    *min = (int) (minmax << 16) >> 16;
+    *max = (int) minmax >> 16;
+    return *max >= *min;
 }
 
 size_t hw_read_ftun_buffer(

@@ -270,6 +270,11 @@ void hw_read_ftun_angle_mag(int *angle, int *magnitude);
  * with 12 extra bits of precision. */
 bool hw_read_ftun_frequency(int *frequency);
 
+/* Reads minimum and maximum magnitude and angle values since last reading,
+ * returns false if no update in the interval. */
+bool hw_read_ftun_mag_minmax(int *min, int *max);
+bool hw_read_ftun_angle_minmax(int *min, int *max);
+
 /* Reads up to FTUN_FIFO_SIZE words from the FTUN FIFO into buffer.  Sets the
  * dropout flag if the FTUN buffer overflowed and returns the number of words
  * read. */
@@ -278,6 +283,7 @@ size_t hw_read_ftun_buffer(
 
 /* Returns ADC and FIR detector delays. */
 void hw_read_ftun_delays(int *adc_delay, int *fir_delay);
+
 
 /* * * * * * * * * * * * * * * * * * * * * */
 /* SEQ: Programmed Bunch and Sweep Control */

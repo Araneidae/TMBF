@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 351
-y 163
+x 352
+y 164
 w 672
-h 680
+h 689
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -33,9 +33,9 @@ major 4
 minor 0
 release 0
 x 8
-y 600
-w 368
-h 72
+y 512
+w 656
+h 80
 lineColor index 14
 fill
 fillColor index 4
@@ -393,7 +393,7 @@ major 4
 minor 0
 release 0
 x 8
-y 512
+y 608
 w 368
 h 72
 lineColor index 14
@@ -408,7 +408,7 @@ major 4
 minor 1
 release 1
 x 16
-y 528
+y 624
 w 59
 h 14
 font "helvetica-bold-r-12.0"
@@ -428,7 +428,7 @@ major 4
 minor 1
 release 1
 x 16
-y 552
+y 648
 w 59
 h 14
 font "helvetica-bold-r-12.0"
@@ -448,7 +448,7 @@ major 4
 minor 6
 release 0
 x 88
-y 528
+y 624
 w 96
 h 20
 controlPv "$(device):NCO:FREQ_S"
@@ -476,7 +476,7 @@ major 4
 minor 0
 release 0
 x 88
-y 552
+y 648
 w 96
 h 22
 fgColor index 14
@@ -495,7 +495,7 @@ major 4
 minor 1
 release 1
 x 8
-y 504
+y 600
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -514,7 +514,7 @@ major 4
 minor 0
 release 0
 x 8
-y 504
+y 600
 w 120
 h 16
 lineColor index 14
@@ -821,7 +821,7 @@ major 4
 minor 6
 release 0
 x 200
-y 528
+y 624
 w 64
 h 16
 controlPv "$(device):NCO:FREQ"
@@ -1281,12 +1281,13 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 104
-y 616
-w 80
+x 88
+y 528
+w 64
 h 16
 controlPv "$(device):FTUN:ANGLE"
 font "helvetica-medium-r-14.0"
+fontAlign "right"
 fgColor index 14
 fgAlarm
 bgColor index 4
@@ -1306,7 +1307,7 @@ major 4
 minor 1
 release 1
 x 16
-y 616
+y 528
 w 36
 h 14
 font "helvetica-bold-r-12.0"
@@ -1325,12 +1326,13 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 104
-y 648
-w 80
+x 88
+y 568
+w 64
 h 16
 controlPv "$(device):FTUN:MAG"
 font "helvetica-medium-r-14.0"
+fontAlign "right"
 fgColor index 14
 fgAlarm
 bgColor index 4
@@ -1350,7 +1352,7 @@ major 4
 minor 1
 release 1
 x 16
-y 648
+y 568
 w 65
 h 14
 font "helvetica-bold-r-12.0"
@@ -1517,12 +1519,13 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 104
-y 632
-w 80
+x 88
+y 544
+w 64
 h 16
 controlPv "$(device):FTUN:ANGLEDELTA"
 font "helvetica-medium-r-14.0"
+fontAlign "right"
 fgColor index 14
 fgAlarm
 bgColor index 4
@@ -1542,7 +1545,7 @@ major 4
 minor 1
 release 1
 x 16
-y 632
+y 544
 w 69
 h 14
 font "helvetica-bold-r-12.0"
@@ -1609,8 +1612,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 192
-y 640
+x 472
+y 560
 w 88
 h 22
 fgColor index 14
@@ -1629,7 +1632,7 @@ major 4
 minor 6
 release 0
 x 200
-y 552
+y 648
 w 64
 h 16
 controlPv "$(device):NCO:FREQ:MEAN"
@@ -1653,7 +1656,7 @@ major 4
 minor 0
 release 0
 x 280
-y 528
+y 624
 w 88
 h 22
 fgColor index 14
@@ -1671,8 +1674,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 192
-y 616
+x 472
+y 536
 w 88
 h 22
 fgColor index 14
@@ -1715,8 +1718,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 288
-y 640
+x 568
+y 560
 w 80
 h 16
 controlPv "$(device):FTUN:MAG:IIR:TC"
@@ -1740,8 +1743,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 288
-y 616
+x 568
+y 536
 w 80
 h 16
 controlPv "$(device):FTUN:ANGLE:IIR:TC"
@@ -1766,7 +1769,7 @@ major 4
 minor 6
 release 0
 x 280
-y 552
+y 648
 w 80
 h 16
 controlPv "$(device):FTUN:FREQ:IIR:TC"
@@ -1791,7 +1794,7 @@ major 4
 minor 1
 release 1
 x 8
-y 592
+y 504
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -1810,10 +1813,243 @@ major 4
 minor 0
 release 0
 x 8
-y 592
+y 504
 w 120
 h 16
 lineColor index 14
 fillColor index 0
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 160
+y 544
+w 64
+h 16
+controlPv "$(device):FTUN:ANGLE:MIN"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 240
+y 544
+w 64
+h 16
+controlPv "$(device):FTUN:ANGLE:MAX"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 312
+y 544
+w 64
+h 16
+controlPv "$(device):FTUN:ANGLE:VAR"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 312
+y 568
+w 64
+h 16
+controlPv "$(device):FTUN:MAG:VAR"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 240
+y 568
+w 64
+h 16
+controlPv "$(device):FTUN:MAG:MAX"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 160
+y 568
+w 64
+h 16
+controlPv "$(device):FTUN:MAG:MIN"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 4
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 200
+y 528
+w 24
+h 16
+font "helvetica-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Min"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 280
+y 528
+w 25
+h 14
+font "helvetica-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Max"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 328
+y 528
+w 52
+h 14
+font "helvetica-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Variation"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 472
+y 520
+w 58
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Filter rate"
+}
+autoSize
 endObjectProperties
 
