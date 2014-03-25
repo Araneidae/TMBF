@@ -484,6 +484,9 @@ static struct epics_record *measured_tune_rec;
 static struct epics_record *measured_phase_rec;
 static unsigned int tune_status;
 
+/* Fake data for test injection. */
+static struct sweep_info injection_sweep;
+
 
 static void update_iq_power(const struct sweep_info *sweep_info)
 {
@@ -562,6 +565,23 @@ void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow)
     trigger_record(measured_tune_rec, severity, NULL);
     trigger_record(measured_phase_rec, severity, NULL);
     interlock_signal(tune_trigger, NULL);
+}
+
+
+/* Inject given test data as power sweep by forcing call to update_tune_sweep
+ * with synthetic sweep info structure. */
+static void inject_test_data(void *context, int *array, size_t *length)
+{
+    injection_sweep.sweep_length = *length;
+    injection_sweep.single_bunch_mode = false;
+    memcpy(injection_sweep.mean.power, array,
+        sizeof(injection_sweep.mean.power));
+
+    /* We don't have ready access to the frequency scale, so just fake one. */
+    for (int i = 0; i < TUNE_LENGTH; i ++)
+        injection_sweep.tune_scale[i] = (double) i / TUNE_LENGTH;
+
+    update_tune_sweep(&injection_sweep, false);
 }
 
 
@@ -673,6 +693,8 @@ bool initialise_tune(void)
     PUBLISH_WRITE_VAR_P(ao, "TUNE:THRESHOLD", threshold_fraction);
     PUBLISH_WRITE_VAR_P(longout, "TUNE:BLK:SEP", min_block_separation);
     PUBLISH_WRITE_VAR_P(longout, "TUNE:BLK:LEN", min_block_length);
+
+    PUBLISH_WAVEFORM(int, "TUNE:INJECT:P", TUNE_LENGTH, inject_test_data);
 
     trigger_record(tune_setting_rec, 0, NULL);
 

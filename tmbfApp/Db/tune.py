@@ -85,6 +85,10 @@ longOut('TUNE:BLK:LEN', DESC = 'Minimum block length')
 
 aOut('TUNE:PEAK:FLOOR', 0, 1, PREC = 2, DESC = 'Peak floor')
 
+# Waveform for injecting test data into tune measurement.
+WaveformOut('TUNE:INJECT:P', TUNE_LENGTH, 'LONG',
+    PINI = 'NO', DESC = 'Test injection')
+
 
 # Tune measurement alias for backwards compatibility
 tune_measurement.add_alias('$(DEVICE):TUNE')
