@@ -2,6 +2,9 @@
 
 from common import *
 
+MAX_EDGES = 20
+MAX_PEAKS = 4
+
 
 # Common controls for simple tune control
 setting_changed = Action('TUNE:CHANGED', DESC = 'Record tune settings changed')
@@ -22,6 +25,23 @@ Action('TUNE:SET', DESC = 'Set tune settings')
 boolIn('TUNE:SETTING', 'Changed', 'As Set',
     ZSV = 'MINOR', OSV = 'NO_ALARM', SCAN = 'I/O Intr',
     DESC = 'Tune setup state check')
+
+
+def peak_readbacks(suffix):
+    return [
+        Waveform('TUNE:POWER:%d' % suffix, TUNE_LENGTH/suffix, 'LONG',
+            DESC = 'Smoothed tune'),
+        Waveform('TUNE:EDGE:%d' % suffix, MAX_EDGES, 'LONG',
+            DESC = 'Detected edges'),
+        longIn('TUNE:ECOUNT:%d' % suffix, DESC = 'Number of edges'),
+        Waveform('TUNE:PEAKIX:%d' % suffix, MAX_PEAKS, 'LONG',
+            DESC = 'Peak indexes'),
+        Waveform('TUNE:PEAKV:%d' % suffix, MAX_PEAKS, 'LONG',
+            DESC = 'Peak values'),
+        Waveform('TUNE:PEAKQ:%d' % suffix, MAX_PEAKS, 'FLOAT',
+            DESC = 'Peak quality'),
+    ]
+
 
 tune_measurement = aIn('TUNE:TUNE', 0, 1, PREC = 4, DESC = 'Measured tune')
 Trigger('TUNE',
@@ -50,13 +70,18 @@ Trigger('TUNE',
         ('Bad fit',     4,  'MINOR'),
         ('Overflow',    5,  'MAJOR'),
         ('Out of range', 6, 'NO_ALARM'),
-        DESC = 'Status of last tune measurement')
-)
+        DESC = 'Status of last tune measurement'),
+
+    # Peak detection support
+    *peak_readbacks(4) + peak_readbacks(16) + peak_readbacks(64))
 
 # Controls for tune peak finding
 aOut('TUNE:THRESHOLD', 0, 1, PREC = 2, DESC = 'Peak fraction threshold')
 longOut('TUNE:BLK:SEP', DESC = 'Minimum block separation')
 longOut('TUNE:BLK:LEN', DESC = 'Minimum block length')
+
+aOut('TUNE:PEAK:MIN', 0, 1, PREC = 2, DESC = 'Peak fraction threshold')
+aOut('TUNE:PEAK:MAX', 0, 1, PREC = 2, DESC = 'Peak fraction threshold')
 
 
 # Tune measurement alias for backwards compatibility

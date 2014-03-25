@@ -20,6 +20,205 @@
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Experimental peak measurement code. */
+
+#define MAX_EDGES   20
+#define MAX_PEAKS   4
+
+struct edge_info {
+    bool up;
+    int start;
+    int end;
+};
+
+struct peak_info {
+    size_t length;      // Length of waveform
+    int min_threshold;
+    int max_threshold;
+    int edge_count;
+    int peak_count;
+    struct edge_info edges[MAX_EDGES];
+    int edge_wf[MAX_EDGES];
+    int peak_ix_wf[MAX_PEAKS];
+    int peak_val_wf[MAX_PEAKS];
+    float peak_q[MAX_PEAKS];
+    int wf[];           // Smoothed power waveform
+};
+
+static struct peak_info *peak_info_4;
+static struct peak_info *peak_info_16;
+static struct peak_info *peak_info_64;
+
+static double peak_threshold_min;
+static double peak_threshold_max;
+
+
+/* Returns index of maximum element of array. */
+static int find_max(int length, const int *array)
+{
+    int max_val = array[0];
+    int max_ix = 0;
+    for (int i = 1; i < length; i ++)
+        if (array[i] > max_val)
+        {
+            max_val = array[i];
+            max_ix = i;
+        }
+    return max_ix;
+}
+
+
+static void emit_edge(struct peak_info *info, int start, int end, bool up)
+{
+    if (info->edge_count < MAX_EDGES)
+    {
+        struct edge_info *edge = &info->edges[info->edge_count];
+        edge->up = up;
+        edge->start = start;
+        edge->end = end;
+        info->edge_wf[info->edge_count] = info->wf[end] - info->wf[start];
+        info->edge_count += 1;
+    }
+}
+
+/* Scan for peaks. */
+static void scan_edges(struct peak_info *info)
+{
+    info->edge_count = 0;
+    memset(info->edges, 0, sizeof(info->edges));
+    memset(info->edge_wf, 0, sizeof(info->edge_wf));
+
+    for (size_t ix = 1; ix < info->length; )
+    {
+        size_t start_ix = ix - 1;
+        while (ix < info->length  &&  info->wf[ix] >= info->wf[ix - 1])
+            ix ++;
+        size_t end_ix = ix - 1;
+        int step_up = info->wf[end_ix] - info->wf[start_ix];
+        if (step_up >= info->max_threshold)
+            emit_edge(info, start_ix, end_ix, true);
+
+        start_ix = ix - 1;
+        while (ix < info->length  &&  info->wf[ix] <= info->wf[ix - 1])
+            ix ++;
+        end_ix = ix - 1;
+        int step_dn = info->wf[start_ix] - info->wf[end_ix];
+        if (step_dn >= info->max_threshold)
+            emit_edge(info, start_ix, end_ix, false);
+    }
+}
+
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+static void emit_peak(struct peak_info *info, int edge_ix)
+{
+    if (info->peak_count < MAX_PEAKS)
+    {
+        int left_ix = info->edges[edge_ix-1].start;
+        int middle_ix = info->edges[edge_ix].start;
+        int right_ix = info->edges[edge_ix].end;
+        int left = info->wf[left_ix];
+        int middle = info->wf[middle_ix];
+        int right = info->wf[right_ix];
+
+        info->peak_ix_wf[info->peak_count] = middle_ix;
+        info->peak_val_wf[info->peak_count] = middle;
+
+        /* Compute a simple peak quality factor. */
+        info->peak_q[info->peak_count] =
+            (middle - MAX(left, right)) / (float) info->max_threshold;
+
+        info->peak_count += 1;
+    }
+}
+
+static void find_peaks(struct peak_info *info)
+{
+    info->peak_count = 0;
+    for (int ix = 0; ix < info->edge_count; ix ++)
+    {
+        while (ix < info->edge_count  &&  info->edges[ix].up)
+            ix += 1;
+        if (0 < ix  &&  ix < info->edge_count)
+            emit_peak(info, ix);
+        while (ix < info->edge_count  &&  !info->edges[ix].up)
+            ix += 1;
+    }
+    for (int ix = info->peak_count; ix < MAX_PEAKS; ix ++)
+    {
+        info->peak_ix_wf[ix] = 0;
+        info->peak_val_wf[ix] = 0;
+        info->peak_q[ix] = 0;
+    }
+}
+
+
+static void process_peak(struct peak_info *info)
+{
+    int max_val = info->wf[find_max(info->length, info->wf)];
+    info->min_threshold = (int) round(peak_threshold_min * max_val);
+    info->max_threshold = (int) round(peak_threshold_max * max_val);
+    scan_edges(info);
+    find_peaks(info);
+}
+
+
+/* Smooths input waveform by taking means of 4 bins at a time. */
+static void smooth_waveform(size_t length, const int *wf_in, int *wf_out)
+{
+    for (size_t i = 0; i < length / 4; i ++)
+    {
+        int64_t accum = 0;
+        for (size_t j = 0; j < 4; j ++)
+            accum += wf_in[4*i + j];
+        wf_out[i] = (int) (accum / 4);
+    }
+}
+
+
+static void process_peaks(const int power[TUNE_LENGTH])
+{
+    smooth_waveform(TUNE_LENGTH,    power,            peak_info_4->wf);
+    smooth_waveform(TUNE_LENGTH/4,  peak_info_4->wf,  peak_info_16->wf);
+    smooth_waveform(TUNE_LENGTH/16, peak_info_16->wf, peak_info_64->wf);
+    process_peak(peak_info_4);
+    process_peak(peak_info_16);
+    process_peak(peak_info_64);
+}
+
+
+static struct peak_info *publish_peak_info(size_t length, const char *suffix)
+{
+    struct peak_info *info =
+        malloc(sizeof(struct peak_info) + length * sizeof(int));
+    info->length = length;
+
+    char buffer[20];
+#define FORMAT(name) \
+    (sprintf(buffer, "TUNE:%s:%s", name, suffix), buffer)
+    PUBLISH_WF_READ_VAR(int, FORMAT("POWER"), length, info->wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("EDGE"), MAX_EDGES, info->edge_wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKIX"), MAX_PEAKS, info->peak_ix_wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKV"), MAX_PEAKS, info->peak_val_wf);
+    PUBLISH_WF_READ_VAR(float, FORMAT("PEAKQ"), MAX_PEAKS, info->peak_q);
+    PUBLISH_READ_VAR(longin, FORMAT("ECOUNT"), info->edge_count);
+#undef FORMAT
+    return info;
+}
+
+static void publish_peaks(void)
+{
+    peak_info_4  = publish_peak_info(TUNE_LENGTH/4,  "4");
+    peak_info_16 = publish_peak_info(TUNE_LENGTH/16, "16");
+    peak_info_64 = publish_peak_info(TUNE_LENGTH/64, "64");
+
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MIN", peak_threshold_min);
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MAX", peak_threshold_max);
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Tune measurement. */
 
 static double threshold_fraction = 0.3;
@@ -58,21 +257,6 @@ enum tune_status {
     TUNE_OVERFLOW,      // Detector input overflow
     TUNE_RANGE,         // Alarm range error
 };
-
-
-/* Returns index of maximum element of array. */
-static int find_max(int length, const int *array)
-{
-    int max_val = array[0];
-    int max_ix = 0;
-    for (int i = 1; i < length; i ++)
-        if (array[i] > max_val)
-        {
-            max_val = array[i];
-            max_ix = i;
-        }
-    return max_ix;
-}
 
 
 /* Searches given waveform for blocks meeting the peak detection criteria,
@@ -245,6 +429,8 @@ static epicsAlarmSeverity measure_tune(
     const double *tune_scale, bool overflow,
     unsigned int *tune_status, double *tune, double *phase)
 {
+    process_peaks(sweep->power);
+
     /* Very crude algorithm:
      *  1.  Find peak
      *  2.  Slice data to 1/3 of peak height and look for contiguous and well
@@ -505,5 +691,7 @@ bool initialise_tune(void)
     PUBLISH_WRITE_VAR_P(longout, "TUNE:BLK:LEN", min_block_length);
 
     trigger_record(tune_setting_rec, 0, NULL);
+
+    publish_peaks();
     return true;
 }

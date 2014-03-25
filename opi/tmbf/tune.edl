@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 51
-y 51
+x 506
+y 141
 w 641
 h 593
 font "helvetica-medium-r-18.0"
@@ -1599,5 +1599,28 @@ fill
 fillColor index 16
 fillAlarm
 alarmPv "$(device):DET:OVF:INP"
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 248
+y 360
+w 88
+h 24
+fgColor index 43
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "Peaks"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/peaks.edl"
+}
 endObjectProperties
 
