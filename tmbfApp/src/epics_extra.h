@@ -55,3 +55,85 @@ void interlock_signal(struct epics_interlock *interlock, struct timespec *time);
 
 /* Needs to be called early, before EPICS initialisation completes. */
 bool initialise_epics_extra(void);
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Support for records with data stored as part of the record.
+ *
+ * The API here consists of the following calls:
+ *
+ *  record = PUBLISH_IN_VALUE[_I][_T](type, name)
+ *      Publishes EPICS PV with writeable value stored as part of the record.
+ *
+ *  WRITE_IN_RECORD(type, record, value, .severity, .timestamp)
+ *      Updates record with new value.  Optionally a .severity and a .timestamp
+ *      can be specified, though the .timestamp value is ignored if _T was not
+ *      used when publishing the record.
+ *
+ *  value = READ_IN_RECORD(type, record)
+ *      Returns value written to record.
+ */
+
+struct in_epics_record_longin;
+struct in_epics_record_ulongin;
+struct in_epics_record_ai;
+struct in_epics_record_bi;
+struct in_epics_record_string;
+struct in_epics_record_mbbi;
+struct in_epics_record_;
+
+#define CONVERT_TYPE(from, to, value) \
+    ( { \
+        union { from f; to t; } _convert = { .f = (value) }; \
+        _convert.t; \
+    } )
+#define _CONVERT_TO_IN_RECORD(type, record) \
+    CONVERT_TYPE( \
+        struct in_epics_record_##type *, struct in_epics_record_ *, record)
+
+
+struct publish_in_epics_record_args {
+    bool io_intr;
+    bool set_time;
+};
+struct in_epics_record_ *_publish_write_epics_record(
+    enum record_type record_type, const char *name,
+    const struct publish_in_epics_record_args *args);
+#define PUBLISH_IN_VALUE(type, name, args...) \
+    CONVERT_TYPE( \
+        struct in_epics_record_ *, struct in_epics_record_##type *, \
+        _publish_write_epics_record(RECORD_TYPE_##type, name, \
+            &(const struct publish_in_epics_record_args) { args }))
+#define PUBLISH_IN_VALUE_I(type, name) \
+    PUBLISH_IN_VALUE(type, name, .io_intr = true)
+#define PUBLISH_IN_VALUE_T(type, name) \
+    PUBLISH_IN_VALUE(type, name, .set_time = true)
+#define PUBLISH_IN_VALUE_I_T(type, name) \
+    PUBLISH_IN_VALUE(type, name, .io_intr = true, .set_time = true)
+
+
+struct in_epics_record_args {
+    epicsAlarmSeverity severity;
+    const struct timespec *timestamp;
+    bool ignore_value;
+};
+
+void _write_in_record(
+    enum record_type record_type, struct in_epics_record_ *record,
+    const void *value, const struct in_epics_record_args *args);
+#define WRITE_IN_RECORD(type, record, value, args...) \
+    _write_in_record( \
+        RECORD_TYPE_##type, _CONVERT_TO_IN_RECORD(type, record), \
+        (const TYPEOF(type)[]) { value }, \
+        &(const struct in_epics_record_args) { args })
+#define WRITE_IN_RECORD_SEV(type, record, args...) \
+    _write_in_record( \
+        RECORD_TYPE_##type, _CONVERT_TO_IN_RECORD(type, record), NULL, \
+        &(const struct in_epics_record_args) { args })
+
+
+void *_read_in_record(
+    enum record_type record_type, struct in_epics_record_ *record);
+#define READ_IN_RECORD(type, record) \
+    (* (const TYPEOF(type) *) _read_in_record( \
+        RECORD_TYPE_##type, _CONVERT_TO_IN_RECORD(type, record))

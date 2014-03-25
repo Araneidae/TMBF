@@ -294,7 +294,7 @@ static bool is_in_record(enum record_type record_type)
 
 void trigger_record(
     struct epics_record *base, epicsAlarmSeverity severity,
-    struct timespec *timestamp)
+    const struct timespec *timestamp)
 {
     bool in_record = is_in_record(base->record_type);
     bool wf_record = base->record_type == RECORD_TYPE_waveform;

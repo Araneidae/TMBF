@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <pthread.h>
+#include <string.h>
 
 #include <initHooks.h>
 
@@ -13,6 +14,10 @@
 #include "epics_device.h"
 
 #include "epics_extra.h"
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* EPICS Interlock */
 
 
 /* An epics_interlock object contains a mutex for interlocking with database
@@ -96,6 +101,83 @@ static void init_hook(initHookState state)
         UNLOCK_READY();
     }
 }
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* IN records with associated value. */
+
+#ifndef __BIGGEST_ALIGNMENT__
+#define __BIGGEST_ALIGNMENT__   8
+#endif
+
+struct in_epics_record_ {
+    enum record_type record_type;
+    struct epics_record *record;
+    int field_size;
+    char value[] __attribute__((aligned(__BIGGEST_ALIGNMENT__)));
+};
+
+_DECLARE_IN_ARGS_(void, void);
+
+static size_t record_field_size(enum record_type record_type)
+{
+    switch (record_type)
+    {
+        case RECORD_TYPE_longin:    return sizeof(TYPEOF(longin));
+        case RECORD_TYPE_ulongin:   return sizeof(TYPEOF(ulongin));
+        case RECORD_TYPE_ai:        return sizeof(TYPEOF(ai));
+        case RECORD_TYPE_bi:        return sizeof(TYPEOF(bi));
+        case RECORD_TYPE_stringin:  return sizeof(TYPEOF(stringin));
+        case RECORD_TYPE_mbbi:      return sizeof(TYPEOF(mbbi));
+        default: ASSERT_FAIL();
+    }
+}
+
+static bool read_in_record(void *context, void *value)
+{
+    struct in_epics_record_ *record = context;
+    memcpy(value, record->value, record->field_size);
+    return true;
+}
+
+struct in_epics_record_ *_publish_write_epics_record(
+    enum record_type record_type, const char *name,
+    const struct publish_in_epics_record_args *args)
+{
+    int field_size = record_field_size(record_type);
+    struct in_epics_record_ *record = malloc(
+        sizeof(struct in_epics_record_) + field_size);
+    record->record_type = record_type;
+    record->field_size = field_size;
+    record->record = publish_epics_record(
+        record_type, name, &(const struct record_args_void) {
+            .read = read_in_record, .context = record,
+            .io_intr = args->io_intr, .set_time = args->set_time });
+    memset(record->value, 0, record->field_size);
+    return record;
+}
+
+
+void _write_in_record(
+    enum record_type record_type, struct in_epics_record_ *record,
+    const void *value, const struct in_epics_record_args *args)
+{
+    ASSERT_OK(record->record_type == record_type);
+    if (value  &&  !args->ignore_value)
+        memcpy(record->value, value, record->field_size);
+    trigger_record(record->record, args->severity, args->timestamp);
+}
+
+
+void *_read_in_record(
+    enum record_type record_type, struct in_epics_record_ *record)
+{
+    ASSERT_OK(record->record_type == record_type);
+    return record->value;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 bool initialise_epics_extra(void)
 {

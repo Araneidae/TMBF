@@ -305,11 +305,10 @@ enum { PEAK_4, PEAK_16, PEAK_64 };
 static unsigned int peak_select;
 
 /* Measurement results. */
-static double peak_measured_tune;    // Tune measurement
-static double peak_measured_phase;   // and associated phase
-static struct epics_record *peak_measured_tune_rec;
-static struct epics_record *peak_measured_phase_rec;
 static unsigned int peak_tune_status;
+
+static struct in_epics_record_ai *peak_measured_tune;
+static struct in_epics_record_ai *peak_measured_phase;
 
 
 /* Skip index over peaks that have already been discovered.  Designed for use as
@@ -559,7 +558,8 @@ static void threshold_peak(
  * to the peak. */
 static unsigned int compute_peak_tune(
     const struct channel_sweep *sweep, const double *tune_scale,
-    struct peak_info *info, struct peak_data *peak)
+    struct peak_info *info, struct peak_data *peak,
+    double *tune, double *phase)
 {
     /* First compute left and right ranges for the peak. */
     int left, right;
@@ -572,8 +572,7 @@ static unsigned int compute_peak_tune(
     double result;
     if (fit_quadratic(right - left + 1, sweep->power + left, &result))
     {
-        index_to_tune(sweep, tune_scale, left + result,
-            &peak_measured_tune, &peak_measured_phase);
+        index_to_tune(sweep, tune_scale, left + result, tune, phase);
         return TUNE_OK;
     }
     else
@@ -610,15 +609,16 @@ static void process_peak_tune(
     }
 
     int severity = epicsSevInvalid;
+    double tune = 0, phase = 0;
     if (peak_ix >= 0)
     {
         peak_tune_status = compute_peak_tune(
-            sweep, tune_scale, info, &peaks[peak_ix]);
+            sweep, tune_scale, info, &peaks[peak_ix], &tune, &phase);
         if (peak_tune_status == TUNE_OK)
         {
 #if 0
             /* Check for measured tune within given alarm range. */
-            if (fabs(peak_measured_tune - centre_tune) >= alarm_range)
+            if (fabs(tune - centre_tune) >= alarm_range)
             {
                 severity = epicsSevMinor;
                 peak_tune_status = TUNE_RANGE;
@@ -628,8 +628,10 @@ static void process_peak_tune(
                 severity = epicsSevNone;
         }
     }
-    trigger_record(peak_measured_tune_rec,  severity, NULL);
-    trigger_record(peak_measured_phase_rec, severity, NULL);
+    WRITE_IN_RECORD(ai, peak_measured_tune, tune,
+        .severity = severity, .ignore_value = severity == epicsSevInvalid);
+    WRITE_IN_RECORD(ai, peak_measured_phase, phase,
+        .severity = severity, .ignore_value = severity == epicsSevInvalid);
 }
 
 
@@ -697,10 +699,8 @@ static void publish_peaks(void)
     PUBLISH_WRITE_VAR_P(mbbo, "TUNE:PEAK:SEL", peak_select);
 
     PUBLISH_READ_VAR(mbbi, "TUNE:PEAK:STATUS", peak_tune_status);
-    peak_measured_tune_rec  =
-        PUBLISH_READ_VAR(ai, "TUNE:PEAK:TUNE",  peak_measured_tune);
-    peak_measured_phase_rec =
-        PUBLISH_READ_VAR(ai, "TUNE:PEAK:PHASE", peak_measured_phase);
+    peak_measured_tune  = PUBLISH_IN_VALUE(ai, "TUNE:PEAK:TUNE");
+    peak_measured_phase = PUBLISH_IN_VALUE(ai, "TUNE:PEAK:PHASE");
 }
 
 

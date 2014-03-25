@@ -309,7 +309,7 @@ struct epics_record *publish_epics_record(
  * will be triggered.  This can only be called for IN and WAVEFORM records. */
 void trigger_record(
     struct epics_record *record, epicsAlarmSeverity severity,
-    struct timespec *timestamp);
+    const struct timespec *timestamp);
 
 /* Simple helper for EPICS_STRING type. */
 void copy_epics_string(EPICS_STRING *out, const char *in);
