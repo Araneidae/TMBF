@@ -9,6 +9,9 @@ MAX_DELTA_FREQ = (2**17 - 1) * 2**-32 * 936
 def IIR(count, step = 1):
     return ['2^%d' % (n * step) for n in range(count)]
 
+phase_offset = aIn('FTUN:PHASE:OFFSET',
+    PREC= 2, EGU = 'deg', DESC = 'Phase offset')
+
 # Tune following settings.
 ForwardLink('FTUN:CONTROL', 'Update tune follow control settings',
     longOut('FTUN:DWELL', 1, 1<<16, DESC = 'Tune following dwell time'),
@@ -40,11 +43,13 @@ ForwardLink('FTUN:CONTROL', 'Update tune follow control settings',
         aIn('FTUN:IQ:IIR:TC', EGU = 'ms', PREC = 1,
             DESC = 'Time constant for IQ IIR'),
         aIn('FTUN:FREQ:IIR:TC', EGU = 'ms', PREC = 1,
-            DESC = 'Time constant for frequency IIR'))
+            DESC = 'Time constant for frequency IIR'),
+        phase_offset)
 )
 
-aOut('FTUN:LOOP:ADC',
-    EGU = 'turns', PREC = 1, DESC = 'Closed loop delay in turns')
+aOut('FTUN:LOOP:DELAY',
+    EGU = 'turns', PREC = 1, DESC = 'Closed loop delay in turns',
+    FLNK = phase_offset)
 
 
 Action('FTUN:START', DESC = 'Start tune following')
@@ -119,6 +124,7 @@ Action('FTUN:STAT:SCAN',
 
 # Fixed NCO control
 aOut('NCO:FREQ', -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 5,
+    FLNK = phase_offset,
     DESC = 'Fixed NCO frequency')
 aIn('NCO:FREQ',  0, BUNCHES_PER_TURN, 'tune', 6,
     DESC = 'Current fixed NCO frequency', SCAN = '.1 second')

@@ -33,6 +33,10 @@ static double filter_iir_tc;
 static double iq_iir_tc;
 static double freq_iir_tc;
 
+/* Frequency dependent delay compensation as an angle. */
+static int delay_offset;
+static double delay_offset_degrees;
+
 /* Tune following. */
 static struct epics_interlock *ftun_interlock;
 /* The following buffers and state are needed to properly fill freq_wf and
@@ -94,7 +98,7 @@ static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define UNLOCK_RUNNING()    pthread_mutex_unlock(&running_mutex)
 
 /* Frequency dependent phase offset adjustment. */
-static double adc_loop_delay = 1;
+static double closed_loop_delay = 1;
 
 
 void update_tune_follow_debug(const int *buffer_raw)
@@ -138,9 +142,43 @@ static double update_iir_tc(unsigned int iir_rate, unsigned int interval)
     }
 }
 
+
+static void update_delay_offset(void)
+{
+    int adc_delay, fir_delay;
+    hw_read_ftun_delays(&adc_delay, &fir_delay);
+    int delay =
+        ftun_control.input_select == FTUN_IN_ADC ? adc_delay : fir_delay;
+    delay += closed_loop_delay * BUNCHES_PER_TURN;
+    delay_offset = nco_freq * delay;
+    delay_offset_degrees = 360.0 / pow(2, 32) * delay_offset;
+}
+
+
+static void set_closed_loop_delay(double delay)
+{
+    closed_loop_delay = delay;
+    update_delay_offset();
+}
+
+
+static double wrap_angle(double angle)
+{
+    if (angle > 180)
+        return angle - 360;
+    else if (angle < -180)
+        return angle + 360;
+    else
+        return angle;
+}
+
+
 static void write_ftun_control(void)
 {
-    ftun_control.target_phase = (int) round(pow(2, 18) / 360.0 * target_phase);
+    update_delay_offset();
+
+    ftun_control.target_phase = (int) round(
+        pow(2, 18) / 360.0 * wrap_angle(target_phase + delay_offset_degrees));
     ftun_control.max_offset = tune_to_freq(max_offset);
     hw_write_ftun_control(&ftun_control);
 
@@ -161,28 +199,13 @@ static void write_ftun_start(void)
 }
 
 
-#if 0
-/* Computes compensated delay (in bunches) from user entered loop delay (in
- * turns together with input specific delay. */
-static int compute_delay(void)
-{
-    int adc_delay, fir_delay;
-    hw_read_ftun_delays(&adc_delay, &fir_delay);
-    int delay =
-        ftun_control.input_select == FTUN_IN_ADC ? adc_delay : fir_delay;
-    /* Just as for the detector, we treat ADC and FIR delays differently. */
-    if (ftun_control.input_select == FTUN_IN_ADC)
-        delay += (int) round(BUNCHES_PER_TURN * adc_loop_delay);
-    return delay;
-}
-#endif
-
-
 static void write_nco_freq(double tune)
 {
     nco_freq = tune_to_freq(tune);
     nco_freq_fraction = tune_to_freq(tune - round(tune));
     hw_write_nco_freq(nco_freq);
+
+    update_delay_offset();
 }
 
 static double read_nco_freq(void)
@@ -190,9 +213,7 @@ static double read_nco_freq(void)
     double result = BUNCHES_PER_TURN / pow(2, 32) * nco_freq;
     int offset;
     if (hw_read_ftun_frequency(&offset))
-    {
         result += BUNCHES_PER_TURN / pow(2, 44) * offset;
-    }
 
     return result;
 }
@@ -204,14 +225,11 @@ static void update_iq_angle_mag(void)
     hw_read_ftun_iq(&current_i, &current_q);
 
     /* Compute magnitude and angle. */
-    current_angle = 180.0 / M_PI * atan2(current_q, current_i);
+    current_angle = wrap_angle(
+        180.0 / M_PI * atan2(current_q, current_i) - delay_offset_degrees);
     current_magnitude = (int) sqrt(SQR(current_i) + SQR(current_q));
 
-    delta_angle = current_angle - target_phase;
-    if (delta_angle > 180)
-        delta_angle -= 360;
-    else if (delta_angle < -180)
-        delta_angle += 360;
+    delta_angle = wrap_angle(current_angle - target_phase);
 }
 
 static void update_minmax(void)
@@ -353,12 +371,14 @@ bool initialise_tune_follow(void)
     PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:IQ:IIR", ftun_control.iq_iir_rate);
     PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:FREQ:IIR", ftun_control.freq_iir_rate);
 
-    PUBLISH_WRITE_VAR_P(ao,      "FTUN:LOOP:ADC", adc_loop_delay);
+    PUBLISH_WRITER_P(ao,      "FTUN:LOOP:DELAY", set_closed_loop_delay);
 
     /* IIR time constants updated when IIR controls set. */
     PUBLISH_READ_VAR(ai, "FTUN:IIR:TC",         filter_iir_tc);
     PUBLISH_READ_VAR(ai, "FTUN:IQ:IIR:TC",      iq_iir_tc);
     PUBLISH_READ_VAR(ai, "FTUN:FREQ:IIR:TC",    freq_iir_tc);
+
+    PUBLISH_READ_VAR(ai, "FTUN:PHASE:OFFSET",   delay_offset_degrees);
 
     /* Tune following action. */
     PUBLISH_ACTION("FTUN:START", write_ftun_start);
