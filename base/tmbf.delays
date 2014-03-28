@@ -28,11 +28,11 @@ DET_ADC_OFFSET = 1
 DET_FIR_OFFSET = 232
 # These two values represent actual phase delays in bunches relative to an
 # aligned single turn.
-DET_ADC_DELAY = -4
-DET_FIR_DELAY = 8
+DET_ADC_DELAY = 0
+DET_FIR_DELAY = 12
 
 # Tune following delays
 FTUN_ADC_OFFSET = 3
 FTUN_FIR_OFFSET = 0
-FTUN_ADC_DELAY = -12
-FTUN_FIR_DELAY = 0
+FTUN_ADC_DELAY = 928
+FTUN_FIR_DELAY = 940

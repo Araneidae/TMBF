@@ -81,8 +81,6 @@ def configure_timing_test(tmbf, compensate = False):
     tmbf.set('LOOPBACK_S', 'Loopback')
     # Turn off DAC output delay (until we need it...)
     tmbf.set('DAC:DELAY_S', 0)
-    # Disable ADC input skew
-    tmbf.set('ADC:DELAY_S', '0 ns')
     # Turn DAC output in case there's something connected
     tmbf.set('DAC:ENABLE_S', 'Off')
 
@@ -91,7 +89,10 @@ def configure_timing_test(tmbf, compensate = False):
     configure.sequencer_enable(tmbf, False)
 
     # We'll be using soft triggering.  Ensure it's in one shot state
-    tmbf.set('TRG:S1:MODE_S', 'One Shot')
+    tmbf.set('TRG:DDR:MODE_S', 'One Shot')
+    tmbf.set('TRG:BUF:MODE_S', 'One Shot')
+    tmbf.set('TRG:DDR:SEL_S', 'Soft 1')
+    tmbf.set('TRG:BUF:SEL_S', 'Soft 2')
 
     # Reset detector window in case it's been messed with
     tmbf.set('DET:RESET_WIN_S.PROC', 0)
@@ -107,16 +108,6 @@ def configure_dac_single_pulse(tmbf, bank = 0):
         DAC_OUT.MAX_GAIN, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.OFF))
 
 
-def configure_buf_soft_trigger(tmbf):
-    tmbf.set('TRG:S1:MODE_S', 'One Shot')
-    tmbf.set('TRG:BUF:SEL_S', 'Soft 1')
-
-def configure_ddr_soft_trigger(tmbf):
-    tmbf.set('TRG:S1:MODE_S', 'One Shot')
-    tmbf.set('TRG:DDR:SEL_S', 'Soft 1')
-
-def fire_soft_trigger_1(tmbf):
-    tmbf.set('TRG:S1:FIRE_S.PROC', 0)
 
 def setup_detector_single_bunch(tmbf, bank=1, fir=0):
     # Configure the sequencer for a simple scan over a narrow range.
@@ -176,8 +167,7 @@ def dac_to_dac_closed_loop(tmbf, maxdac):
 # Measures delay from reference bunch to selected buffer waveforms
 def dac_to_buf(tmbf, bufa, bufb, sources):
     tmbf.set('BUF:SELECT_S', sources)
-#     fire_soft_trigger_1(tmbf)
-    configure.fire_and_wait(tmbf, False, True, False)
+    configure.fire_and_wait(tmbf, 'BUF')
     a = bufa.get()[:BUNCH_COUNT]
     b = bufb.get()[:BUNCH_COUNT]
     return find_one_peak(a), find_one_peak(b)
@@ -185,8 +175,7 @@ def dac_to_buf(tmbf, bufa, bufb, sources):
 # Measures delay from reference bunch to selected DDR waveform
 def dac_to_ddr(tmbf, ddr_buf, source):
     tmbf.set('DDR:INPUT_S', source)
-#     fire_soft_trigger_1(tmbf)
-    configure.fire_and_wait(tmbf, False, True, False)
+    configure.fire_and_wait(tmbf, 'DDR')
     return find_one_peak(ddr_buf.get()[:BUNCH_COUNT])
 
 
@@ -204,7 +193,7 @@ def fir_to_ddr(tmbf, ddr_buf):
         DAC_OUT.MAX_GAIN, one_bunch(0, 1), DAC_OUT.NCO)
 
     tmbf.set('DDR:INPUT_S', 'FIR')
-    fire_soft_trigger_1(tmbf)
+    tmbf.set('TRG:DDR:ARM_S.PROC', 0)
     return find_one_peak(ddr_buf.get()[:BUNCH_COUNT])
 
 
@@ -234,7 +223,7 @@ def search_det_bunch(tmbf, det_power, source):
         outwf[end:] = DAC_OUT.OFF
         tmbf.set('BUN:1:OUTWF_S', outwf)
 
-        fire_soft_trigger_1(tmbf)
+        tmbf.set('TRG:BUF:ARM_S.PROC', 0)
         return det_power.get().mean() > 0
 
     return binary_search(0, BUNCH_COUNT, test)
@@ -274,8 +263,7 @@ def search_det_delay(tmbf, det_i, det_q, source):
     configure.detector_input(tmbf, source)
 
     # Capture data
-#     fire_soft_trigger_1(tmbf)
-    configure.fire_and_wait(tmbf, False, True, True)
+    configure.fire_and_wait(tmbf, 'BUF')
     scale = tmbf.get('DET:SCALE')
     iq = numpy.dot([1, 1j], [det_i.get(), det_q.get()])
     return compute_group_delay(scale, iq)
@@ -353,7 +341,6 @@ def measure_maxbuf(tmbf, results):
 def measure_buf(tmbf, results):
     print >>sys.stderr, 'Measuring BUF'
 
-    configure_buf_soft_trigger(tmbf)
     buf_a = tmbf.PV('BUF:WFA')
     buf_b = tmbf.PV('BUF:WFB')
     buf_a.get()
@@ -373,7 +360,6 @@ def measure_buf(tmbf, results):
 def measure_ddr(tmbf, results):
     print >>sys.stderr, 'Measuring DDR'
 
-    configure_ddr_soft_trigger(tmbf)
     ddr_buf = tmbf.PV('DDR:SHORTWF')
     ddr_buf.get()
 
@@ -452,6 +438,8 @@ def measure_tune_follow_bunch(tmbf, results):
 
 
 def measure_tune_follow_delay(tmbf, results):
+    print >>sys.stderr, 'Measuring Tune Follow Delay'
+
     configure.fir_wf(tmbf, 0, 32767)
     configure.bank(tmbf, 0, DAC_OUT.MAX_GAIN, 0, DAC_OUT.NCO)
 
@@ -461,10 +449,11 @@ def measure_tune_follow_delay(tmbf, results):
     tmbf.set('FTUN:GAIN_S', '-48dB')
     tmbf.set('FTUN:BLANKING_S', 'Off')
     tmbf.set('NCO:GAIN_S', '-36dB')
+    tmbf.set('FTUN:IQ:IIR_S', '2^6')
 
     angle = tmbf.PV('FTUN:ANGLE')
     results.set('FTUN_ADC_DELAY', search_ftun_delay(tmbf, angle, 'ADC'))
-    results.set('FTUN_FIR_DELAY', search_ftun_delay(tmbf, angle, 'FIR') - 936)
+    results.set('FTUN_FIR_DELAY', search_ftun_delay(tmbf, angle, 'FIR'))
     angle.close()
 
 

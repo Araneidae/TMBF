@@ -212,18 +212,7 @@ class WaitReady:
                 self.event.Signal()
                 self.monitor.close()
 
-
-# Let's make the three flags part of the trigger object somehow
-def fire_and_wait(tmbf, ddr, buf, seq):
-#     status_flags = [
-#         'TRG:%s:STATUS' % action
-#         for action in ['DDR', 'BUF', 'SEQ']]
-#     waiters = [
-#         WaitReady(tmbf, status)
-#         for enable, status in zip([ddr, buf, seq], status_flags)
-#         if enable] + [WaitReady(tmbf, 'TRG:S1:STATUS')]
-    waiter = WaitReady(tmbf, 'TRG:S1:STATUS')
-    tmbf.set('TRG:S1:FIRE_S.PROC', 0)
+def fire_and_wait(tmbf, target):
+    waiter = WaitReady(tmbf, 'TRG:%s:STATUS' % target)
+    tmbf.set('TRG:%s:ARM_S.PROC' % target, 0)
     waiter.Wait()
-#     cothread.WaitForAll(waiters)
-#     print 'fire_and_wait done'
