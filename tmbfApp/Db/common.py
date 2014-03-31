@@ -36,6 +36,7 @@ def ForwardLink(name, desc, *pvs, **kargs):
     action = Action(name, DESC = desc, **kargs)
     for pv in pvs:
         pv.FLNK = action
+    return action
 
 
 # Aggregates the severity of all the given records into a single record.  The

@@ -34,7 +34,6 @@ static double iq_iir_tc;
 static double freq_iir_tc;
 
 /* Frequency dependent delay compensation as an angle. */
-static int delay_offset;
 static double delay_offset_degrees;
 
 /* Tune following. */
@@ -149,16 +148,8 @@ static void update_delay_offset(void)
     hw_read_ftun_delays(&adc_delay, &fir_delay);
     int delay =
         ftun_control.input_select == FTUN_IN_ADC ? adc_delay : fir_delay;
-    delay += closed_loop_delay * BUNCHES_PER_TURN;
-    delay_offset = nco_freq * delay;
-    delay_offset_degrees = 360.0 / pow(2, 32) * delay_offset;
-}
-
-
-static void set_closed_loop_delay(double delay)
-{
-    closed_loop_delay = delay;
-    update_delay_offset();
+    delay += round(closed_loop_delay * BUNCHES_PER_TURN);
+    delay_offset_degrees = 360.0 / pow(2, 32) * (nco_freq * delay);
 }
 
 
@@ -204,8 +195,6 @@ static void write_nco_freq(double tune)
     nco_freq = tune_to_freq(tune);
     nco_freq_fraction = tune_to_freq(tune - round(tune));
     hw_write_nco_freq(nco_freq);
-
-    update_delay_offset();
 }
 
 static double read_nco_freq(void)
@@ -370,8 +359,7 @@ bool initialise_tune_follow(void)
     PUBLISH_WRITE_VAR_P(ao,      "FTUN:MAXDELTA", max_offset);
     PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:IQ:IIR", ftun_control.iq_iir_rate);
     PUBLISH_WRITE_VAR_P(mbbo,    "FTUN:FREQ:IIR", ftun_control.freq_iir_rate);
-
-    PUBLISH_WRITER_P(ao,      "FTUN:LOOP:DELAY", set_closed_loop_delay);
+    PUBLISH_WRITE_VAR_P(ao,      "FTUN:LOOP:DELAY", closed_loop_delay);
 
     /* IIR time constants updated when IIR controls set. */
     PUBLISH_READ_VAR(ai, "FTUN:IIR:TC",         filter_iir_tc);

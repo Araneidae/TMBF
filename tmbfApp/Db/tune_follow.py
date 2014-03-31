@@ -9,11 +9,10 @@ MAX_DELTA_FREQ = (2**17 - 1) * 2**-32 * 936
 def IIR(count, step = 1):
     return ['2^%d' % (n * step) for n in range(count)]
 
-phase_offset = aIn('FTUN:PHASE:OFFSET',
-    PREC= 2, EGU = 'deg', DESC = 'Phase offset')
-
 # Tune following settings.
-ForwardLink('FTUN:CONTROL', 'Update tune follow control settings',
+ftun_control = ForwardLink(
+    'FTUN:CONTROL', 'Update tune follow control settings',
+
     longOut('FTUN:DWELL', 1, 1<<16, DESC = 'Tune following dwell time'),
     longOut('FTUN:BUNCH', 0, BUNCHES_PER_TURN-1, DESC = 'Tune following bunch'),
     boolOut('FTUN:BLANKING', 'Off', 'Blanking',
@@ -37,6 +36,9 @@ ForwardLink('FTUN:CONTROL', 'Update tune follow control settings',
     mbbOut('FTUN:IQ:IIR', DESC = 'IQ readback IIR', *IIR(8, 2)),
     mbbOut('FTUN:FREQ:IIR', DESC = 'Frequency readback IIR', *IIR(8, 2)),
 
+    aOut('FTUN:LOOP:DELAY',
+        EGU = 'turns', PREC = 1, DESC = 'Closed loop delay in turns'),
+
     FLNK = create_fanout('FTUN:IIR:FAN',
         aIn('FTUN:IIR:TC', EGU = 'ms', PREC = 1,
             DESC = 'Time constant for feedback IIR'),
@@ -44,12 +46,9 @@ ForwardLink('FTUN:CONTROL', 'Update tune follow control settings',
             DESC = 'Time constant for IQ IIR'),
         aIn('FTUN:FREQ:IIR:TC', EGU = 'ms', PREC = 1,
             DESC = 'Time constant for frequency IIR'),
-        phase_offset)
+        aIn('FTUN:PHASE:OFFSET', PREC= 2, EGU = 'deg',
+            DESC = 'Phase offset'))
 )
-
-aOut('FTUN:LOOP:DELAY',
-    EGU = 'turns', PREC = 1, DESC = 'Closed loop delay in turns',
-    FLNK = phase_offset)
 
 
 Action('FTUN:START', DESC = 'Start tune following')
@@ -124,8 +123,7 @@ Action('FTUN:STAT:SCAN',
 
 # Fixed NCO control
 aOut('NCO:FREQ', -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 5,
-    FLNK = phase_offset,
-    DESC = 'Fixed NCO frequency')
+    DESC = 'Fixed NCO frequency', FLNK = ftun_control)
 aIn('NCO:FREQ',  0, BUNCHES_PER_TURN, 'tune', 6,
     DESC = 'Current fixed NCO frequency', SCAN = '.1 second')
 mbbOut('NCO:GAIN', DESC = 'Fixed NCO gain', *dBrange(14, -6) + ['Off'])
