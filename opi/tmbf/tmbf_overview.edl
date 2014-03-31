@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2784
-y 606
+x 844
+y 437
 w 415
 h 369
 font "helvetica-medium-r-8.0"
@@ -46,7 +46,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 0
 y 0
 w 416
@@ -83,7 +83,7 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 3
+minor 2
 release 0
 x 4
 y 4
@@ -106,11 +106,11 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 4
+minor 2
 release 0
 x 8
 y 80
-w 64
+w 72
 h 24
 fgColor index 43
 bgColor index 4
@@ -129,10 +129,10 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 4
+minor 2
 release 0
-x 232
-y 80
+x 168
+y 112
 w 72
 h 24
 fgColor index 43
@@ -152,7 +152,7 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 3
+minor 2
 release 0
 x 8
 y 336
@@ -174,7 +174,7 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 3
+minor 2
 release 0
 x 280
 y 336
@@ -196,7 +196,7 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 4
+minor 2
 release 0
 x 8
 y 304
@@ -228,7 +228,7 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 3
+minor 2
 release 0
 x 144
 y 336
@@ -251,7 +251,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
 y 40
 w 82
@@ -270,7 +270,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 96
 y 40
@@ -294,11 +294,11 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 4
+minor 2
 release 0
-x 80
-y 80
-w 64
+x 8
+y 112
+w 72
 h 24
 fgColor index 43
 bgColor index 4
@@ -317,9 +317,9 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 4
+minor 2
 release 0
-x 152
+x 168
 y 80
 w 72
 h 24
@@ -340,10 +340,10 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 4
+minor 2
 release 0
-x 336
-y 40
+x 328
+y 80
 w 72
 h 24
 fgColor index 43
@@ -363,11 +363,11 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 4
+minor 2
 release 0
-x 8
-y 112
-w 88
+x 88
+y 80
+w 72
 h 24
 fgColor index 43
 bgColor index 4
@@ -386,9 +386,9 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 4
+minor 2
 release 0
-x 104
+x 88
 y 112
 w 72
 h 24
@@ -409,7 +409,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 96
 y 56
@@ -434,7 +434,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
 y 56
 w 82
@@ -487,12 +487,12 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 40
 y 168
 w 184
-h 16
+h 14
 controlPv "$(device):SE:OVF:FIR.DESC"
 font "helvetica-medium-r-12.0"
 fgColor index 14
@@ -511,7 +511,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 40
 y 192
@@ -535,7 +535,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 40
 y 272
@@ -576,7 +576,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 40
 y 216
@@ -630,7 +630,7 @@ inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
 controlPv "$(device):DAC:ENABLE_S"
-font "helvetica-medium-r-12.0"
+font "helvetica-bold-r-12.0"
 endObjectProperties
 
 # (Static Text)
@@ -638,9 +638,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 96
-y 304
+y 308
 w 105
 h 16
 font "helvetica-bold-r-14.0"
@@ -658,7 +658,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
 y 144
 w 120
@@ -692,8 +692,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 312
-y 40
+x 328
+y 48
 w 16
 h 16
 lineColor index 14
@@ -724,7 +724,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 224
 y 192
@@ -748,7 +748,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 224
 y 272
@@ -789,7 +789,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 224
 y 216
@@ -853,10 +853,10 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 4
+minor 2
 release 0
-x 184
-y 112
+x 248
+y 80
 w 72
 h 24
 fgColor index 43
@@ -876,10 +876,10 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 4
+minor 2
 release 0
-x 336
-y 72
+x 328
+y 112
 w 72
 h 24
 fgColor index 43
@@ -899,7 +899,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 224
 y 168
@@ -940,18 +940,18 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 4
+minor 2
 release 0
-x 264
+x 248
 y 112
-w 88
+w 72
 h 24
 fgColor index 43
 bgColor index 4
 topShadowColor index 1
 botShadowColor index 11
 font "helvetica-bold-r-12.0"
-buttonLabel "Tune Follow"
+buttonLabel "Tune PLL"
 numPvs 4
 numDsps 1
 displayFileName {
@@ -963,7 +963,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 40
 y 240
@@ -998,5 +998,25 @@ fill
 fillColor index 16
 fillAlarm
 alarmPv "$(device):SE:OVF:ADC"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 352
+y 50
+w 36
+h 14
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Health"
+}
+autoSize
 endObjectProperties
 
