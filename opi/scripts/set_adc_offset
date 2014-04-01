@@ -19,9 +19,9 @@ def get(pv):
 
 # Configure DDR for software single shot, grab a single shot
 put('TRG:DDR:SEL_S', 'Soft 1')
-put('TRG:S1:MODE_S', 'One Shot')
+put('TRG:DDR:MODE_S', 'One Shot')
 put('DDR:INPUT_S', 'ADC')
-put('TRG:S1:FIRE_S.PROC', 0)
+put('TRG:DDR:ARM_S.PROC', 0)
 
 print 'Waiting for capture'
 cothread.Sleep(1)

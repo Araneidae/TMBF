@@ -110,9 +110,8 @@ put SEQ:0:BANK_S 'Bank 0'
 put DET:RESET_WIN_S.PROC 0
 
 # Ensure no triggers are running and the sequencer is stopped
-put TRG:S1:RESET_S.PROC 0
-put TRG:S2:RESET_S.PROC 0
-put TRG:EXT:RESET_S.PROC 0
+put TRG:DDR:RESET_S.PROC 0
+put TRG:BUF:RESET_S.PROC 0
 put SEQ:RESET_S.PROC 0
 
 # Configure FIR as selected
@@ -153,9 +152,9 @@ put TUNE:THRESHOLD_S $tune_threshold
 # Trigger on external trigger.
 put TRG:BUF:SEL_S External
 put TRG:SEQ:ENA_S Enabled
-put TRG:EXT:MODE_S Retrigger
+put TRG:BUF:MODE_S Retrigger
 put TRG:BLANKING_S $blanking_interval
 
 # Now we can go!
 put DAC:ENABLE_S On
-put TRG:EXT:ARM_S.PROC 0
+put TRG:BUF:ARM_S.PROC 0
