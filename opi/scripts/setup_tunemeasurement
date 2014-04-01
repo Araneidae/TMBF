@@ -54,8 +54,8 @@ put()
 # tune and FIR shape.
 
 case $DEVICE in
-    SR21C-DI-TMBF-01)   AXIS=X ;;
-    SR21C-DI-TMBF-02)   AXIS=Y ;;
+    SR23C-DI-TMBF-01)   AXIS=X ;;
+    SR23C-DI-TMBF-02)   AXIS=Y ;;
     TS-DI-TMBF-01)      AXIS=X ;;
     *)                  Error Unknown device $DEVICE ;;
 esac
