@@ -13,8 +13,8 @@ tmbf = sys.argv[1]
 
 def put(pv, value):
     caput('%s:%s' % (tmbf, pv), value)
-def get(pv):
-    return caget('%s:%s' % (tmbf, pv))
+def get(pv, **kargs):
+    return caget('%s:%s' % (tmbf, pv), **kargs)
 
 
 # Configure DDR for software single shot, grab a single shot
@@ -28,7 +28,12 @@ cothread.Sleep(1)
 
 offsets = get('ADC:OFFSET_S')
 adc = get('DDR:LONGWF')
-delta = adc.reshape(4, None).mean(1)
+delta = adc.reshape((-1, 4)).mean(0)
+
+# Correct for ADC output skew.  To avoid confusion this should probably be done
+# closer to the hardware in the driver, but here is where it is for now!
+skew = get('ADC:DELAY', datatype = int)
+delta = numpy.roll(delta, -skew)
 
 new_offsets = numpy.round(offsets - delta)
 print 'Updating offsets:', offsets, '=>', new_offsets

@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 382
-y 630
+x 383
+y 631
 w 641
 h 512
 font "helvetica-medium-r-18.0"
@@ -561,10 +561,10 @@ bgColor index 4
 topShadowColor index 1
 botShadowColor index 11
 font "helvetica-bold-r-12.0"
-buttonLabel "ADC Offsets"
+buttonLabel "Set ADC Offsets"
 numCmds 1
 command {
-  0 "xterm -T 'Set ADC offsets' -e 'set_adc_offset $(device) || read -p \"press return\"'"
+  0 "xterm -T 'Set ADC offsets' -e 'set_adc_offset $(device); read -p \"press return\"'"
 }
 endObjectProperties
 

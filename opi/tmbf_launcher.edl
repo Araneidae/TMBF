@@ -67,7 +67,7 @@ displayFileName {
   0 "tmbf/tmbf_overview.edl"
 }
 symbols {
-  0 "device=SR21C-DI-TMBF-01"
+  0 "device=SR23C-DI-TMBF-01"
 }
 endObjectProperties
 
@@ -93,7 +93,7 @@ displayFileName {
   0 "tmbf/tmbf_overview.edl"
 }
 symbols {
-  0 "device=SR21C-DI-TMBF-02"
+  0 "device=SR23C-DI-TMBF-02"
 }
 endObjectProperties
 
@@ -145,7 +145,7 @@ displayFileName {
   0 "tmbf/tmbf_overview.edl"
 }
 symbols {
-  0 "device=SR21C-DI-TMBF-03"
+  0 "device=SR23C-DI-TMBF-03"
 }
 endObjectProperties
 
