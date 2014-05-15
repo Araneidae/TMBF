@@ -233,11 +233,22 @@ struct ftun_control {
 /* Writes given settings to FTUN. */
 void hw_write_ftun_control(struct ftun_control *control);
 
+/* Controls whether tune following is enabled. */
+void hw_write_ftun_enable(bool enable);
+
 /* Initiates tune following. */
 void hw_write_ftun_start(void);
 
-/* Halts tune following if active. */
-void hw_write_ftun_stop(void);
+/* Enables triggered tune following start. */
+void hw_write_ftun_arm(void);
+
+/* Disarms triggered tune following start. */
+void hw_write_ftun_disarm(void);
+
+/* Returns current operational status of tune following: one of not running,
+ * armed and waiting for trigger, or running. */
+enum ftun_status { FTUN_STOPPED, FTUN_ARMED, FTUN_RUNNING };
+enum ftun_status hw_read_ftun_status(void);
 
 /* Read current tune following status into an array of bool. */
 enum {
@@ -259,7 +270,7 @@ enum {
 
     FTUN_BIT_COUNT = FTUN_STOP_INP + 1  // Number of bits in array
 };
-void hw_read_ftun_status(bool status[FTUN_BIT_COUNT]);
+void hw_read_ftun_status_bits(bool status[FTUN_BIT_COUNT]);
 
 /* Reads snapshot of current (filtered) IQ value. */
 void hw_read_ftun_iq(int *I, int *Q);

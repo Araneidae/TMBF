@@ -52,6 +52,7 @@ ftun_control = ForwardLink(
 
 
 Action('FTUN:START', DESC = 'Start tune following')
+Action('FTUN:ARM', DESC = 'Arm triggered tune following')
 Action('FTUN:STOP', DESC = 'Stop tune following')
 
 # Detailed data about internal processing of tune following data stream
@@ -100,7 +101,7 @@ Action('FTUN:STAT:SCAN',
         status('FTUN:STOP:MAG', 'Signal magnitude too small'),
         status('FTUN:STOP:VAL', 'Frequency shift too large'),
         # Activity status
-        boolIn('FTUN:ACTIVE', 'Not running', 'Running',
+        mbbIn('FTUN:ACTIVE', 'Not running', 'Trigger armed', 'Running',
             DESC = 'Tune following activity'),
 
         # Current position and angle readout

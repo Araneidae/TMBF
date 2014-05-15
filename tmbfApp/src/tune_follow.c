@@ -73,6 +73,7 @@ static int freq_scaling_shift;
 
 /* Status readback data. */
 static bool status_array[FTUN_BIT_COUNT];
+static unsigned int ftun_status;
 static int current_i;
 static int current_q;
 static double current_angle;
@@ -87,14 +88,6 @@ static int maximum_q;
 static double iq_variation;
 
 
-/* Running status.  This is set under a lock when starting tune following and
- * updated, also under the same lock, when the status array above is read.  This
- * is used to ensure we read a complete buffer at the end of a run. */
-static bool ftun_running;
-static bool ftun_stopped;   // Used to trigger final buffer update
-static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
-#define LOCK_RUNNING()      pthread_mutex_lock(&running_mutex)
-#define UNLOCK_RUNNING()    pthread_mutex_unlock(&running_mutex)
 
 /* Frequency dependent phase offset adjustment. */
 static double closed_loop_delay = 1;
@@ -183,10 +176,23 @@ static void write_ftun_start(void)
 {
     hw_write_nco_freq(nco_freq);
 
-    LOCK_RUNNING();
-    ftun_running = true;
+    hw_write_ftun_disarm();
+    hw_write_ftun_enable(true);
     hw_write_ftun_start();
-    UNLOCK_RUNNING();
+}
+
+static void write_ftun_arm(void)
+{
+    hw_write_nco_freq(nco_freq);
+
+    hw_write_ftun_enable(true);
+    hw_write_ftun_arm();
+}
+
+static void write_ftun_stop(void)
+{
+    hw_write_ftun_disarm();
+    hw_write_ftun_enable(false);
 }
 
 
@@ -246,14 +252,8 @@ static void update_minmax(void)
 
 static void read_ftun_status(void)
 {
-    LOCK_RUNNING();
-    hw_read_ftun_status(status_array);
-    /* On transition from running to stopped set the ftun_stopped flag to
-     * trigger a flush of the read buffer. */
-    if (ftun_running  &&  !status_array[FTUN_STAT_RUNNING])
-        ftun_stopped = true;
-    ftun_running = status_array[FTUN_STAT_RUNNING];
-    UNLOCK_RUNNING();
+    hw_read_ftun_status_bits(status_array);
+    ftun_status = hw_read_ftun_status();
 
     update_iq_angle_mag();
     update_minmax();
@@ -299,9 +299,11 @@ static void process_ftun_buffer(int *buffer, size_t read_count, bool dropout)
     if (dropout)
         dropout_seen = true;
 
+    /* Update output buffer either when the raw buffer is full or when it is
+     * non-empty and we've stopped running. */
     /* If the raw buffer is full then we can transfer it and update. */
     if (buffer_wf_length == FTUN_FREQ_LENGTH  ||
-            (!ftun_running  &&  buffer_wf_length > 0  &&  (read_count == 0)))
+        (buffer_wf_length > 0  &&  hw_read_ftun_status() != FTUN_RUNNING))
         update_ftun_buffer();
 
     /* Copy any residue into the raw buffer. */
@@ -318,14 +320,7 @@ static void *poll_tune_follow(void *context)
         int ftun_buffer[FTUN_FIFO_SIZE];
         bool dropout;
         size_t read_count = hw_read_ftun_buffer(ftun_buffer, &dropout);
-
-        LOCK_RUNNING();
-        bool stopped = ftun_stopped;
-        ftun_stopped = false;
-        UNLOCK_RUNNING();
-
-        if (read_count > 0  ||  stopped)
-            process_ftun_buffer(ftun_buffer, read_count, dropout);
+        process_ftun_buffer(ftun_buffer, read_count, dropout);
 
         usleep(10000); // 100 Hz polling
     }
@@ -368,7 +363,8 @@ bool initialise_tune_follow(void)
 
     /* Tune following action. */
     PUBLISH_ACTION("FTUN:START", write_ftun_start);
-    PUBLISH_ACTION("FTUN:STOP", hw_write_ftun_stop);
+    PUBLISH_ACTION("FTUN:ARM", write_ftun_arm);
+    PUBLISH_ACTION("FTUN:STOP", write_ftun_stop);
 
     PUBLISH_READ_VAR(bi, "FTUN:FREQ:DROPOUT", data_dropout);
     PUBLISH_WF_READ_VAR(float, "FTUN:FREQ", FTUN_FREQ_LENGTH, freq_wf);
@@ -399,7 +395,7 @@ bool initialise_tune_follow(void)
     PUBLISH_READ_VAR(bi, "FTUN:STOP:DET", status_array[FTUN_STOP_DET]);
     PUBLISH_READ_VAR(bi, "FTUN:STOP:MAG", status_array[FTUN_STOP_MAG]);
     PUBLISH_READ_VAR(bi, "FTUN:STOP:VAL", status_array[FTUN_STOP_VAL]);
-    PUBLISH_READ_VAR(bi, "FTUN:ACTIVE", status_array[FTUN_STAT_RUNNING]);
+    PUBLISH_READ_VAR(mbbi, "FTUN:ACTIVE", ftun_status);
     PUBLISH_READ_VAR(ai, "FTUN:ANGLE", current_angle);
     PUBLISH_READ_VAR(ai, "FTUN:ANGLEDELTA", delta_angle);
     PUBLISH_READ_VAR(longin, "FTUN:MAG", current_magnitude);

@@ -719,18 +719,40 @@ void hw_write_ftun_control(struct ftun_control *control)
     UNLOCK();
 }
 
+void hw_write_ftun_enable(bool enable)
+{
+    WRITE_CONTROL_BITS(1, 1, enable);
+}
+
 void hw_write_ftun_start(void)
 {
-    WRITE_CONTROL_BITS(1, 1, 1);
     pulse_control_bit(12);
 }
 
-void hw_write_ftun_stop(void)
+void hw_write_ftun_arm(void)
 {
-    WRITE_CONTROL_BITS(1, 1, 0);
+    pulse_control_bit(14);
 }
 
-void hw_read_ftun_status(bool *status)
+void hw_write_ftun_disarm(void)
+{
+    pulse_control_bit(15);
+}
+
+enum ftun_status hw_read_ftun_status(void)
+{
+    bool armed = READ_STATUS_BITS(25, 1);
+    bool running = config_space->ftune_status & (1 << FTUN_STAT_RUNNING);
+    if (running)
+        return FTUN_RUNNING;
+    else if (armed)
+        return FTUN_ARMED;
+    else
+        return FTUN_STOPPED;
+}
+
+
+void hw_read_ftun_status_bits(bool *status)
 {
     config_space->ftune_read_control = 1;
     uint32_t status_word = config_space->ftune_status;
