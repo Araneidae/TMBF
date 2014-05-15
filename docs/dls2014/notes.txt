@@ -1,0 +1,13 @@
+
+Present description of flip-flops.  This is worth several slides.  Talk about
+the fundamental behaviour of a clocked D-type flip-flop (also known as a
+register).  Also talk about metastiblity and consequences when trying to cross
+between different clocks.
+
+Register interface.  Write-only registers are a sensible use of resources.
+Reading is surprisingly expensive because of multiplexors.
+
+Pipelining.  Explain the detector accumulator, we have quite a nice diagram of
+how it is pipelined.
+
+Complain about languages, critique SV.
