@@ -226,7 +226,11 @@ struct tmbf_config_space
         uint32_t nco_frequency;         // Fixed NCO generator frequency
     };
     uint32_t ftune_p_scale;         // 30  Feedback proportional scale
-    uint32_t unused_31;             // 31    (unused)
+    uint32_t ftune_read_control;    // 31  Latches readback values
+    // Control bits:
+    //  0       Latches and resets accumulated ftune_status bits 4:0
+    //  1       Latches and resets ftune_i_minmax readout
+    //  2       Latches and resets ftune_q_minmax readout
 };
 
 /* These two pointers directly overlay the FF memory. */
@@ -728,6 +732,7 @@ void hw_write_ftun_stop(void)
 
 void hw_read_ftun_status(bool *status)
 {
+    config_space->ftune_read_control = 1;
     uint32_t status_word = config_space->ftune_status;
     for (int i = 0; i < FTUN_BIT_COUNT; i ++)
         status[i] = (status_word >> i) & 1;
@@ -753,12 +758,14 @@ bool hw_read_ftun_frequency(int *frequency)
 
 bool hw_read_ftun_i_minmax(int *min, int *max)
 {
+    config_space->ftune_read_control = 2;
     read_signed_pair(config_space->ftune_i_minmax, min, max);
     return *max >= *min;
 }
 
 bool hw_read_ftun_q_minmax(int *min, int *max)
 {
+    config_space->ftune_read_control = 4;
     read_signed_pair(config_space->ftune_q_minmax, min, max);
     return *max >= *min;
 }
