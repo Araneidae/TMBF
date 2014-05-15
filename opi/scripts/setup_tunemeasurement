@@ -1,160 +1,170 @@
-#!/bin/bash
+#!/usr/bin/env dls-python
 
 # Simple script for setting the TMBF into the appropriate tune measurement
 # mode.
 
-set -e      # Exit immediately if any command fails
+from pkg_resources import require
+require('cothread')
+require('numpy')
 
-HERE="$(dirname "$0")"
+import sys
+import numpy
+from cothread import catools
 
-# Validate input parameters.
-DEVICE="${1:?Specify device}"
-MODE="${2:?Specify mode}"
-CONFIG="${3:-/home/ops/diagnostics/config/TMBF_tune.config}"
+
+def put(pv, value):
+    catools.caput('%s:%s' % (DEVICE, pv), value)
+
+def putwf(pv, value):
+    put(pv, value * numpy.ones(936))
+
+
+DeviceToAxis = {
+    'SR23C-DI-TMBF-01': 'X',
+    'SR23C-DI-TMBF-02': 'Y',
+    'TS-DI-TMBF-01': 'X',
+}
+
+
+# Argument parsing
+DEVICE, MODE = sys.argv[1:3]
+if len(sys.argv) > 3:
+    CONFIG = sys.argv[3]
+else:
+    CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
+AXIS = DeviceToAxis[DEVICE]
+
 
 
 # ------------------------------------------------------------------------------
-# Set up defaults before loading config file.
+# Defaults and configuration
 
-HARMONIC=80
-BUNCH=450
+HARMONIC = 80
+BUNCH = 450
 
-tune_threshold=0.3
-min_block_sep=20
-min_block_len=20
-sweep_dwell_time=100
+tune_threshold = 0.3
+min_block_sep = 20
+min_block_len = 20
+sweep_dwell_time = 100
 
-blanking_interval=5000
+blanking_interval = 5000
 
-sweep_range=0.05
-alarm_range=0.01
+sweep_range = 0.05
+alarm_range = 0.01
+
+
 
 # Pull in configured tune settings.  The config file contains settings for tune
-# and FIR fraction cycles/length for each ring mode and axis and may optionally
-# contain overrides for the defaults above.
-. "$CONFIG"
-
-# ------------------------------------------------------------------------------
-
-
-Error()
-{
-    echo >&2 "$@"
-    exit 1
-}
-
-put()
-{
-    [[ -n $2 ]]  ||  Error "Missing value for $1"
-    caput -s $DEVICE:$1 "$2"
-}
+# and FIR fraction cycles/length for each ring mode and axis.  Currently the
+# config settings are in a bash compatible format.
+config = {}
+execfile(CONFIG, {}, config)
 
 
 # Extract the tune settings appropriate to our device, determine the nominal
 # tune and FIR shape.
 
-case $DEVICE in
-    SR23C-DI-TMBF-01)   AXIS=X ;;
-    SR23C-DI-TMBF-02)   AXIS=Y ;;
-    TS-DI-TMBF-01)      AXIS=X ;;
-    *)                  Error Unknown device $DEVICE ;;
-esac
+ring_mode = catools.caget('SR-CS-RING-01:MODE', datatype = str)
 
-ring_mode=$(caget -t SR-CS-RING-01:MODE | sed 's/ $//')
-eval tune=\$${AXIS}_tune_$ring_mode
-eval cycles=\$${AXIS}_cycles_$ring_mode
-eval length=\$${AXIS}_length_$ring_mode
-if [ -z "$tune" -o -z "$cycles" -o -z "$length" ]; then
-    Error "Unknown ring mode $ring_mode, check PV SR-CS-RING-01:MODE"
-fi
-tune=0.$tune
+def get_config(key):
+    return config['%s_%s_%s' % (AXIS, key, ring_mode)]
+
+
+cycles = get_config('cycles')
+length = get_config('length')
+# Convert tune from four digit string to numerical format
+tune = float('0.%04d' % get_config('tune'))
 
 
 # Settings with mode specific overrides
-dac_output=0                # By default DAC output is off
-bunch_mode='All Bunches'    # By default detect on all bunches
-detector_input=FIR
+dac_output = 0                # By default DAC output is off
+bunch_mode = 'All Bunches'    # By default detect on all bunches
+detector_input = 'FIR'
 
 # Mode specific settings
-case $MODE in
-    TUNE)   # Multibunch tune measurement
-        sweep_gain=-42dB
-        ;;
-    SBFB)   # Feedback on, single bunch tune measurement
-        sweep_gain=-24dB
-        dac_output=1    # Enable FIR output in this mode
-        bunch_mode='Single Bunch'
-        HARMONIC=0
-        ;;
-    AP)
-        sweep_gain=0dB
-        tune=0.25
-        sweep_range=0.245
-        alarm_range=0.245
-        detector_input=ADC
-        min_block_len=5
-        ;;
-    *)  Error Mode must be one of TUNE, AP or SBFB.
-        ;;
-esac
+if MODE == 'TUNE':
+    # Multibunch tune measurement
+    sweep_gain = '-42dB'
+elif MODE == 'SBFB':
+    # Feedback on, single bunch tune measurement
+    sweep_gain = '-24dB'
+    dac_output = 1    # Enable FIR output in this mode
+    bunch_mode = 'Single Bunch'
+    HARMONIC = 0
+elif MODE == 'AP':
+    # Accelerator physics mode
+    sweep_gain = '0dB'
+    tune = 0.25
+    sweep_range = 0.245
+    alarm_range = 0.245
+    detector_input = 'ADC'
+    min_block_len = 5
+else:
+    assert False, 'Mode must be one of TUNE, AP or SBFB.'
 
+
+# ------------------------------------------------------------------------------
+# Write computed configuration
 
 # First a bunch of sanity settings, in case somebody has been messing with
 # stuff.
-put DAC:ENABLE_S Off        # Turn off while we mess with settings
+put('DAC:ENABLE_S', 'Off')        # Turn off while we mess with settings
 
 # Make sure we're sane.
-put LOOPBACK_S Normal
-put COMPENSATE_S Normal
-put SEQ:0:BANK_S 'Bank 0'
-put DET:RESET_WIN_S.PROC 0
+put('LOOPBACK_S', 'Normal')
+put('COMPENSATE_S', 'Normal')
+put('SEQ:0:BANK_S', 'Bank 0')
+put('DET:RESET_WIN_S.PROC', 0)
 
 # Ensure no triggers are running and the sequencer is stopped
-put TRG:DDR:RESET_S.PROC 0
-put TRG:BUF:RESET_S.PROC 0
-put SEQ:RESET_S.PROC 0
+put('TRG:DDR:RESET_S.PROC', 0)
+put('TRG:BUF:RESET_S.PROC', 0)
+put('SEQ:RESET_S.PROC', 0)
 
 # Configure FIR as selected
-put FIR:0:LENGTH_S $length
-put FIR:0:CYCLES_S $cycles
-put FIR:0:USEWF_S Settings
-put FIR:GAIN_S -42dB
+put('FIR:0:LENGTH_S', length)
+put('FIR:0:CYCLES_S', cycles)
+put('FIR:0:USEWF_S', 'Settings')
+put('FIR:GAIN_S', '-42dB')
 
 # Configure bunch bank #0 for FIR and selected operation
-echo set_one_bunch $DEVICE 0 all 0 $dac_output 1023
-"$HERE"/set_one_bunch $DEVICE 0 all 0 $dac_output 1023
+putwf('BUN:0:FIRWF_S', 0)
+putwf('BUN:0:OUTWF_S', dac_output)
+putwf('BUN:0:GAINWF_S', 1023)
 
 # Configure sequencer
-put SEQ:1:HOLDOFF_S 2
-put SEQ:1:DWELL_S $sweep_dwell_time
-put SEQ:1:GAIN_S $sweep_gain
-put SEQ:1:ENWIN_S Windowed
-put SEQ:1:BLANK_S Blanking
+put('SEQ:1:HOLDOFF_S', 2)
+put('SEQ:1:DWELL_S', sweep_dwell_time)
+put('SEQ:1:GAIN_S', sweep_gain)
+put('SEQ:1:ENWIN_S', 'Windowed')
+put('SEQ:1:BLANK_S', 'Blanking')
 
 # Configure detector
-put DET:MODE_S "$bunch_mode"
-put DET:AUTOGAIN_S Autogain
-put DET:INPUT_S $detector_input
-put DET:LOOP:ADC_S 1
+put('DET:MODE_S', bunch_mode)
+put('DET:AUTOGAIN_S', 'Autogain')
+put('DET:INPUT_S', detector_input)
+put('DET:LOOP:ADC_S', 1)
 
 # Configure tune measurement
-put TUNE:HARMONIC_S $HARMONIC
-put TUNE:CENTRE_S $tune
-put TUNE:RANGE_S $sweep_range
-put TUNE:ALARM_S $alarm_range
-put TUNE:BUNCH_S $BUNCH
-put TUNE:SET_S.PROC 0
+put('TUNE:HARMONIC_S', HARMONIC)
+put('TUNE:CENTRE_S', tune)
+put('TUNE:RANGE_S', sweep_range)
+put('TUNE:ALARM_S', alarm_range)
+put('TUNE:BUNCH_S', BUNCH)
+put('TUNE:SET_S.PROC', 0)
 
-put TUNE:BLK:LEN_S $min_block_len
-put TUNE:BLK:SEP_S $min_block_sep
-put TUNE:THRESHOLD_S $tune_threshold
+put('TUNE:BLK:LEN_S', min_block_len)
+put('TUNE:BLK:SEP_S', min_block_sep)
+put('TUNE:THRESHOLD_S', tune_threshold)
 
 # Trigger on external trigger.
-put TRG:BUF:SEL_S External
-put TRG:SEQ:ENA_S Enabled
-put TRG:BUF:MODE_S Retrigger
-put TRG:BLANKING_S $blanking_interval
+put('TRG:BUF:SEL_S', 'External')
+put('TRG:SEQ:ENA_S', 'Enabled')
+put('TRG:BUF:MODE_S', 'Retrigger')
+put('TRG:BLANKING_S', blanking_interval)
 
 # Now we can go!
-put DAC:ENABLE_S On
-put TRG:BUF:ARM_S.PROC 0
+put('DAC:ENABLE_S', 'On')
+put('TRG:BUF:ARM_S.PROC', 0)
+
+# vim: set filetype=python:
