@@ -157,7 +157,9 @@ struct tmbf_config_space
     uint32_t bunch_select;          //  5  Detector bunch selections
     uint32_t adc_offset_ab;         //  6  ADC channel offsets (channels A/B)
     uint32_t adc_offset_cd;         //  7  ADC channel offsets (channels C/D)
-    uint32_t dac_preemph_taps[3];   // 8-10     DAC pre-emphasis filter
+    uint32_t dac_preemph_taps;      //  8  DAC pre-emphasis filter
+    uint32_t unused_9;              //  9   (unused)
+    uint32_t unused_10;             // 10   (unused)
     uint32_t bunch_zero_offset;     // 11  Bunch zero offset
     uint32_t ddr_trigger_delay;     // 12  DDR Trigger delay control
     uint32_t buf_trigger_delay;     // 13  BUF Trigger delay control
@@ -437,8 +439,12 @@ void hw_write_dac_enable(bool enable)
 
 void hw_write_dac_preemph(short taps[3])
 {
-    for (int i = 0; i < 3; i ++)
-        config_space->dac_preemph_taps[i] = taps[i];
+    config_space->write_select = 0;
+    for (int i = 2; i >= 0; i --)
+    {
+        for (int j = 0; j < 4; j ++)
+            config_space->dac_preemph_taps = taps[i];
+    }
 }
 
 void hw_write_dac_delay(unsigned int dac_delay, unsigned int preemph_delay)
