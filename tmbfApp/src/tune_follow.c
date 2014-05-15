@@ -287,8 +287,7 @@ static void update_ftun_buffer(void)
 }
 
 
-static void process_ftun_buffer(
-    int *buffer, size_t read_count, bool dropout, bool empty)
+static void process_ftun_buffer(int *buffer, size_t read_count, bool dropout)
 {
     /* Copy what we can to the raw buffer. */
     size_t copied = FTUN_FREQ_LENGTH - buffer_wf_length;
@@ -302,7 +301,7 @@ static void process_ftun_buffer(
 
     /* If the raw buffer is full then we can transfer it and update. */
     if (buffer_wf_length == FTUN_FREQ_LENGTH  ||
-            (!ftun_running  &&  buffer_wf_length > 0  &&  empty))
+            (!ftun_running  &&  buffer_wf_length > 0  &&  (read_count == 0)))
         update_ftun_buffer();
 
     /* Copy any residue into the raw buffer. */
@@ -318,8 +317,7 @@ static void *poll_tune_follow(void *context)
     {
         int ftun_buffer[FTUN_FIFO_SIZE];
         bool dropout;
-        bool empty;
-        size_t read_count = hw_read_ftun_buffer(ftun_buffer, &dropout, &empty);
+        size_t read_count = hw_read_ftun_buffer(ftun_buffer, &dropout);
 
         LOCK_RUNNING();
         bool stopped = ftun_stopped;
@@ -327,7 +325,7 @@ static void *poll_tune_follow(void *context)
         UNLOCK_RUNNING();
 
         if (read_count > 0  ||  stopped)
-            process_ftun_buffer(ftun_buffer, read_count, dropout, empty);
+            process_ftun_buffer(ftun_buffer, read_count, dropout);
 
         usleep(10000); // 100 Hz polling
     }

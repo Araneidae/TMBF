@@ -277,8 +277,7 @@ bool hw_read_ftun_q_minmax(int *min, int *max);
 /* Reads up to FTUN_FIFO_SIZE words from the FTUN FIFO into buffer.  Sets the
  * dropout flag if the FTUN buffer overflowed and returns the number of words
  * read. */
-size_t hw_read_ftun_buffer(
-    int buffer[FTUN_FIFO_SIZE], bool *dropout, bool *empty);
+size_t hw_read_ftun_buffer(int buffer[FTUN_FIFO_SIZE], bool *dropout);
 
 /* Returns ADC and FIR detector delays. */
 void hw_read_ftun_delays(int *adc_delay, int *fir_delay);

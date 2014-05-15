@@ -757,30 +757,36 @@ bool hw_read_ftun_q_minmax(int *min, int *max)
     return *max >= *min;
 }
 
-size_t hw_read_ftun_buffer(
-    int buffer[FTUN_FIFO_SIZE], bool *dropout, bool *empty)
-{
-    /* Read until the FIFO is empty or our buffer is full. */
-    bool dropout_flag = false;
-    size_t read_count = 0;
-    size_t fifo_entries;
-    for (; read_count < FTUN_FIFO_SIZE; read_count ++)
-    {
-        /* Each word read has the following bit fields:
-         *  17:0    Payload (current frequency offset)
-         *  30:21   Words remaining in FIFO
-         *  31      Set if FIFO overrun detected. */
-        uint32_t word = config_space->ftune_readout;
-        dropout_flag |= word >> 31;
-        fifo_entries = (word >> 21) & 0x3FF;
-        if (fifo_entries)
-            buffer[read_count] = (int) (word << 14) >> 14;
-        else
-            break;
-    }
 
-    *dropout = dropout_flag;
-    *empty = fifo_entries <= 1;
+static size_t read_ftun_buffer_word(int *buffer, bool *dropout)
+{
+    /* Each word read has the following bit fields:
+     *  17:0    Payload (current frequency offset)
+     *  30:21   Words remaining in FIFO
+     *  31      Set if FIFO overrun detected. */
+    uint32_t word = config_space->ftune_readout;
+    *dropout |= word >> 31;
+    size_t fifo_entries = (word >> 21) & 0x3FF;
+    if (fifo_entries)
+        *buffer = (int) (word << 14) >> 14;
+    return fifo_entries;
+}
+
+size_t hw_read_ftun_buffer(int buffer[FTUN_FIFO_SIZE], bool *dropout)
+{
+    /* Because of the strange interface between the processor and the FPGA the
+     * readout tends to be one sample behind.  This means we must start by
+     * always reading at least two words, as the first word read can be pretty
+     * old. */
+    *dropout = false;
+    size_t read_count = 0;
+    if (read_ftun_buffer_word(&buffer[read_count], dropout))
+        read_count += 1;
+
+    /* Now read until the FIFO is empty or our buffer is full. */
+    while (read_count < FTUN_FIFO_SIZE  &&
+           read_ftun_buffer_word(&buffer[read_count], dropout))
+        read_count += 1;
     return read_count;
 }
 
