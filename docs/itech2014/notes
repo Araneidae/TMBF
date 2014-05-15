@@ -1,0 +1,61 @@
+Notes for a TMBF at i-Tech
+==========================
+
+Talk for 10th April 2014, 25 minutes, to audience of Libera and related product
+users.
+
+
+Themes and Ideas
+================
+
+
+
+Acknowlegements and TMBF history
+--------------------------------
+
+* Initial version from Graham Naylor at the ESRF, late 2005 (Simulink / Matlab
+  System Generator)
+
+* From early 2006 to late 2013 version written by Isa Uzun (System Verilog)
+
+* Guenther Rehm
+
+
+Platform and Architecture
+-------------------------
+
+Describe Libera TMBF: bare platform, fast ADCs, FPGA, DAC, SBC, fast RAM,
+wrapper interface in FPGA.
+
+System development in System Verilog within framework provided by iTech.
+
+
+Introduction to Transverse MultiBunch Feedback
+----------------------------------------------
+
+Describe what tunes are.  Can draw a diagram of betatron oscillations.
+
+Importance of measuring tunes.
+
+Effect of fill patterns.
+
+Instabilities and using feedback to control them.
+
+
+TMBF Improvement Project
+------------------------
+
+Main goals:
+
+* More control over individual bunches
+
+* Complex measurement experiments
+
+* Tune following as a new form of tune measurement
+
+
+Implementation Notes
+--------------------
+
+
+..  vim: set filetype=rst:

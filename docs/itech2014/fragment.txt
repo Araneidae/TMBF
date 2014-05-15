@@ -1,0 +1,20 @@
+// DAC selection input multiplexer.  The intermediate selection is 16 bits wide
+// so we can detect overflow when adding up to three 14 bit values.  To match
+// this delay we need to delay the mux and config as well.
+logic [7: 0] [15: 0] dac_out_mux = 0;
+logic [2:0] out_mux_sel = 0;
+logic signed [10:0] bunch_gain_0 = 0;
+always_ff @(posedge adc_clk_i) begin
+    dac_out_mux[0] <= 0;
+    dac_out_mux[1] <= signed'(fir_dat_i);
+    dac_out_mux[2] <= signed'(hom_0_dat_i);
+    dac_out_mux[3] <= signed'(hom_0_dat_i) + signed'(fir_dat_i);
+    dac_out_mux[4] <= signed'(hom_1_dat_i);
+    dac_out_mux[5] <= signed'(hom_1_dat_i) + signed'(fir_dat_i);
+    dac_out_mux[6] <= signed'(hom_1_dat_i) + signed'(hom_0_dat_i);
+    dac_out_mux[7] <=
+        signed'(hom_1_dat_i) + signed'(hom_0_dat_i) + signed'(fir_dat_i);
+
+    out_mux_sel <= out_mux_sel_i;
+    bunch_gain_0 <= bunch_gain_i;
+end
