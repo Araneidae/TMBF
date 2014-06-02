@@ -18,7 +18,8 @@ def get(pv, **kargs):
 
 
 # Configure DDR for software single shot, grab a single shot
-put('TRG:DDR:SEL_S', 'Soft 1')
+put('TRG:SYNC_S', 'Separate')
+put('TRG:DDR:SEL_S', 'Soft')
 put('TRG:DDR:MODE_S', 'One Shot')
 put('DDR:INPUT_S', 'ADC')
 put('TRG:DDR:ARM_S.PROC', 0)

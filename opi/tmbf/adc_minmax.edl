@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 837
-y 86
+x 1103
+y 56
 w 641
 h 512
 font "helvetica-medium-r-18.0"
@@ -391,61 +391,6 @@ objType "monitors"
 noExecuteClipMask
 endObjectProperties
 
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 240
-y 416
-w 152
-h 88
-# Appearance
-graphTitle "ADC Offset"
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "fromUser"
-xMin -0.5
-xMax 3.5
-# Y axis properties
-showYAxis
-yAxisSrc "AutoScale"
-yMax 1
-yLabelIntervals 2
-yUserSpecScaleDiv 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Min 8300
-y2Max 16600
-# Trace Properties
-numTraces 1
-yPv {
-  0 "$(device):ADC:OFFSET_S"
-}
-plotStyle {
-  0 "needle"
-}
-plotUpdateMode {
-  0 "y"
-}
-plotSymbolType {
-  0 "circle"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 27
-}
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -486,7 +431,7 @@ major 4
 minor 0
 release 0
 x 512
-y 448
+y 416
 w 120
 h 24
 fgColor index 14
@@ -498,25 +443,26 @@ controlPv "$(device):ADC:SCAN_S.SCAN"
 font "helvetica-medium-r-12.0"
 endObjectProperties
 
-# (Shell Command)
-object shellCmdClass
+# (Related Display)
+object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 3
+minor 4
 release 0
-x 400
+x 456
 y 480
-w 128
+w 104
 h 24
-fgColor index 25
+fgColor index 43
 bgColor index 4
 topShadowColor index 1
 botShadowColor index 11
 font "helvetica-bold-r-12.0"
-buttonLabel "Set ADC Offsets"
-numCmds 1
-command {
-  0 "xterm -T 'Set ADC offsets' -e 'set_adc_offset $(device); read -p \"press return\"'"
+buttonLabel "ADC Setup"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/adc_setup.edl"
 }
 endObjectProperties
 

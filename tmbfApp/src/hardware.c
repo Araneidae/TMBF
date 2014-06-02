@@ -201,8 +201,8 @@ struct tmbf_config_space
             //  12      Whether DDR trigger source respects blanking
             //  15:13   Select DDR trigger source
             uint32_t bunch_select;      //  5  Detector bunch selections
-            uint32_t adc_offset_ab;     //  6  ADC channel offsets (A/B)
-            uint32_t adc_offset_cd;     //  7  ADC channel offsets (C/D)
+            uint32_t adc_offsets;       //  6  ADC channel offsets (A/B)
+            uint32_t unused_7;          //  7   (unused)
             uint32_t dac_preemph_taps;  //  8  DAC pre-emphasis filter
             uint32_t adc_filter_taps;   //  9  ADC compensation filter
             uint32_t unused_w_10;       // 10   (unused)
@@ -418,15 +418,11 @@ bool hw_read_clock_dropout(void)
 /* * * * * * * * * * * * */
 /* ADC: Data Input Stage */
 
-static uint32_t combine_offsets(short offset_a, short offset_b)
-{
-    return ((uint32_t) offset_a & 0xFFFF) + ((uint32_t) offset_b << 16);
-}
-
 void hw_write_adc_offsets(short offsets[4])
 {
-    config_space->adc_offset_ab = combine_offsets(offsets[0], offsets[1]);
-    config_space->adc_offset_cd = combine_offsets(offsets[2], offsets[3]);
+    config_space->write_select = 0;
+    for (int i = 0; i < 4; i ++)
+        config_space->adc_offsets = offsets[i];
 }
 
 void hw_write_adc_filter(short taps[12])

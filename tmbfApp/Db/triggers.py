@@ -49,7 +49,8 @@ for name, desc in external_triggers:
         boolIn('TRG:DDR:%s:HIT' % name, 'No', 'Yes',
             ZSV = 'MINOR', DESC = '%s trigger source' % desc))
 create_fanout('TRG:DDR:FAN',
-    Action('TRG:DDR:IN'), SCAN = '.2 second', *input_status)
+    Action('TRG:DDR:IN', DESC = 'Scan trigger inputs'),
+    SCAN = '.2 second', *input_status)
 Trigger('TRG:DDR:HIT', *trigger_status)
 
 

@@ -94,24 +94,16 @@ static struct min_max dac_min_max = { .read = hw_read_dac_minmax };
 
 static unsigned int adc_skew;       // 0 to 3
 static unsigned int dac_delay;      // 0 to 935
-static unsigned int preemph_delay;  // 0 to 2
 static struct epics_record *adc_skew_pv;
 
 static void write_dac_delays(void)
 {
     hw_write_dac_delay(dac_delay + 3 - adc_skew);
-    hw_write_dac_filter_delay(preemph_delay);
 }
 
 static void write_dac_delay(unsigned int delay)
 {
     dac_delay = delay;
-    write_dac_delays();
-}
-
-static void write_preemph_delay(unsigned int delay)
-{
-    preemph_delay = delay;
     write_dac_delays();
 }
 
@@ -133,6 +125,7 @@ bool initialise_adc_dac(void)
     /* Offset control for ADC. */
     PUBLISH_WF_ACTION_P(short, "ADC:OFFSET", 4, hw_write_adc_offsets);
     PUBLISH_WF_ACTION_P(short, "ADC:FILTER", 12, hw_write_adc_filter);
+    PUBLISH_WRITER_P(mbbo, "ADC:FILTER:DELAY", hw_write_adc_filter_delay);
     adc_skew_pv = PUBLISH_READ_VAR_I(mbbi, "ADC:SKEW", adc_skew);
     PUBLISH_WRITER_P(longout, "ADC:LIMIT", hw_write_adc_limit);
 
@@ -142,7 +135,7 @@ bool initialise_adc_dac(void)
 
     /* Pre-emphasis filter interface. */
     PUBLISH_WF_ACTION_P(short, "DAC:PREEMPH", 3, hw_write_dac_preemph);
-    PUBLISH_WRITER_P(mbbo, "DAC:PREEMPH:DELAY", write_preemph_delay);
+    PUBLISH_WRITER_P(mbbo, "DAC:PREEMPH:DELAY", hw_write_dac_filter_delay);
 
     return true;
 }

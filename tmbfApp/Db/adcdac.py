@@ -42,6 +42,8 @@ def minmax_pvs(source):
 minmax_pvs('ADC')
 WaveformOut('ADC:OFFSET', CHANNEL_COUNT, 'SHORT', DESC = 'ADC offsets')
 WaveformOut('ADC:FILTER', 12, 'SHORT', DESC = 'ADC compensation filter')
+mbbOut('ADC:FILTER:DELAY', '-2 ns', '0 ns', '+2 ns',
+    DESC = 'Compensation filter group delay')
 mbbIn('ADC:SKEW', '0 ns', '2 ns', '4 ns', '6 ns',
     SCAN = 'I/O Intr', DESC = 'Input skew')
 longOut('ADC:LIMIT', 0, (1<<13)-1, DESC = 'ADC error threshold')
