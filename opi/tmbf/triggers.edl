@@ -1399,7 +1399,7 @@ x 264
 y 208
 w 32
 h 16
-controlPv "$(device):ADC:DELAY"
+controlPv "$(device):ADC:SKEW"
 font "helvetica-medium-r-14.0"
 fgColor index 14
 fgAlarm

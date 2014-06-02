@@ -28,7 +28,7 @@ int hw_read_version(void);
 
 /* All bits will be read into overflow_bits[], but only those bits selected in
  * read_bits[] will be updated and correctly reset. */
-enum OVERFLOW_BITS {
+enum {
     OVERFLOW_FIR        = 0,    // Overflow in FIR gain control output
     OVERFLOW_DAC        = 1,    // Overflow in DAC multiplexor and scaling
     OVERFLOW_DAC_COMP   = 2,    // Overflow in DAC pre-emphasis filter
@@ -38,11 +38,11 @@ enum OVERFLOW_BITS {
     OVERFLOW_IQ_ACC     = 5,    // Overflow in IQ detector accumulator
     OVERFLOW_IQ_SCALE   = 6,    // Overflow in IQ detector readout scaling
 
-    OVERFLOW_BIT_COUNT = 8
+    PULSED_BIT_COUNT = 8
 };
-void hw_read_overflows(
-    const bool read_bits[OVERFLOW_BIT_COUNT],
-    bool overflow_bits[OVERFLOW_BIT_COUNT]);
+void hw_read_pulsed_bits(
+    const bool read_bits[PULSED_BIT_COUNT],
+    bool pulsed_bits[PULSED_BIT_COUNT]);
 
 /* Only useful for testing: loops digital DAC output to digital ADC input. */
 void hw_write_loopback_enable(bool loopback);
@@ -63,6 +63,9 @@ bool hw_read_clock_dropout(void);
 
 /* Writes ADC offset corrections, one for each ADC channel. */
 void hw_write_adc_offsets(short offsets[4]);
+
+/* Writes ADC compensation FIR. */
+void hw_write_adc_filter(short taps[12]);
 
 /* Reads ADC minimum and maximum values since last reading. */
 void hw_read_adc_minmax(
@@ -360,7 +363,7 @@ void hw_write_trg_blanking_source(unsigned int source);
 void hw_write_trg_arm_raw_phase(void);
 
 /* Configure DDR trigger source. */
-void hw_write_trg_ddr_source(unsigned int source);
+void hw_write_trg_ddr_source(unsigned int source, bool blanking);
 
 /* Returns raw phase bits from trigger. */
 int hw_read_trg_raw_phase(void);

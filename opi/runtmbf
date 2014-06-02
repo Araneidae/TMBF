@@ -1,9 +1,5 @@
 #!/bin/sh
 
-if ! which edm >/dev/null 2>&1; then
-    PATH=$PATH:/dls_sw/epics/R3.14.8.2/extensions/bin/linux-x86/
-fi
-
 cd "$(dirname "$0")"
 export EPICS_CA_MAX_ARRAY_BYTES=1000000
 PATH="$(pwd)"/scripts:"$PATH"

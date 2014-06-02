@@ -23,18 +23,19 @@
 /* Need to serialise some of our operations. */
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
-#define LOCK()      pthread_mutex_lock(&lock);
-#define UNLOCK()    pthread_mutex_unlock(&lock);
+#define LOCK()      pthread_mutex_lock(&lock)
+#define UNLOCK()    pthread_mutex_unlock(&lock)
 
 
 
 enum trigger_source {
     TRIG_SOURCE_SOFT1,
     TRIG_SOURCE_SOFT2,
-    TRIG_SOURCE_EXTERNAL,
+    TRIG_SOURCE_EXTERNAL,   // Must be first external source
     TRIG_SOURCE_PM,
     TRIG_SOURCE_ADC,
     TRIG_SOURCE_SEQ,
+    TRIG_SOURCE_SCLK
 };
 
 
@@ -145,7 +146,7 @@ static void arm_target(struct trigger_target *target, bool auto_arm)
     {
         /* Configure DDR source if appropriate. */
         if (arm_ddr  &&  external)
-            hw_write_trg_ddr_source(source - TRIG_SOURCE_EXTERNAL);
+            hw_write_trg_ddr_source(source - TRIG_SOURCE_EXTERNAL, false);
 
         /* Prepare the targets. */
         if (arm_ddr)

@@ -32,7 +32,7 @@ delta = adc.reshape((-1, 4)).mean(0)
 
 # Correct for ADC output skew.  To avoid confusion this should probably be done
 # closer to the hardware in the driver, but here is where it is for now!
-skew = get('ADC:DELAY', datatype = int)
+skew = get('ADC:SKEW', datatype = int)
 delta = numpy.roll(delta, -skew)
 
 new_offsets = numpy.round(offsets - delta)

@@ -91,13 +91,7 @@ struct tmbf_config_space
             uint32_t system_status;     //  1  Status register
             //  3:0     Trigger phase bits
             //  7:4     Bunch trigger phase bits
-            //  15:8    Overflow bits
-            //          0   FIR gain overflow
-            //          1   DAC mux output overflow
-            //          2   DAC pre-emphasis filter overflow
-            //          4   IQ FIR input overflow
-            //          5   IQ accumulator overflow
-            //          6   IQ readout overflow
+            //  15:8    (unused)
             //  18:16   Current sequencer state ("program counter")
             //  19      (unused)
             //  20      Buffer trigger armed
@@ -106,8 +100,14 @@ struct tmbf_config_space
             //  23      DDR trigger armed
             //  24      ADC clock dropout detect.
             //  31:25   (unused)
-            uint32_t control_r;         //  2  Control register readback
-            uint32_t unused_r_3;        //  3   (unused)
+            uint32_t unused_r_2;        //  2   (unused)
+            uint32_t latch_pulsed_r;    //  3  Pulsed bits readback
+            //  0   FIR gain overflow
+            //  1   DAC mux output overflow
+            //  2   DAC pre-emphasis filter overflow
+            //  4   IQ FIR input overflow
+            //  5   IQ accumulator overflow
+            //  6   IQ readout overflow
             uint32_t ddr_status;        //  4  DDR status and offset
             //  23:0    Trigger offset into DDR buffer
             //  31      Set if DDR waiting for trigger
@@ -181,7 +181,7 @@ struct tmbf_config_space
             //  1       Enable tune following feedback
             //  2       Detector input select
             //  5:3     Sequencer starting state
-            //  7:6     Select DDR trigger source
+            //  7:6     (unused)
             //  8       Detector bunch mode enable
             //  9       Select blanking source
             //  11:10   Buffer data select (FIR+ADC/IQ/FIR+DAC/ADC+DAC)
@@ -194,15 +194,17 @@ struct tmbf_config_space
             //  27      Front panel LED
             //  29:28   DDR input select (0 => ADC, 1 => DAC, 2 => FIR, 3 => 0)
             //  31:30   ACD input fine delay (2ns steps)
-            uint32_t latch_overflow;    //  3  Latch new overflow status
-            uint32_t dac_delay;         //  4  DAC output delay (2ns steps)
+            uint32_t latch_pulsed;      //  3  Latch pulsed bit status
+            uint32_t control2;          //  4  Second control register
             //  9:0     DAC output delay in 2ns steps
             //  11:10   DAC pre-emphasis filter group delay in 2ns steps
+            //  12      Whether DDR trigger source respects blanking
+            //  15:13   Select DDR trigger source
             uint32_t bunch_select;      //  5  Detector bunch selections
             uint32_t adc_offset_ab;     //  6  ADC channel offsets (A/B)
             uint32_t adc_offset_cd;     //  7  ADC channel offsets (C/D)
             uint32_t dac_preemph_taps;  //  8  DAC pre-emphasis filter
-            uint32_t unused_w_9;        //  9   (unused)
+            uint32_t adc_filter_taps;   //  9  ADC compensation filter
             uint32_t unused_w_10;       // 10   (unused)
             uint32_t bunch_zero_offset; // 11  Bunch zero offset
             uint32_t ddr_trigger_delay; // 12  DDR Trigger delay control
@@ -259,15 +261,35 @@ static pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
 #define LOCK()      pthread_mutex_lock(&global_lock);
 #define UNLOCK()    pthread_mutex_unlock(&global_lock);
 
+/* Images of what was last written to the two control bit fields. */
+static uint32_t control_field_1 = 0;
+static uint32_t control_field_2 = 0;
+
 
 /* Writes to a sub field of a register by reading the register and writing
  * the appropriately masked value.  The register *must* be locked. */
 static void write_control_bit_field(
+    volatile uint32_t *control, uint32_t *memory,
     unsigned int start, unsigned int bits, uint32_t value)
 {
     uint32_t mask = ((1 << bits) - 1) << start;
-    config_space->control =
-        (config_space->control & ~mask) | ((value << start) & mask);
+    uint32_t update = (*memory & ~mask) | ((value << start) & mask);
+    *memory = update;
+    *control = update;
+}
+
+static void write_control_bit_field_1(
+    unsigned int start, unsigned int bits, uint32_t value)
+{
+    write_control_bit_field(
+        &config_space->control, &control_field_1, start, bits, value);
+}
+
+static void write_control_bit_field_2(
+    unsigned int start, unsigned int bits, uint32_t value)
+{
+    write_control_bit_field(
+        &config_space->control2, &control_field_2, start, bits, value);
 }
 
 /* Writes mask to the pulse register.  This generates simultaneous pulse events
@@ -285,7 +307,13 @@ static void pulse_control_bit(unsigned int bit)
 
 #define WRITE_CONTROL_BITS(start, length, value) \
     LOCK(); \
-    write_control_bit_field(start, length, value); \
+    write_control_bit_field_1(start, length, value); \
+    UNLOCK()
+
+#define WRITE_CONTROL_BITS_2(start, length, value) \
+    LOCK(); \
+    write_control_bit_field( \
+        &config_space->control2, &control_field_2, start, length, value); \
     UNLOCK()
 
 #define READ_STATUS_BITS(start, length) \
@@ -337,20 +365,20 @@ int hw_read_version(void)
 
 /* This routine is a bit more involved that most because we want to read a
  * programmable set of bits: all the bits we set are reset after being read. */
-void hw_read_overflows(
-    const bool read_bits[OVERFLOW_BIT_COUNT],
-    bool overflow_bits[OVERFLOW_BIT_COUNT])
+void hw_read_pulsed_bits(
+    const bool read_bits[PULSED_BIT_COUNT],
+    bool pulsed_bits[PULSED_BIT_COUNT])
 {
     uint32_t read_mask = 0;
-    for (int i = 0; i < OVERFLOW_BIT_COUNT; i ++)
+    for (int i = 0; i < PULSED_BIT_COUNT; i ++)
         read_mask |= read_bits[i] << i;
 
     /* Latch the selected overflow bits and read back the associated status. */
-    config_space->latch_overflow = read_mask;
-    uint32_t status = READ_STATUS_BITS(8, OVERFLOW_BIT_COUNT);
+    config_space->latch_pulsed = read_mask;
+    uint32_t status = config_space->latch_pulsed_r;
 
-    for (int i = 0; i < OVERFLOW_BIT_COUNT; i ++)
-        overflow_bits[i] = (status >> i) & 1;
+    for (int i = 0; i < PULSED_BIT_COUNT; i ++)
+        pulsed_bits[i] = (status >> i) & 1;
 }
 
 
@@ -396,6 +424,14 @@ void hw_write_adc_offsets(short offsets[4])
 {
     config_space->adc_offset_ab = combine_offsets(offsets[0], offsets[1]);
     config_space->adc_offset_cd = combine_offsets(offsets[2], offsets[3]);
+}
+
+void hw_write_adc_filter(short taps[12])
+{
+    config_space->write_select = 0;
+    for (int i = 2; i >= 0; i --)
+        for (int j = 0; j < 4; j ++)
+            config_space->adc_filter_taps = taps[3*j + i]; // taps[j][i];
 }
 
 void hw_read_adc_minmax(
@@ -458,17 +494,16 @@ void hw_write_dac_preemph(short taps[3])
 {
     config_space->write_select = 0;
     for (int i = 2; i >= 0; i --)
-    {
         for (int j = 0; j < 4; j ++)
             config_space->dac_preemph_taps = taps[i];
-    }
 }
 
 void hw_write_dac_delay(unsigned int dac_delay, unsigned int preemph_delay)
 {
-    config_space->dac_delay =
-        ((dac_delay + 4) & 0x3ff) |
-        (preemph_delay & 0x3) << 10;
+    LOCK();
+    write_control_bit_field_2(0, 10, dac_delay + 4);
+    write_control_bit_field_2(10, 2, preemph_delay);
+    UNLOCK();
 }
 
 
@@ -561,8 +596,8 @@ void hw_write_buf_select(unsigned int selection)
      * debug data is routed to IQ, the top two bits are the actual selection,
      * and debug is only available on IQ. */
     bool enable_debug = selection == BUF_SELECT_DEBUG;
-    write_control_bit_field(10, 2, enable_debug ? BUF_SELECT_IQ : selection);
-    write_control_bit_field(15, 1, enable_debug);
+    write_control_bit_field_1(10, 2, enable_debug ? BUF_SELECT_IQ : selection);
+    write_control_bit_field_1(15, 1, enable_debug);
     UNLOCK();
 }
 
@@ -964,9 +999,9 @@ void hw_write_trg_arm_raw_phase(void)
     pulse_control_bit(11);
 }
 
-void hw_write_trg_ddr_source(unsigned int source)
+void hw_write_trg_ddr_source(unsigned int source, bool blanking)
 {
-    WRITE_CONTROL_BITS(6, 2, source);
+    WRITE_CONTROL_BITS_2(12, 4, blanking | (source << 1));
 }
 
 int hw_read_trg_raw_phase(void)

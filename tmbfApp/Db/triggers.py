@@ -19,7 +19,7 @@ def TriggerTarget(name, extra_sel = ()):
         SCAN = 'I/O Intr', DESC = '%s status' % name)
 
 # Trigger source selections for the trigger targets.
-TriggerTarget('DDR', ('Postmortem', 'ADC Overflow', 'Seq State'))
+TriggerTarget('DDR', ('Postmortem', 'ADC Overflow', 'Seq State', 'SCLK'))
 TriggerTarget('BUF')
 
 # Sequencer control.

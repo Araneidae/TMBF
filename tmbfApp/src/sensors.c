@@ -613,17 +613,17 @@ static void *sensors_thread(void *context)
 }
 
 
-static bool overflows[OVERFLOW_BIT_COUNT];
+static bool overflows[PULSED_BIT_COUNT];
 
 static void read_overflows(void)
 {
-    const bool read_mask[OVERFLOW_BIT_COUNT] = {
+    const bool read_mask[PULSED_BIT_COUNT] = {
         [OVERFLOW_FIR] = true,
         [OVERFLOW_DAC] = true,
         [OVERFLOW_DAC_COMP] = true,
         [OVERFLOW_ADC_LIMIT] = true,
     };
-    hw_read_overflows(read_mask, overflows);
+    hw_read_pulsed_bits(read_mask, overflows);
 }
 
 

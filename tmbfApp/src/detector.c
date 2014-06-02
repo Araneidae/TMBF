@@ -35,7 +35,7 @@ static int timebase[TUNE_LENGTH];
 static struct epics_interlock *tune_scale_trigger;
 
 /* Overflow status from the last sweep. */
-static bool overflows[OVERFLOW_BIT_COUNT];
+static bool overflows[PULSED_BIT_COUNT];
 
 /* Gain and autogain control.  If autogain is enabled then we'll bump the
  * detector gain up or down where necessary and possible. */
@@ -302,12 +302,12 @@ static void update_sweep_info(
 /* Read out accumulated overflow bits over the last capture. */
 static bool update_overflow(void)
 {
-    const bool read_mask[OVERFLOW_BIT_COUNT] = {
+    const bool read_mask[PULSED_BIT_COUNT] = {
         [OVERFLOW_IQ_FIR] = true,
         [OVERFLOW_IQ_ACC] = true,
         [OVERFLOW_IQ_SCALE] = true,
     };
-    hw_read_overflows(read_mask, overflows);
+    hw_read_pulsed_bits(read_mask, overflows);
     return
         overflows[OVERFLOW_IQ_FIR] ||
         overflows[OVERFLOW_IQ_ACC] ||
