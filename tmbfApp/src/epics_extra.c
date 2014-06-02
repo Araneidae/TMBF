@@ -30,9 +30,9 @@ struct epics_interlock {
 };
 
 #define LOCK_INTERLOCK(interlock) \
-    ASSERT_0(pthread_mutex_lock(&interlock->mutex))
+    ASSERT_0(pthread_mutex_lock(&(interlock)->mutex))
 #define UNLOCK_INTERLOCK(interlock) \
-    ASSERT_0(pthread_mutex_unlock(&interlock->mutex))
+    ASSERT_0(pthread_mutex_unlock(&(interlock)->mutex))
 
 
 /* If EPICS isn't ready yet then we need to block all callers until it is. */
@@ -88,6 +88,31 @@ struct epics_interlock *create_interlock(
 }
 
 
+void wait_for_epics_start(void)
+{
+    /* This is very naughty code.  We fake up a temporary interlock object just
+     * so we can go onto the initialisation list.  Still, it will serve... */
+    struct epics_interlock interlock = { .mutex = PTHREAD_MUTEX_INITIALIZER };
+
+    LOCK_READY();
+    bool lock_needed = !epics_ready;
+    if (lock_needed)
+    {
+        interlock.next = notify_list;
+        notify_list = &interlock;
+        LOCK_INTERLOCK(&interlock);
+    }
+    UNLOCK_READY();
+
+    if(lock_needed)
+    {
+        LOCK_INTERLOCK(&interlock);
+        UNLOCK_INTERLOCK(&interlock);
+        pthread_mutex_destroy(&interlock.mutex);
+    }
+}
+
+
 /* Called during EPICS initialisation so we can detect completion. */
 static void init_hook(initHookState state)
 {
@@ -96,8 +121,15 @@ static void init_hook(initHookState state)
     {
         LOCK_READY();
         epics_ready = true;
-        for ( ; notify_list; notify_list = notify_list->next)
+        while (notify_list)
+        {
+            /* Because of the naughty implementation of wait_for_epics_start()
+             * it's possible that the current head will evaporate as soon as we
+             * touch it, so grab its next pointer first for safety. */
+            struct epics_interlock *next = notify_list->next;
             UNLOCK_INTERLOCK(notify_list);
+            notify_list = next;
+        }
         UNLOCK_READY();
     }
 }
