@@ -76,6 +76,9 @@ def configure_timing_test(tmbf, compensate = False):
     # This is our nominal zero delay for the DAC pre-emphasis
     tmbf.set('DAC:PREEMPH_S', [0, 1<<14, 0])
     tmbf.set('DAC:PREEMPH:DELAY_S', '0 ns')
+    # Similarly reset ADC pre-emphasis filter
+    tmbf.set('ADC:FILTER_S', 4 * [0, 1<<14, 0])
+    tmbf.set('ADC:FILTER:DELAY_S', '0 ns')
 
     # For inputs use internal loopback
     tmbf.set('LOOPBACK_S', 'Loopback')
@@ -89,10 +92,11 @@ def configure_timing_test(tmbf, compensate = False):
     configure.sequencer_enable(tmbf, False)
 
     # We'll be using soft triggering.  Ensure it's in one shot state
+    tmbf.set('TRG:SYNC_S', 'Separate')
     tmbf.set('TRG:DDR:MODE_S', 'One Shot')
     tmbf.set('TRG:BUF:MODE_S', 'One Shot')
-    tmbf.set('TRG:DDR:SEL_S', 'Soft 1')
-    tmbf.set('TRG:BUF:SEL_S', 'Soft 2')
+    tmbf.set('TRG:DDR:SEL_S', 'Soft')
+    tmbf.set('TRG:BUF:SEL_S', 'Soft')
 
     # Reset detector window in case it's been messed with
     tmbf.set('DET:RESET_WIN_S.PROC', 0)
