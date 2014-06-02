@@ -174,6 +174,15 @@ static void stop_target(struct trigger_target *target)
 }
 
 
+/* When changing the trigger source need to stop the trigger because otherwise
+ * the new source won't be processed. */
+static void set_source(struct trigger_target *target, unsigned int value)
+{
+    stop_target(target);
+    target->source = value;
+}
+
+
 /* Called as part of the event polling loop.  The ready flags indicate
  * transition from busy to ready and so represent edge triggered events. */
 static void update_target_status(bool ddr_ready, bool buf_ready, bool seq_ready)
@@ -200,6 +209,14 @@ static void publish_status(const char *name, struct armed_status *status)
     status->status_pv = PUBLISH_READ_VAR_I(bi, name, status->armed);
 }
 
+static bool call_set_source(void *context, const unsigned int *value)
+{
+    LOCK();
+    set_source(context, *value);
+    UNLOCK();
+    return true;
+}
+
 static bool call_arm_target(void *context, const bool *value)
 {
     LOCK();
@@ -223,7 +240,8 @@ static void publish_target(struct trigger_target *target, const char *name)
     (sprintf(buffer, "TRG:%s:%s", name, pv), buffer)
 
     publish_status(FORMAT("STATUS"), &target->status);
-    PUBLISH_WRITE_VAR_P(mbbo,    FORMAT("SEL"),   target->source);
+    PUBLISH(mbbo, FORMAT("SEL"), call_set_source,
+        .context = target, .persist = true);
     PUBLISH_WRITE_VAR_P(bo,      FORMAT("MODE"),  target->auto_rearm);
     PUBLISH(bo, FORMAT("ARM"),   call_arm_target,  .context = target);
     PUBLISH(bo, FORMAT("RESET"), call_stop_target, .context = target);
@@ -288,6 +306,8 @@ static void poll_trigger_phase(void)
  *  - Sequencer state and sequencer ready */
 static void *monitor_events(void *context)
 {
+    wait_for_epics_start();
+
     while (true)
     {
         LOCK();
