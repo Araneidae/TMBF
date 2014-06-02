@@ -6,9 +6,9 @@ from common import *
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Core trigger configuration
 
-def TriggerTarget(name, extra_sel = ()):
+def TriggerTarget(name):
     mbbOut('TRG:%s:SEL' % name, 'Soft 1', 'Soft 2', 'External',
-        DESC = '%s trigger source' % name, *extra_sel)
+        DESC = '%s trigger source' % name)
     boolOut('TRG:%s:MODE' % name, 'One Shot', 'Retrigger',
         DESC = 'Mode select for %s' % name)
     Action('TRG:%s:ARM' % name, DESC = 'Arm or fire %s' % name)
@@ -19,8 +19,38 @@ def TriggerTarget(name, extra_sel = ()):
         SCAN = 'I/O Intr', DESC = '%s status' % name)
 
 # Trigger source selections for the trigger targets.
-TriggerTarget('DDR', ('Postmortem', 'ADC Overflow', 'Seq State', 'SCLK'))
+TriggerTarget('DDR')
 TriggerTarget('BUF')
+
+# External trigger source configuration for DDR trigger.  For each source we
+# have a source enable, a blanking enable, an active status, and a trigger
+# source status.
+set_ddr_ext = Action('TRG:DDR:SET', DESC = 'Update DDR trigger source')
+external_triggers = [
+    ('EXT', 'External'),
+    ('PM', 'Postmortem'),
+    ('ADC', 'Min/max limit'),
+    ('SEQ', 'Sequencer state'),
+    ('SCLK', 'SCLK input')]
+input_status = []
+trigger_status = []
+for name, desc in external_triggers:
+    boolOut('TRG:DDR:%s:EN' % name, 'Ignore', 'Enable', FLNK = set_ddr_ext,
+        DESC = '%s trigger enable' % desc)
+    boolOut('TRG:DDR:%s:BL' % name, 'Off', 'Blanking', FLNK = set_ddr_ext,
+        DESC = '%s blanking' % desc)
+    input_status.append(
+        boolIn('TRG:DDR:%s:IN' % name, 'No', 'Yes',
+            ZSV = 'MINOR', DESC = '%s present' % desc))
+    trigger_status.append(
+        boolIn('TRG:DDR:%s:HIT' % name, 'No', 'Yes',
+            ZSV = 'MINOR', DESC = '%s trigger source' % desc))
+create_fanout('TRG:DDR:FAN',
+    Action('TRG:DDR:IN'), SCAN = '.2 second', *input_status)
+Trigger('TRG:DDR:HIT', *trigger_status)
+
+
+
 
 # Sequencer control.
 boolOut('TRG:SEQ:ENA', 'Disabled', 'Enabled', DESC = 'Sequencer trigger enable')

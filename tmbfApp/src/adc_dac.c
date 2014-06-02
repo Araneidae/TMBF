@@ -99,7 +99,8 @@ static struct epics_record *adc_skew_pv;
 
 static void write_dac_delays(void)
 {
-    hw_write_dac_delay(dac_delay + 3 - adc_skew, preemph_delay);
+    hw_write_dac_delay(dac_delay + 3 - adc_skew);
+    hw_write_dac_filter_delay(preemph_delay);
 }
 
 static void write_dac_delay(unsigned int delay)

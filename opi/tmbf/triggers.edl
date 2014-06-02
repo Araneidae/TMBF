@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 557
-y 103
+x 1921
+y 1
 w 632
 h 345
 font "helvetica-medium-r-18.0"
@@ -1446,5 +1446,28 @@ w 120
 h 16
 lineColor index 14
 fillColor index 0
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 440
+y 264
+w 96
+h 24
+fgColor index 43
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "DDR Triggers"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/ddr_triggers.edl"
+}
 endObjectProperties
 

@@ -38,7 +38,13 @@ enum {
     OVERFLOW_IQ_ACC     = 5,    // Overflow in IQ detector accumulator
     OVERFLOW_IQ_SCALE   = 6,    // Overflow in IQ detector readout scaling
 
-    PULSED_BIT_COUNT = 8
+    TRIGGER_SCLK_IN     = 16,
+    TRIGGER_PM_IN       = 17,
+    TRIGGER_SEQ_IN      = 18,
+    TRIGGER_ADC_IN      = 19,
+    TRIGGER_TRG_IN      = 20,
+
+    PULSED_BIT_COUNT = 24
 };
 void hw_read_pulsed_bits(
     const bool read_bits[PULSED_BIT_COUNT],
@@ -67,6 +73,9 @@ void hw_write_adc_offsets(short offsets[4]);
 /* Writes ADC compensation FIR. */
 void hw_write_adc_filter(short taps[12]);
 
+/* Compensates for group delay of ADC filter. */
+void hw_write_adc_filter_delay(unsigned int delay);
+
 /* Reads ADC minimum and maximum values since last reading. */
 void hw_read_adc_minmax(
     short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN]);
@@ -85,7 +94,7 @@ void hw_write_adc_limit(int limit);
 void hw_write_fir_gain(unsigned int gain);
 
 /* FIR tap coefficients for selected bank.  Taps are signed 18-bit integers. */
-void hw_write_fir_taps(int bank, int taps[]);
+void hw_write_fir_taps(int bank, const int taps[]);
 
 /* Returns the number of coefficients in the FIR filters. */
 int hw_read_fir_length(void);
@@ -101,9 +110,11 @@ void hw_read_dac_minmax(
 /* Output enable. */
 void hw_write_dac_enable(bool enable);
 
-/* Output delay in 2ns steps up to 1023 steps for DAC delay and output delay
- * from 0 to 2 (in 2ns steps) for preemphasis filter. */
-void hw_write_dac_delay(unsigned int dac_delay, unsigned int preemph_delay);
+/* Output delay in 2ns steps up to 1023 steps for DAC delay. */
+void hw_write_dac_delay(unsigned int dac_delay);
+
+/* Preemphasis filter delay from 0 to 2 (in 2ns steps). */
+void hw_write_dac_filter_delay(unsigned int preemph_delay);
 
 /* Pre-emphasis filter. */
 void hw_write_dac_preemph(short taps[3]);
@@ -136,7 +147,8 @@ struct bunch_entry {
 };
 
 /* Writes the selected bunch entries to the selected bank. */
-void hw_write_bun_entry(int bank, struct bunch_entry entries[BUNCHES_PER_TURN]);
+void hw_write_bun_entry(
+    int bank, const struct bunch_entry entries[BUNCHES_PER_TURN]);
 
 /* Enables bunch counter synchronsation. */
 void hw_write_bun_sync(void);
@@ -194,14 +206,14 @@ void hw_write_det_input_select(unsigned int input);
 
 /* If bunch mode enabled selects which bunch will be detected in each of the
  * four concurrent channels. */
-void hw_write_det_bunches(unsigned int bunch[4]);
+void hw_write_det_bunches(const unsigned int bunch[4]);
 
 /* Configures detector gain. */
 void hw_write_det_gain(unsigned int gain);
 
 /* Writes the detector window waveform. */
 #define DET_WINDOW_LENGTH   1024
-void hw_write_det_window(uint16_t window[DET_WINDOW_LENGTH]);
+void hw_write_det_window(const uint16_t window[DET_WINDOW_LENGTH]);
 
 /* Returns measured detector phase delays (relative to a full turn of delay) for
  * ADC and FIR measurements, results are reported in bunches. */
@@ -234,7 +246,7 @@ struct ftun_control {
 };
 
 /* Writes given settings to FTUN. */
-void hw_write_ftun_control(struct ftun_control *control);
+void hw_write_ftun_control(const struct ftun_control *control);
 
 /* Controls whether tune following is enabled. */
 void hw_write_ftun_enable(bool enable);
@@ -316,7 +328,7 @@ struct seq_entry {
 
 /* Rewrites the sequencer table.  All entries must be present. */
 void hw_write_seq_entries(
-    unsigned int bank0, struct seq_entry entries[MAX_SEQUENCER_COUNT]);
+    unsigned int bank0, const struct seq_entry entries[MAX_SEQUENCER_COUNT]);
 
 /* Programs sequencer program counter.  The sequencer will run the next time the
  * buffer is armed. */
@@ -337,6 +349,8 @@ void hw_write_seq_reset(void);
 
 /* * * * * * * * * * * * */
 /* TRG: Trigger control. */
+
+#define DDR_SOURCE_COUNT    5       // 5 DDR trigger sources available
 
 /* Simultaneously arm one or both of DDR and BUF. */
 void hw_write_trg_arm(bool ddr, bool buf);
@@ -363,7 +377,13 @@ void hw_write_trg_blanking_source(unsigned int source);
 void hw_write_trg_arm_raw_phase(void);
 
 /* Configure DDR trigger source. */
-void hw_write_trg_ddr_source(unsigned int source, bool blanking);
+void hw_write_trg_ddr_source(const bool source[DDR_SOURCE_COUNT]);
+
+/* Configure which trigger sources respect the blanking window. */
+void hw_write_trg_ddr_blanking(const bool blanking[DDR_SOURCE_COUNT]);
+
+/* Reads back which trigger sources were responsible for last trigger. */
+void hw_read_trg_ddr_source(bool source[DDR_SOURCE_COUNT]);
 
 /* Returns raw phase bits from trigger. */
 int hw_read_trg_raw_phase(void);

@@ -31,11 +31,7 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 enum trigger_source {
     TRIG_SOURCE_SOFT1,
     TRIG_SOURCE_SOFT2,
-    TRIG_SOURCE_EXTERNAL,   // Must be first external source
-    TRIG_SOURCE_PM,
-    TRIG_SOURCE_ADC,
-    TRIG_SOURCE_SEQ,
-    TRIG_SOURCE_SCLK
+    TRIG_SOURCE_EXTERNAL
 };
 
 
@@ -127,7 +123,7 @@ static void arm_target(struct trigger_target *target, bool auto_arm)
 {
     /* Work out which targets we want to fire. */
     enum trigger_source source = target->source;
-    bool external = source >= TRIG_SOURCE_EXTERNAL;
+    bool external = source == TRIG_SOURCE_EXTERNAL;
     bool arm_ddr = check_arm_target(&ddr_target, source, auto_arm);
     bool arm_buf = check_arm_target(&buf_target, source, auto_arm);
 
@@ -144,10 +140,6 @@ static void arm_target(struct trigger_target *target, bool auto_arm)
     }
     else
     {
-        /* Configure DDR source if appropriate. */
-        if (arm_ddr  &&  external)
-            hw_write_trg_ddr_source(source - TRIG_SOURCE_EXTERNAL, false);
-
         /* Prepare the targets. */
         if (arm_ddr)
             do_arm_ddr();
@@ -196,6 +188,83 @@ static void update_target_status(bool ddr_ready, bool buf_ready, bool seq_ready)
     /* Trigger rearming as appropriate. */
     if (ddr_ready)  arm_target(&ddr_target, true);
     if (buf_ready)  arm_target(&buf_target, true);
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* DDR external trigger source control and monitoring. */
+
+/* Configured DDR trigger source enables. */
+static bool ddr_trigger_source[DDR_SOURCE_COUNT];
+/* Blanking enables for each trigger source. */
+static bool ddr_trigger_blanking[DDR_SOURCE_COUNT];
+/* Polled input status for each trigger source. */
+static bool ddr_trigger_in[DDR_SOURCE_COUNT];
+/* Source of last trigger when DDR trigger fired. */
+static bool ddr_trigger_hit[DDR_SOURCE_COUNT];
+
+/* Used to update trigger source on a trigger hit. */
+static struct epics_interlock *ddr_hit_update;
+
+
+/* Called each time any of the configuration bits is changed. */
+static void set_ddr_trigger_source(void)
+{
+    hw_write_trg_ddr_source(ddr_trigger_source);
+    hw_write_trg_ddr_blanking(ddr_trigger_blanking);
+}
+
+/* Polled to read the state of the trigger sources. */
+static void update_ddr_trigger_in(void)
+{
+    static int const trigger_bits[DDR_SOURCE_COUNT] = {
+        TRIGGER_TRG_IN,
+        TRIGGER_PM_IN,
+        TRIGGER_ADC_IN,
+        TRIGGER_SEQ_IN,
+        TRIGGER_SCLK_IN,
+    };
+    bool pulsed_bits[PULSED_BIT_COUNT];
+    bool read_bits[PULSED_BIT_COUNT] = { };
+    for (int i = 0; i < DDR_SOURCE_COUNT; i ++)
+        read_bits[trigger_bits[i]] = true;
+    hw_read_pulsed_bits(read_bits, pulsed_bits);
+
+    interlock_wait(ddr_hit_update);
+    for (int i = 0; i < DDR_SOURCE_COUNT; i ++)
+        ddr_trigger_in[i] = pulsed_bits[trigger_bits[i]];
+    interlock_signal(ddr_hit_update, NULL);
+}
+
+static void update_ddr_trigger_hit(void)
+{
+    hw_read_trg_ddr_source(ddr_trigger_hit);
+}
+
+static void publish_ddr_external(void)
+{
+    /* These five trigger names need to match the five trigger sources defined
+     * in triggers.py and in the hardware interface. */
+    static const char *const names[DDR_SOURCE_COUNT] = {
+        "EXT", "PM", "ADC", "SEQ", "SCLK" };
+
+    for (int ix = 0; ix < DDR_SOURCE_COUNT; ix ++)
+    {
+        char buffer[40];
+#define FORMAT(field) \
+        (sprintf(buffer, "TRG:DDR:%s:%s", names[ix], field), buffer)
+
+        PUBLISH_WRITE_VAR_P(bo, FORMAT("EN"), ddr_trigger_source[ix]);
+        PUBLISH_WRITE_VAR_P(bo, FORMAT("BL"), ddr_trigger_blanking[ix]);
+        PUBLISH_READ_VAR(bi, FORMAT("IN"), ddr_trigger_in[ix]);
+        PUBLISH_READ_VAR(bi, FORMAT("HIT"), ddr_trigger_hit[ix]);
+#undef FORMAT
+    }
+
+    PUBLISH_ACTION("TRG:DDR:SET", set_ddr_trigger_source);
+    PUBLISH_ACTION("TRG:DDR:IN", update_ddr_trigger_in);
+    ddr_hit_update = create_interlock(
+        "TRG:DDR:HIT:TRIG", "TRG:DDR:HIT:DONE", false);
 }
 
 
@@ -255,6 +324,7 @@ static void publish_targets(void)
 {
     publish_target(&ddr_target, "DDR");
     PUBLISH_WRITER_P(ulongout, "TRG:DDR:DELAY", hw_write_trg_ddr_delay);
+    publish_ddr_external();
 
     publish_target(&buf_target, "BUF");
     PUBLISH_WRITER_P(ulongout, "TRG:BUF:DELAY", hw_write_trg_buf_delay);
@@ -322,6 +392,7 @@ static void *monitor_events(void *context)
         /* Allow all the corresponding targets to be processed. */
         if (ddr_ready)
         {
+            update_ddr_trigger_hit();
             set_ddr_offset(ddr_offset);
             process_ddr_buffer(!ddr_target.auto_rearm);
         }

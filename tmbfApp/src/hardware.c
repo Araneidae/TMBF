@@ -285,13 +285,6 @@ static void write_control_bit_field_1(
         &config_space->control, &control_field_1, start, bits, value);
 }
 
-static void write_control_bit_field_2(
-    unsigned int start, unsigned int bits, uint32_t value)
-{
-    write_control_bit_field(
-        &config_space->control2, &control_field_2, start, bits, value);
-}
-
 /* Writes mask to the pulse register.  This generates simultaneous pulse events
  * for all selected bits. */
 static void pulse_mask(uint32_t mask)
@@ -307,7 +300,8 @@ static void pulse_control_bit(unsigned int bit)
 
 #define WRITE_CONTROL_BITS(start, length, value) \
     LOCK(); \
-    write_control_bit_field_1(start, length, value); \
+    write_control_bit_field( \
+        &config_space->control, &control_field_1, start, length, value); \
     UNLOCK()
 
 #define WRITE_CONTROL_BITS_2(start, length, value) \
@@ -363,22 +357,31 @@ int hw_read_version(void)
 }
 
 
+static uint32_t bool_array_to_bits(size_t count, const bool array[])
+{
+    uint32_t result = 0;
+    for (size_t i = 0; i < count; i ++)
+        result |= array[i] << i;
+    return result;
+}
+
+static void bits_to_bool_array(size_t count, bool array[], uint32_t bits)
+{
+    for (size_t i = 0; i < count; i ++)
+        array[i] = (bits >> i) & 1;
+}
+
+
 /* This routine is a bit more involved that most because we want to read a
  * programmable set of bits: all the bits we set are reset after being read. */
 void hw_read_pulsed_bits(
     const bool read_bits[PULSED_BIT_COUNT],
     bool pulsed_bits[PULSED_BIT_COUNT])
 {
-    uint32_t read_mask = 0;
-    for (int i = 0; i < PULSED_BIT_COUNT; i ++)
-        read_mask |= read_bits[i] << i;
-
-    /* Latch the selected overflow bits and read back the associated status. */
+    uint32_t read_mask = bool_array_to_bits(PULSED_BIT_COUNT, read_bits);
     config_space->latch_pulsed = read_mask;
-    uint32_t status = config_space->latch_pulsed_r;
-
-    for (int i = 0; i < PULSED_BIT_COUNT; i ++)
-        pulsed_bits[i] = (status >> i) & 1;
+    bits_to_bool_array(
+        PULSED_BIT_COUNT, pulsed_bits, config_space->latch_pulsed_r);
 }
 
 
@@ -434,6 +437,11 @@ void hw_write_adc_filter(short taps[12])
             config_space->adc_filter_taps = taps[3*j + i]; // taps[j][i];
 }
 
+void hw_write_adc_filter_delay(unsigned int delay)
+{
+    WRITE_CONTROL_BITS_2(22, 2, delay);
+}
+
 void hw_read_adc_minmax(
     short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN])
 {
@@ -461,7 +469,7 @@ void hw_write_fir_gain(unsigned int gain)
     WRITE_CONTROL_BITS(20, 3, gain);
 }
 
-void hw_write_fir_taps(int bank, int taps[])
+void hw_write_fir_taps(int bank, const int taps[])
 {
     LOCK();
     config_space->write_select = (uint32_t) bank;
@@ -498,12 +506,14 @@ void hw_write_dac_preemph(short taps[3])
             config_space->dac_preemph_taps = taps[i];
 }
 
-void hw_write_dac_delay(unsigned int dac_delay, unsigned int preemph_delay)
+void hw_write_dac_delay(unsigned int dac_delay)
 {
-    LOCK();
-    write_control_bit_field_2(0, 10, dac_delay + 4);
-    write_control_bit_field_2(10, 2, preemph_delay);
-    UNLOCK();
+    WRITE_CONTROL_BITS_2(0, 10, dac_delay + 4);
+}
+
+void hw_write_dac_filter_delay(unsigned int preemph_delay)
+{
+    WRITE_CONTROL_BITS_2(10, 2, preemph_delay);
 }
 
 
@@ -546,7 +556,8 @@ bool hw_read_ddr_status(int *offset)
 /* * * * * * * * * * * * * * * * * * * * */
 /* BUN: Bunch by Bunch Banked Selection */
 
-void hw_write_bun_entry(int bank, struct bunch_entry entries[BUNCHES_PER_TURN])
+void hw_write_bun_entry(
+    int bank, const struct bunch_entry entries[BUNCHES_PER_TURN])
 {
     LOCK();
     config_space->write_select = (uint32_t) bank;
@@ -708,7 +719,7 @@ void hw_write_det_input_select(unsigned int input)
     update_det_bunch_select();
 }
 
-void hw_write_det_bunches(unsigned int bunch[4])
+void hw_write_det_bunches(const unsigned int bunch[4])
 {
     memcpy(det_bunches, bunch, sizeof(det_bunches));
     update_det_bunch_select();
@@ -719,7 +730,7 @@ void hw_write_det_gain(unsigned int gain)
     WRITE_CONTROL_BITS(24, 3, gain);
 }
 
-void hw_write_det_window(uint16_t window[DET_WINDOW_LENGTH])
+void hw_write_det_window(const uint16_t window[DET_WINDOW_LENGTH])
 {
     LOCK();
     config_space->write_select = 1;    // Select sequencer window
@@ -738,7 +749,7 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay)
 /* * * * * * * * * * * * * * * * * * * * * */
 /* FTUN: Fast Tune Following and Detector  */
 
-void hw_write_ftun_control(struct ftun_control *control)
+void hw_write_ftun_control(const struct ftun_control *control)
 {
     int offset = control->input_select ? FTUN_FIR_OFFSET : FTUN_ADC_OFFSET;
     int channel = control->bunch & 3;
@@ -884,7 +895,7 @@ void hw_read_ftun_delays(int *adc_delay, int *fir_delay)
 /* SEQ: Programmed Bunch and Sweep Control */
 
 void hw_write_seq_entries(
-    unsigned int bank0, struct seq_entry entries[MAX_SEQUENCER_COUNT])
+    unsigned int bank0, const struct seq_entry entries[MAX_SEQUENCER_COUNT])
 {
     LOCK();
     config_space->write_select = 0;    // Select seq state file
@@ -903,7 +914,7 @@ void hw_write_seq_entries(
 
     for (int i = 0; i < MAX_SEQUENCER_COUNT; i ++)
     {
-        struct seq_entry *entry = &entries[i];
+        const struct seq_entry *entry = &entries[i];
         config_space->sequencer_write = entry->start_freq;
         config_space->sequencer_write = entry->delta_freq;
         config_space->sequencer_write = entry->dwell_time - 1;
@@ -999,14 +1010,24 @@ void hw_write_trg_arm_raw_phase(void)
     pulse_control_bit(11);
 }
 
-void hw_write_trg_ddr_source(unsigned int source, bool blanking)
-{
-    WRITE_CONTROL_BITS_2(12, 4, blanking | (source << 1));
-}
-
 int hw_read_trg_raw_phase(void)
 {
     return READ_STATUS_BITS(0, 4);
+}
+
+void hw_write_trg_ddr_source(const bool source[DDR_SOURCE_COUNT])
+{
+    WRITE_CONTROL_BITS_2(12, 5, bool_array_to_bits(DDR_SOURCE_COUNT, source));
+}
+
+void hw_write_trg_ddr_blanking(const bool blanking[DDR_SOURCE_COUNT])
+{
+    WRITE_CONTROL_BITS_2(17, 5, bool_array_to_bits(DDR_SOURCE_COUNT, blanking));
+}
+
+void hw_read_trg_ddr_source(bool source[DDR_SOURCE_COUNT])
+{
+    bits_to_bool_array(DDR_SOURCE_COUNT, source, READ_STATUS_BITS(8, 5));
 }
 
 
