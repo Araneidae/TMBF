@@ -70,7 +70,7 @@ symbol1 {
   0 "out"
 }
 PV1 {
-  0 "LOC\\out=e:0,Off,FIR,NCO,FIR+NCO,Sweep,Sw+FIR,Sw+NCO,Sw+FIR+NCO"
+  0 "LOC\\out=e:0,Off,FIR,NCO,FIR+NCO,Sweep,Sw+FIR,Sw+NCO,Sw+NCO+FIR"
 }
 symbol2 {
   0 "fir"

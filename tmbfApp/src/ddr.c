@@ -58,6 +58,7 @@ static volatile struct history_buffer_fifo *fifo;
 
 static uint32_t ddr_trigger_offset;
 
+#define PURGE_FIFO_LIMIT    65536
 
 /* Ensures data transfer FIFO is empty on startup. */
 static void purge_read_buffer(void)
@@ -65,7 +66,7 @@ static void purge_read_buffer(void)
     unsigned int fifo_size = history_buffer->transfer_status & 0x7FF;
     if (fifo_size > 0)
     {
-        printf("Purging read FIFO: ");
+        printf("Purging read FIFO: %u\n", fifo_size);
         unsigned int total_read = 0;
         do {
             for (unsigned int i = 0; i < fifo_size; i ++)
@@ -75,7 +76,7 @@ static void purge_read_buffer(void)
             }
             total_read += fifo_size;
             fifo_size = history_buffer->transfer_status & 0x7FF;
-        } while (fifo_size > 0);
+        } while (fifo_size > 0  &&  total_read < PURGE_FIFO_LIMIT);
         printf("%u atoms discarded\n", total_read);
     }
 }

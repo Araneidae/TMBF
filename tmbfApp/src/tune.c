@@ -878,7 +878,7 @@ static void set_bunch_control(void)
     WRITE_NAMED_RECORD_WF(char, "BUN:1:FIRWF_S", fir_wf, BUNCHES_PER_TURN);
     WRITE_NAMED_RECORD_WF(int,  "BUN:1:GAINWF_S", gain_wf, BUNCHES_PER_TURN);
 
-    bool single_bunch_mode = READ_NAMED_RECORD_VALUE(bo, "DET:MODE");
+    bool single_bunch_mode = READ_NAMED_RECORD(bo, "DET:MODE");
 
     char out_wf[BUNCHES_PER_TURN];
     if (single_bunch_mode)

@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1246
-y 339
+x 2787
+y 589
 w 456
-h 450
+h 474
 font "helvetica-medium-r-8.0"
 ctlFont "helvetica-medium-r-8.0"
 btnFont "helvetica-medium-r-8.0"
@@ -50,7 +50,7 @@ release 0
 x 232
 y 48
 w 216
-h 88
+h 112
 lineColor index 14
 fill
 fillColor index 4
@@ -61,7 +61,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 0
 y 0
 w 456
@@ -82,7 +82,7 @@ major 4
 minor 1
 release 0
 x 392
-y 384
+y 408
 w 56
 h 24
 fgColor index 46
@@ -98,7 +98,7 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 2
+minor 3
 release 0
 x 4
 y 4
@@ -141,7 +141,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 232
 y 40
 w 120
@@ -160,7 +160,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 240
 y 72
 w 31
@@ -180,7 +180,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 240
 y 104
 w 40
@@ -237,11 +237,11 @@ endObjectProperties
 object xyGraphClass
 beginObjectProperties
 major 4
-minor 6
+minor 8
 release 0
 # Geometry
 x 8
-y 144
+y 168
 w 440
 h 200
 # Appearance
@@ -288,10 +288,10 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
 x 8
-y 384
+y 408
 w 80
 h 24
 fgColor index 43
@@ -320,10 +320,10 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 2
+minor 3
 release 0
 x 8
-y 416
+y 440
 w 136
 h 24
 fgColor index 25
@@ -342,10 +342,10 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 2
+minor 3
 release 0
 x 312
-y 416
+y 440
 w 136
 h 24
 fgColor index 25
@@ -364,10 +364,10 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 2
+minor 3
 release 0
 x 160
-y 416
+y 440
 w 136
 h 24
 fgColor index 25
@@ -387,9 +387,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 96
-y 384
+y 408
 w 47
 h 21
 font "helvetica-medium-r-18.0"
@@ -406,10 +406,10 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 152
-y 384
+y 408
 w 72
 h 21
 controlPv "$(device):TUNE:TUNE"
@@ -432,9 +432,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 240
-y 384
+y 408
 w 55
 h 21
 font "helvetica-medium-r-18.0"
@@ -451,10 +451,10 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 304
-y 384
+y 408
 w 72
 h 21
 controlPv "$(device):TUNE:PHASE"
@@ -477,10 +477,10 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
 x 96
-y 384
+y 408
 w 136
 h 24
 fgColor index 14
@@ -500,10 +500,10 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
 x 240
-y 384
+y 408
 w 136
 h 24
 fgColor index 14
@@ -523,7 +523,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 400
 y 80
@@ -550,7 +550,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 40
 y 64
@@ -591,7 +591,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 40
 y 88
@@ -649,7 +649,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 40
 y 112
@@ -674,7 +674,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 40
 w 120
@@ -706,7 +706,7 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
 x 16
 y 112
@@ -732,7 +732,7 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
 x 16
 y 64
@@ -758,7 +758,7 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
 x 16
 y 88
@@ -785,9 +785,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
-y 352
+y 376
 w 440
 h 24
 font "helvetica-bold-r-24.0"
@@ -798,5 +798,53 @@ useDisplayBg
 value {
   "Target tune phase is +-180 deg"
 }
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 240
+y 136
+w 200
+h 16
+controlPv "$(device):BUN:MODE"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 8
+y 144
+w 216
+h 16
+controlPv "$(device):TUNE:MODE"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
 endObjectProperties
 

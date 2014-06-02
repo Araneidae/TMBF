@@ -37,10 +37,10 @@ struct bunch_bank {
 
 /* Helper routine: counts number of instances of given value, not all set,
  * returns index of last non-equal value. */
-static int count_value(const int *wf, int value, int *diff_ix)
+static int count_value(const int *wf, int value, unsigned int *diff_ix)
 {
     int count = 0;
-    for (int i = 0; i < BUNCHES_PER_TURN; i ++)
+    for (unsigned int i = 0; i < BUNCHES_PER_TURN; i ++)
         if (wf[i] == value)
             count += 1;
         else
@@ -55,30 +55,30 @@ static int count_value(const int *wf, int value, int *diff_ix)
  *  3.  Something else: "It's complicated" */
 enum complexity { ALL_SAME, ALL_BUT_ONE, COMPLICATED };
 static enum complexity assess_complexity(
-    const int wf[BUNCHES_PER_TURN], int *value, int *other, int *other_ix)
+    const int wf[BUNCHES_PER_TURN],
+    int *value, int *other, unsigned int *other_ix)
 {
-    *other_ix = 0;
     *value = wf[0];
-    int count = count_value(wf, *value, other_ix);
-    if (count == BUNCHES_PER_TURN)
-        return ALL_SAME;
-    else if (count == 1)
+    *other_ix = 0;
+    *other = 0;
+    switch (count_value(wf, *value, other_ix))
     {
-        /* Need to check whether all rest are the same. */
-        *value = wf[1];
-        *other = wf[0];
-        if (count_value(wf, *value, other_ix) == BUNCHES_PER_TURN-1)
+        case BUNCHES_PER_TURN:
+            return ALL_SAME;
+        case 1:
+            /* Need to check whether all rest are the same. */
+            *value = wf[1];
+            *other = wf[0];
+            if (count_value(wf, *value, other_ix) == BUNCHES_PER_TURN-1)
+                return ALL_BUT_ONE;
+            else
+                return COMPLICATED;
+        case BUNCHES_PER_TURN-1:
+            *other = wf[*other_ix];
             return ALL_BUT_ONE;
-        else
+        default:
             return COMPLICATED;
     }
-    else if (count == BUNCHES_PER_TURN-1)
-    {
-        *other = wf[*other_ix];
-        return ALL_BUT_ONE;
-    }
-    else
-        return COMPLICATED;
 }
 
 
@@ -86,7 +86,8 @@ static void update_status_core(
     const char *name, const int *wf, EPICS_STRING *status,
     void (*render)(int, char[]))
 {
-    int value, other = 0, other_ix;
+    int value, other;
+    unsigned int other_ix;
     enum complexity complexity =
         assess_complexity(wf, &value, &other, &other_ix);
     char value_name[20], other_name[20];
@@ -99,7 +100,7 @@ static void update_status_core(
             snprintf(status->s, 40, "%s", value_name);
             break;
         case ALL_BUT_ONE:
-            snprintf(status->s, 40, "%s (%s @%d)",
+            snprintf(status->s, 40, "%s (%s @%u)",
                 value_name, other_name, other_ix);
             break;
         case COMPLICATED:
@@ -109,7 +110,8 @@ static void update_status_core(
 }
 
 
-/* Name rendering methods for calls to update_status_core below. */
+/* Name rendering methods for calls to update_status_core above.  These three
+ * functions are invoked in the macro DEFINE_WRITE_WF below. */
 
 static void fir_name(int fir, char result[])
 {
@@ -120,11 +122,9 @@ static void out_name(int out, char result[])
 {
     const char *out_names[] = {
         "Off",      "FIR",      "NCO",      "NCO+FIR",
-        "Sweep",    "Sw+FIR",   "Sw+NCO",   "S+F+N" };
-    if (0 <= out  &&  out < 8)
-        sprintf(result, "%s", out_names[out]);
-    else
-        sprintf(result, "Error");
+        "Sweep",    "Sw+FIR",   "Sw+NCO",   "Sw+N+F" };
+    ASSERT_OK(0 <= out  &&  out < (int) ARRAY_SIZE(out_names));
+    sprintf(result, "%s", out_names[out]);
 }
 
 static void gain_name(int gain, char result[])
@@ -207,6 +207,47 @@ static void publish_bank_control(void)
         publish_bank(i, &banks[i]);
 }
 
+
+const int *read_bank_out_wf(int bank)
+{
+    return banks[bank].out_wf;
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Feedback mode calculation. */
+
+
+static EPICS_STRING read_feedback_mode(void)
+{
+    int current_bank = READ_NAMED_RECORD(mbbo, "SEQ:0:BANK");
+    struct bunch_bank *bank = &banks[current_bank];
+
+    /* Evaluate DAC out and FIR waveforms. */
+    bool all_off = true;
+    bool all_fir = true;
+    bool same_fir = true;
+    for (int i = 0; i < BUNCHES_PER_TURN; i ++)
+    {
+        if ((bank->out_wf[i] & DAC_OUT_FIR) != 0)
+            all_off = false;
+        if (bank->out_wf[i] != DAC_OUT_FIR)
+            all_fir = false;
+        if (bank->fir_wf[i] != bank->fir_wf[0])
+            same_fir = false;
+    }
+
+    EPICS_STRING result;
+    if (all_off)
+        snprintf(result.s, 40, "Off");
+    else if (!all_fir)
+        snprintf(result.s, 40, "Mixed mode");
+    else if (same_fir)
+        snprintf(result.s, 40, "On, FIR: #%d", bank->fir_wf[0]);
+    else
+        snprintf(result.s, 40, "On, FIR: mixed");
+    return result;
+}
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -376,6 +417,8 @@ static bool publish_bunch_sync(void)
     sync_interlock = create_interlock("BUN:SYNC:TRIG", "BUN:SYNC:DONE", false);
     PUBLISH_READ_VAR(longin, "BUN:PHASE", sync_phase);
     PUBLISH_READ_VAR(mbbi, "BUN:STATUS", sync_status);
+
+    PUBLISH_READER(stringin, "BUN:MODE", read_feedback_mode);
 
     pthread_t thread_id;
     return

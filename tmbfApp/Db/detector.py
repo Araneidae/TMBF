@@ -65,3 +65,6 @@ boolOut('DET:RESET_WIN', FLNK = det_window, PINI = 'YES',
 # Total loop delay in turns.
 aOut('DET:LOOP:ADC',
     EGU = 'turns', PREC = 1, DESC = 'Closed loop delay in turns')
+
+
+stringIn('TUNE:MODE', SCAN = '1 second', DESC = 'Tune mode')

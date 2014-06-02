@@ -413,8 +413,9 @@ static bool record_to_dbaddr(
 {
     return
         TEST_OK_(record->record_type == record_type,
-            "%s is %s, not %s", record->key,
-            get_type_name(record->record_type), get_type_name(record_type))  &&
+            "%s is %s (%d), not %s (%d)", record->key,
+            get_type_name(record->record_type), record->record_type,
+            get_type_name(record_type), record_type)  &&
         TEST_OK_(length <= record->max_length, "Length request too long")  &&
 
         // The writing API needs a dbAddr to describe the target

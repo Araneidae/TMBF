@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1121
-y 352
+x 2786
+y 588
 w 415
-h 393
+h 408
 font "helvetica-medium-r-8.0"
 ctlFont "helvetica-medium-r-8.0"
 btnFont "helvetica-medium-r-8.0"
@@ -33,7 +33,7 @@ major 4
 minor 0
 release 0
 x 8
-y 152
+y 168
 w 400
 h 168
 lineColor index 14
@@ -67,7 +67,7 @@ major 4
 minor 1
 release 0
 x 352
-y 328
+y 344
 w 56
 h 24
 fgColor index 46
@@ -109,7 +109,7 @@ major 4
 minor 4
 release 0
 x 8
-y 80
+y 96
 w 72
 h 24
 fgColor index 43
@@ -132,7 +132,7 @@ major 4
 minor 4
 release 0
 x 168
-y 112
+y 128
 w 72
 h 24
 fgColor index 43
@@ -155,7 +155,7 @@ major 4
 minor 3
 release 0
 x 8
-y 360
+y 376
 w 128
 h 24
 fgColor index 25
@@ -177,7 +177,7 @@ major 4
 minor 3
 release 0
 x 280
-y 360
+y 376
 w 128
 h 24
 fgColor index 25
@@ -199,7 +199,7 @@ major 4
 minor 4
 release 0
 x 8
-y 328
+y 344
 w 64
 h 24
 fgColor index 43
@@ -231,7 +231,7 @@ major 4
 minor 3
 release 0
 x 144
-y 360
+y 376
 w 128
 h 24
 fgColor index 25
@@ -297,7 +297,7 @@ major 4
 minor 4
 release 0
 x 8
-y 112
+y 128
 w 72
 h 24
 fgColor index 43
@@ -320,7 +320,7 @@ major 4
 minor 4
 release 0
 x 168
-y 80
+y 96
 w 72
 h 24
 fgColor index 43
@@ -343,7 +343,7 @@ major 4
 minor 4
 release 0
 x 328
-y 80
+y 96
 w 72
 h 24
 fgColor index 43
@@ -366,7 +366,7 @@ major 4
 minor 4
 release 0
 x 88
-y 80
+y 96
 w 72
 h 24
 fgColor index 43
@@ -389,7 +389,7 @@ major 4
 minor 4
 release 0
 x 88
-y 112
+y 128
 w 72
 h 24
 fgColor index 43
@@ -411,8 +411,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 96
-y 56
+x 256
+y 40
 w 64
 h 14
 controlPv "$(device):FPGAVER"
@@ -435,8 +435,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 8
-y 56
+x 168
+y 40
 w 82
 h 14
 font "helvetica-medium-r-12.0"
@@ -456,7 +456,7 @@ major 4
 minor 0
 release 0
 x 16
-y 216
+y 232
 w 16
 h 16
 lineColor index 14
@@ -473,7 +473,7 @@ major 4
 minor 0
 release 0
 x 16
-y 240
+y 256
 w 16
 h 16
 lineColor index 14
@@ -490,7 +490,7 @@ major 4
 minor 6
 release 0
 x 40
-y 216
+y 232
 w 184
 h 14
 controlPv "$(device):SE:OVF:FIR.DESC"
@@ -514,7 +514,7 @@ major 4
 minor 6
 release 0
 x 40
-y 240
+y 256
 w 184
 h 16
 controlPv "$(device):SE:OVF:DAC.DESC"
@@ -538,7 +538,7 @@ major 4
 minor 6
 release 0
 x 40
-y 296
+y 312
 w 184
 h 16
 controlPv "$(device):SE:OVF.DESC"
@@ -562,7 +562,7 @@ major 4
 minor 0
 release 0
 x 16
-y 296
+y 312
 w 16
 h 16
 lineColor index 14
@@ -579,7 +579,7 @@ major 4
 minor 6
 release 0
 x 40
-y 264
+y 280
 w 184
 h 16
 controlPv "$(device):SE:OVF:COMP.DESC"
@@ -603,7 +603,7 @@ major 4
 minor 0
 release 0
 x 16
-y 264
+y 280
 w 16
 h 16
 lineColor index 14
@@ -620,7 +620,7 @@ major 4
 minor 0
 release 0
 x 208
-y 328
+y 344
 w 72
 h 24
 fgColor index 14
@@ -640,7 +640,7 @@ major 4
 minor 1
 release 1
 x 96
-y 336
+y 352
 w 105
 h 16
 font "helvetica-bold-r-14.0"
@@ -660,7 +660,7 @@ major 4
 minor 1
 release 1
 x 8
-y 144
+y 160
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -679,7 +679,7 @@ major 4
 minor 0
 release 0
 x 8
-y 144
+y 160
 w 120
 h 16
 lineColor index 14
@@ -710,7 +710,7 @@ major 4
 minor 0
 release 0
 x 200
-y 192
+y 208
 w 16
 h 16
 lineColor index 14
@@ -727,7 +727,7 @@ major 4
 minor 6
 release 0
 x 224
-y 192
+y 208
 w 176
 h 16
 controlPv "$(device):DET:OVF:ACC.DESC"
@@ -751,7 +751,7 @@ major 4
 minor 6
 release 0
 x 224
-y 296
+y 312
 w 176
 h 16
 controlPv "$(device):DET:OVF.DESC"
@@ -775,7 +775,7 @@ major 4
 minor 0
 release 0
 x 200
-y 296
+y 312
 w 16
 h 16
 lineColor index 14
@@ -792,7 +792,7 @@ major 4
 minor 6
 release 0
 x 224
-y 216
+y 232
 w 176
 h 16
 controlPv "$(device):DET:OVF:IQ.DESC"
@@ -816,7 +816,7 @@ major 4
 minor 0
 release 0
 x 200
-y 216
+y 232
 w 16
 h 16
 lineColor index 14
@@ -833,7 +833,7 @@ major 4
 minor 0
 release 1
 x 16
-y 288
+y 304
 w 384
 h 0
 lineColor index 9
@@ -844,8 +844,8 @@ xPoints {
   1 400
 }
 yPoints {
-  0 288
-  1 288
+  0 304
+  1 304
 }
 endObjectProperties
 
@@ -856,7 +856,7 @@ major 4
 minor 4
 release 0
 x 248
-y 80
+y 96
 w 72
 h 24
 fgColor index 43
@@ -879,7 +879,7 @@ major 4
 minor 4
 release 0
 x 328
-y 112
+y 128
 w 72
 h 24
 fgColor index 43
@@ -902,7 +902,7 @@ major 4
 minor 6
 release 0
 x 224
-y 168
+y 184
 w 176
 h 14
 controlPv "$(device):DET:OVF:INP.DESC"
@@ -926,7 +926,7 @@ major 4
 minor 0
 release 0
 x 200
-y 168
+y 184
 w 16
 h 16
 lineColor index 14
@@ -943,7 +943,7 @@ major 4
 minor 4
 release 0
 x 248
-y 112
+y 128
 w 72
 h 24
 fgColor index 43
@@ -966,7 +966,7 @@ major 4
 minor 6
 release 0
 x 40
-y 168
+y 184
 w 184
 h 14
 controlPv "$(device):SE:OVF:ADCIN.DESC"
@@ -990,7 +990,7 @@ major 4
 minor 0
 release 0
 x 16
-y 168
+y 184
 w 16
 h 16
 lineColor index 14
@@ -1027,7 +1027,7 @@ major 4
 minor 6
 release 0
 x 40
-y 192
+y 208
 w 184
 h 14
 controlPv "$(device):SE:OVF:ADCCOMP.DESC"
@@ -1051,7 +1051,7 @@ major 4
 minor 0
 release 0
 x 16
-y 192
+y 208
 w 16
 h 16
 lineColor index 14
@@ -1059,5 +1059,93 @@ fill
 fillColor index 16
 fillAlarm
 alarmPv "$(device):SE:OVF:ADCCOMP"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 56
+w 59
+h 14
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Feedback:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 80
+y 56
+w 176
+h 16
+controlPv "$(device):BUN:MODE"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 80
+y 72
+w 176
+h 14
+controlPv "$(device):TUNE:MODE"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 72
+w 65
+h 14
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Tune mode:"
+}
+autoSize
 endObjectProperties
 

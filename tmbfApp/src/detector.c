@@ -17,6 +17,7 @@
 #include "sequencer.h"
 #include "numeric.h"
 #include "tune.h"
+#include "bunch_select.h"
 
 #include "detector.h"
 
@@ -403,6 +404,85 @@ static void reset_detector_window(void)
 }
 
 
+static const char *tune_sweep_state(
+    bool single_bunch, int bunch, bool *sweep_ok)
+{
+    int sweep_bank = READ_NAMED_RECORD(mbbo, "SEQ:1:BANK");
+    const int *out_wf = read_bank_out_wf(sweep_bank);
+
+    /* Check whether the configured bank is performing sweeps. */
+    bool any_sweep = false;
+    bool full_sweep = true;
+    bool pure_sweep = true;
+    for (int i = 0; i < BUNCHES_PER_TURN; i ++)
+    {
+        /* Ignore bunch state for bunches outside of detector. */
+        if (!single_bunch  ||  i == bunch)
+        {
+            if (out_wf[i] & DAC_OUT_SWEEP)
+                any_sweep = true;
+            else
+                full_sweep = false;
+            if (out_wf[i] != DAC_OUT_SWEEP)
+                pure_sweep = false;
+        }
+    }
+
+    *sweep_ok = any_sweep;      // Accept a sweep with any excitation
+    if (!any_sweep)
+        return "No tune sweep";
+    else if (pure_sweep)
+        return "Sweep";
+    else if (full_sweep)
+        return "Mixed sweep";
+    else
+        return "Partial sweep";
+}
+
+/* Inspects state of all settings involved with Tune operation and computes a
+ * status string summarising the status. */
+static EPICS_STRING read_tune_mode(void)
+{
+    /* Start by evaluating the sequencer.  We expect a single sequencer state
+     * with data capture, sequencer enabled, and IQ buffer capture. */
+    const char *status = NULL;
+    if (!READ_NAMED_RECORD(bo, "TRG:SEQ:ENA"))
+        status = "Not enabled";
+    else if (READ_NAMED_RECORD(ulongout, "SEQ:PC") != 1)
+        status = "Multi-state sequencer";
+    else if (!READ_NAMED_RECORD(bo, "SEQ:1:CAPTURE")  ||
+             READ_NAMED_RECORD(mbbo, "BUF:SELECT") != BUF_SELECT_IQ)
+        status = "No data capture";
+    else
+    {
+        /* At this point the sequencer is running and capturing data.  Now
+         * assess whether we're generating a sweep and whether it's consistent
+         * with the detector mode. */
+        bool single_bunch = READ_NAMED_RECORD(bo, "DET:MODE");
+        int bunch = READ_NAMED_RECORD(longout, "TUNE:BUNCH");
+
+        /* Check whether the configured bank is performing sweeps. */
+        bool sweep_ok;
+        const char *sweep = tune_sweep_state(single_bunch, bunch, &sweep_ok);
+        if (sweep_ok)
+        {
+            EPICS_STRING result;
+            if (single_bunch)
+                snprintf(result.s, 40, "%s: bunch %d", sweep, bunch);
+            else
+                snprintf(result.s, 40, "%s: multibunch", sweep);
+            return result;
+        }
+        else
+            status = sweep;
+    }
+
+    EPICS_STRING result;
+    snprintf(result.s, 40, status);
+    return result;
+}
+
+
 bool initialise_detector(void)
 {
     gain_setting = PUBLISH_WRITE_VAR_P(mbbo, "DET:GAIN", detector_gain);
@@ -441,6 +521,8 @@ bool initialise_detector(void)
     PUBLISH_WAVEFORM(
         short, "DET:WINDOW", DET_WINDOW_LENGTH, write_detector_window);
     PUBLISH_ACTION("DET:RESET_WIN", reset_detector_window);
+
+    PUBLISH_READER(stringin, "TUNE:MODE", read_tune_mode);
 
     return true;
 }

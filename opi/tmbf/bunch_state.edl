@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 247
-y 43
+x 248
+y 44
 w 599
 h 26
 font "helvetica-medium-r-18.0"
@@ -31,7 +31,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 0
 y 0
 w 52
@@ -50,7 +50,7 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
 x 440
 y 0
@@ -73,7 +73,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 24
 y 0
@@ -98,9 +98,9 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
-x 128
+x 120
 y 0
 w 184
 h 16
@@ -123,11 +123,11 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
-x 312
+x 304
 y 0
-w 128
+w 136
 h 16
 controlPv "$(device):BUN:$(bank):GAINWF:STA"
 font "helvetica-medium-r-14.0"

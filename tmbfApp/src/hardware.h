@@ -142,6 +142,8 @@ bool hw_read_ddr_status(int *offset);
 /* * * * * * * * * * * * * * * * * * * * */
 /* BUN: Bunch by Bunch Banked Selection */
 
+enum { DAC_OUT_FIR = 1, DAC_OUT_NCO = 2, DAC_OUT_SWEEP = 4 };
+
 struct bunch_entry {
     unsigned int bunch_gain;        // FIR gain for this bunch
     unsigned int output_select;     // Output selection for this bunch

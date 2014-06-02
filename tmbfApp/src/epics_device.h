@@ -377,7 +377,7 @@ void _read_record_waveform(
     _read_record_waveform( \
         waveform_TYPE_##type, record, *(type *[]) { value }, length)
 
-#define READ_NAMED_RECORD_VALUE(record, name) \
+#define READ_NAMED_RECORD(record, name) \
     READ_RECORD_VALUE(record, LOOKUP_RECORD(record, name))
 #define READ_NAMED_RECORD_WF(type, name, value, length) \
     READ_RECORD_VALUE_WF( \

@@ -36,3 +36,8 @@ Trigger('BUN:SYNC',
         ('Synchronised',        4, 'NO_ALARM'), # This is where we want to be!
         ('Inconsistent phase',  5, 'MAJOR'),    # Whoops
         DESC = 'Bunch synchronisation status'))
+
+
+# Feedback mode.  This is aggregated from the sequencer state and the selected
+# DAC output status.
+stringIn('BUN:MODE', SCAN = '1 second', DESC = 'Feedback mode')
