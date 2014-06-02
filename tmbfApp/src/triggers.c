@@ -28,13 +28,6 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 
 
-enum trigger_source {
-    TRIG_SOURCE_SOFT1,
-    TRIG_SOURCE_SOFT2,
-    TRIG_SOURCE_EXTERNAL
-};
-
-
 /* Used for reporting armed status. */
 struct armed_status {
     bool armed;
@@ -47,7 +40,7 @@ struct trigger_target {
     struct armed_status status;
 
     // Configuration settings set by EPICS
-    unsigned int source; // Configured source, written from PV
+    bool external;          // Configured source, written from PV
     bool auto_rearm;
 
     enum {
@@ -69,6 +62,12 @@ static struct trigger_target ddr_target = { .target_id = DDR_TARGET };
 static struct trigger_target buf_target = { .target_id = BUF_TARGET };
 static struct seq_target seq_target;
 
+/* Whether DDR and BUF triggers should be armed and fired together.  This
+ * affects both arm/fire and rearming: if this flag is set, arm/fire will fire
+ * both triggers and rearming will wait for both targets to complete, but only
+ * if both targets agree on their trigger source. */
+static bool synchronise_triggers;
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -85,9 +84,12 @@ static void set_armed_status(struct armed_status *status, bool armed)
 
 /* Computes whether this target should be armed. */
 static bool check_arm_target(
-    struct trigger_target *target, enum trigger_source source, bool auto_arm)
+    struct trigger_target *self, struct trigger_target *target,
+    bool external, bool auto_arm)
 {
-    bool arm = target->source == source  &&  !target->status.armed;
+    bool arm =
+        target->external == external  &&  !target->status.armed  &&
+        (synchronise_triggers  ||  self == target);
     if (auto_arm)
         /* Auto arming behaviour depends on the trigger target's state. */
         switch (target->state)
@@ -119,39 +121,45 @@ static void do_arm_buf(void)
     buf_target.state = STATE_NORMAL;
 }
 
+static void arm_and_fire(bool arm_ddr, bool arm_buf, bool external)
+{
+    /* Prepare the targets. */
+    if (arm_ddr)
+        do_arm_ddr();
+    if (arm_buf)
+        do_arm_buf();
+
+    /* Fire! */
+    if (external)
+        hw_write_trg_arm(arm_ddr, arm_buf);
+    else
+        hw_write_trg_soft_trigger(arm_ddr, arm_buf);
+}
+
 static void arm_target(struct trigger_target *target, bool auto_arm)
 {
-    /* Work out which targets we want to fire. */
-    enum trigger_source source = target->source;
-    bool external = source == TRIG_SOURCE_EXTERNAL;
-    bool arm_ddr = check_arm_target(&ddr_target, source, auto_arm);
-    bool arm_buf = check_arm_target(&buf_target, source, auto_arm);
+    /* There are two arming targets, DDR and BUF, and target is one of them.  If
+     * synchronise_triggers is set then we need to take the other target into
+     * account, otherwise we can just rearm ourself. */
+    bool external = target->external;
+    bool arm_ddr = check_arm_target(target, &ddr_target, external, auto_arm);
+    bool arm_buf = check_arm_target(target, &buf_target, external, auto_arm);
 
     /* Figure out whether we can accept this arming request: only if all users
-     * of the source are currently idle. */
+     * of the source are currently idle.  If we're not in synchronise_triggers
+     * mode we ignore the status of the other target. */
     bool targets_busy =
-        (ddr_target.source == source  &&  ddr_target.status.armed)  ||
-        (buf_target.source == source  &&  buf_target.status.armed);
+        synchronise_triggers  &&
+        ((ddr_target.external == external  &&  ddr_target.status.armed)  ||
+         (buf_target.external == external  &&  buf_target.status.armed));
     if (targets_busy)
     {
         /* Configure this target for later re-arming if it's armable. */
-        if (check_arm_target(target, source, auto_arm))
+        if (check_arm_target(target, target, external, auto_arm))
             target->state = STATE_ARMED;
     }
     else
-    {
-        /* Prepare the targets. */
-        if (arm_ddr)
-            do_arm_ddr();
-        if (arm_buf)
-            do_arm_buf();
-
-        /* Fire! */
-        if (external)
-            hw_write_trg_arm(arm_ddr, arm_buf);
-        else
-            hw_write_trg_soft_trigger(arm_ddr, arm_buf);
-    }
+        arm_and_fire(arm_ddr, arm_buf, external);
 }
 
 
@@ -169,10 +177,10 @@ static void stop_target(struct trigger_target *target)
 
 /* When changing the trigger source need to stop the trigger because otherwise
  * the new source won't be processed. */
-static void set_source(struct trigger_target *target, unsigned int value)
+static void set_source(struct trigger_target *target, bool value)
 {
     stop_target(target);
-    target->source = value;
+    target->external = value;
 }
 
 
@@ -279,7 +287,7 @@ static void publish_status(const char *name, struct armed_status *status)
     status->status_pv = PUBLISH_READ_VAR_I(bi, name, status->armed);
 }
 
-static bool call_set_source(void *context, const unsigned int *value)
+static bool call_set_source(void *context, const bool *value)
 {
     LOCK();
     set_source(context, *value);
@@ -310,7 +318,7 @@ static void publish_target(struct trigger_target *target, const char *name)
     (sprintf(buffer, "TRG:%s:%s", name, pv), buffer)
 
     publish_status(FORMAT("STATUS"), &target->status);
-    PUBLISH(mbbo, FORMAT("SEL"), call_set_source,
+    PUBLISH(bo, FORMAT("SEL"), call_set_source,
         .context = target, .persist = true);
     PUBLISH_WRITE_VAR_P(bo,      FORMAT("MODE"),  target->auto_rearm);
     PUBLISH(bo, FORMAT("ARM"),   call_arm_target,  .context = target);
@@ -330,7 +338,9 @@ static void publish_targets(void)
     PUBLISH_WRITER_P(ulongout, "TRG:BUF:DELAY", hw_write_trg_buf_delay);
 
     publish_status("TRG:SEQ:STATUS", &seq_target.status);
-    PUBLISH_WRITE_VAR_P(bo,   "TRG:SEQ:ENA", seq_target.enabled);
+    PUBLISH_WRITE_VAR_P(bo, "TRG:SEQ:ENA", seq_target.enabled);
+
+    PUBLISH_WRITE_VAR_P(bo, "TRG:SYNC", synchronise_triggers);
 }
 
 

@@ -7,7 +7,7 @@ from common import *
 # Core trigger configuration
 
 def TriggerTarget(name):
-    mbbOut('TRG:%s:SEL' % name, 'Soft 1', 'Soft 2', 'External',
+    boolOut('TRG:%s:SEL' % name, 'Soft', 'External',
         DESC = '%s trigger source' % name)
     boolOut('TRG:%s:MODE' % name, 'One Shot', 'Retrigger',
         DESC = 'Mode select for %s' % name)
@@ -21,6 +21,9 @@ def TriggerTarget(name):
 # Trigger source selections for the trigger targets.
 TriggerTarget('DDR')
 TriggerTarget('BUF')
+
+boolOut('TRG:SYNC', 'Separate', 'Synched',
+    DESC = 'Synchronise DDR & BUF triggers')
 
 # External trigger source configuration for DDR trigger.  For each source we
 # have a source enable, a blanking enable, an active status, and a trigger

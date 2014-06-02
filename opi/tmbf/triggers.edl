@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1921
-y 1
+x 1922
+y 2
 w 632
 h 345
 font "helvetica-medium-r-18.0"
@@ -1469,5 +1469,24 @@ numDsps 1
 displayFileName {
   0 "tmbf/ddr_triggers.edl"
 }
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 440
+y 296
+w 104
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:SYNC_S"
+font "helvetica-medium-r-12.0"
 endObjectProperties
 
