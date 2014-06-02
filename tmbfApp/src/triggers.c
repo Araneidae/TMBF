@@ -70,6 +70,83 @@ static bool synchronise_triggers;
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* DDR external trigger source control and monitoring. */
+
+/* Configured DDR trigger source enables. */
+static bool ddr_trigger_source[DDR_SOURCE_COUNT];
+/* Blanking enables for each trigger source. */
+static bool ddr_trigger_blanking[DDR_SOURCE_COUNT];
+/* Polled input status for each trigger source. */
+static bool ddr_trigger_in[DDR_SOURCE_COUNT];
+/* Source of last trigger when DDR trigger fired. */
+static bool ddr_trigger_hit[DDR_SOURCE_COUNT];
+
+/* Used to update trigger source on a trigger hit. */
+static struct epics_interlock *ddr_hit_update;
+
+
+/* Called each time any of the configuration bits is changed. */
+static void set_ddr_trigger_source(void)
+{
+    hw_write_trg_ddr_source(ddr_trigger_source);
+    hw_write_trg_ddr_blanking(ddr_trigger_blanking);
+}
+
+/* Polled to read the state of the trigger sources. */
+static void update_ddr_trigger_in(void)
+{
+    static int const trigger_bits[DDR_SOURCE_COUNT] = {
+        TRIGGER_TRG_IN,
+        TRIGGER_PM_IN,
+        TRIGGER_ADC_IN,
+        TRIGGER_SEQ_IN,
+        TRIGGER_SCLK_IN,
+    };
+    bool pulsed_bits[PULSED_BIT_COUNT];
+    bool read_bits[PULSED_BIT_COUNT] = { };
+    for (int i = 0; i < DDR_SOURCE_COUNT; i ++)
+        read_bits[trigger_bits[i]] = true;
+    hw_read_pulsed_bits(read_bits, pulsed_bits);
+
+    for (int i = 0; i < DDR_SOURCE_COUNT; i ++)
+        ddr_trigger_in[i] = pulsed_bits[trigger_bits[i]];
+}
+
+static void update_ddr_trigger_hit(void)
+{
+    interlock_wait(ddr_hit_update);
+    hw_read_trg_ddr_source(ddr_trigger_hit);
+    interlock_signal(ddr_hit_update, NULL);
+}
+
+static void publish_ddr_external(void)
+{
+    /* These five trigger names need to match the five trigger sources defined
+     * in triggers.py and in the hardware interface. */
+    static const char *const names[DDR_SOURCE_COUNT] = {
+        "EXT", "PM", "ADC", "SEQ", "SCLK" };
+
+    for (int ix = 0; ix < DDR_SOURCE_COUNT; ix ++)
+    {
+        char buffer[40];
+#define FORMAT(field) \
+        (sprintf(buffer, "TRG:DDR:%s:%s", names[ix], field), buffer)
+
+        PUBLISH_WRITE_VAR_P(bo, FORMAT("EN"), ddr_trigger_source[ix]);
+        PUBLISH_WRITE_VAR_P(bo, FORMAT("BL"), ddr_trigger_blanking[ix]);
+        PUBLISH_READ_VAR(bi, FORMAT("IN"), ddr_trigger_in[ix]);
+        PUBLISH_READ_VAR(bi, FORMAT("HIT"), ddr_trigger_hit[ix]);
+#undef FORMAT
+    }
+
+    PUBLISH_ACTION("TRG:DDR:SET", set_ddr_trigger_source);
+    PUBLISH_ACTION("TRG:DDR:IN", update_ddr_trigger_in);
+    ddr_hit_update = create_interlock(
+        "TRG:DDR:HIT:TRIG", "TRG:DDR:HIT:DONE", false);
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* Updates armed status and generates PV update if necessary. */
 static void set_armed_status(struct armed_status *status, bool armed)
@@ -134,6 +211,9 @@ static void arm_and_fire(bool arm_ddr, bool arm_buf, bool external)
         hw_write_trg_arm(arm_ddr, arm_buf);
     else
         hw_write_trg_soft_trigger(arm_ddr, arm_buf);
+
+    if (arm_ddr)
+        update_ddr_trigger_hit();
 }
 
 static void arm_target(struct trigger_target *target, bool auto_arm)
@@ -196,83 +276,6 @@ static void update_target_status(bool ddr_ready, bool buf_ready, bool seq_ready)
     /* Trigger rearming as appropriate. */
     if (ddr_ready)  arm_target(&ddr_target, true);
     if (buf_ready)  arm_target(&buf_target, true);
-}
-
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* DDR external trigger source control and monitoring. */
-
-/* Configured DDR trigger source enables. */
-static bool ddr_trigger_source[DDR_SOURCE_COUNT];
-/* Blanking enables for each trigger source. */
-static bool ddr_trigger_blanking[DDR_SOURCE_COUNT];
-/* Polled input status for each trigger source. */
-static bool ddr_trigger_in[DDR_SOURCE_COUNT];
-/* Source of last trigger when DDR trigger fired. */
-static bool ddr_trigger_hit[DDR_SOURCE_COUNT];
-
-/* Used to update trigger source on a trigger hit. */
-static struct epics_interlock *ddr_hit_update;
-
-
-/* Called each time any of the configuration bits is changed. */
-static void set_ddr_trigger_source(void)
-{
-    hw_write_trg_ddr_source(ddr_trigger_source);
-    hw_write_trg_ddr_blanking(ddr_trigger_blanking);
-}
-
-/* Polled to read the state of the trigger sources. */
-static void update_ddr_trigger_in(void)
-{
-    static int const trigger_bits[DDR_SOURCE_COUNT] = {
-        TRIGGER_TRG_IN,
-        TRIGGER_PM_IN,
-        TRIGGER_ADC_IN,
-        TRIGGER_SEQ_IN,
-        TRIGGER_SCLK_IN,
-    };
-    bool pulsed_bits[PULSED_BIT_COUNT];
-    bool read_bits[PULSED_BIT_COUNT] = { };
-    for (int i = 0; i < DDR_SOURCE_COUNT; i ++)
-        read_bits[trigger_bits[i]] = true;
-    hw_read_pulsed_bits(read_bits, pulsed_bits);
-
-    interlock_wait(ddr_hit_update);
-    for (int i = 0; i < DDR_SOURCE_COUNT; i ++)
-        ddr_trigger_in[i] = pulsed_bits[trigger_bits[i]];
-    interlock_signal(ddr_hit_update, NULL);
-}
-
-static void update_ddr_trigger_hit(void)
-{
-    hw_read_trg_ddr_source(ddr_trigger_hit);
-}
-
-static void publish_ddr_external(void)
-{
-    /* These five trigger names need to match the five trigger sources defined
-     * in triggers.py and in the hardware interface. */
-    static const char *const names[DDR_SOURCE_COUNT] = {
-        "EXT", "PM", "ADC", "SEQ", "SCLK" };
-
-    for (int ix = 0; ix < DDR_SOURCE_COUNT; ix ++)
-    {
-        char buffer[40];
-#define FORMAT(field) \
-        (sprintf(buffer, "TRG:DDR:%s:%s", names[ix], field), buffer)
-
-        PUBLISH_WRITE_VAR_P(bo, FORMAT("EN"), ddr_trigger_source[ix]);
-        PUBLISH_WRITE_VAR_P(bo, FORMAT("BL"), ddr_trigger_blanking[ix]);
-        PUBLISH_READ_VAR(bi, FORMAT("IN"), ddr_trigger_in[ix]);
-        PUBLISH_READ_VAR(bi, FORMAT("HIT"), ddr_trigger_hit[ix]);
-#undef FORMAT
-    }
-
-    PUBLISH_ACTION("TRG:DDR:SET", set_ddr_trigger_source);
-    PUBLISH_ACTION("TRG:DDR:IN", update_ddr_trigger_in);
-    ddr_hit_update = create_interlock(
-        "TRG:DDR:HIT:TRIG", "TRG:DDR:HIT:DONE", false);
 }
 
 
