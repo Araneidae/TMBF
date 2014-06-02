@@ -45,9 +45,9 @@ static int selected_turn = 0;
 static struct epics_record *long_trigger;
 static struct epics_record *short_trigger;
 
+static bool long_enable;                // Whether long data capture is enabled
 static struct in_epics_record_bi *long_data_ready;   // Status report to outside
 
-static bool ddr_one_shot = false;
 
 /* Used for waiting for record processing completion callbacks. */
 static pthread_cond_t done_cond = PTHREAD_COND_INITIALIZER;
@@ -79,21 +79,33 @@ static void set_long_data_ready(bool ready)
 }
 
 
+static void set_long_enable(bool enable)
+{
+    LOCK();
+    if (enable != long_enable)
+    {
+        long_enable = enable;
+        if (long_enable)
+            trigger_record(long_trigger, 0, NULL);
+    }
+    UNLOCK();
+}
+
+
 /* This is called each time the DDR buffer successfully triggers.  The short
  * waveforms are always triggered, but the long waveform is only triggered when
  * we're in one-shot mode. */
-void process_ddr_buffer(bool one_shot)
+void process_ddr_buffer(void)
 {
     LOCK();
-    ddr_one_shot = one_shot;
-    if (one_shot)
+    if (long_enable)
         trigger_record(long_trigger, 0, NULL);
     trigger_record(short_trigger, 0, NULL);
 
     /* Now wait for the completion callbacks from both records (if necessary)
      * have reported completion. */
     short_done = false;
-    long_done = !one_shot;
+    long_done = !long_enable;
     while (!short_done  ||  !long_done)
         pthread_cond_wait(&done_cond, &lock);
     UNLOCK();
@@ -136,7 +148,7 @@ static void set_selected_turn(int value)
 {
     selected_turn = value;
     LOCK();
-    if (ddr_one_shot)
+    if (long_enable)
         trigger_record(long_trigger, 0, NULL);
     UNLOCK();
 }
@@ -168,6 +180,7 @@ bool initialise_ddr_epics(void)
 
     /* Turn selection and readback.  Readback is triggered after completion of
      * long record processing. */
+    PUBLISH_WRITER_P(bo, "DDR:LONGEN", set_long_enable);
     PUBLISH_WRITER(longout, "DDR:TURNSEL", set_selected_turn);
     PUBLISH_READ_VAR(longin, "DDR:TURNSEL", selected_turn);
 

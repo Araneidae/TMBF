@@ -27,7 +27,8 @@ longOut('DDR:BUNCHSEL', 0, BUNCHES_PER_TURN-1,
     DESC = 'Select bunch for DDR readout')
 
 
-# The long waveform and its records are only processed in single shot mode.
+# The long waveform and its records are only processed when selected.
+boolOut('DDR:LONGEN', 'No', 'Long', DESC = 'Enable long waveform update')
 Trigger('DDR:LONG',
     Waveform('DDR:LONGWF', LONG_TURN_WF_LENGTH, 'SHORT',
         DESC = 'Long turn by turn waveform'),

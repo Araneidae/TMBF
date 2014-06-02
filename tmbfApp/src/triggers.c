@@ -407,7 +407,7 @@ static void *monitor_events(void *context)
         {
             update_ddr_trigger_hit();
             set_ddr_offset(ddr_offset);
-            process_ddr_buffer(!ddr_target.auto_rearm);
+            process_ddr_buffer();
         }
         if (buf_ready)
             process_fast_buffer();
