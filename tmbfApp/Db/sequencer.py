@@ -29,7 +29,7 @@ for state in range(1, 8):
     aOut('SEQ:%d:STEP_FREQ' % state,
         -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 7,
         FLNK = update, DESC = 'Sweep NCO step frequency')
-    longOut('SEQ:%d:DWELL' % state, 1, (1<<31) - 1,
+    longOut('SEQ:%d:DWELL' % state, 1, 1<<16,
         FLNK = update, EGU = 'turns', DESC = 'Sweep dwell time')
     longOut('SEQ:%d:COUNT' % state, 1, 1<<12,
         FLNK = update, DESC = 'Sweep count')

@@ -32,11 +32,13 @@ enum {
     OVERFLOW_FIR        = 0,    // Overflow in FIR gain control output
     OVERFLOW_DAC        = 1,    // Overflow in DAC multiplexor and scaling
     OVERFLOW_DAC_COMP   = 2,    // Overflow in DAC pre-emphasis filter
-    OVERFLOW_ADC_LIMIT  = 3,    // ADC input exceeds configured limit
+    OVERFLOW_ADC_LIMIT  = 3,    // ADC input hard overflow
 
     OVERFLOW_IQ_FIR     = 4,    // Overflow in IQ detector FIR input
     OVERFLOW_IQ_ACC     = 5,    // Overflow in IQ detector accumulator
     OVERFLOW_IQ_SCALE   = 6,    // Overflow in IQ detector readout scaling
+
+    OVERFLOW_ADC_FILTER = 7,    // Overflow in ADC compensation filter
 
     TRIGGER_SCLK_IN     = 16,
     TRIGGER_PM_IN       = 17,

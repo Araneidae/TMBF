@@ -6,8 +6,8 @@ from common import *
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Core trigger configuration
 
-def TriggerTarget(name):
-    boolOut('TRG:%s:SEL' % name, 'Soft', 'External',
+def TriggerTarget(name, hardware):
+    boolOut('TRG:%s:SEL' % name, 'Soft', hardware,
         DESC = '%s trigger source' % name)
     boolOut('TRG:%s:MODE' % name, 'One Shot', 'Retrigger',
         DESC = 'Mode select for %s' % name)
@@ -19,8 +19,8 @@ def TriggerTarget(name):
         SCAN = 'I/O Intr', DESC = '%s status' % name)
 
 # Trigger source selections for the trigger targets.
-TriggerTarget('DDR')
-TriggerTarget('BUF')
+TriggerTarget('DDR', 'Hardware')
+TriggerTarget('BUF', 'Trigger In')
 
 boolOut('TRG:SYNC', 'Separate', 'Synched',
     DESC = 'Synchronise DDR & BUF triggers')

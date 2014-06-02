@@ -25,8 +25,9 @@
 
 
 
-/* We poll the sensors every 10 seconds. */
-#define SENSORS_POLL_INTERVAL   10
+/* We poll the sensors every 5 seconds.  This interval is a tradeoff between
+ * reported precision and timeliness. */
+#define SENSORS_POLL_INTERVAL   5
 
 /* Some scaling factors. */
 #define SCALE_K     1024
@@ -292,14 +293,15 @@ static void ProcessNetworkStats(void)
             &NetBytesTx, &NetPacketsTx, &NetMultiTx))
     {
 #define UPDATE(name, scale) \
-    name##Delta = (double) scale * (name - name##Last); \
+    name##Delta = \
+        ((double) scale / SENSORS_POLL_INTERVAL) * (name - name##Last); \
     name##Last = name
-        UPDATE(NetBytesRx,   1e-4);
-        UPDATE(NetMultiRx,   0.1);
-        UPDATE(NetPacketsRx, 0.1);
-        UPDATE(NetBytesTx,   1e-4);
-        UPDATE(NetMultiTx,   0.1);
-        UPDATE(NetPacketsTx, 0.1);
+        UPDATE(NetBytesRx,   1e-3);
+        UPDATE(NetMultiRx,   1);
+        UPDATE(NetPacketsRx, 1);
+        UPDATE(NetBytesTx,   1e-3);
+        UPDATE(NetMultiTx,   1);
+        UPDATE(NetPacketsTx, 1);
 #undef UPDATE
     }
 }
@@ -618,10 +620,11 @@ static bool overflows[PULSED_BIT_COUNT];
 static void read_overflows(void)
 {
     const bool read_mask[PULSED_BIT_COUNT] = {
+        [OVERFLOW_ADC_LIMIT] = true,
+        [OVERFLOW_ADC_FILTER] = true,
         [OVERFLOW_FIR] = true,
         [OVERFLOW_DAC] = true,
         [OVERFLOW_DAC_COMP] = true,
-        [OVERFLOW_ADC_LIMIT] = true,
     };
     hw_read_pulsed_bits(read_mask, overflows);
 }
@@ -651,10 +654,11 @@ bool initialise_sensors(void)
     PUBLISH_READ_VAR(stringin, "SE:SERVER",  NTP_server);
 
     PUBLISH_ACTION("SE:OVF:SCAN", read_overflows);
+    PUBLISH_READ_VAR(bi, "SE:OVF:ADCIN", overflows[OVERFLOW_ADC_LIMIT]);
+    PUBLISH_READ_VAR(bi, "SE:OVF:ADCCOMP", overflows[OVERFLOW_ADC_FILTER]);
     PUBLISH_READ_VAR(bi, "SE:OVF:FIR", overflows[OVERFLOW_FIR]);
     PUBLISH_READ_VAR(bi, "SE:OVF:DAC", overflows[OVERFLOW_DAC]);
     PUBLISH_READ_VAR(bi, "SE:OVF:COMP", overflows[OVERFLOW_DAC_COMP]);
-    PUBLISH_READ_VAR(bi, "SE:OVF:ADC", overflows[OVERFLOW_ADC_LIMIT]);
 
     InitialiseUptime();
     initialise_fan_control();

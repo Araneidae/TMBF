@@ -76,7 +76,8 @@ def configure_timing_test(tmbf, compensate = False):
     # This is our nominal zero delay for the DAC pre-emphasis
     tmbf.set('DAC:PREEMPH_S', [0, 1<<14, 0])
     tmbf.set('DAC:PREEMPH:DELAY_S', '0 ns')
-    # Similarly reset ADC pre-emphasis filter
+    # Similarly reset ADC pre-emphasis filter and offsets
+    tmbf.set('ADC:OFFSET_S', 4 * [0])
     tmbf.set('ADC:FILTER_S', 4 * [0, 1<<14, 0])
     tmbf.set('ADC:FILTER:DELAY_S', '0 ns')
 

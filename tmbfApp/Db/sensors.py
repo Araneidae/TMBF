@@ -3,6 +3,13 @@
 from common import *
 
 
+debug_control = [
+    boolOut('LOOPBACK', 'Normal', 'Loopback', OSV = 'MAJOR', VAL = 0,
+        DESC = 'Enable internal data loopback'),
+    boolOut('COMPENSATE', 'Normal', 'Disabled', OSV = 'MAJOR', VAL = 0,
+        DESC = 'Disable internal delay compensation')]
+
+
 trigger_pvs = []        # All sensor records that need triggering, in order
 health_pvs = []         # Records for reporting aggregate health
 
@@ -65,7 +72,8 @@ system_alarm_pvs = [
         DESC = 'NTP stratum level')]
 trigger_pvs.extend(system_alarm_pvs)
 health_pvs.append(
-    AggregateSeverity('SE:SYS:OK', 'System health', system_alarm_pvs))
+    AggregateSeverity('SE:SYS:OK', 'System health',
+        system_alarm_pvs + debug_control))
 
 
 # Sensor PVs without alarm status.
@@ -106,10 +114,11 @@ longOut('SE:TEMP:KI', DESC = 'Fan controller KI')
 def overflow(name, desc):
     return boolIn(name, 'Ok', 'Overflow', OSV = 'MAJOR', DESC = desc)
 overflows = [
+    overflow('SE:OVF:ADCIN', 'ADC input overflow'),
+    overflow('SE:OVF:ADCCOMP', 'ADC compensation filter'),
     overflow('SE:OVF:FIR', 'FIR overflow'),
     overflow('SE:OVF:DAC', 'DAC overflow'),
     overflow('SE:OVF:COMP', 'DAC pre-emphasis overflow'),
-    overflow('SE:OVF:ADC', 'ADC over limit'),
 ]
 overflows.append(
     AggregateSeverity('SE:OVF', 'Numerical overflow', overflows))

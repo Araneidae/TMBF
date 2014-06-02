@@ -29,14 +29,14 @@ cothread.Sleep(1)
 
 offsets = get('ADC:OFFSET_S')
 adc = get('DDR:LONGWF')
-delta = adc.reshape((-1, 4)).mean(0)
+delta = 2 * adc.reshape((-1, 4)).mean(0)
 
 # Correct for ADC output skew.  To avoid confusion this should probably be done
 # closer to the hardware in the driver, but here is where it is for now!
 skew = get('ADC:SKEW', datatype = int)
 delta = numpy.roll(delta, -skew)
 
-new_offsets = numpy.round(offsets - delta)
+new_offsets = numpy.int_(numpy.round(offsets - delta))
 print 'Updating offsets:', offsets, '=>', new_offsets
 put('ADC:OFFSET_S', new_offsets)
 
