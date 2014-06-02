@@ -13,6 +13,7 @@
 #include "ddr.h"
 #include "hardware.h"
 #include "epics_device.h"
+#include "epics_extra.h"
 
 #include "ddr_epics.h"
 
@@ -44,8 +45,7 @@ static int selected_turn = 0;
 static struct epics_record *long_trigger;
 static struct epics_record *short_trigger;
 
-static bool data_ready = false;
-static struct epics_record *long_ready;      // Updates ready flag
+static struct in_epics_record_bi *long_data_ready;   // Status report to outside
 
 static bool ddr_one_shot = false;
 
@@ -75,11 +75,7 @@ static void read_long_turn_waveform(short *waveform)
 /* Just writes value to DDR:READY flag. */
 static void set_long_data_ready(bool ready)
 {
-    if (ready != data_ready)
-    {
-        data_ready = ready;
-        trigger_record(long_ready, 0, NULL);
-    }
+    WRITE_IN_RECORD(bi, long_data_ready, ready);
 }
 
 
@@ -165,7 +161,7 @@ bool initialise_ddr_epics(void)
     PUBLISH_ACTION("DDR:LONG:DONE",  long_trigger_done);
 
     /* Used to report completion of long record updates. */
-    long_ready = PUBLISH_READ_VAR_I(bi, "DDR:READY", data_ready);
+    long_data_ready = PUBLISH_IN_VALUE_I(bi, "DDR:READY");
 
     /* Select bunch for single bunch waveform. */
     PUBLISH_WRITE_VAR(longout, "DDR:BUNCHSEL", selected_bunch);

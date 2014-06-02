@@ -146,6 +146,7 @@ struct in_epics_record_ {
     enum record_type record_type;
     struct epics_record *record;
     int field_size;
+    bool force_update;
     char value[] __attribute__((aligned(__BIGGEST_ALIGNMENT__)));
 };
 
@@ -185,6 +186,7 @@ struct in_epics_record_ *_publish_write_epics_record(
         record_type, name, &(const struct record_args_void) {
             .read = read_in_record, .context = record,
             .io_intr = args->io_intr, .set_time = args->set_time });
+    record->force_update = args->force_update;
     memset(record->value, 0, record->field_size);
     return record;
 }
@@ -192,12 +194,18 @@ struct in_epics_record_ *_publish_write_epics_record(
 
 void _write_in_record(
     enum record_type record_type, struct in_epics_record_ *record,
-    const void *value, const struct in_epics_record_args *args)
+    const void *value, const struct write_in_epics_record_args *args)
 {
     ASSERT_OK(record->record_type == record_type);
-    if (value  &&  !args->ignore_value)
+    bool do_update = record->force_update;
+    if (value)
+    {
+        do_update = do_update  ||  args->force_update  ||
+            memcmp(record->value, value, record->field_size) != 0;
         memcpy(record->value, value, record->field_size);
-    trigger_record(record->record, args->severity, args->timestamp);
+    }
+    if (do_update)
+        trigger_record(record->record, args->severity, args->timestamp);
 }
 
 

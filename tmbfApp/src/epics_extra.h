@@ -70,7 +70,7 @@ void wait_for_epics_start(void);
  *  record = PUBLISH_IN_VALUE[_I][_T](type, name)
  *      Publishes EPICS PV with writeable value stored as part of the record.
  *
- *  WRITE_IN_RECORD(type, record, value, .severity, .timestamp)
+ *  WRITE_IN_RECORD(type, record, value, .severity, .timestamp, .force_update)
  *      Updates record with new value.  Optionally a .severity and a .timestamp
  *      can be specified, though the .timestamp value is ignored if _T was not
  *      used when publishing the record.
@@ -100,6 +100,7 @@ struct in_epics_record_;
 struct publish_in_epics_record_args {
     bool io_intr;
     bool set_time;
+    bool force_update;
 };
 struct in_epics_record_ *_publish_write_epics_record(
     enum record_type record_type, const char *name,
@@ -117,24 +118,25 @@ struct in_epics_record_ *_publish_write_epics_record(
     PUBLISH_IN_VALUE(type, name, .io_intr = true, .set_time = true)
 
 
-struct in_epics_record_args {
+struct write_in_epics_record_args {
     epicsAlarmSeverity severity;
     const struct timespec *timestamp;
-    bool ignore_value;
+    bool force_update;
 };
 
 void _write_in_record(
     enum record_type record_type, struct in_epics_record_ *record,
-    const void *value, const struct in_epics_record_args *args);
+    const void *value, const struct write_in_epics_record_args *args);
 #define WRITE_IN_RECORD(type, record, value, args...) \
     _write_in_record( \
         RECORD_TYPE_##type, _CONVERT_TO_IN_RECORD(type, record), \
         (const TYPEOF(type)[]) { value }, \
-        &(const struct in_epics_record_args) { args })
-#define WRITE_IN_RECORD_SEV(type, record, args...) \
+        &(const struct write_in_epics_record_args) { args })
+#define WRITE_IN_RECORD_SEV(type, record, severity, args...) \
     _write_in_record( \
         RECORD_TYPE_##type, _CONVERT_TO_IN_RECORD(type, record), NULL, \
-        &(const struct in_epics_record_args) { args })
+        &(const struct write_in_epics_record_args) { \
+            .severity = severity, ##args })
 
 
 void *_read_in_record(

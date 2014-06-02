@@ -633,10 +633,16 @@ static void process_peak_tune(
                 severity = epicsSevNone;
         }
     }
-    WRITE_IN_RECORD(ai, peak_measured_tune, tune,
-        .severity = severity, .ignore_value = severity == epicsSevInvalid);
-    WRITE_IN_RECORD(ai, peak_measured_phase, phase,
-        .severity = severity, .ignore_value = severity == epicsSevInvalid);
+    if (severity == epicsSevInvalid)
+    {
+        WRITE_IN_RECORD_SEV(ai, peak_measured_tune, severity);
+        WRITE_IN_RECORD_SEV(ai, peak_measured_phase, severity);
+    }
+    else
+    {
+        WRITE_IN_RECORD(ai, peak_measured_tune, tune);
+        WRITE_IN_RECORD(ai, peak_measured_phase, phase);
+    }
 }
 
 
@@ -705,8 +711,10 @@ static void publish_peaks(void)
     PUBLISH_WRITE_VAR_P(mbbo, "TUNE:PEAK:SEL", peak_select);
 
     PUBLISH_READ_VAR(mbbi, "TUNE:PEAK:STATUS", peak_tune_status);
-    peak_measured_tune  = PUBLISH_IN_VALUE(ai, "TUNE:PEAK:TUNE");
-    peak_measured_phase = PUBLISH_IN_VALUE(ai, "TUNE:PEAK:PHASE");
+    peak_measured_tune =
+        PUBLISH_IN_VALUE(ai, "TUNE:PEAK:TUNE", .force_update = true);
+    peak_measured_phase =
+        PUBLISH_IN_VALUE(ai, "TUNE:PEAK:PHASE", .force_update = true);
 }
 
 
