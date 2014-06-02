@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1922
-y 2
+x 213
+y 93
 w 632
-h 345
+h 524
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -33,7 +33,7 @@ major 4
 minor 0
 release 0
 x 384
-y 160
+y 336
 w 240
 h 96
 lineColor index 14
@@ -48,7 +48,7 @@ major 4
 minor 0
 release 0
 x 8
-y 272
+y 448
 w 424
 h 64
 lineColor index 14
@@ -63,7 +63,7 @@ major 4
 minor 0
 release 0
 x 8
-y 160
+y 336
 w 368
 h 96
 lineColor index 14
@@ -112,7 +112,7 @@ major 4
 minor 1
 release 0
 x 560
-y 312
+y 488
 w 64
 h 24
 fgColor index 46
@@ -463,7 +463,7 @@ major 4
 minor 1
 release 0
 x 112
-y 176
+y 352
 w 88
 h 22
 fgColor index 14
@@ -486,7 +486,7 @@ major 4
 minor 1
 release 1
 x 16
-y 184
+y 360
 w 88
 h 14
 font "helvetica-bold-r-12.0"
@@ -506,7 +506,7 @@ major 4
 minor 6
 release 0
 x 304
-y 176
+y 352
 w 56
 h 20
 controlPv "$(device):BUN:OFFSET_S"
@@ -534,7 +534,7 @@ major 4
 minor 6
 release 0
 x 96
-y 232
+y 408
 w 32
 h 16
 controlPv "$(device):BUN:PHASE"
@@ -561,7 +561,7 @@ major 4
 minor 6
 release 0
 x 64
-y 288
+y 464
 w 32
 h 16
 controlPv "$(device):TRG:RAWPHASE"
@@ -587,7 +587,7 @@ major 4
 minor 1
 release 1
 x 224
-y 208
+y 384
 w 29
 h 14
 font "helvetica-bold-r-12.0"
@@ -607,7 +607,7 @@ major 4
 minor 1
 release 1
 x 224
-y 184
+y 360
 w 70
 h 14
 font "helvetica-bold-r-12.0"
@@ -627,7 +627,7 @@ major 4
 minor 1
 release 1
 x 16
-y 232
+y 408
 w 74
 h 14
 font "helvetica-bold-r-12.0"
@@ -647,7 +647,7 @@ major 4
 minor 1
 release 1
 x 16
-y 288
+y 464
 w 40
 h 14
 font "helvetica-bold-r-12.0"
@@ -666,7 +666,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 416
+x 424
 y 112
 w 72
 h 22
@@ -689,7 +689,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 416
+x 424
 y 64
 w 72
 h 22
@@ -712,7 +712,7 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 416
+x 424
 y 88
 w 72
 h 22
@@ -735,7 +735,7 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 496
+x 504
 y 64
 w 80
 h 24
@@ -763,7 +763,7 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 496
+x 504
 y 88
 w 80
 h 24
@@ -791,7 +791,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 584
+x 592
 y 72
 w 27
 h 14
@@ -811,7 +811,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 584
+x 592
 y 96
 w 27
 h 14
@@ -858,7 +858,7 @@ major 4
 minor 1
 release 1
 x 392
-y 184
+y 360
 w 54
 h 14
 font "helvetica-bold-r-12.0"
@@ -878,7 +878,7 @@ major 4
 minor 6
 release 0
 x 456
-y 176
+y 352
 w 80
 h 20
 controlPv "$(device):TRG:BLANKING_S"
@@ -906,7 +906,7 @@ major 4
 minor 1
 release 1
 x 544
-y 184
+y 360
 w 27
 h 14
 font "helvetica-medium-r-12.0"
@@ -926,7 +926,7 @@ major 4
 minor 1
 release 0
 x 336
-y 304
+y 480
 w 88
 h 24
 fgColor index 14
@@ -949,7 +949,7 @@ major 4
 minor 6
 release 0
 x 256
-y 288
+y 464
 w 88
 h 16
 controlPv "$(device):TRG:COUNT"
@@ -976,7 +976,7 @@ major 4
 minor 1
 release 1
 x 208
-y 288
+y 464
 w 38
 h 14
 font "helvetica-bold-r-12.0"
@@ -996,7 +996,7 @@ major 4
 minor 6
 release 0
 x 96
-y 312
+y 488
 w 72
 h 16
 controlPv "$(device):TRG:JITTER"
@@ -1023,7 +1023,7 @@ major 4
 minor 1
 release 1
 x 16
-y 312
+y 488
 w 73
 h 14
 font "helvetica-bold-r-12.0"
@@ -1043,7 +1043,7 @@ major 4
 minor 6
 release 0
 x 184
-y 312
+y 488
 w 88
 h 16
 controlPv "$(device):TRG:JITTERPC"
@@ -1070,7 +1070,7 @@ major 4
 minor 1
 release 1
 x 168
-y 312
+y 488
 w 7
 h 14
 font "helvetica-bold-r-12.0"
@@ -1090,7 +1090,7 @@ major 4
 minor 6
 release 0
 x 144
-y 288
+y 464
 w 56
 h 16
 controlPv "$(device):TRG:AGE"
@@ -1117,7 +1117,7 @@ major 4
 minor 1
 release 1
 x 112
-y 288
+y 464
 w 26
 h 14
 font "helvetica-bold-r-12.0"
@@ -1137,7 +1137,7 @@ major 4
 minor 0
 release 0
 x 8
-y 152
+y 328
 w 16
 h 16
 lineColor index 14
@@ -1154,7 +1154,7 @@ major 4
 minor 1
 release 1
 x 8
-y 264
+y 440
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -1173,7 +1173,7 @@ major 4
 minor 0
 release 0
 x 8
-y 264
+y 440
 w 120
 h 16
 lineColor index 14
@@ -1187,7 +1187,7 @@ major 4
 minor 1
 release 1
 x 136
-y 232
+y 408
 w 44
 h 14
 font "helvetica-bold-r-12.0"
@@ -1207,7 +1207,7 @@ major 4
 minor 6
 release 0
 x 192
-y 232
+y 408
 w 96
 h 16
 controlPv "$(device):BUN:STATUS"
@@ -1233,7 +1233,7 @@ major 4
 minor 1
 release 0
 x 112
-y 200
+y 376
 w 88
 h 22
 fgColor index 14
@@ -1256,7 +1256,7 @@ major 4
 minor 1
 release 1
 x 24
-y 152
+y 328
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -1275,7 +1275,7 @@ major 4
 minor 0
 release 0
 x 24
-y 152
+y 328
 w 120
 h 16
 lineColor index 14
@@ -1289,7 +1289,7 @@ major 4
 minor 1
 release 1
 x 16
-y 208
+y 384
 w 72
 h 14
 font "helvetica-bold-r-12.0"
@@ -1309,7 +1309,7 @@ major 4
 minor 0
 release 0
 x 456
-y 208
+y 384
 w 96
 h 22
 fgColor index 14
@@ -1328,7 +1328,7 @@ major 4
 minor 1
 release 1
 x 392
-y 216
+y 392
 w 46
 h 14
 font "helvetica-bold-r-12.0"
@@ -1341,54 +1341,6 @@ value {
 autoSize
 endObjectProperties
 
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 552
-y 112
-w 40
-h 24
-controlPv "$(device):SEQ:TRIGGER_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-clipToDspLimits
-noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 496
-y 120
-w 51
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Seq trig:"
-}
-autoSize
-endObjectProperties
-
 # (Text Monitor)
 object activeXTextDspClass:noedit
 beginObjectProperties
@@ -1396,7 +1348,7 @@ major 4
 minor 6
 release 0
 x 264
-y 208
+y 384
 w 32
 h 16
 controlPv "$(device):ADC:SKEW"
@@ -1422,7 +1374,7 @@ major 4
 minor 1
 release 1
 x 384
-y 152
+y 328
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -1441,34 +1393,62 @@ major 4
 minor 0
 release 0
 x 384
-y 152
+y 328
 w 120
 h 16
 lineColor index 14
 fillColor index 0
 endObjectProperties
 
-# (Related Display)
-object relatedDisplayClass
+# (Button)
+object activeButtonClass
 beginObjectProperties
 major 4
-minor 4
+minor 1
 release 0
-x 440
-y 264
-w 96
-h 24
-fgColor index 43
-bgColor index 4
+x 328
+y 112
+w 80
+h 22
+fgColor index 14
+onColor index 4
+offColor index 4
+inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-font "helvetica-bold-r-12.0"
-buttonLabel "DDR Triggers"
-numPvs 4
-numDsps 1
-displayFileName {
-  0 "tmbf/ddr_triggers.edl"
-}
+controlPv "$(device):TRG:SYNC_S"
+3d
+font "helvetica-medium-r-12.0"
+objType "controls"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 320
+y 56
+w 96
+h 84
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 160
+w 616
+h 160
+lineColor index 14
+fill
+fillColor index 4
 endObjectProperties
 
 # (Menu Button)
@@ -1477,16 +1457,916 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 440
-y 296
-w 104
+x 88
+y 192
+w 80
 h 22
 fgColor index 14
 bgColor index 3
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):TRG:SYNC_S"
+controlPv "$(device):TRG:DDR:EXT:EN_S"
 font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 200
+w 56
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Trigger in"
+}
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 488
+y 264
+w 56
+h 24
+controlPv "$(device):SEQ:TRIGGER_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 272
+y 192
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:DDR:EXT:HIT"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 176
+y 192
+w 80
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:DDR:EXT:BL_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 88
+y 174
+w 42
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Source"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 176
+y 174
+w 50
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Blanking"
+}
+autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 344
+y 192
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:DDR:EXT:IN"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 368
+y 192
+w 40
+h 16
+controlPv "$(device):TRG:DDR:EXT:IN"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 296
+y 192
+w 40
+h 16
+controlPv "$(device):TRG:DDR:EXT:HIT"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 272
+y 174
+w 29
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Fired"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 344
+y 174
+w 30
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Input"
+}
+autoSize
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 88
+y 216
+w 80
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:DDR:PM:EN_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 224
+w 33
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "PM in"
+}
+autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 272
+y 216
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:DDR:PM:HIT"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 176
+y 216
+w 80
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:DDR:PM:BL_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 344
+y 216
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:DDR:PM:IN"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 368
+y 216
+w 40
+h 14
+controlPv "$(device):TRG:DDR:PM:IN"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 296
+y 216
+w 40
+h 14
+controlPv "$(device):TRG:DDR:PM:HIT"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 88
+y 240
+w 80
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:DDR:ADC:EN_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 248
+w 54
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "ADC limit"
+}
+autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 272
+y 240
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:DDR:ADC:HIT"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 176
+y 240
+w 80
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:DDR:ADC:BL_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 344
+y 240
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:DDR:ADC:IN"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 368
+y 240
+w 40
+h 14
+controlPv "$(device):TRG:DDR:ADC:IN"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 296
+y 240
+w 40
+h 14
+controlPv "$(device):TRG:DDR:ADC:HIT"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 88
+y 264
+w 80
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:DDR:SEQ:EN_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 272
+w 62
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "SEQ state"
+}
+autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 272
+y 264
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:DDR:SEQ:HIT"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 176
+y 264
+w 80
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:DDR:SEQ:BL_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 344
+y 264
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:DDR:SEQ:IN"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 368
+y 264
+w 40
+h 14
+controlPv "$(device):TRG:DDR:SEQ:IN"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 296
+y 264
+w 40
+h 14
+controlPv "$(device):TRG:DDR:SEQ:HIT"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 88
+y 288
+w 80
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:DDR:SCLK:EN_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 296
+w 47
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "SCLK in"
+}
+autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 272
+y 288
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:DDR:SCLK:HIT"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 176
+y 288
+w 80
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:DDR:SCLK:BL_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 344
+y 288
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:DDR:SCLK:IN"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 368
+y 288
+w 40
+h 14
+controlPv "$(device):TRG:DDR:SCLK:IN"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 296
+y 288
+w 40
+h 14
+controlPv "$(device):TRG:DDR:SCLK:HIT"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 488
+y 240
+w 56
+h 24
+controlPv "$(device):ADC:LIMIT_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 152
+w 144
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "DDR External Trigger"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 152
+w 144
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 416
+y 244
+w 54
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "ADC limit"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 416
+y 268
+w 62
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "SEQ state"
+}
+autoSize
 endObjectProperties
 
