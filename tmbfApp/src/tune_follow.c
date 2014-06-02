@@ -241,9 +241,10 @@ static void update_minmax(void)
         maximum_q = max;
     }
 
+    /* Estimate variation from peak to peak movement. */
     double raw_variation = sqrt(
-        SQR((double) maximum_i - minimum_i) +
-        SQR((double) maximum_q - minimum_q));
+        (SQR((double) maximum_i - minimum_i) +
+         SQR((double) maximum_q - minimum_q)) / 2);
     if (current_magnitude > 0)
         iq_variation = raw_variation / current_magnitude;
     else

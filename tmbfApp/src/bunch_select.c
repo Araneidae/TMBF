@@ -37,7 +37,7 @@ struct bunch_bank {
 
 /* Helper routine: counts number of instances of given value, not all set,
  * returns index of last non-equal value. */
-static int count_value(int *wf, int value, int *diff_ix)
+static int count_value(const int *wf, int value, int *diff_ix)
 {
     int count = 0;
     for (int i = 0; i < BUNCHES_PER_TURN; i ++)
@@ -49,99 +49,89 @@ static int count_value(int *wf, int value, int *diff_ix)
 }
 
 
-/* Converts output control into concise displayable value. */
-static const char *out_name(int value)
-{
-    const char *out_names[] = {
-        "Off",      "FIR",      "NCO",      "NCO+FIR",
-        "Sweep",    "Sw+FIR",   "Sw+NCO",   "S+F+N" };
-    if (0 <= value  &&  value < 8)
-        return out_names[value];
-    else
-        return "Error";
-}
-
-
 /* Status computation.  We support three possibilities:
  *  1.  All one value
  *  2.  All one value except for one different value
  *  3.  Something else: "It's complicated" */
 enum complexity { ALL_SAME, ALL_BUT_ONE, COMPLICATED };
 static enum complexity assess_complexity(
-    int wf[BUNCHES_PER_TURN], int *value, int *other, int *other_ix)
+    const int wf[BUNCHES_PER_TURN], int *value, int *other, int *other_ix)
 {
     *other_ix = 0;
     *value = wf[0];
     int count = count_value(wf, *value, other_ix);
     if (count == BUNCHES_PER_TURN)
         return ALL_SAME;
-    else if (1 < count  &&  count < BUNCHES_PER_TURN-1)
-        return COMPLICATED;
-    else
+    else if (count == 1)
+    {
+        /* Need to check whether all rest are the same. */
+        *value = wf[1];
+        *other = wf[0];
+        if (count_value(wf, *value, other_ix) == BUNCHES_PER_TURN-1)
+            return ALL_BUT_ONE;
+        else
+            return COMPLICATED;
+    }
+    else if (count == BUNCHES_PER_TURN-1)
     {
         *other = wf[*other_ix];
-        if (count == 1)
-        {
-            int t = *value; *value = *other; *other = t;
-            *other_ix = 0;
-        }
         return ALL_BUT_ONE;
     }
+    else
+        return COMPLICATED;
 }
 
-static void update_fir_status(struct bunch_bank *bank)
+
+static void update_status_core(
+    const char *name, const int *wf, EPICS_STRING *status,
+    void (*render)(int, char[]))
 {
-    int value, other, other_ix;
-    switch (assess_complexity(bank->fir_wf, &value, &other, &other_ix))
+    int value, other = 0, other_ix;
+    enum complexity complexity =
+        assess_complexity(wf, &value, &other, &other_ix);
+    char value_name[20], other_name[20];
+    render(value, value_name);
+    render(other, other_name);
+
+    switch (complexity)
     {
         case ALL_SAME:
-            sprintf(bank->fir_status.s, "All #%d", value);
+            snprintf(status->s, 40, "%s", value_name);
             break;
         case ALL_BUT_ONE:
-            sprintf(bank->fir_status.s, "#%d (#%d @%d)",
-                value, other, other_ix);
+            snprintf(status->s, 40, "%s (%s @%d)",
+                value_name, other_name, other_ix);
             break;
         case COMPLICATED:
-            sprintf(bank->fir_status.s, "Mixed");
+            snprintf(status->s, 40, "Mixed %s", name);
             break;
     }
 }
 
-static void update_out_status(struct bunch_bank *bank)
+
+/* Name rendering methods for calls to update_status_core below. */
+
+static void fir_name(int fir, char result[])
 {
-    int value, other, other_ix;
-    switch (assess_complexity(bank->out_wf, &value, &other, &other_ix))
-    {
-        case ALL_SAME:
-            sprintf(bank->out_status.s, "%s", out_name(value));
-            break;
-        case ALL_BUT_ONE:
-            sprintf(bank->out_status.s, "%s (%s @%d)",
-                out_name(value), out_name(other), other_ix);
-            break;
-        case COMPLICATED:
-            sprintf(bank->out_status.s, "Mixed outputs");
-            break;
-    }
+    sprintf(result, "#%d", fir);
 }
 
-static void update_gain_status(struct bunch_bank *bank)
+static void out_name(int out, char result[])
 {
-    int value, other, other_ix;
-    switch (assess_complexity(bank->gain_wf, &value, &other, &other_ix))
-    {
-        case ALL_SAME:
-            sprintf(bank->gain_status.s, "%d", value);
-            break;
-        case ALL_BUT_ONE:
-            sprintf(bank->gain_status.s, "%d (%d @%d)",
-                value, other, other_ix);
-            break;
-        case COMPLICATED:
-            sprintf(bank->gain_status.s, "Mixed gains");
-            break;
-    }
+    const char *out_names[] = {
+        "Off",      "FIR",      "NCO",      "NCO+FIR",
+        "Sweep",    "Sw+FIR",   "Sw+NCO",   "S+F+N" };
+    if (0 <= out  &&  out < 8)
+        sprintf(result, "%s", out_names[out]);
+    else
+        sprintf(result, "Error");
 }
+
+static void gain_name(int gain, char result[])
+{
+    sprintf(result, "%d", gain);
+}
+
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -166,7 +156,7 @@ static void update_bunch_select(struct bunch_bank *bank)
 
 /* The update for each bunch control waveform follows the same pattern, but
  * there are type differences preventing direct reuse. */
-#define DEFINE_WRITE_WF(type, field) \
+#define DEFINE_WRITE_WF(type, field, name) \
     static void write_##field##_wf(void *context, type *wf, size_t *length) \
     { \
         struct bunch_bank *bank = context; \
@@ -174,12 +164,13 @@ static void update_bunch_select(struct bunch_bank *bank)
         for (int i = 0; i < BUNCHES_PER_TURN; i ++) \
             bank->field##_wf[i] = wf[i]; \
         update_bunch_select(bank); \
-        update_##field##_status(bank); \
+        update_status_core(name, \
+            bank->field##_wf, &bank->field##_status, field##_name); \
     }
 
-DEFINE_WRITE_WF(char, fir)
-DEFINE_WRITE_WF(char, out)
-DEFINE_WRITE_WF(int, gain)
+DEFINE_WRITE_WF(char, fir, "FIR")
+DEFINE_WRITE_WF(char, out, "outputs")
+DEFINE_WRITE_WF(int, gain, "gains")
 
 
 static void publish_bank(int ix, struct bunch_bank *bank)

@@ -420,8 +420,8 @@ static void *monitor_events(void *context)
         poll_trigger_phase();
 
         UNLOCK();
-        /* Now sleep for a bit; 50ms seems responsive enough (20Hz). */
-        usleep(50000);
+
+        usleep(10000);      // Poll triggers at 100Hz for quick response
     }
     return NULL;
 }
