@@ -81,156 +81,169 @@ static const char *hardware_config_file;
 
 struct tmbf_config_space
 {
-    /* Some registers have completely different read and write meanings, in
-     * these cases we use anonymous unions to overlay two different names. */
+    /* Because each register has a different read and write meaning we define
+     * different overlaid read and write names for each register. */
 
-    union {                         // 0
-        const uint32_t fpga_version; // Version and FIR count
-        uint32_t pulse;             // Pulse event register
-        // All writes to this register generate single clock pulses for all
-        // written bits with the following effect:
-        //  0       Arm DDR
-        //  1       Soft trigger DDR
-        //  2       Arm buffer and sequencer
-        //  3       Soft trigger buffer and sequencer
-        //  4       Arm bunch counter sync
-        //  5       Disarm DDR, pulsed
-        //  7       Abort sequencer operation
-        //  8       Enable DDR capture (must be done before triggering)
-        //  9       Initiate ADC min/max readout
-        //  10      Initiate DAC min/max readout
-        //  11      Arm trigger phase capture
-        //  12      Enable tune following start
-        //  13      Initiate fast buffer readout
-    };
-    union {                         // 1
-        const uint32_t system_status;   // Status register
-        //  3:0     Trigger phase bits
-        //  7:4     Bunch trigger phase bits
-        //  15:8    Overflow bits
-        //          0   FIR gain overflow
-        //          1   DAC mux output overflow
-        //          2   DAC pre-emphasis filter overflow
-        //          4   IQ FIR input overflow
-        //          5   IQ accumulator overflow
-        //          6   IQ readout overflow
-        //  18:16   Current sequencer state ("program counter")
-        //  19      (unused)
-        //  20      Buffer trigger armed
-        //  21      Set if buffer busy
-        //  22      Set if sequencer busy
-        //  23      DDR trigger armed
-        //  24      ADC clock dropout detect.
-        //  31:25   (unused)
-        uint32_t write_select;      // Initiate write register
-    };
+    union {
+        /* The following registers are read only. */
+        const struct {
+            uint32_t fpga_version;      //  0  Version and FIR count
+            uint32_t system_status;     //  1  Status register
+            //  3:0     Trigger phase bits
+            //  7:4     Bunch trigger phase bits
+            //  15:8    Overflow bits
+            //          0   FIR gain overflow
+            //          1   DAC mux output overflow
+            //          2   DAC pre-emphasis filter overflow
+            //          4   IQ FIR input overflow
+            //          5   IQ accumulator overflow
+            //          6   IQ readout overflow
+            //  18:16   Current sequencer state ("program counter")
+            //  19      (unused)
+            //  20      Buffer trigger armed
+            //  21      Set if buffer busy
+            //  22      Set if sequencer busy
+            //  23      DDR trigger armed
+            //  24      ADC clock dropout detect.
+            //  31:25   (unused)
+            uint32_t control_r;         //  2  Control register readback
+            uint32_t unused_r_3;        //  3   (unused)
+            uint32_t ddr_status;        //  4  DDR status and offset
+            //  23:0    Trigger offset into DDR buffer
+            //  31      Set if DDR waiting for trigger
+            uint32_t unused_r_5;        //  5   (unused)
+            uint32_t unused_r_6;        //  6   (unused)
+            uint32_t unused_r_7;        //  7   (unused)
+            uint32_t unused_r_8;        //  8   (unused)
+            uint32_t unused_r_9;        //  9   (unused)
+            uint32_t unused_r_10;       // 10   (unused)
+            uint32_t unused_r_11;       // 11   (unused)
+            uint32_t unused_r_12;       // 12   (unused)
+            uint32_t unused_r_13;       // 13   (unused)
+            uint32_t unused_r_14;       // 14   (unused)
+            uint32_t unused_r_15;       // 15   (unused)
+            uint32_t unused_r_16;       // 16   (unused)
+            uint32_t unused_r_17;       // 17   (unused)
+            uint32_t unused_r_18;       // 18   (unused)
+            uint32_t unused_r_19;       // 19   (unused)
+            uint32_t adc_minmax_read;   // 20  Read ADC min/max data
+            uint32_t dac_minmax_read;   // 21  Read DAC min/max data
+            uint32_t fast_buffer_read;  // 22  Read fast buffer data
+            uint32_t unused_r_23;       // 23   (unused)
 
-    uint32_t control;               //  2  System control register
-    //  0       Global DAC output enable (1 => enabled)
-    //  1       Enable tune following feedback
-    //  2       Detector input select
-    //  5:3     Sequencer starting state
-    //  7:6     Select DDR trigger source
-    //  8       Detector bunch mode enable
-    //  9       Select blanking source
-    //  11:10   Buffer data select (FIR+ADC/IQ/FIR+DAC/ADC+DAC)
-    //  14:12   Select sequencer state for trigger generation
-    //  15      Select debug data for IQ buffer input
-    //  19:16   HOM gain select (in 6dB steps)
-    //  22:20   FIR gain select (in 6dB steps)
-    //  23      Enable internal loopback (testing only!)
-    //  26:24   Detector gain select (in 6dB steps)
-    //  27      Front panel LED
-    //  29:28   DDR input select (0 => ADC, 1 => DAC, 2 => FIR, 3 => 0)
-    //  31:30   ACD input fine delay (2ns steps)
+            // The following block of 8 registers is dedicated to tune following
+            uint32_t ftune_status;      // 24  Tune following status
+            // Status bits:
+            //  0       Set if integrated frequency out of range
+            //  1       Set if signal magnitude too small
+            //  2       Set on detector output overflow
+            //  3       Set on detector accumulator overflow
+            //  4       Set on FIR input overflow
+            //  5       Set if tune following feedback running
+            //  7:6     (unused)
+            //  12:8    Zero when feedback running, set to a copy of bits 4:0
+            //          when feedback halted.
+            uint32_t ftune_readout;     // 25  Tune following readout
+            // When read returns frequency offset values from FIFO with status
+            // and buffer info:
+            //  17:0    Frequency offset
+            //  30:21   Number of samples in buffer (including value being read)
+            //  31      Set of FIFO overflow has occurred
+            uint32_t ftune_iq;          // 26  Filtered IQ readback
+            uint32_t ftune_freq_offset; // 27  Filtered frequency offset
+            uint32_t ftune_i_minmax;    // 28  I min and max
+            uint32_t ftune_q_minmax;    // 29  Q min and max
+            uint32_t unused_r_30;       // 30   (unused)
+            uint32_t unused_r_31;       // 31   (unused)
+        };
 
-    uint32_t latch_overflow;        //  3  Latch new overflow status
-    union {                         //  4
-        const uint32_t ddr_status;  // DDR status and offset
-        //  23:0    Trigger offset into DDR buffer
-        //  31      Set if DDR waiting for trigger
-        uint32_t dac_delay;         // DAC output delay (2ns steps)
-        //  9:0     DAC output delay in 2ns steps
-        //  11:10   DAC pre-emphasis filter group delay in 2ns steps
-    };
+        /* The following registers are write only. */
+        struct {
+            uint32_t pulse;             //  0  Pulse event register
+            // All writes to this register generate single clock pulses for all
+            // written bits with the following effect:
+            //  0       Arm DDR
+            //  1       Soft trigger DDR
+            //  2       Arm buffer and sequencer
+            //  3       Soft trigger buffer and sequencer
+            //  4       Arm bunch counter sync
+            //  5       Disarm DDR, pulsed
+            //  7       Abort sequencer operation
+            //  8       Enable DDR capture (must be done before triggering)
+            //  9       Initiate ADC min/max readout
+            //  10      Initiate DAC min/max readout
+            //  11      Arm trigger phase capture
+            //  12      Enable tune following start
+            //  13      Initiate fast buffer readout
+            uint32_t write_select;      //  1  Initiate write register
+            uint32_t control;           //  2  System control register
+            //  0       Global DAC output enable (1 => enabled)
+            //  1       Enable tune following feedback
+            //  2       Detector input select
+            //  5:3     Sequencer starting state
+            //  7:6     Select DDR trigger source
+            //  8       Detector bunch mode enable
+            //  9       Select blanking source
+            //  11:10   Buffer data select (FIR+ADC/IQ/FIR+DAC/ADC+DAC)
+            //  14:12   Select sequencer state for trigger generation
+            //  15      Select debug data for IQ buffer input
+            //  19:16   HOM gain select (in 6dB steps)
+            //  22:20   FIR gain select (in 6dB steps)
+            //  23      Enable internal loopback (testing only!)
+            //  26:24   Detector gain select (in 6dB steps)
+            //  27      Front panel LED
+            //  29:28   DDR input select (0 => ADC, 1 => DAC, 2 => FIR, 3 => 0)
+            //  31:30   ACD input fine delay (2ns steps)
+            uint32_t latch_overflow;    //  3  Latch new overflow status
+            uint32_t dac_delay;         //  4  DAC output delay (2ns steps)
+            //  9:0     DAC output delay in 2ns steps
+            //  11:10   DAC pre-emphasis filter group delay in 2ns steps
+            uint32_t bunch_select;      //  5  Detector bunch selections
+            uint32_t adc_offset_ab;     //  6  ADC channel offsets (A/B)
+            uint32_t adc_offset_cd;     //  7  ADC channel offsets (C/D)
+            uint32_t dac_preemph_taps;  //  8  DAC pre-emphasis filter
+            uint32_t unused_w_9;        //  9   (unused)
+            uint32_t unused_w_10;       // 10   (unused)
+            uint32_t bunch_zero_offset; // 11  Bunch zero offset
+            uint32_t ddr_trigger_delay; // 12  DDR Trigger delay control
+            uint32_t buf_trigger_delay; // 13  BUF Trigger delay control
+            uint32_t trigger_blanking;  // 14  Trigger blanking length in turns
+            uint32_t unused_w_15;       // 15   (unused)
+            uint32_t unused_w_16;       // 16   (unused)
+            uint32_t fir_write;         // 17  Write FIR coefficients
+            uint32_t adc_limit;         // 18  Configure ADC limit threshold
+            uint32_t bunch_write;       // 19  Write bunch configuration
+            uint32_t unused_w_20;       // 20   (unused)
+            uint32_t unused_w_21;       // 21   (unused)
+            uint32_t unused_w_22;       // 22   (unused)
+            uint32_t sequencer_write;   // 23  Write sequencer data
 
-    uint32_t bunch_select;          //  5  Detector bunch selections
-    uint32_t adc_offset_ab;         //  6  ADC channel offsets (channels A/B)
-    uint32_t adc_offset_cd;         //  7  ADC channel offsets (channels C/D)
-    uint32_t dac_preemph_taps;      //  8  DAC pre-emphasis filter
-    uint32_t unused_9;              //  9   (unused)
-    uint32_t unused_10;             // 10   (unused)
-    uint32_t bunch_zero_offset;     // 11  Bunch zero offset
-    uint32_t ddr_trigger_delay;     // 12  DDR Trigger delay control
-    uint32_t buf_trigger_delay;     // 13  BUF Trigger delay control
-    uint32_t trigger_blanking;      // 14  Trigger blanking length in turns
-    uint32_t unused_15;             // 15   (unused)
-    uint32_t unused_16;             // 16   (unused)
-    uint32_t fir_write;             // 17  Write FIR coefficients
-    uint32_t adc_limit;             // 18  Configure ADC limit threshold
-    uint32_t bunch_write;           // 19  Write bunch configuration
-    uint32_t adc_minmax_read;       // 20  Read ADC min/max data
-    uint32_t dac_minmax_read;       // 21  Read DAC min/max data
-    uint32_t fast_buffer_read;      // 22  Read fast buffer data
-    uint32_t sequencer_write;       // 23  Write sequencer data
-
-    // The following block of 8 registers is dedicated to tune following
-    union {                         // 24
-        const uint32_t ftune_status;    // Tune following status
-        // Status bits:
-        //  0       Set if integrated frequency out of range
-        //  1       Set if signal magnitude too small
-        //  2       Set on detector output overflow
-        //  3       Set on detector accumulator overflow
-        //  4       Set on FIR input overflow
-        //  5       Set if tune following feedback running
-        //  7:6     (unused)
-        //  12:8    Zero when feedback running, set to a copy of bits 4:0 when
-        //          feedback halted.
-        uint32_t ftune_control;         // 24  Tune following master control
-        // For writing supports the following fields:
-        //  15:0    Dwell time in turns
-        //  16      Blanking enable
-        //  17      Multibunch enable
-        //  19:18   Channel selection
-        //  27:20   Single bunch selection
-        //  28      Input selection
-        //  31:29   Detector gain
+            // The following block of 8 registers is dedicated to tune following
+            uint32_t ftune_control;     // 24  Tune following master control
+            // For writing supports the following fields:
+            //  15:0    Dwell time in turns
+            //  16      Blanking enable
+            //  17      Multibunch enable
+            //  19:18   Channel selection
+            //  27:20   Single bunch selection
+            //  28      Input selection
+            //  31:29   Detector gain
+            uint32_t ftune_target;      // 25  Target phase and control
+            // For writing supports these fields:
+            //  17:0    Target phase
+            //  20:18   IIR scaling
+            uint32_t ftune_i_scale;     // 26  Tune following integral scaling
+            uint32_t ftune_min_mag;     // 27  Magnitude threshold for feedback
+            uint32_t ftune_max_offset;  // 28  Frequency offset feedback limit
+            uint32_t nco_frequency;     // 29  Fixed NCO generator frequency
+            uint32_t ftune_p_scale;     // 30  Feedback proportional scale
+            uint32_t ftune_read_control; // 31  Latches readback values
+            // Control bits:
+            //  0       Latches and resets accumulated ftune_status bits 4:0
+            //  1       Latches and resets ftune_i_minmax readout
+            //  2       Latches and resets ftune_q_minmax readout
+        };
     };
-    union {                         // 25
-        const uint32_t ftune_readout;   // Tune following readout
-        // When read returns frequency offset values from FIFO with status and
-        // buffer info:
-        //  17:0    Frequency offset
-        //  30:21   Number of samples in buffer (including value being read)
-        //  31      Set of FIFO overflow has occurred
-        uint32_t ftune_target;          // Target phase and control
-        // For writing supports these fields:
-        //  17:0    Target phase
-        //  20:18   IIR scaling
-    };
-    union {                         // 26
-        const uint32_t ftune_iq;        // Filtered IQ readback
-        uint32_t ftune_i_scale;         // Tune following integral scaling
-    };
-    union {                         // 27
-        const uint32_t ftune_freq_offset;
-        uint32_t ftune_min_magnitude;   // Magnitude threshold for feedback
-    };
-    union {                         // 28
-        const uint32_t ftune_i_minmax;  // I min and max
-        uint32_t ftune_max_offset;      // Frequency offset limit for feedback
-    };
-    union {                         // 29
-        const uint32_t ftune_q_minmax;  // Q min and max
-        uint32_t nco_frequency;         // Fixed NCO generator frequency
-    };
-    uint32_t ftune_p_scale;         // 30  Feedback proportional scale
-    uint32_t ftune_read_control;    // 31  Latches readback values
-    // Control bits:
-    //  0       Latches and resets accumulated ftune_status bits 4:0
-    //  1       Latches and resets ftune_i_minmax readout
-    //  2       Latches and resets ftune_q_minmax readout
 };
 
 /* These two pointers directly overlay the FF memory. */
@@ -292,7 +305,7 @@ static int subtract_offset(int value, int offset, int max_count)
 /* Reads packed array of min/max values using readout selector.  Used for ADC
  * and DAC readouts. */
 static void read_minmax(
-    int pulse_bit, volatile uint32_t *read_register,
+    int pulse_bit, volatile const uint32_t *read_register,
     int delay, short *min_out, short *max_out)
 {
     LOCK();
@@ -710,7 +723,7 @@ void hw_write_ftun_control(struct ftun_control *control)
         (control->target_phase & 0x3FFFF) |     // bits 17:0
         (control->iir_rate & 0x7) << 18;        //      20:18
     config_space->ftune_i_scale = -control->i_scale;
-    config_space->ftune_min_magnitude =
+    config_space->ftune_min_mag =
         (control->min_magnitude & 0xFFFF) |
         (control->iq_iir_rate & 0x7) << 16 |
         (control->freq_iir_rate & 0x7) << 22;
