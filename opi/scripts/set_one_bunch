@@ -25,31 +25,75 @@ gain_wf_pv   = pv('GAINWF')
 wf_pvs = [fir_wf_pv, output_wf_pv, gain_wf_pv]
 
 
-if action == 'one':
-    bunch, fir, output, gain = map(int, sys.argv[4:])
+def check(name, wf, min_val, max_val):
+    assert (min_val <= wf).all() and (wf < max_val).all(), \
+        'Invalid %s value: %s' % (name, wf)
+
+def check_fir(fir_wf):
+    check('FIR', fir_wf, 0, 4)
+def check_output(output_wf):
+    check('output', output_wf, 0, 8)
+def check_gain(gain_wf):
+    check('gain', gain_wf, -1024, 1024)
+
+def put_all(fir_wf, output_wf, gain_wf):
+    check_fir(fir_wf)
+    check_output(output_wf)
+    check_gain(gain_wf)
+    caput(wf_pvs, [fir_wf, output_wf, gain_wf])
+
+
+def action_one(args):
+    bunch, fir, output, gain = map(int, args)
     fir_wf, output_wf, gain_wf = caget(wf_pvs)
 
     fir_wf[bunch] = fir
     output_wf[bunch] = output
     gain_wf[bunch] = gain
 
-elif action == 'all':
-    fir, output, gain = map(int, sys.argv[4:])
+    put_all(fir_wf, output_wf, gain_wf)
+
+def action_all(args):
+    fir, output, gain = map(int, args)
     z = numpy.zeros(936, dtype = int)
     fir_wf    = z + fir
     output_wf = z + output
     gain_wf   = z + gain
 
-else:
+    put_all(fir_wf, output_wf, gain_wf)
+
+def make_action_one(wf_pv, check):
+    def action(args):
+        bunch, value = map(int, args)
+        wf = caget(wf_pv)
+        wf[bunch] = value
+        check(wf)
+        caput(wf_pv, wf)
+    return action
+
+def make_action_all(wf_pv, check):
+    def action(args):
+        value, = map(int, args)
+        wf = value * numpy.ones(936, dtype = int)
+        check(wf)
+        caput(wf_pv, wf)
+    return action
+
+action_fir_one  = make_action_one(fir_wf_pv,    check_fir)
+action_out_one  = make_action_one(output_wf_pv, check_output)
+action_gain_one = make_action_one(gain_wf_pv,   check_gain)
+
+action_fir_all  = make_action_all(fir_wf_pv,    check_fir)
+action_out_all  = make_action_all(output_wf_pv, check_output)
+action_gain_all = make_action_all(gain_wf_pv,   check_gain)
+
+
+try:
+    action_method = globals()['action_%s' % action]
+except:
     assert False, 'Unknown action: %s' % action
+else:
+    action_method(sys.argv[4:])
 
-
-def check(wf, min_val, max_val):
-    return (min_val <= wf).all() and (wf < max_val).all()
-
-assert check(fir_wf, 0, 4), 'Invalid FIR value'
-assert check(output_wf, 0, 8), 'Invalid output valie'
-assert check(gain_wf, -1024, 1024), 'Invalid gain value'
-caput(wf_pvs, [fir_wf, output_wf, gain_wf])
 
 # vim: set filetype=python:
