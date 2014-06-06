@@ -1026,6 +1026,21 @@ void hw_read_trg_ddr_source(bool source[DDR_SOURCE_COUNT])
     bits_to_bool_array(DDR_SOURCE_COUNT, source, READ_STATUS_BITS(8, 5));
 }
 
+void hw_write_trg_buf_source(const bool source[BUF_SOURCE_COUNT])
+{
+    WRITE_CONTROL_BITS_2(24, 3, bool_array_to_bits(BUF_SOURCE_COUNT, source));
+}
+
+void hw_write_trg_buf_blanking(const bool blanking[BUF_SOURCE_COUNT])
+{
+    WRITE_CONTROL_BITS_2(27, 3, bool_array_to_bits(BUF_SOURCE_COUNT, blanking));
+}
+
+void hw_read_trg_buf_source(bool source[BUF_SOURCE_COUNT])
+{
+    bits_to_bool_array(BUF_SOURCE_COUNT, source, READ_STATUS_BITS(13, 3));
+}
+
 
 /******************************************************************************/
 

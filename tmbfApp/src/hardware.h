@@ -355,6 +355,7 @@ void hw_write_seq_reset(void);
 /* TRG: Trigger control. */
 
 #define DDR_SOURCE_COUNT    5       // 5 DDR trigger sources available
+#define BUF_SOURCE_COUNT    3       // 3 BUF trigger sources available
 
 /* Simultaneously arm one or both of DDR and BUF. */
 void hw_write_trg_arm(bool ddr, bool buf);
@@ -388,6 +389,15 @@ void hw_write_trg_ddr_blanking(const bool blanking[DDR_SOURCE_COUNT]);
 
 /* Reads back which trigger sources were responsible for last trigger. */
 void hw_read_trg_ddr_source(bool source[DDR_SOURCE_COUNT]);
+
+/* Configure BUF trigger source. */
+void hw_write_trg_buf_source(const bool source[BUF_SOURCE_COUNT]);
+
+/* Configure which trigger sources respect the blanking window. */
+void hw_write_trg_buf_blanking(const bool blanking[BUF_SOURCE_COUNT]);
+
+/* Reads back which trigger sources were responsible for last trigger. */
+void hw_read_trg_buf_source(bool source[BUF_SOURCE_COUNT]);
 
 /* Returns raw phase bits from trigger. */
 int hw_read_trg_raw_phase(void);

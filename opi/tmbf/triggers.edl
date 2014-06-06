@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 214
-y 94
+x 2095
+y 53
 w 632
-h 524
+h 529
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -33,7 +33,7 @@ major 4
 minor 0
 release 0
 x 384
-y 336
+y 344
 w 240
 h 96
 lineColor index 14
@@ -48,7 +48,7 @@ major 4
 minor 0
 release 0
 x 8
-y 448
+y 456
 w 424
 h 64
 lineColor index 14
@@ -63,7 +63,7 @@ major 4
 minor 0
 release 0
 x 8
-y 336
+y 344
 w 368
 h 96
 lineColor index 14
@@ -112,7 +112,7 @@ major 4
 minor 1
 release 0
 x 560
-y 488
+y 496
 w 64
 h 24
 fgColor index 46
@@ -463,7 +463,7 @@ major 4
 minor 1
 release 0
 x 112
-y 352
+y 360
 w 88
 h 22
 fgColor index 14
@@ -486,7 +486,7 @@ major 4
 minor 1
 release 1
 x 16
-y 360
+y 368
 w 88
 h 14
 font "helvetica-bold-r-12.0"
@@ -506,7 +506,7 @@ major 4
 minor 6
 release 0
 x 304
-y 352
+y 360
 w 56
 h 20
 controlPv "$(device):BUN:OFFSET_S"
@@ -534,7 +534,7 @@ major 4
 minor 6
 release 0
 x 96
-y 408
+y 416
 w 32
 h 16
 controlPv "$(device):BUN:PHASE"
@@ -561,7 +561,7 @@ major 4
 minor 6
 release 0
 x 64
-y 464
+y 472
 w 32
 h 16
 controlPv "$(device):TRG:RAWPHASE"
@@ -587,7 +587,7 @@ major 4
 minor 1
 release 1
 x 224
-y 384
+y 392
 w 29
 h 14
 font "helvetica-bold-r-12.0"
@@ -607,7 +607,7 @@ major 4
 minor 1
 release 1
 x 224
-y 360
+y 368
 w 70
 h 14
 font "helvetica-bold-r-12.0"
@@ -627,7 +627,7 @@ major 4
 minor 1
 release 1
 x 16
-y 408
+y 416
 w 74
 h 14
 font "helvetica-bold-r-12.0"
@@ -647,7 +647,7 @@ major 4
 minor 1
 release 1
 x 16
-y 464
+y 472
 w 40
 h 14
 font "helvetica-bold-r-12.0"
@@ -858,7 +858,7 @@ major 4
 minor 1
 release 1
 x 392
-y 360
+y 368
 w 54
 h 14
 font "helvetica-bold-r-12.0"
@@ -878,7 +878,7 @@ major 4
 minor 6
 release 0
 x 456
-y 352
+y 360
 w 80
 h 20
 controlPv "$(device):TRG:BLANKING_S"
@@ -906,7 +906,7 @@ major 4
 minor 1
 release 1
 x 544
-y 360
+y 368
 w 27
 h 14
 font "helvetica-medium-r-12.0"
@@ -926,7 +926,7 @@ major 4
 minor 1
 release 0
 x 336
-y 480
+y 488
 w 88
 h 24
 fgColor index 14
@@ -949,7 +949,7 @@ major 4
 minor 6
 release 0
 x 256
-y 464
+y 472
 w 88
 h 16
 controlPv "$(device):TRG:COUNT"
@@ -976,7 +976,7 @@ major 4
 minor 1
 release 1
 x 208
-y 464
+y 472
 w 38
 h 14
 font "helvetica-bold-r-12.0"
@@ -996,7 +996,7 @@ major 4
 minor 6
 release 0
 x 96
-y 488
+y 496
 w 72
 h 16
 controlPv "$(device):TRG:JITTER"
@@ -1023,7 +1023,7 @@ major 4
 minor 1
 release 1
 x 16
-y 488
+y 496
 w 73
 h 14
 font "helvetica-bold-r-12.0"
@@ -1043,7 +1043,7 @@ major 4
 minor 6
 release 0
 x 184
-y 488
+y 496
 w 88
 h 16
 controlPv "$(device):TRG:JITTERPC"
@@ -1070,7 +1070,7 @@ major 4
 minor 1
 release 1
 x 168
-y 488
+y 496
 w 7
 h 14
 font "helvetica-bold-r-12.0"
@@ -1090,7 +1090,7 @@ major 4
 minor 6
 release 0
 x 144
-y 464
+y 472
 w 56
 h 16
 controlPv "$(device):TRG:AGE"
@@ -1117,7 +1117,7 @@ major 4
 minor 1
 release 1
 x 112
-y 464
+y 472
 w 26
 h 14
 font "helvetica-bold-r-12.0"
@@ -1137,7 +1137,7 @@ major 4
 minor 0
 release 0
 x 8
-y 328
+y 336
 w 16
 h 16
 lineColor index 14
@@ -1154,7 +1154,7 @@ major 4
 minor 1
 release 1
 x 8
-y 440
+y 448
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -1173,7 +1173,7 @@ major 4
 minor 0
 release 0
 x 8
-y 440
+y 448
 w 120
 h 16
 lineColor index 14
@@ -1187,7 +1187,7 @@ major 4
 minor 1
 release 1
 x 136
-y 408
+y 416
 w 44
 h 14
 font "helvetica-bold-r-12.0"
@@ -1207,7 +1207,7 @@ major 4
 minor 6
 release 0
 x 192
-y 408
+y 416
 w 96
 h 16
 controlPv "$(device):BUN:STATUS"
@@ -1233,7 +1233,7 @@ major 4
 minor 1
 release 0
 x 112
-y 376
+y 384
 w 88
 h 22
 fgColor index 14
@@ -1256,7 +1256,7 @@ major 4
 minor 1
 release 1
 x 24
-y 328
+y 336
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -1275,7 +1275,7 @@ major 4
 minor 0
 release 0
 x 24
-y 328
+y 336
 w 120
 h 16
 lineColor index 14
@@ -1289,7 +1289,7 @@ major 4
 minor 1
 release 1
 x 16
-y 384
+y 392
 w 72
 h 14
 font "helvetica-bold-r-12.0"
@@ -1309,7 +1309,7 @@ major 4
 minor 0
 release 0
 x 456
-y 384
+y 392
 w 96
 h 22
 fgColor index 14
@@ -1328,7 +1328,7 @@ major 4
 minor 1
 release 1
 x 392
-y 392
+y 400
 w 46
 h 14
 font "helvetica-bold-r-12.0"
@@ -1348,7 +1348,7 @@ major 4
 minor 6
 release 0
 x 264
-y 384
+y 392
 w 32
 h 16
 controlPv "$(device):ADC:SKEW"
@@ -1374,7 +1374,7 @@ major 4
 minor 1
 release 1
 x 384
-y 328
+y 336
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -1393,7 +1393,7 @@ major 4
 minor 0
 release 0
 x 384
-y 328
+y 336
 w 120
 h 16
 lineColor index 14
@@ -1445,7 +1445,7 @@ release 0
 x 8
 y 160
 w 616
-h 160
+h 168
 lineColor index 14
 fill
 fillColor index 4
@@ -1457,9 +1457,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 88
+x 64
 y 192
-w 80
+w 64
 h 22
 fgColor index 14
 bgColor index 3
@@ -1478,14 +1478,14 @@ minor 1
 release 1
 x 16
 y 200
-w 56
+w 23
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Trigger in"
+  "Trig"
 }
 autoSize
 endObjectProperties
@@ -1496,7 +1496,7 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 488
+x 560
 y 264
 w 56
 h 24
@@ -1524,7 +1524,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 272
+x 216
 y 192
 w 16
 h 16
@@ -1541,9 +1541,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 176
+x 136
 y 192
-w 80
+w 72
 h 22
 fgColor index 14
 bgColor index 3
@@ -1554,53 +1554,13 @@ controlPv "$(device):TRG:DDR:EXT:BL_S"
 font "helvetica-medium-r-12.0"
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 88
-y 174
-w 42
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Source"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 176
-y 174
-w 50
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Blanking"
-}
-autoSize
-endObjectProperties
-
 # (Rectangle)
 object activeRectangleClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 344
+x 504
 y 192
 w 16
 h 16
@@ -1608,7 +1568,7 @@ lineColor index 14
 fill
 fillColor index 16
 fillAlarm
-alarmPv "$(device):TRG:DDR:EXT:IN"
+alarmPv "$(device):TRG:EXT:IN"
 endObjectProperties
 
 # (Text Monitor)
@@ -1617,11 +1577,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 368
+x 528
 y 192
 w 40
 h 16
-controlPv "$(device):TRG:DDR:EXT:IN"
+controlPv "$(device):TRG:EXT:IN"
 font "helvetica-medium-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -1642,9 +1602,9 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 296
+x 240
 y 192
-w 40
+w 32
 h 16
 controlPv "$(device):TRG:DDR:EXT:HIT"
 font "helvetica-medium-r-12.0"
@@ -1667,28 +1627,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 272
-y 174
-w 29
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Fired"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 344
-y 174
+x 504
+y 176
 w 30
 h 14
 font "helvetica-bold-r-12.0"
@@ -1707,9 +1647,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 88
+x 64
 y 216
-w 80
+w 64
 h 22
 fgColor index 14
 bgColor index 3
@@ -1728,14 +1668,14 @@ minor 1
 release 1
 x 16
 y 224
-w 33
+w 19
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "PM in"
+  "PM"
 }
 autoSize
 endObjectProperties
@@ -1746,7 +1686,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 272
+x 216
 y 216
 w 16
 h 16
@@ -1763,9 +1703,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 176
+x 136
 y 216
-w 80
+w 72
 h 22
 fgColor index 14
 bgColor index 3
@@ -1782,7 +1722,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 344
+x 504
 y 216
 w 16
 h 16
@@ -1790,7 +1730,7 @@ lineColor index 14
 fill
 fillColor index 16
 fillAlarm
-alarmPv "$(device):TRG:DDR:PM:IN"
+alarmPv "$(device):TRG:PM:IN"
 endObjectProperties
 
 # (Text Monitor)
@@ -1799,11 +1739,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 368
+x 528
 y 216
 w 40
 h 14
-controlPv "$(device):TRG:DDR:PM:IN"
+controlPv "$(device):TRG:PM:IN"
 font "helvetica-medium-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -1824,10 +1764,10 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 296
+x 240
 y 216
-w 40
-h 14
+w 32
+h 16
 controlPv "$(device):TRG:DDR:PM:HIT"
 font "helvetica-medium-r-12.0"
 fgColor index 14
@@ -1849,9 +1789,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 88
+x 64
 y 240
-w 80
+w 64
 h 22
 fgColor index 14
 bgColor index 3
@@ -1870,14 +1810,14 @@ minor 1
 release 1
 x 16
 y 248
-w 54
+w 25
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "ADC limit"
+  "ADC"
 }
 autoSize
 endObjectProperties
@@ -1888,7 +1828,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 272
+x 216
 y 240
 w 16
 h 16
@@ -1905,9 +1845,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 176
+x 136
 y 240
-w 80
+w 72
 h 22
 fgColor index 14
 bgColor index 3
@@ -1924,7 +1864,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 344
+x 504
 y 240
 w 16
 h 16
@@ -1932,7 +1872,7 @@ lineColor index 14
 fill
 fillColor index 16
 fillAlarm
-alarmPv "$(device):TRG:DDR:ADC:IN"
+alarmPv "$(device):TRG:ADC:IN"
 endObjectProperties
 
 # (Text Monitor)
@@ -1941,11 +1881,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 368
+x 528
 y 240
 w 40
 h 14
-controlPv "$(device):TRG:DDR:ADC:IN"
+controlPv "$(device):TRG:ADC:IN"
 font "helvetica-medium-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -1966,10 +1906,10 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 296
+x 240
 y 240
-w 40
-h 14
+w 32
+h 16
 controlPv "$(device):TRG:DDR:ADC:HIT"
 font "helvetica-medium-r-12.0"
 fgColor index 14
@@ -1991,9 +1931,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 88
+x 64
 y 264
-w 80
+w 64
 h 22
 fgColor index 14
 bgColor index 3
@@ -2012,14 +1952,14 @@ minor 1
 release 1
 x 16
 y 272
-w 62
+w 27
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "SEQ state"
+  "SEQ"
 }
 autoSize
 endObjectProperties
@@ -2030,7 +1970,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 272
+x 216
 y 264
 w 16
 h 16
@@ -2047,9 +1987,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 176
+x 136
 y 264
-w 80
+w 72
 h 22
 fgColor index 14
 bgColor index 3
@@ -2066,7 +2006,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 344
+x 504
 y 264
 w 16
 h 16
@@ -2074,7 +2014,7 @@ lineColor index 14
 fill
 fillColor index 16
 fillAlarm
-alarmPv "$(device):TRG:DDR:SEQ:IN"
+alarmPv "$(device):TRG:SEQ:IN"
 endObjectProperties
 
 # (Text Monitor)
@@ -2083,11 +2023,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 368
+x 528
 y 264
 w 40
 h 14
-controlPv "$(device):TRG:DDR:SEQ:IN"
+controlPv "$(device):TRG:SEQ:IN"
 font "helvetica-medium-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -2108,10 +2048,10 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 296
+x 240
 y 264
-w 40
-h 14
+w 32
+h 16
 controlPv "$(device):TRG:DDR:SEQ:HIT"
 font "helvetica-medium-r-12.0"
 fgColor index 14
@@ -2133,9 +2073,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 88
+x 64
 y 288
-w 80
+w 64
 h 22
 fgColor index 14
 bgColor index 3
@@ -2154,14 +2094,14 @@ minor 1
 release 1
 x 16
 y 296
-w 47
+w 33
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "SCLK in"
+  "SCLK"
 }
 autoSize
 endObjectProperties
@@ -2172,7 +2112,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 272
+x 216
 y 288
 w 16
 h 16
@@ -2189,9 +2129,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 176
+x 136
 y 288
-w 80
+w 72
 h 22
 fgColor index 14
 bgColor index 3
@@ -2208,7 +2148,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 344
+x 504
 y 288
 w 16
 h 16
@@ -2216,7 +2156,7 @@ lineColor index 14
 fill
 fillColor index 16
 fillAlarm
-alarmPv "$(device):TRG:DDR:SCLK:IN"
+alarmPv "$(device):TRG:SCLK:IN"
 endObjectProperties
 
 # (Text Monitor)
@@ -2225,11 +2165,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 368
+x 528
 y 288
 w 40
 h 14
-controlPv "$(device):TRG:DDR:SCLK:IN"
+controlPv "$(device):TRG:SCLK:IN"
 font "helvetica-medium-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -2250,10 +2190,10 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 296
+x 240
 y 288
-w 40
-h 14
+w 32
+h 16
 controlPv "$(device):TRG:DDR:SCLK:HIT"
 font "helvetica-medium-r-12.0"
 fgColor index 14
@@ -2275,7 +2215,7 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 488
+x 560
 y 240
 w 56
 h 24
@@ -2312,7 +2252,7 @@ fontAlign "center"
 fgColor index 1
 bgColor index 10
 value {
-  "DDR Hardware Trigger"
+  "Hardware Triggers"
 }
 endObjectProperties
 
@@ -2330,24 +2270,258 @@ lineColor index 14
 fillColor index 0
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
+# (Menu Button)
+object activeMenuButtonClass
 beginObjectProperties
 major 4
-minor 1
-release 1
-x 416
-y 244
-w 54
+minor 0
+release 0
+x 288
+y 192
+w 64
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:BUF:EXT:EN_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 440
+y 192
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:BUF:EXT:HIT"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 360
+y 192
+w 72
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:BUF:EXT:BL_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 464
+y 192
+w 32
 h 14
-font "helvetica-bold-r-12.0"
+controlPv "$(device):TRG:BUF:EXT:HIT"
+font "helvetica-medium-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
-value {
-  "ADC limit"
-}
-autoSize
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 288
+y 240
+w 64
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:BUF:ADC:EN_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 440
+y 240
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:BUF:ADC:HIT"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 360
+y 240
+w 72
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:BUF:ADC:BL_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 464
+y 240
+w 32
+h 14
+controlPv "$(device):TRG:BUF:ADC:HIT"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 288
+y 288
+w 64
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:BUF:SCLK:EN_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 440
+y 288
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 16
+fillAlarm
+alarmPv "$(device):TRG:BUF:SCLK:HIT"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 360
+y 288
+w 72
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TRG:BUF:SCLK:BL_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 464
+y 288
+w 32
+h 14
+controlPv "$(device):TRG:BUF:SCLK:HIT"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 56
+y 184
+w 216
+h 136
+lineColor index 14
+fillColor index 0
 endObjectProperties
 
 # (Static Text)
@@ -2356,17 +2530,49 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 416
-y 268
-w 62
-h 14
+x 64
+y 176
+w 40
+h 16
 font "helvetica-bold-r-12.0"
+fontAlign "center"
 fgColor index 14
-bgColor index 0
-useDisplayBg
+bgColor index 4
 value {
-  "SEQ state"
+  "DDR"
 }
-autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 280
+y 184
+w 216
+h 136
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 288
+y 176
+w 40
+h 16
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "Buf"
+}
 endObjectProperties
 

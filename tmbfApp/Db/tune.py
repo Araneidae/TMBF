@@ -86,8 +86,8 @@ Trigger('TUNE',
     *tune_measurement +
 
     # Peak detection support
-     peak_readbacks(4) + peak_readbacks(16) + peak_readbacks(64) +
-     tune_results(':PEAK'))
+    peak_readbacks(4) + peak_readbacks(16) + peak_readbacks(64) +
+    tune_results(':PEAK'))
 
 # Controls for tune peak finding
 aOut('TUNE:THRESHOLD', 0, 1, PREC = 2, DESC = 'Peak fraction threshold')

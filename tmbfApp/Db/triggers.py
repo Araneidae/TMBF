@@ -6,8 +6,8 @@ from common import *
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Core trigger configuration
 
-def TriggerTarget(name, hardware):
-    boolOut('TRG:%s:SEL' % name, 'Soft', hardware,
+def TriggerTarget(name):
+    boolOut('TRG:%s:SEL' % name, 'Soft', 'Hardware',
         DESC = '%s trigger source' % name)
     boolOut('TRG:%s:MODE' % name, 'One Shot', 'Retrigger',
         DESC = 'Mode select for %s' % name)
@@ -18,42 +18,53 @@ def TriggerTarget(name, hardware):
     boolIn('TRG:%s:STATUS' % name, 'Ready', 'Busy',
         SCAN = 'I/O Intr', DESC = '%s status' % name)
 
+# External trigger source configuration.  For each source we have a source
+# enable, a blanking enable, and a trigger source status.
+def TriggerSources(name, trigger_list):
+    set_ext = Action('TRG:%s:SET' % name,
+        DESC = 'Update %s trigger source' % name)
+    trigger_status = []
+    for src, desc in trigger_list:
+        boolOut('TRG:%s:%s:EN' % (name, src), 'Ignore', 'Enable',
+            FLNK = set_ext, DESC = '%s %s trigger enable' % (name, desc))
+        boolOut('TRG:%s:%s:BL' % (name, src), 'All', 'Blanking',
+            FLNK = set_ext, DESC = '%s %s blanking' % (name, desc))
+        trigger_status.append(
+            boolIn('TRG:%s:%s:HIT' % (name, src), 'No', 'Yes',
+                ZSV = 'MINOR', DESC = '%s %s trigger source' % (name, desc)))
+    Trigger('TRG:%s:HIT' % name, *trigger_status)
+
+
+# List of all available external trigger sources.  Only the first three are used
+# for BUF triggering.
+external_triggers = [
+    ('EXT', 'External'),
+    ('ADC', 'Min/max limit'),
+    ('SCLK', 'SCLK input'),
+    ('PM', 'Postmortem'),
+    ('SEQ', 'Sequencer state')]
+
+# Monitor input status for each trigger source.
+input_status = [
+    boolIn('TRG:%s:IN' % name, 'No', 'Yes',
+        ZSV = 'MINOR', DESC = '%s present' % desc)
+    for name, desc in external_triggers]
+create_fanout('TRG:IN:FAN',
+    Action('TRG:IN', DESC = 'Scan trigger inputs'),
+    SCAN = '.2 second', *input_status)
+
+
 # Trigger source selections for the trigger targets.
-TriggerTarget('DDR', 'Hardware')
-TriggerTarget('BUF', 'Trigger In')
+TriggerTarget('DDR')
+TriggerTarget('BUF')
+
+# Trigger external sources.  For BUF we don't support PM or SEQ triggering
+TriggerSources('DDR', external_triggers)
+TriggerSources('BUF', external_triggers[:3])
+
 
 boolOut('TRG:SYNC', 'Separate', 'Synched',
     DESC = 'Synchronise DDR & BUF triggers')
-
-# External trigger source configuration for DDR trigger.  For each source we
-# have a source enable, a blanking enable, an active status, and a trigger
-# source status.
-set_ddr_ext = Action('TRG:DDR:SET', DESC = 'Update DDR trigger source')
-external_triggers = [
-    ('EXT', 'External'),
-    ('PM', 'Postmortem'),
-    ('ADC', 'Min/max limit'),
-    ('SEQ', 'Sequencer state'),
-    ('SCLK', 'SCLK input')]
-input_status = []
-trigger_status = []
-for name, desc in external_triggers:
-    boolOut('TRG:DDR:%s:EN' % name, 'Ignore', 'Enable', FLNK = set_ddr_ext,
-        DESC = '%s trigger enable' % desc)
-    boolOut('TRG:DDR:%s:BL' % name, 'Off', 'Blanking', FLNK = set_ddr_ext,
-        DESC = '%s blanking' % desc)
-    input_status.append(
-        boolIn('TRG:DDR:%s:IN' % name, 'No', 'Yes',
-            ZSV = 'MINOR', DESC = '%s present' % desc))
-    trigger_status.append(
-        boolIn('TRG:DDR:%s:HIT' % name, 'No', 'Yes',
-            ZSV = 'MINOR', DESC = '%s trigger source' % desc))
-create_fanout('TRG:DDR:FAN',
-    Action('TRG:DDR:IN', DESC = 'Scan trigger inputs'),
-    SCAN = '.2 second', *input_status)
-Trigger('TRG:DDR:HIT', *trigger_status)
-
-
 
 
 # Sequencer control.

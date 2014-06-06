@@ -158,9 +158,14 @@ put('TUNE:BLK:SEP_S', min_block_sep)
 put('TUNE:THRESHOLD_S', tune_threshold)
 
 # Trigger on external trigger.
-put('TRG:BUF:SEL_S', 'Trigger In')
-put('TRG:SEQ:ENA_S', 'Enabled')
+put('TRG:BUF:SEL_S', 'Hardware')
+put('TRG:BUF:EXT:EN_S', 'Enable')
+put('TRG:BUF:EXT:BL_S', 'Blanking')
+put('TRG:BUF:ADC:EN_S', 'Ignore')
+put('TRG:BUF:SCLK:EN_S', 'Ignore')
 put('TRG:BUF:MODE_S', 'Retrigger')
+
+put('TRG:SEQ:ENA_S', 'Enabled')
 put('TRG:SYNC_S', 'Separate')
 put('TRG:BLANKING_S', blanking_interval)
 
