@@ -504,13 +504,12 @@ bool initialise_detector(void)
         publish_channel(name, &sweep_info.channels[i]);
     }
     publish_channel("M", &sweep_info.mean);
-    iq_trigger = create_interlock("DET:TRIG", "DET:DONE", false);
+    iq_trigger = create_interlock("DET", false);
 
     PUBLISH_WF_READ_VAR(
         double, "DET:SCALE", TUNE_LENGTH, sweep_info.tune_scale);
     PUBLISH_WF_READ_VAR(int, "DET:TIMEBASE", TUNE_LENGTH, timebase);
-    tune_scale_trigger =
-        create_interlock("DET:SCALE:TRIG", "DET:SCALE:DONE", false);
+    tune_scale_trigger = create_interlock("DET:SCALE", false);
 
     /* Initialise the scaling constants so that
      *  wf_scaling * 2^wf_shift = 936 * 2^-32. */

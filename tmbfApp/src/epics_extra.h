@@ -40,8 +40,7 @@ struct epics_interlock;
 
 /* Creates an interlock with the given names.  If set_time is set then a
  * timestamp should be passed when signalling the interlock. */
-struct epics_interlock *create_interlock(
-    const char *trigger_name, const char *done_name, bool set_time);
+struct epics_interlock *create_interlock(const char *base_name, bool set_time);
 
 /* Blocks until EPICS reports back by processing the DONE record.  The first
  * call must be made before calling interlock_signal() and will wait for EPICS

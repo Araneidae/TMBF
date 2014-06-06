@@ -371,7 +371,7 @@ bool initialise_tune_follow(void)
     PUBLISH_WF_READ_VAR(float, "FTUN:FREQ", FTUN_FREQ_LENGTH, freq_wf);
     PUBLISH_WF_READ_VAR(int, "FTUN:RAWFREQ", FTUN_FREQ_LENGTH, raw_freq_wf);
     PUBLISH_READ_VAR(ai, "NCO:FREQ:MEAN", mean_nco_frequency);
-    ftun_interlock = create_interlock("FTUN:TRIG", "FTUN:DONE", false);
+    ftun_interlock = create_interlock("FTUN", false);
 
     /* Debug PVs available when fast buffer in debug mode. */
     PUBLISH_WF_READ_VAR(short, "FTUN:DEBUG:I", DATA_LENGTH, debug_i);
@@ -381,8 +381,7 @@ bool initialise_tune_follow(void)
     PUBLISH_WF_READ_VAR(float, "FTUN:DEBUG:FILTER", DATA_LENGTH, debug_filter);
     PUBLISH_WF_READ_VAR(float, "FTUN:DEBUG:DELTAF", DATA_LENGTH, debug_deltaf);
     PUBLISH_WF_READ_VAR(short, "FTUN:DEBUG:STATUS", DATA_LENGTH, debug_status);
-    debug_interlock = create_interlock(
-        "FTUN:DEBUG:TRIG", "FTUN:DEBUG:DONE", false);
+    debug_interlock = create_interlock("FTUN:DEBUG", false);
 
     /* Status bits. */
     PUBLISH_ACTION("FTUN:STAT:SCAN", read_ftun_status);

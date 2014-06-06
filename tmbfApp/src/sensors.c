@@ -633,7 +633,7 @@ static void read_overflows(void)
 
 bool initialise_sensors(void)
 {
-    interlock = create_interlock("SE:TRIG", "SE:DONE", false);
+    interlock = create_interlock("SE", false);
 
     PUBLISH_READ_VAR(longin, "SE:TEMP", MbTemperature);
     PUBLISH_READ_VAR(longin, "SE:FAN1", FanSpeeds[0]);

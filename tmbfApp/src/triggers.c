@@ -159,9 +159,7 @@ static void publish_trigger_sources(struct trigger_sources *sources)
 #define FORMAT(field) \
     (sprintf(buffer, "TRG:%s:%s", sources->name, field), buffer)
     PUBLISH(bo, FORMAT("SET"), set_trigger_source, .context = sources);
-    char buffer2[40];
-    strcpy(buffer2, FORMAT("HIT:DONE"));
-    sources->hit_update = create_interlock(FORMAT("HIT:TRIG"), buffer2, false);
+    sources->hit_update = create_interlock(FORMAT("HIT"), false);
 #undef FORMAT
 }
 
@@ -494,7 +492,7 @@ bool initialise_triggers(void)
 {
     publish_targets();
 
-    trigger_tick = create_interlock("TRG:TICK:TRIG", "TRG:TICK:DONE", false);
+    trigger_tick = create_interlock("TRG:TICK", false);
     PUBLISH_READ_VAR(longin, "TRG:RAWPHASE", raw_trig_phase);
     PUBLISH_READ_VAR(longin, "TRG:COUNT", trigger_count);
     PUBLISH_READ_VAR(longin, "TRG:JITTER", jitter_count);

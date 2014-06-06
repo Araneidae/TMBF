@@ -225,12 +225,12 @@ bool initialise_sequencer(void)
     PUBLISH_ACTION("SEQ:RESET", hw_write_seq_reset);
     PUBLISH_WRITER_P(longout, "SEQ:TRIGGER", hw_write_seq_trig_state);
 
-    info_trigger = create_interlock("SEQ:INFO:TRIG", "SEQ:INFO:DONE", false);
+    info_trigger = create_interlock("SEQ:INFO", false);
     PUBLISH_READ_VAR(longin, "SEQ:LENGTH", capture_count);
     PUBLISH_READ_VAR(longin, "SEQ:DURATION", sequencer_duration);
 
     /* Fast buffer configuration settings. */
-    buffer_trigger = create_interlock("BUF:TRIG", "BUF:DONE", false);
+    buffer_trigger = create_interlock("BUF", false);
     PUBLISH_WF_READ_VAR(int, "BUF:WF", BUF_DATA_LENGTH, buffer_raw);
     PUBLISH_WF_READ_VAR(short, "BUF:WFA", BUF_DATA_LENGTH, buffer_low);
     PUBLISH_WF_READ_VAR(short, "BUF:WFB", BUF_DATA_LENGTH, buffer_high);

@@ -63,15 +63,18 @@ static bool interlock_done(void *context, const bool *value)
     return true;
 }
 
-struct epics_interlock *create_interlock(
-    const char *trigger_name, const char *done_name, bool set_time)
+struct epics_interlock *create_interlock(const char *base_name, bool set_time)
 {
     struct epics_interlock *interlock = malloc(sizeof(struct epics_interlock));
     interlock->next = NULL;
-    interlock->trigger = PUBLISH(bi, trigger_name,
+
+    char buffer[strlen(base_name) + strlen(":TRIG") + 1];
+    sprintf(buffer, "%s:TRIG", base_name);
+    interlock->trigger = PUBLISH(bi, buffer,
         .read = _publish_trigger_bi, .io_intr = true, .set_time = set_time);
     pthread_mutex_init(&interlock->mutex, NULL);
-    PUBLISH(bo, done_name, .write = interlock_done, .context = interlock);
+    sprintf(buffer, "%s:DONE", base_name);
+    PUBLISH(bo, buffer, .write = interlock_done, .context = interlock);
 
     LOCK_READY();
     if (!epics_ready)

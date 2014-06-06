@@ -929,7 +929,7 @@ static void set_tune_settings(void)
 
 bool initialise_tune(void)
 {
-    tune_trigger = create_interlock("TUNE:TRIG", "TUNE:DONE", false);
+    tune_trigger = create_interlock("TUNE", false);
     PUBLISH_WRITE_VAR_P(longout, "TUNE:HARMONIC", harmonic);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:CENTRE", centre_tune);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:RANGE", half_range);

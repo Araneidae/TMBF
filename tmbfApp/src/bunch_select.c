@@ -414,7 +414,7 @@ static bool publish_bunch_sync(void)
     PUBLISH_ACTION("BUN:RESET", reset_bunch_sync);
     PUBLISH_ACTION("BUN:SYNC", sync_bunch_sync);
 
-    sync_interlock = create_interlock("BUN:SYNC:TRIG", "BUN:SYNC:DONE", false);
+    sync_interlock = create_interlock("BUN:SYNC", false);
     PUBLISH_READ_VAR(longin, "BUN:PHASE", sync_phase);
     PUBLISH_READ_VAR(mbbi, "BUN:STATUS", sync_status);
 
