@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2787
-y 589
+x 650
+y 68
 w 456
 h 474
 font "helvetica-medium-r-8.0"
@@ -35,7 +35,7 @@ release 0
 x 8
 y 48
 w 216
-h 88
+h 112
 lineColor index 14
 fill
 fillColor index 4
@@ -790,7 +790,7 @@ x 8
 y 376
 w 440
 h 24
-font "helvetica-bold-r-24.0"
+font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 0
@@ -811,7 +811,7 @@ y 136
 w 200
 h 16
 controlPv "$(device):BUN:MODE"
-font "helvetica-medium-r-14.0"
+font "helvetica-bold-r-14.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
@@ -830,12 +830,12 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 8
-y 144
-w 216
+x 16
+y 136
+w 200
 h 16
 controlPv "$(device):TUNE:MODE"
-font "helvetica-medium-r-14.0"
+font "helvetica-bold-r-14.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
