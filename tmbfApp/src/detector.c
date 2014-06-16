@@ -18,6 +18,7 @@
 #include "numeric.h"
 #include "tune.h"
 #include "bunch_select.h"
+#include "tmbf.h"
 
 #include "detector.h"
 
@@ -374,27 +375,34 @@ static void publish_channel(const char *name, struct channel_sweep *sweep)
 }
 
 
+static void compute_default_window(float window[])
+{
+    /* Let's use the Hamming window.  As this is only done once at startup it
+     * doesn't matter if we take our time and use full floating point
+     * arithmetic. */
+    double a = 0.54;
+    double b = 1 - a;
+    for (int i = 0; i < DET_WINDOW_LENGTH; i ++)
+        window[i] = (a - b * cos(2 * M_PI * i / (DET_WINDOW_LENGTH - 1)));
+}
+
+
 static bool reset_window = true;
 
 /* Compute the appropriate windowing function for the detector.  If called after
  * reset_window has been set then the incoming window is replaced by a standard
  * window before being written to hardware. */
-static void write_detector_window(void *context, short *window, size_t *length)
+static void write_detector_window(void *context, float window[], size_t *length)
 {
     if (reset_window)
     {
-        /* Let's use the Hamming window.  As this is only done once at startup
-         * it doesn't matter if we take our time and use full floating point
-         * arithmetic. */
-        double a = 0.54;
-        double b = 1 - a;
-        for (int i = 0; i < DET_WINDOW_LENGTH; i ++)
-            window[i] = (uint16_t) round(32767 *
-                (a - b * cos(2 * M_PI * i / (DET_WINDOW_LENGTH - 1))));
-
+        compute_default_window(window);
         reset_window = false;
     }
-    hw_write_det_window((uint16_t *) window);
+
+    int window_int[DET_WINDOW_LENGTH];
+    float_array_to_int(DET_WINDOW_LENGTH, window, window_int, 16, 0);
+    hw_write_det_window(window_int);
     *length = DET_WINDOW_LENGTH;
 }
 
@@ -518,7 +526,7 @@ bool initialise_detector(void)
 
     /* Program the sequencer window. */
     PUBLISH_WAVEFORM(
-        short, "DET:WINDOW", DET_WINDOW_LENGTH, write_detector_window);
+        float, "DET:WINDOW", DET_WINDOW_LENGTH, write_detector_window);
     PUBLISH_ACTION("DET:RESET_WIN", reset_detector_window);
 
     PUBLISH_READER(stringin, "TUNE:MODE", read_tune_mode);

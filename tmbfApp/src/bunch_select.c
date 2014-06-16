@@ -16,6 +16,7 @@
 #include "epics_device.h"
 #include "epics_extra.h"
 #include "adc_dac.h"
+#include "tmbf.h"
 
 #include "bunch_select.h"
 
@@ -34,8 +35,6 @@ struct bunch_bank {
 
 
 #define GAIN_SCALE      1024
-#define MAX_GAIN        (1.0 - 1.0 / GAIN_SCALE)
-#define MIN_GAIN        (-1.0)
 
 
 
@@ -182,14 +181,7 @@ DEFINE_WRITE_WF(int, gain, "gains")
 static void write_gain_wf_float(void *context, float gain[], size_t *length)
 {
     int gain_int[BUNCHES_PER_TURN];
-    for (int i = 0; i < BUNCHES_PER_TURN; i ++)
-    {
-        if (gain[i] > MAX_GAIN)
-            gain[i] = MAX_GAIN;
-        else if (gain[i] < MIN_GAIN)
-            gain[i] = MIN_GAIN;
-        gain_int[i] = (int) roundf(gain[i] * GAIN_SCALE);
-    }
+    float_array_to_int(BUNCHES_PER_TURN, gain, gain_int, 11, 0);
     write_gain_wf(context, gain_int, length);
 }
 

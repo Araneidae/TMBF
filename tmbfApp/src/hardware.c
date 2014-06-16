@@ -425,7 +425,7 @@ void hw_write_adc_offsets(short offsets[4])
         config_space->adc_offsets = offsets[i];
 }
 
-void hw_write_adc_filter(short taps[12])
+void hw_write_adc_filter(int taps[12])
 {
     config_space->write_select = 0;
     for (int i = 2; i >= 0; i --)
@@ -494,7 +494,7 @@ void hw_write_dac_enable(bool enable)
     WRITE_CONTROL_BITS(0, 1, enable);
 }
 
-void hw_write_dac_preemph(short taps[3])
+void hw_write_dac_preemph(int taps[3])
 {
     config_space->write_select = 0;
     for (int i = 2; i >= 0; i --)
@@ -726,7 +726,7 @@ void hw_write_det_gain(unsigned int gain)
     WRITE_CONTROL_BITS(24, 3, gain);
 }
 
-void hw_write_det_window(const uint16_t window[DET_WINDOW_LENGTH])
+void hw_write_det_window(const int window[DET_WINDOW_LENGTH])
 {
     LOCK();
     config_space->write_select = 1;    // Select sequencer window

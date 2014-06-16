@@ -22,9 +22,9 @@ for bank in range(4):
 
     # Waveform taps in two forms: TAPS_S is what is set directly as a waveform
     # write, TAPS is what is current loaded.
-    WaveformOut('FIR:%d:TAPS_S' % bank, FIR_LENGTH,
+    WaveformOut('FIR:%d:TAPS_S' % bank, FIR_LENGTH, 'FLOAT',
         DESC = 'Set waveform taps')
-    Waveform('FIR:%d:TAPS' % bank, FIR_LENGTH,
+    Waveform('FIR:%d:TAPS' % bank, FIR_LENGTH, 'FLOAT',
         SCAN = 'I/O Intr', DESC = 'Current waveform taps')
 
 

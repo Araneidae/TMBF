@@ -14,6 +14,7 @@
 #include "hardware.h"
 #include "epics_device.h"
 #include "numeric.h"
+#include "tmbf.h"
 
 #include "adc_dac.h"
 
@@ -40,7 +41,7 @@ struct min_max {
     double max_max;
 
     /* Support for filter coefficient update. */
-    void (*write_filter)(short taps[]);
+    void (*write_filter)(int taps[]);
     int tap_count;
 };
 
@@ -113,22 +114,11 @@ static void publish_minmax(
 
 
 /* Support for writing waveforms with clipping. */
-#define COEFF_SCALE     16384
-#define MAX_COEFF       (2.0 - 1.0 / COEFF_SCALE)
-#define MIN_COEFF       (-2.0)
 static void write_filter_coeffs(void *context, float coeffs[], size_t *length)
 {
     struct min_max *min_max = context;
-    short taps[min_max->tap_count];
-    for (int i = 0; i < min_max->tap_count; i ++)
-    {
-        if (coeffs[i] > MAX_COEFF)
-            coeffs[i] = MAX_COEFF;
-        else if (coeffs[i] < MIN_COEFF)
-            coeffs[i] = MIN_COEFF;
-        taps[i] = (int) roundf(coeffs[i] * COEFF_SCALE);
-    }
-
+    int taps[min_max->tap_count];
+    float_array_to_int(min_max->tap_count, coeffs, taps, 16, 1);
     min_max->write_filter(taps);
     *length = min_max->tap_count;
 }

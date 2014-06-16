@@ -24,9 +24,6 @@ class DAC_OUT:
     NCO = 2
     SWEEP = 4
 
-    # Maximum DAC output gain
-    MAX_GAIN = 1023
-
 
 
 # ------------------------------------------------------------------------------
@@ -74,11 +71,11 @@ def configure_timing_test(tmbf, compensate = False):
     # Disable delay compensation so we meaure raw delays
     tmbf.set('COMPENSATE_S', 'Normal' if compensate else 'Disabled')
     # This is our nominal zero delay for the DAC pre-emphasis
-    tmbf.set('DAC:PREEMPH_S', [0, 1<<14, 0])
+    tmbf.set('DAC:PREEMPH_S', [0, 1, 0])
     tmbf.set('DAC:PREEMPH:DELAY_S', '0 ns')
     # Similarly reset ADC pre-emphasis filter and offsets
     tmbf.set('ADC:OFFSET_S', 4 * [0])
-    tmbf.set('ADC:FILTER_S', 4 * [0, 1<<14, 0])
+    tmbf.set('ADC:FILTER_S', 4 * [0, 1, 0])
     tmbf.set('ADC:FILTER:DELAY_S', '0 ns')
 
     # For inputs use internal loopback
@@ -109,8 +106,7 @@ def configure_timing_test(tmbf, compensate = False):
 
 # Configure bank for single pulse output from NCO
 def configure_dac_single_pulse(tmbf, bank = 0):
-    configure.bank_wf(tmbf, bank,
-        DAC_OUT.MAX_GAIN, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.OFF))
+    configure.bank_wf(tmbf, bank, 1, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.OFF))
 
 
 
@@ -120,7 +116,7 @@ def setup_detector_single_bunch(tmbf, bank=1, fir=0):
     configure.sequencer_pc(tmbf, 1)
 
     # Configure the selected bank for sweep
-    configure.bank_wf(tmbf, bank, DAC_OUT.MAX_GAIN, fir, DAC_OUT.SWEEP)
+    configure.bank_wf(tmbf, bank, 1, fir, DAC_OUT.SWEEP)
 
     # Configure detector for single bunch capture
     tmbf.set('DET:MODE_S', 'Single Bunch')
@@ -154,7 +150,7 @@ def dac_to_minmax(tmbf, maxval):
 # through the FIR for all bunches except the reference bunch.
 def dac_to_dac_closed_loop(tmbf, maxdac):
     # Configure FIR 0 for passthrough
-    configure.fir_wf(tmbf, 0, 32767)
+    configure.fir_wf(tmbf, 0, 1)
 
     # Need quite strong attenuation to ensure the peak dies down before it comes
     # around again.
@@ -162,8 +158,7 @@ def dac_to_dac_closed_loop(tmbf, maxdac):
 
     # Configure bank 0 for fir 0 on all bunches, NCO output on bunch 0, FIR
     # passthrough on all other bunches.
-    configure.bank_wf(tmbf, 0,
-        DAC_OUT.MAX_GAIN, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.FIR))
+    configure.bank_wf(tmbf, 0, 1, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.FIR))
 
     # Fetch and process next valid waveform
     return find_second_peak(maxdac.get_new(0.25))
@@ -186,16 +181,14 @@ def dac_to_ddr(tmbf, ddr_buf, source):
 
 # Measures which bunch has its gain controlled by bunch select 0
 def gain_delay(tmbf, maxdac):
-    configure.bank_wf(tmbf, 0,
-        one_bunch(DAC_OUT.MAX_GAIN, 0), 0, DAC_OUT.NCO)
+    configure.bank_wf(tmbf, 0, one_bunch(1, 0), 0, DAC_OUT.NCO)
     return find_one_peak(maxdac.get_new(0.25))
 
 
 # Measures which bunch has its FIR controlled by bunch select 0
 def fir_to_ddr(tmbf, ddr_buf):
     configure.fir_wf(tmbf, 1, 0)
-    configure.bank_wf(tmbf, 0,
-        DAC_OUT.MAX_GAIN, one_bunch(0, 1), DAC_OUT.NCO)
+    configure.bank_wf(tmbf, 0, 1, one_bunch(0, 1), DAC_OUT.NCO)
 
     tmbf.set('DDR:INPUT_S', 'FIR')
     tmbf.set('TRG:DDR:ARM_S.PROC', 0)
@@ -389,8 +382,8 @@ def measure_detector_bunch(tmbf, results):
     configure.detector_bunches(tmbf, 0)
     configure.detector_gain(tmbf, '-24dB')
 
-    configure.fir_wf(tmbf, 0, 32767)
-    configure.bank_wf(tmbf, 1, DAC_OUT.MAX_GAIN, 0, DAC_OUT.SWEEP)
+    configure.fir_wf(tmbf, 0, 1)
+    configure.bank_wf(tmbf, 1, 1, 0, DAC_OUT.SWEEP)
 
     det_power = tmbf.PV('DET:POWER:0')
     det_power.get()
@@ -407,8 +400,8 @@ def measure_detector_delay(tmbf, results):
     configure.detector_bunches(tmbf)
     configure.detector_gain(tmbf, '-72dB')
 
-    configure.fir_wf(tmbf, 0, 32767)
-    configure.bank(tmbf, 1, DAC_OUT.MAX_GAIN, 0, DAC_OUT.SWEEP)
+    configure.fir_wf(tmbf, 0, 1)
+    configure.bank(tmbf, 1, 1, 0, DAC_OUT.SWEEP)
 
     tmbf.set('DET:LOOP:ADC_S', 1)
 
@@ -427,8 +420,8 @@ def measure_detector_delay(tmbf, results):
 def measure_tune_follow_bunch(tmbf, results):
     print >>sys.stderr, 'Measuring Tune Follow Bunch Offset'
 
-    configure.fir_wf(tmbf, 0, 32767)
-    configure.bank(tmbf, 0, DAC_OUT.MAX_GAIN, 0, DAC_OUT.SWEEP)
+    configure.fir_wf(tmbf, 0, 1)
+    configure.bank(tmbf, 0, 1, 0, DAC_OUT.SWEEP)
 
     tmbf.set('FTUN:DWELL_S', 10)
     tmbf.set('FTUN:BUNCH_S', 0)
@@ -445,8 +438,8 @@ def measure_tune_follow_bunch(tmbf, results):
 def measure_tune_follow_delay(tmbf, results):
     print >>sys.stderr, 'Measuring Tune Follow Delay'
 
-    configure.fir_wf(tmbf, 0, 32767)
-    configure.bank(tmbf, 0, DAC_OUT.MAX_GAIN, 0, DAC_OUT.NCO)
+    configure.fir_wf(tmbf, 0, 1)
+    configure.bank(tmbf, 0, 1, 0, DAC_OUT.NCO)
 
     tmbf.set('FTUN:DWELL_S', 100)
     tmbf.set('FTUN:BUNCH_S', 0)
@@ -455,6 +448,7 @@ def measure_tune_follow_delay(tmbf, results):
     tmbf.set('FTUN:BLANKING_S', 'Off')
     tmbf.set('NCO:GAIN_S', '-36dB')
     tmbf.set('FTUN:IQ:IIR_S', '2^6')
+    tmbf.set('FTUN:LOOP:DELAY_S', 0)
 
     angle = tmbf.PV('FTUN:ANGLE')
     results.set('FTUN_ADC_DELAY', search_ftun_delay(tmbf, angle, 'ADC'))

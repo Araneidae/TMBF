@@ -58,8 +58,8 @@ Trigger('DET', *concat(bunch_channels) + mean_channel + overflows)
 
 
 # Control over the internal detector window.
-det_window = WaveformOut('DET:WINDOW', 1024, 'SHORT', DESC = 'Detector window')
-boolOut('DET:RESET_WIN', FLNK = det_window, PINI = 'YES',
+det_window = WaveformOut('DET:WINDOW', 1024, 'FLOAT', DESC = 'Detector window')
+boolOut('DET:RESET_WIN', FLNK = det_window, PINI = 'NO',
     DESC = 'Reset detector window to Hamming')
 
 # Total loop delay in turns.

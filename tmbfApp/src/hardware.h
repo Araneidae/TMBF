@@ -73,7 +73,7 @@ bool hw_read_clock_dropout(void);
 void hw_write_adc_offsets(short offsets[4]);
 
 /* Writes ADC compensation FIR. */
-void hw_write_adc_filter(short taps[12]);
+void hw_write_adc_filter(int taps[12]);
 
 /* Compensates for group delay of ADC filter. */
 void hw_write_adc_filter_delay(unsigned int delay);
@@ -119,7 +119,7 @@ void hw_write_dac_delay(unsigned int dac_delay);
 void hw_write_dac_filter_delay(unsigned int preemph_delay);
 
 /* Pre-emphasis filter. */
-void hw_write_dac_preemph(short taps[3]);
+void hw_write_dac_preemph(int taps[3]);
 
 
 /* * * * * * * * * * * * * * * * * * * * * * */
@@ -217,7 +217,7 @@ void hw_write_det_gain(unsigned int gain);
 
 /* Writes the detector window waveform. */
 #define DET_WINDOW_LENGTH   1024
-void hw_write_det_window(const uint16_t window[DET_WINDOW_LENGTH]);
+void hw_write_det_window(const int window[DET_WINDOW_LENGTH]);
 
 /* Returns measured detector phase delays (relative to a full turn of delay) for
  * ADC and FIR measurements, results are reported in bunches. */
