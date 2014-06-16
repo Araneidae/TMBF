@@ -222,7 +222,11 @@ static void update_iq_angle_mag(void)
     /* Compute magnitude and angle. */
     current_angle = wrap_angle(
         180.0 / M_PI * atan2(current_q, current_i) - delay_offset_degrees);
-    current_magnitude = (int) sqrt(SQR(current_i) + SQR(current_q));
+    /* There is a tricky detail in this calculation.  When IQ saturates one of
+     * the possible limit values is (I,Q) = (-2^15,-2^15) with I^2+Q^2 = 2^31,
+     * which is too large for an int, hence the casts to unsigned int. */
+    current_magnitude = (int) sqrt(
+        (unsigned int) SQR(current_i) + (unsigned int) SQR(current_q));
 
     delta_angle = wrap_angle(current_angle - target_phase);
 }

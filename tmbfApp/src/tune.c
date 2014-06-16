@@ -207,9 +207,20 @@ static enum tune_status find_peak(
 }
 
 
+static int find_high_ix(
+    const struct block *blocks, int count, const double tune_scale[])
+{
+    int low_ix  = (blocks[0].start + blocks[0].end) / 2;
+    int high_ix = (blocks[count-1].start + blocks[count-1].end) / 2;
+    if (tune_scale[low_ix] < tune_scale[high_ix])
+        return 0;
+    else
+        return count-1;
+}
+
 static epicsAlarmSeverity measure_tune(
     int length, const struct channel_sweep *sweep,
-    const double *tune_scale, bool overflow,
+    const double tune_scale[], bool overflow,
     unsigned int *tune_status, double *tune, double *phase)
 {
     /* Very crude algorithm:
@@ -236,10 +247,15 @@ static epicsAlarmSeverity measure_tune(
             *tune_status = TUNE_EXTRA_PEAKS;
             break;
         case 1:
-        case 2:
-            *tune_status = find_peak(
-                sweep->power, &blocks[block_count - 1], &tune_ix);
+            *tune_status = find_peak(sweep->power, &blocks[0], &tune_ix);
             break;
+        case 2:
+        {
+            // Take the peak with the higher frequency
+            int block_ix = find_high_ix(blocks, 2, tune_scale);
+            *tune_status = find_peak(sweep->power, &blocks[block_ix], &tune_ix);
+            break;
+        }
     }
 
     if (*tune_status == TUNE_OK)

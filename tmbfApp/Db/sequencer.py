@@ -49,7 +49,7 @@ for state in range(1, 8):
     # This fellow is treated a little differently and is processed internally.
     aOut('SEQ:%d:END_FREQ' % state,
         -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 5,
-        PINI = 'NO', DESC = 'Sweep NCO start frequency')
+        PINI = 'NO', DESC = 'Sweep NCO end frequency')
 
 # This is the only valid control in state 0.
 mbbOut('SEQ:0:BANK', 'Bank 0', 'Bank 1', 'Bank 2', 'Bank 3',

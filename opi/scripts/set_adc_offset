@@ -21,6 +21,7 @@ def get(pv, **kargs):
 put('TRG:SYNC_S', 'Separate')
 put('TRG:DDR:SEL_S', 'Soft')
 put('TRG:DDR:MODE_S', 'One Shot')
+put('DDR:LONGEN_S', 'Long')
 put('DDR:INPUT_S', 'ADC')
 put('TRG:DDR:ARM_S.PROC', 0)
 
