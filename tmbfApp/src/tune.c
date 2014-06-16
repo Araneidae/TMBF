@@ -443,6 +443,17 @@ static void set_bunch_control(void)
 }
 
 
+/* Clips frequency to range 0..BUNCHES_PER_TURN (maximum possible mode). */
+static double clip_freq_range(double frequency)
+{
+    if (frequency < 0)
+        return 0;
+    else if (frequency > BUNCHES_PER_TURN)
+        return BUNCHES_PER_TURN;
+    else
+        return frequency;
+}
+
 /* When the user wishes to use the tune settings this function will force the
  * sequencer and detector to use the settings configured here. */
 static void set_tune_settings(void)
@@ -461,10 +472,10 @@ static void set_tune_settings(void)
      * capture to sensible values and set the sequencer PC to 1. */
     double centre = harmonic + centre_tune;
     WRITE_NAMED_RECORD(ulongout, "SEQ:1:COUNT", 4096);
-    WRITE_NAMED_RECORD(ao, "SEQ:1:START_FREQ",
-        centre + (reverse_tune ? + half_range : - half_range));
-    WRITE_NAMED_RECORD(ao, "SEQ:1:END_FREQ",
-        centre + (reverse_tune ? - half_range : + half_range));
+    WRITE_NAMED_RECORD(ao, "SEQ:1:START_FREQ", clip_freq_range(
+        centre + (reverse_tune ? + half_range : - half_range)));
+    WRITE_NAMED_RECORD(ao, "SEQ:1:END_FREQ", clip_freq_range(
+        centre + (reverse_tune ? - half_range : + half_range)));
     WRITE_NAMED_RECORD(bo,       "SEQ:1:CAPTURE", true);
     WRITE_NAMED_RECORD(mbbo,     "SEQ:1:BANK", 1);
     WRITE_NAMED_RECORD(ulongout, "SEQ:PC", 1);
