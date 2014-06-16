@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 11
-y 54
+x 15
+y 58
 w 648
-h 633
+h 634
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -64,7 +64,7 @@ symbol0 {
   0 "gain"
 }
 PV0 {
-  0 "LOC\\gain=i:1023"
+  0 "LOC\\gain=d:1"
 }
 symbol1 {
   0 "out"
@@ -124,12 +124,12 @@ nPts 2
 showXAxis
 xAxisSrc "fromUser"
 xMin -10
-xMax 936
+xMax 940
 # Y axis properties
 showYAxis
 yAxisSrc "fromUser"
-yMin -1024
-yMax 1024
+yMin -1
+yMax 1
 # Y2 axis properties
 y2AxisSrc "AutoScale"
 y2Max 1
@@ -233,7 +233,7 @@ nPts 2
 showXAxis
 xAxisSrc "fromUser"
 xMin -10
-xMax 936
+xMax 940
 # Y axis properties
 showYAxis
 yAxisSrc "fromUser"
@@ -284,7 +284,7 @@ nPts 2
 showXAxis
 xAxisSrc "fromUser"
 xMin -10
-xMax 936
+xMax 940
 # Y axis properties
 showYAxis
 yAxisSrc "fromUser"
@@ -971,7 +971,7 @@ minor 6
 release 0
 x 512
 y 384
-w 56
+w 104
 h 20
 controlPv "LOC\\gain"
 font "helvetica-medium-r-14.0"

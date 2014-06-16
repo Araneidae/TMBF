@@ -18,7 +18,7 @@ for bank in range(4):
     # Waveform settings with status update
     BunchWaveforms(bank, 'FIRWF', 'CHAR', 'FIR bank select')
     BunchWaveforms(bank, 'OUTWF', 'CHAR', 'DAC output select')
-    BunchWaveforms(bank, 'GAINWF', 'LONG', 'DAC output gain')
+    BunchWaveforms(bank, 'GAINWF', 'FLOAT', 'DAC output gain')
 
 
 # Bunch synchronisation.

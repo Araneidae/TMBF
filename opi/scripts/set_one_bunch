@@ -26,15 +26,15 @@ wf_pvs = [fir_wf_pv, output_wf_pv, gain_wf_pv]
 
 
 def check(name, wf, min_val, max_val):
-    assert (min_val <= wf).all() and (wf < max_val).all(), \
+    assert (min_val <= wf).all() and (wf <= max_val).all(), \
         'Invalid %s value: %s' % (name, wf)
 
 def check_fir(fir_wf):
-    check('FIR', fir_wf, 0, 4)
+    check('FIR', fir_wf, 0, 3)
 def check_output(output_wf):
-    check('output', output_wf, 0, 8)
+    check('output', output_wf, 0, 7)
 def check_gain(gain_wf):
-    check('gain', gain_wf, -1024, 1024)
+    check('gain', gain_wf, -1, 1)
 
 def put_all(fir_wf, output_wf, gain_wf):
     check_fir(fir_wf)
@@ -42,9 +42,11 @@ def put_all(fir_wf, output_wf, gain_wf):
     check_gain(gain_wf)
     caput(wf_pvs, [fir_wf, output_wf, gain_wf])
 
+def zmap(fns, args):
+    return [f(x) for (f, x) in zip(fns, args)]
 
 def action_one(args):
-    bunch, fir, output, gain = map(int, args)
+    bunch, fir, output, gain = zmap([int, int, int, float], args)
     fir_wf, output_wf, gain_wf = caget(wf_pvs)
 
     fir_wf[bunch] = fir
@@ -54,7 +56,7 @@ def action_one(args):
     put_all(fir_wf, output_wf, gain_wf)
 
 def action_all(args):
-    fir, output, gain = map(int, args)
+    fir, output, gain = zmap([int, int, float], args)
     z = numpy.zeros(936, dtype = int)
     fir_wf    = z + fir
     output_wf = z + output
@@ -62,18 +64,18 @@ def action_all(args):
 
     put_all(fir_wf, output_wf, gain_wf)
 
-def make_action_one(wf_pv, check):
+def make_action_one(wf_pv, check, datatype=int):
     def action(args):
-        bunch, value = map(int, args)
+        bunch, value = zmap([int, datatype], args)
         wf = caget(wf_pv)
         wf[bunch] = value
         check(wf)
         caput(wf_pv, wf)
     return action
 
-def make_action_all(wf_pv, check):
+def make_action_all(wf_pv, check, datatype=int):
     def action(args):
-        value, = map(int, args)
+        value, = map(datatype, args)
         wf = value * numpy.ones(936, dtype = int)
         check(wf)
         caput(wf_pv, wf)
@@ -81,11 +83,11 @@ def make_action_all(wf_pv, check):
 
 action_fir_one  = make_action_one(fir_wf_pv,    check_fir)
 action_out_one  = make_action_one(output_wf_pv, check_output)
-action_gain_one = make_action_one(gain_wf_pv,   check_gain)
+action_gain_one = make_action_one(gain_wf_pv,   check_gain, float)
 
 action_fir_all  = make_action_all(fir_wf_pv,    check_fir)
 action_out_all  = make_action_all(output_wf_pv, check_output)
-action_gain_all = make_action_all(gain_wf_pv,   check_gain)
+action_gain_all = make_action_all(gain_wf_pv,   check_gain, float)
 
 
 try:

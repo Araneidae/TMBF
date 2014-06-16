@@ -9,6 +9,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <math.h>
 
 #include "error.h"
 #include "hardware.h"
@@ -30,6 +31,12 @@ struct bunch_bank {
     EPICS_STRING out_status;
     EPICS_STRING gain_status;
 };
+
+
+#define GAIN_SCALE      1024
+#define MAX_GAIN        (1.0 - 1.0 / GAIN_SCALE)
+#define MIN_GAIN        (-1.0)
+
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -129,7 +136,7 @@ static void out_name(int out, char result[])
 
 static void gain_name(int gain, char result[])
 {
-    sprintf(result, "%d", gain);
+    sprintf(result, "%.3g", gain / (float) GAIN_SCALE);
 }
 
 
@@ -172,6 +179,20 @@ DEFINE_WRITE_WF(char, fir, "FIR")
 DEFINE_WRITE_WF(char, out, "outputs")
 DEFINE_WRITE_WF(int, gain, "gains")
 
+static void write_gain_wf_float(void *context, float gain[], size_t *length)
+{
+    int gain_int[BUNCHES_PER_TURN];
+    for (int i = 0; i < BUNCHES_PER_TURN; i ++)
+    {
+        if (gain[i] > MAX_GAIN)
+            gain[i] = MAX_GAIN;
+        else if (gain[i] < MIN_GAIN)
+            gain[i] = MIN_GAIN;
+        gain_int[i] = (int) roundf(gain[i] * GAIN_SCALE);
+    }
+    write_gain_wf(context, gain_int, length);
+}
+
 
 static void publish_bank(int ix, struct bunch_bank *bank)
 {
@@ -188,7 +209,7 @@ static void publish_bank(int ix, struct bunch_bank *bank)
 
     PUBLISH_BANK_WF(char, "FIRWF_S", write_fir_wf);
     PUBLISH_BANK_WF(char, "OUTWF_S", write_out_wf);
-    PUBLISH_BANK_WF(int, "GAINWF_S", write_gain_wf);
+    PUBLISH_BANK_WF(float, "GAINWF_S", write_gain_wf_float);
 
     PUBLISH_READ_VAR(stringin, FORMAT("FIRWF:STA"), bank->fir_status);
     PUBLISH_READ_VAR(stringin, FORMAT("OUTWF:STA"), bank->out_status);
