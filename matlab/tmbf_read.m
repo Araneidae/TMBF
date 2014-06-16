@@ -16,12 +16,15 @@ function data = tmbf_read(tmbf, turns, start)
     assert(turns > 0, 'Bad number of turns requested');
 
     ready    = [tmbf ':DDR:READY'];
+    long_ena = [tmbf ':DDR:LONGEN_S'];
     set_turn = [tmbf ':DDR:TURNSEL_S'];
     turn_rb  = [tmbf ':DDR:TURNSEL'];
     longwf   = [tmbf ':DDR:LONGWF'];
 
     % Ensure we're correctly triggered (call tmbf_trigger first).
     assert(strcmp(lcaGet(ready), 'Triggered'), [tmbf ' is not triggered']);
+    assert(strcmp(lcaGet(long_ena), 'Long'), ...
+        [tmbf 'not configured for long DDR capture']);
 
     turn_length = 936;
     window_length = lcaGet([longwf '.NELM']) / turn_length;
