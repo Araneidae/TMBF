@@ -3,6 +3,8 @@
 #define TUNE_LENGTH    (RAW_BUF_DATA_LENGTH / 4)
 
 
+struct seq_entry;
+
 /* Information about a single channel of sweep measurement. */
 struct channel_sweep {
     short wf_i[TUNE_LENGTH];
