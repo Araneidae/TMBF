@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1103
-y 56
+x 1106
+y 59
 w 641
 h 512
 font "helvetica-medium-r-18.0"
@@ -180,7 +180,7 @@ xMax 1000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
-yMax 1
+yMax 0.001
 # Y2 axis properties
 y2AxisSrc "AutoScale"
 y2Min 8300
@@ -279,6 +279,7 @@ y 480
 w 64
 h 16
 controlPv "$(device):ADC:STD"
+format "gfloat"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -341,54 +342,6 @@ value {
   "Max ADC:"
 }
 autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 152
-y 440
-w 4
-h 16
-font "helvetica-medium-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "/"
-}
-autoSize
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 168
-y 440
-w 48
-h 16
-controlPv "$(device):ADC:MAX_PC"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-fgAlarm
-bgColor index 5
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-useHexPrefix
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
 endObjectProperties
 
 # (Static Text)

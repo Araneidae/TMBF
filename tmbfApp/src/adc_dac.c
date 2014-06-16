@@ -8,10 +8,12 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include "error.h"
 #include "hardware.h"
 #include "epics_device.h"
+#include "numeric.h"
 
 #include "adc_dac.h"
 
@@ -21,13 +23,25 @@
 /* Min/Max Buffer */
 
 struct min_max {
+    /* Support for scaling min and max buffers values to floating point for
+     * display. */
+    int max_value;
+    uint32_t scaling;
+    int shift;
+
+    /* Function for reading min/max buffer. */
     void (*read)(short *min_buf, short *max_buf);
-    short int min_buf[BUNCHES_PER_TURN];
-    short int max_buf[BUNCHES_PER_TURN];
-    short int diff_buf[BUNCHES_PER_TURN];
+    /* Values exported through EPICS. */
+    float min_buf[BUNCHES_PER_TURN];
+    float max_buf[BUNCHES_PER_TURN];
+    float diff_buf[BUNCHES_PER_TURN];
     double mean_diff;
     double var_diff;
-    int max_max;
+    double max_max;
+
+    /* Support for filter coefficient update. */
+    void (*write_filter)(short taps[]);
+    int tap_count;
 };
 
 
@@ -39,31 +53,45 @@ static bool read_minmax(void *context, const bool *ignore)
 {
     struct min_max *min_max = context;
 
-    min_max->read(min_max->min_buf, min_max->max_buf);
+    short min_buf[BUNCHES_PER_TURN];
+    short max_buf[BUNCHES_PER_TURN];
+    min_max->read(min_buf, max_buf);
 
     int sum_diff = 0;
     long long int sum_var = 0;
     int max_max = 0;
+    uint32_t scaling = min_max->scaling;
+    int shift = min_max->shift;
     for (unsigned int i = 0; i < BUNCHES_PER_TURN; ++i)
     {
-        short int diff = min_max->max_buf[i] - min_max->min_buf[i];
+        short int diff = max_buf[i] - min_buf[i];
         min_max->diff_buf[i] = diff;
         sum_diff += diff;
         sum_var  += (int) diff * diff;
-        max_max = MAX(max_max, abs(min_max->max_buf[i]));
-        max_max = MAX(max_max, abs(min_max->min_buf[i]));
+        max_max = MAX(max_max, abs(max_buf[i]));
+        max_max = MAX(max_max, abs(min_buf[i]));
+
+        fixed_to_single(min_buf[i], &min_max->min_buf[i], scaling, shift);
+        fixed_to_single(max_buf[i], &min_max->max_buf[i], scaling, shift);
+        fixed_to_single(diff, &min_max->diff_buf[i], scaling, shift);
     }
 
-    min_max->max_max = max_max;
-    min_max->mean_diff = sum_diff / (double) BUNCHES_PER_TURN;
+    min_max->max_max = (double) max_max / min_max->max_value;
+    min_max->mean_diff =
+        sum_diff / (double) BUNCHES_PER_TURN / min_max->max_value;
     min_max->var_diff  =
-        sum_var  / (double) BUNCHES_PER_TURN -
+        sum_var  / (double) BUNCHES_PER_TURN /
+            min_max->max_value / min_max->max_value -
         min_max->mean_diff * min_max->mean_diff;
     return true;
 }
 
-static void publish_minmax(const char *name, struct min_max *min_max)
+static void publish_minmax(
+    const char *name, struct min_max *min_max, int max_value)
 {
+    min_max->max_value = max_value;
+    compute_scaling(1.0 / max_value, &min_max->scaling, &min_max->shift);
+
     char buffer[20];
 #define FORMAT(record_name) \
     (sprintf(buffer, "%s:%s", name, record_name), buffer)
@@ -71,21 +99,51 @@ static void publish_minmax(const char *name, struct min_max *min_max)
     PUBLISH(bo, FORMAT("SCAN"), .write = read_minmax, .context = min_max);
 
     PUBLISH_WF_READ_VAR(
-        short, FORMAT("MINBUF"), BUNCHES_PER_TURN, min_max->min_buf);
+        float, FORMAT("MINBUF"), BUNCHES_PER_TURN, min_max->min_buf);
     PUBLISH_WF_READ_VAR(
-        short, FORMAT("MAXBUF"), BUNCHES_PER_TURN, min_max->max_buf);
+        float, FORMAT("MAXBUF"), BUNCHES_PER_TURN, min_max->max_buf);
     PUBLISH_WF_READ_VAR(
-        short, FORMAT("DIFFBUF"), BUNCHES_PER_TURN, min_max->diff_buf);
+        float, FORMAT("DIFFBUF"), BUNCHES_PER_TURN, min_max->diff_buf);
 
-    PUBLISH_READ_VAR(ai,      FORMAT("MEAN"), min_max->mean_diff);
-    PUBLISH_READ_VAR(ai,      FORMAT("STD"),  min_max->var_diff);
-    PUBLISH_READ_VAR(longin,  FORMAT("MAX"),  min_max->max_max);
+    PUBLISH_READ_VAR(ai, FORMAT("MEAN"), min_max->mean_diff);
+    PUBLISH_READ_VAR(ai, FORMAT("STD"),  min_max->var_diff);
+    PUBLISH_READ_VAR(ai, FORMAT("MAX"),  min_max->max_max);
 #undef FORMAT
 }
 
 
-static struct min_max adc_min_max = { .read = hw_read_adc_minmax };
-static struct min_max dac_min_max = { .read = hw_read_dac_minmax };
+/* Support for writing waveforms with clipping. */
+#define COEFF_SCALE     16384
+#define MAX_COEFF       (2.0 - 1.0 / COEFF_SCALE)
+#define MIN_COEFF       (-2.0)
+static void write_filter_coeffs(void *context, float coeffs[], size_t *length)
+{
+    struct min_max *min_max = context;
+    short taps[min_max->tap_count];
+    for (int i = 0; i < min_max->tap_count; i ++)
+    {
+        if (coeffs[i] > MAX_COEFF)
+            coeffs[i] = MAX_COEFF;
+        else if (coeffs[i] < MIN_COEFF)
+            coeffs[i] = MIN_COEFF;
+        taps[i] = (int) roundf(coeffs[i] * COEFF_SCALE);
+    }
+
+    min_max->write_filter(taps);
+    *length = min_max->tap_count;
+}
+
+
+static struct min_max adc_min_max = {
+    .read = hw_read_adc_minmax,
+    .write_filter = hw_write_adc_filter,
+    .tap_count = 12
+};
+static struct min_max dac_min_max = {
+    .read = hw_read_dac_minmax,
+    .write_filter = hw_write_dac_preemph,
+    .tap_count = 3
+};
 
 
 /* The ADC skew and DAC delay interact with each other so that the aggregate
@@ -119,12 +177,13 @@ void set_adc_skew(unsigned int skew)
 bool initialise_adc_dac(void)
 {
     /* Common min/max PVs. */
-    publish_minmax("ADC", &adc_min_max);
-    publish_minmax("DAC", &dac_min_max);
+    publish_minmax("ADC", &adc_min_max, 1 << 15);
+    publish_minmax("DAC", &dac_min_max, 1 << 13);
 
     /* Offset control for ADC. */
     PUBLISH_WF_ACTION_P(short, "ADC:OFFSET", 4, hw_write_adc_offsets);
-    PUBLISH_WF_ACTION_P(short, "ADC:FILTER", 12, hw_write_adc_filter);
+    PUBLISH_WAVEFORM(float, "ADC:FILTER", 12, write_filter_coeffs,
+        .context = &adc_min_max, .persist = true);
     PUBLISH_WRITER_P(mbbo, "ADC:FILTER:DELAY", hw_write_adc_filter_delay);
     adc_skew_pv = PUBLISH_READ_VAR_I(mbbi, "ADC:SKEW", adc_skew);
     PUBLISH_WRITER_P(longout, "ADC:LIMIT", hw_write_adc_limit);
@@ -134,7 +193,8 @@ bool initialise_adc_dac(void)
     PUBLISH_WRITER_P(ulongout, "DAC:DELAY", write_dac_delay);
 
     /* Pre-emphasis filter interface. */
-    PUBLISH_WF_ACTION_P(short, "DAC:PREEMPH", 3, hw_write_dac_preemph);
+    PUBLISH_WAVEFORM(float, "DAC:PREEMPH", 3, write_filter_coeffs,
+        .context = &dac_min_max, .persist = true);
     PUBLISH_WRITER_P(mbbo, "DAC:PREEMPH:DELAY", hw_write_dac_filter_delay);
 
     return true;

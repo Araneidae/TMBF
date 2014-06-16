@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1977
-y 425
+x 755
+y 133
 w 641
 h 513
 font "helvetica-medium-r-18.0"
@@ -32,7 +32,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 208
+x 168
 y 424
 w 160
 h 80
@@ -49,7 +49,7 @@ minor 0
 release 0
 x 8
 y 424
-w 192
+w 152
 h 80
 lineColor index 14
 fill
@@ -180,6 +180,7 @@ y 224
 w 624
 h 184
 # Appearance
+autoScaleBothDirections
 graphTitle "DAC Difference"
 fgColor index 14
 bgColor index 3
@@ -195,7 +196,7 @@ xMax 1000
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
-yMax 1
+yMax 0.001
 # Y2 axis properties
 y2AxisSrc "AutoScale"
 y2Min 8300
@@ -294,6 +295,7 @@ y 480
 w 64
 h 16
 controlPv "$(device):DAC:STD"
+format "gfloat"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -318,7 +320,7 @@ minor 6
 release 0
 x 80
 y 440
-w 48
+w 64
 h 16
 controlPv "$(device):DAC:MAX"
 font "helvetica-medium-r-14.0"
@@ -358,61 +360,13 @@ value {
 autoSize
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 136
-y 440
-w 4
-h 16
-font "helvetica-medium-r-14.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "/"
-}
-autoSize
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 152
-y 440
-w 40
-h 16
-controlPv "$(device):DAC:MAX_PC"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-fgAlarm
-bgColor index 5
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-useHexPrefix
-showUnits
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
 # (Menu Button)
 object activeMenuButtonClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 280
+x 240
 y 440
 w 72
 h 24
@@ -432,7 +386,7 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 280
+x 240
 y 472
 w 72
 h 24
@@ -460,7 +414,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 216
+x 176
 y 440
 w 42
 h 28
@@ -481,7 +435,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 216
+x 176
 y 472
 w 37
 h 28
@@ -503,9 +457,9 @@ major 4
 minor 8
 release 0
 # Geometry
-x 376
+x 336
 y 416
-w 96
+w 136
 h 88
 # Appearance
 graphTitle "Pre-emphasis"
@@ -628,7 +582,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 208
+x 168
 y 416
 w 120
 h 16
@@ -647,7 +601,7 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 208
+x 168
 y 416
 w 120
 h 16
