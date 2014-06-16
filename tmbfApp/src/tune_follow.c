@@ -141,7 +141,7 @@ static void update_delay_offset(void)
     hw_read_ftun_delays(&adc_delay, &fir_delay);
     int delay =
         ftun_control.input_select == FTUN_IN_ADC ? adc_delay : fir_delay;
-    delay += round(closed_loop_delay * BUNCHES_PER_TURN);
+    delay += lround(closed_loop_delay * BUNCHES_PER_TURN);
     delay_offset_degrees = 360.0 / pow(2, 32) * (nco_freq * delay);
 }
 
@@ -161,7 +161,7 @@ static void write_ftun_control(void)
 {
     update_delay_offset();
 
-    ftun_control.target_phase = (int) round(
+    ftun_control.target_phase = lround(
         pow(2, 18) / 360.0 * wrap_angle(target_phase + delay_offset_degrees));
     ftun_control.max_offset = tune_to_freq(max_offset);
     hw_write_ftun_control(&ftun_control);

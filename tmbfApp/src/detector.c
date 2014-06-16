@@ -138,7 +138,7 @@ static int compute_delay(void)
      * FIR input mode, however, we're interested in the closed loop system
      * response so we ignore this. */
     if (detector_input == DET_IN_ADC)
-        delay += (int) round(BUNCHES_PER_TURN * adc_loop_delay);
+        delay += lround(BUNCHES_PER_TURN * adc_loop_delay);
     return delay;
 }
 

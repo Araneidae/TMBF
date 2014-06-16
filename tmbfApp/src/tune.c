@@ -423,11 +423,11 @@ static void set_bunch_control(void)
 {
     /* Copy FIR and gain settings from bank 0 to bank 1. */
     char fir_wf[BUNCHES_PER_TURN];
-    int gain_wf[BUNCHES_PER_TURN];
-    READ_NAMED_RECORD_WF(char, "BUN:0:FIRWF_S", fir_wf, BUNCHES_PER_TURN);
-    READ_NAMED_RECORD_WF(int,  "BUN:0:GAINWF_S", gain_wf, BUNCHES_PER_TURN);
-    WRITE_NAMED_RECORD_WF(char, "BUN:1:FIRWF_S", fir_wf, BUNCHES_PER_TURN);
-    WRITE_NAMED_RECORD_WF(int,  "BUN:1:GAINWF_S", gain_wf, BUNCHES_PER_TURN);
+    float gain_wf[BUNCHES_PER_TURN];
+    READ_NAMED_RECORD_WF(char,  "BUN:0:FIRWF_S", fir_wf, BUNCHES_PER_TURN);
+    READ_NAMED_RECORD_WF(float, "BUN:0:GAINWF_S", gain_wf, BUNCHES_PER_TURN);
+    WRITE_NAMED_RECORD_WF(char,  "BUN:1:FIRWF_S", fir_wf, BUNCHES_PER_TURN);
+    WRITE_NAMED_RECORD_WF(float, "BUN:1:GAINWF_S", gain_wf, BUNCHES_PER_TURN);
 
     bool single_bunch_mode = READ_NAMED_RECORD(bo, "DET:MODE");
 

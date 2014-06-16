@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1106
-y 59
+x 338
+y 627
 w 641
 h 512
 font "helvetica-medium-r-18.0"
@@ -236,14 +236,14 @@ minor 1
 release 1
 x 16
 y 464
-w 40
+w 61
 h 16
 font "helvetica-medium-r-14.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Mean:"
+  "Mean diff:"
 }
 autoSize
 endObjectProperties
@@ -256,14 +256,14 @@ minor 1
 release 1
 x 16
 y 480
-w 27
+w 48
 h 16
 font "helvetica-medium-r-14.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Var:"
+  "Var diff:"
 }
 autoSize
 endObjectProperties
