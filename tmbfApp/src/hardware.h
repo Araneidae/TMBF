@@ -17,6 +17,13 @@
  * processed data length. */
 #define BUF_DATA_LENGTH     (RAW_BUF_DATA_LENGTH - BUNCHES_PER_TURN)
 
+/* Trigger status enumeration. */
+enum trigger_status {
+    TRIGGER_READY,      // Device is ready
+    TRIGGER_ARMED,      // Device is armed and waiting for trigger
+    TRIGGER_BUSY,       // Device is processing data
+};
+
 
 /* To be called once at startup.  The given config_file contains hardware
  * offsets describing the FPGA behaviour. */
@@ -40,11 +47,11 @@ enum {
 
     OVERFLOW_ADC_FILTER = 7,    // Overflow in ADC compensation filter
 
-    TRIGGER_SCLK_IN     = 16,
-    TRIGGER_PM_IN       = 17,
-    TRIGGER_SEQ_IN      = 18,
-    TRIGGER_ADC_IN      = 19,
-    TRIGGER_TRG_IN      = 20,
+    TRIGGER_SCLK_IN     = 16,   // Trigger source from SCLK seen
+    TRIGGER_PM_IN       = 17,   // Postmortem trigger source seen
+    TRIGGER_SEQ_IN      = 18,   // Sequencer trigger state seen
+    TRIGGER_ADC_IN      = 19,   // ADC threshold trigger seen
+    TRIGGER_TRG_IN      = 20,   // External trigger input seen
 
     PULSED_BIT_COUNT = 24
 };
@@ -135,8 +142,12 @@ void hw_write_ddr_enable(void);
  * This depends on the currently selected data source. */
 int hw_read_ddr_delay(void);
 
+/* Reads the current DDR trigger offset.  Should return true unless called at
+ * the wrong time. */
+bool hw_read_ddr_offset(uint32_t *offset);
+
 /* Returns DDR trigger status together with current buffer offset. */
-bool hw_read_ddr_status(int *offset);
+enum trigger_status hw_read_ddr_status(void);
 
 
 /* * * * * * * * * * * * * * * * * * * * */
@@ -173,12 +184,9 @@ enum { BUF_SELECT_IQ = 1, BUF_SELECT_DEBUG = 4 };
 /* Selects data for capture to buffer. */
 void hw_write_buf_select(unsigned int selection);
 
-/* Returns current buffer status: true if waiting for data or trigger, false if
- * idle. */
-bool hw_read_buf_status(void);
-
-/* Digest of buf_status above, returns true if buffer expects more data. */
-bool hw_read_buf_busy(void);
+/* Returns trigger and capture status of BUF.  The *iq_active flag is set if the
+ * buffer is busy and capturing IQ data. */
+enum trigger_status hw_read_buf_status(void);
 
 /* Reads buffer into two separate 16-bit arrays. */
 void hw_read_buf_data(
@@ -345,7 +353,7 @@ void hw_write_seq_trig_state(int state);
 unsigned int hw_read_seq_state(void);
 
 /* Returns true if sequencer busy, either waiting for trigger or running. */
-bool hw_read_seq_status(void);
+enum trigger_status hw_read_seq_status(void);
 
 /* Resets sequencer. */
 void hw_write_seq_reset(void);

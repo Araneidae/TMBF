@@ -28,33 +28,31 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 
 
-/* Used for reporting armed status. */
-struct armed_status {
-    bool armed;
-    struct epics_record *status_pv;
-};
-
 /* Records state of a trigger target. */
 struct trigger_target {
     enum { DDR_TARGET, BUF_TARGET } target_id;
-    struct armed_status status;
+
+    struct in_epics_record_mbbi *status;    // enum trigger_status
 
     // Configuration settings set by EPICS
     bool external;          // Configured source, written from PV
     bool auto_rearm;
 
+    bool armed;             // Set while we're expecting hardware to respond
+
     enum {
         STATE_NORMAL,       // Normal triggering
         STATE_STOPPED,      // Explicitly stopped, don't auto re-arm
         STATE_ARMED,        // Explicitly rearmed but companion busy
-    } state;
+    } auto_arm_state;
 };
 
 /* The sequencer is a little different as it shares triggering with the
  * buffer, but has its own enable state. */
 struct seq_target {
-    struct armed_status status;
-    bool enabled;               // Updated from PV
+    struct in_epics_record_mbbi *status;
+    bool enabled;           // Updated from PV
+    bool armed;             // Set if currently enabled
 };
 
 
@@ -70,7 +68,7 @@ static bool synchronise_triggers;
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* DDR external trigger source control and monitoring. */
+/* External trigger source control and monitoring. */
 
 struct trigger_sources {
     const char *name;
@@ -200,28 +198,17 @@ static void publish_monitor_input(void)
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/* Updates armed status and generates PV update if necessary. */
-static void set_armed_status(struct armed_status *status, bool armed)
-{
-    if (armed != status->armed)
-    {
-        status->armed = armed;
-        trigger_record(status->status_pv, 0, NULL);
-    }
-}
-
-
 /* Computes whether this target should be armed. */
 static bool check_arm_target(
     struct trigger_target *self, struct trigger_target *target,
     bool external, bool auto_arm)
 {
     bool arm =
-        target->external == external  &&  !target->status.armed  &&
+        target->external == external  &&  !target->armed  &&
         (synchronise_triggers  ||  self == target);
     if (auto_arm)
         /* Auto arming behaviour depends on the trigger target's state. */
-        switch (target->state)
+        switch (target->auto_arm_state)
         {
             case STATE_NORMAL:  return arm  &&  target->auto_rearm;
             case STATE_STOPPED: return false;
@@ -237,17 +224,24 @@ static void do_arm_ddr(void)
     arming_ddr_buffer();    // Let software know DDR buffer is active
     hw_write_ddr_enable();  // Initiate capture of selected DDR data
 
-    set_armed_status(&ddr_target.status, true);
-    ddr_target.state = STATE_NORMAL;
+    ddr_target.armed = true;
+    ddr_target.auto_arm_state = STATE_NORMAL;
+
+    /* Do this to force the status to go through the armed state. */
+    WRITE_IN_RECORD(mbbi, ddr_target.status, TRIGGER_ARMED);
 }
 
 static void do_arm_buf(void)
 {
-    set_armed_status(&seq_target.status, seq_target.enabled);
     prepare_sequencer(seq_target.enabled);
 
-    set_armed_status(&buf_target.status, true);
-    buf_target.state = STATE_NORMAL;
+    buf_target.armed = true;
+    seq_target.armed = seq_target.enabled;
+    buf_target.auto_arm_state = STATE_NORMAL;
+
+    WRITE_IN_RECORD(mbbi, buf_target.status, TRIGGER_ARMED);
+    if (seq_target.armed)
+        WRITE_IN_RECORD(mbbi, seq_target.status, TRIGGER_ARMED);
 }
 
 static void arm_and_fire(bool arm_ddr, bool arm_buf, bool external)
@@ -285,13 +279,13 @@ static void arm_target(struct trigger_target *target, bool auto_arm)
      * mode we ignore the status of the other target. */
     bool targets_busy =
         synchronise_triggers  &&
-        ((ddr_target.external == external  &&  ddr_target.status.armed)  ||
-         (buf_target.external == external  &&  buf_target.status.armed));
+        ((ddr_target.external == external  &&  ddr_target.armed)  ||
+         (buf_target.external == external  &&  buf_target.armed));
     if (targets_busy)
     {
         /* Configure this target for later re-arming if it's armable. */
         if (check_arm_target(target, target, external, auto_arm))
-            target->state = STATE_ARMED;
+            target->auto_arm_state = STATE_ARMED;
     }
     else
         arm_and_fire(arm_ddr, arm_buf, external);
@@ -305,8 +299,8 @@ static void stop_target(struct trigger_target *target)
         target->target_id == DDR_TARGET,
         target->target_id == BUF_TARGET);
 
-    target->state = STATE_STOPPED;
-    set_armed_status(&target->status, false);
+    target->auto_arm_state = STATE_STOPPED;
+    target->armed = false;
 }
 
 
@@ -323,84 +317,14 @@ static void set_source(struct trigger_target *target, bool value)
  * transition from busy to ready and so represent edge triggered events. */
 static void update_target_status(bool ddr_ready, bool buf_ready, bool seq_ready)
 {
-    /* First update the status of each target. */
-    if (ddr_ready)  set_armed_status(&ddr_target.status, false);
-    if (buf_ready)  set_armed_status(&buf_target.status, false);
-    if (seq_ready)  set_armed_status(&seq_target.status, false);
+    /* Reset the armed status of each target. */
+    if (ddr_ready)  ddr_target.armed = false;
+    if (buf_ready)  buf_target.armed = false;
+    if (seq_ready)  seq_target.armed = false;
 
     /* Trigger rearming as appropriate. */
     if (ddr_ready)  arm_target(&ddr_target, true);
     if (buf_ready)  arm_target(&buf_target, true);
-}
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* EPICS interface to triggers. */
-
-
-/* Initialises armed_status structure including publishing of associated PV. */
-static void publish_status(const char *name, struct armed_status *status)
-{
-    status->armed = false;
-    status->status_pv = PUBLISH_READ_VAR_I(bi, name, status->armed);
-}
-
-static bool call_set_source(void *context, const bool *value)
-{
-    LOCK();
-    set_source(context, *value);
-    UNLOCK();
-    return true;
-}
-
-static bool call_arm_target(void *context, const bool *value)
-{
-    LOCK();
-    arm_target(context, false);
-    UNLOCK();
-    return true;
-}
-
-static bool call_stop_target(void *context, const bool *value)
-{
-    LOCK();
-    stop_target(context);
-    UNLOCK();
-    return true;
-}
-
-static void publish_target(struct trigger_target *target, const char *name)
-{
-    char buffer[20];
-#define FORMAT(pv) \
-    (sprintf(buffer, "TRG:%s:%s", name, pv), buffer)
-
-    publish_status(FORMAT("STATUS"), &target->status);
-    PUBLISH(bo, FORMAT("SEL"), call_set_source,
-        .context = target, .persist = true);
-    PUBLISH_WRITE_VAR_P(bo,      FORMAT("MODE"),  target->auto_rearm);
-    PUBLISH(bo, FORMAT("ARM"),   call_arm_target,  .context = target);
-    PUBLISH(bo, FORMAT("RESET"), call_stop_target, .context = target);
-
-#undef FORMAT
-}
-
-
-static void publish_targets(void)
-{
-    publish_target(&ddr_target, "DDR");
-    PUBLISH_WRITER_P(ulongout, "TRG:DDR:DELAY", hw_write_trg_ddr_delay);
-
-    publish_trigger_sources(&ddr_trigger_source);
-    publish_trigger_sources(&buf_trigger_source);
-    publish_monitor_input();
-
-    publish_target(&buf_target, "BUF");
-    PUBLISH_WRITER_P(ulongout, "TRG:BUF:DELAY", hw_write_trg_buf_delay);
-
-    publish_status("TRG:SEQ:STATUS", &seq_target.status);
-    PUBLISH_WRITE_VAR_P(bo, "TRG:SEQ:ENA", seq_target.enabled);
-
-    PUBLISH_WRITE_VAR_P(bo, "TRG:SYNC", synchronise_triggers);
 }
 
 
@@ -453,17 +377,19 @@ static void *monitor_events(void *context)
     {
         LOCK();
 
-        int ddr_offset;
-        bool ddr_ready =
-            ddr_target.status.armed  &&  !hw_read_ddr_status(&ddr_offset);
-        bool buf_ready = buf_target.status.armed  &&  !hw_read_buf_busy();
-        bool seq_ready = seq_target.status.armed  &&  !hw_read_seq_status();
+        enum trigger_status ddr_status = hw_read_ddr_status();
+        enum trigger_status buf_status = hw_read_buf_status();
+        enum trigger_status seq_status = hw_read_seq_status();
+
+        bool ddr_ready = ddr_target.armed  &&  ddr_status == TRIGGER_READY;
+        bool buf_ready = buf_target.armed  &&  buf_status == TRIGGER_READY;
+        bool seq_ready = seq_target.armed  &&  seq_status == TRIGGER_READY;
 
         /* Allow all the corresponding targets to be processed. */
         if (ddr_ready)
         {
             update_trigger_hit(&ddr_trigger_source);
-            set_ddr_offset(ddr_offset);
+            set_ddr_offset();
             process_ddr_buffer();
         }
         if (buf_ready)
@@ -471,6 +397,11 @@ static void *monitor_events(void *context)
             update_trigger_hit(&buf_trigger_source);
             process_fast_buffer();
         }
+
+        /* Keep published status up to date. */
+        WRITE_IN_RECORD(mbbi, ddr_target.status, ddr_status);
+        WRITE_IN_RECORD(mbbi, buf_target.status, buf_status);
+        WRITE_IN_RECORD(mbbi, seq_target.status, seq_status);
 
         /* Clear the busy flags for all targets that have completed and handle
          * rearming as appropriate. */
@@ -486,6 +417,70 @@ static void *monitor_events(void *context)
     return NULL;
 }
 
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* EPICS interface to triggers. */
+
+
+static bool call_set_source(void *context, const bool *value)
+{
+    LOCK();
+    set_source(context, *value);
+    UNLOCK();
+    return true;
+}
+
+static bool call_arm_target(void *context, const bool *value)
+{
+    LOCK();
+    arm_target(context, false);
+    UNLOCK();
+    return true;
+}
+
+static bool call_stop_target(void *context, const bool *value)
+{
+    LOCK();
+    stop_target(context);
+    UNLOCK();
+    return true;
+}
+
+static void publish_target(struct trigger_target *target, const char *name)
+{
+    char buffer[20];
+#define FORMAT(pv) \
+    (sprintf(buffer, "TRG:%s:%s", name, pv), buffer)
+
+    target->status = PUBLISH_IN_VALUE_I(mbbi, FORMAT("STATUS"));
+    PUBLISH(bo, FORMAT("SEL"), call_set_source,
+        .context = target, .persist = true);
+    PUBLISH_WRITE_VAR_P(bo,      FORMAT("MODE"),  target->auto_rearm);
+    PUBLISH(bo, FORMAT("ARM"),   call_arm_target,  .context = target);
+    PUBLISH(bo, FORMAT("RESET"), call_stop_target, .context = target);
+
+#undef FORMAT
+}
+
+
+static void publish_targets(void)
+{
+    publish_target(&ddr_target, "DDR");
+    PUBLISH_WRITER_P(ulongout, "TRG:DDR:DELAY", hw_write_trg_ddr_delay);
+
+    publish_trigger_sources(&ddr_trigger_source);
+    publish_trigger_sources(&buf_trigger_source);
+    publish_monitor_input();
+
+    publish_target(&buf_target, "BUF");
+    PUBLISH_WRITER_P(ulongout, "TRG:BUF:DELAY", hw_write_trg_buf_delay);
+
+    seq_target.status = PUBLISH_IN_VALUE_I(mbbi, "TRG:SEQ:STATUS");
+    PUBLISH_WRITE_VAR_P(bo, "TRG:SEQ:ENA", seq_target.enabled);
+
+    PUBLISH_WRITE_VAR_P(bo, "TRG:SYNC", synchronise_triggers);
+}
 
 
 bool initialise_triggers(void)

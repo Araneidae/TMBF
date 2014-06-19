@@ -541,11 +541,21 @@ int hw_read_ddr_delay(void)
     }
 }
 
-bool hw_read_ddr_status(int *offset)
+bool hw_read_ddr_offset(uint32_t *offset)
 {
     uint32_t ddr_status = config_space->ddr_status;
     *offset = ddr_status & 0xFFFFFF;
-    return ddr_status >> 31;
+    return !(ddr_status >> 31);
+}
+
+enum trigger_status hw_read_ddr_status(void)
+{
+    if (READ_STATUS_BITS(23, 1))
+        return TRIGGER_ARMED;
+    else if (READ_STATUS_BITS(26, 1))
+        return TRIGGER_BUSY;    // This is a *very* transient state!
+    else
+        return TRIGGER_READY;
 }
 
 
@@ -609,17 +619,21 @@ void hw_write_buf_select(unsigned int selection)
 }
 
 
-bool hw_read_buf_status(void)
+enum trigger_status hw_read_buf_status(void)
 {
-    return READ_STATUS_BITS(20, 1) || READ_STATUS_BITS(21, 1); // Separate out?
-}
-
-bool hw_read_buf_busy(void)
-{
-    if (buf_selection == BUF_SELECT_IQ)
-        return hw_read_buf_status()  &&  hw_read_seq_status();
+    if (READ_STATUS_BITS(20, 1))
+        return TRIGGER_ARMED;
+    else if (READ_STATUS_BITS(21, 1))
+    {
+        if (buf_selection == BUF_SELECT_IQ  &&  !READ_STATUS_BITS(22, 1))
+            /* When the buffer is busy but the selection is IQ we have to fudge
+             * completion of the buffer to sequencer completion. */
+            return TRIGGER_READY;
+        else
+            return TRIGGER_BUSY;
+    }
     else
-        return hw_read_buf_status();
+        return TRIGGER_READY;
 }
 
 
@@ -890,6 +904,8 @@ void hw_read_ftun_delays(int *adc_delay, int *fir_delay)
 /* * * * * * * * * * * * * * * * * * * * * */
 /* SEQ: Programmed Bunch and Sweep Control */
 
+static int sequencer_pc;
+
 void hw_write_seq_entries(
     unsigned int bank0, const struct seq_entry entries[MAX_SEQUENCER_COUNT])
 {
@@ -929,8 +945,9 @@ void hw_write_seq_entries(
     UNLOCK();
 }
 
-void hw_write_seq_count(int sequencer_pc)
+void hw_write_seq_count(int set_sequencer_pc)
 {
+    sequencer_pc = set_sequencer_pc;
     WRITE_CONTROL_BITS(3, 3, sequencer_pc);
 }
 
@@ -944,9 +961,14 @@ unsigned int hw_read_seq_state(void)
     return READ_STATUS_BITS(16, 3);
 }
 
-bool hw_read_seq_status(void)
+enum trigger_status hw_read_seq_status(void)
 {
-    return READ_STATUS_BITS(20, 1) || READ_STATUS_BITS(22, 1); // Separate out?
+    if (sequencer_pc > 0  &&  READ_STATUS_BITS(20, 1))
+        return TRIGGER_ARMED;
+    else if (READ_STATUS_BITS(22, 1))
+        return TRIGGER_BUSY;
+    else
+        return TRIGGER_READY;
 }
 
 void hw_write_seq_reset(void)

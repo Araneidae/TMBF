@@ -15,7 +15,7 @@ def TriggerTarget(name):
     longOut('TRG:%s:DELAY' % name, 0, (1<<24)-1, EGU = 'turns',
         DESC = '%s trigger delay' % name)
     Action('TRG:%s:RESET' % name, DESC = 'Reset %s' % name)
-    boolIn('TRG:%s:STATUS' % name, 'Ready', 'Busy',
+    mbbIn('TRG:%s:STATUS' % name, 'Ready', 'Armed', 'Busy',
         SCAN = 'I/O Intr', DESC = '%s status' % name)
 
 # External trigger source configuration.  For each source we have a source
@@ -69,7 +69,7 @@ boolOut('TRG:SYNC', 'Separate', 'Synched',
 
 # Sequencer control.
 boolOut('TRG:SEQ:ENA', 'Disabled', 'Enabled', DESC = 'Sequencer trigger enable')
-boolIn('TRG:SEQ:STATUS', 'Ready', 'Busy',
+mbbIn('TRG:SEQ:STATUS', 'Ready', 'Armed', 'Busy',
     SCAN = 'I/O Intr', DESC = 'SEQ status')
 
 

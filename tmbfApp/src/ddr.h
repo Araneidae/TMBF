@@ -14,4 +14,4 @@ void read_ddr_bunch(ssize_t start, size_t bunch, size_t turns, int16_t *result);
 
 /* Configures offset into DDR buffer, to be called in response to successful
  * call to hw_read_ddr_status. */
-void set_ddr_offset(int ddr_offset);
+void set_ddr_offset(void);

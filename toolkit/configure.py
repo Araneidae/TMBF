@@ -203,9 +203,9 @@ class WaitReady:
         self.event = cothread.Event()
         self.Wait = self.event.Wait
     def update(self, value):
-#         print 'update', value.name, value
+#         print 'update', self.state, value.name, value
         if self.state == 'Passive':
-            if value == 'Busy':
+            if value == 'Busy' or value == 'Armed':
                 self.state = 'Busy'
         elif self.state == 'Busy':
             if value == 'Ready':

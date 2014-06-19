@@ -179,15 +179,9 @@ void read_ddr_bunch(ssize_t start, size_t bunch, size_t turns, int16_t *result)
 }
 
 
-void set_ddr_offset(int ddr_offset)
+void set_ddr_offset(void)
 {
-    ddr_trigger_offset = ddr_offset;
-
-    /* After seeing a trigger we need to wait for capture to complete before
-     * trying to read the buffer (there doesn't seem to be an event for this,
-     * surprisingly enough).  We have to wait for 32M samples at 500MHz, or
-     * around 64ms. */
-    usleep(64000);
+    TEST_OK(hw_read_ddr_offset(&ddr_trigger_offset));
 }
 
 
