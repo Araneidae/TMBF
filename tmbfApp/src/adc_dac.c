@@ -65,10 +65,9 @@ static bool read_minmax(void *context, const bool *ignore)
     int shift = min_max->shift;
     for (unsigned int i = 0; i < BUNCHES_PER_TURN; ++i)
     {
-        short int diff = max_buf[i] - min_buf[i];
-        min_max->diff_buf[i] = diff;
+        int diff = max_buf[i] - min_buf[i];
         sum_diff += diff;
-        sum_var  += (int) diff * diff;
+        sum_var  += diff * diff;
         max_max = MAX(max_max, abs(max_buf[i]));
         max_max = MAX(max_max, abs(min_buf[i]));
 
@@ -164,6 +163,12 @@ void set_adc_skew(unsigned int skew)
 }
 
 
+static void write_adc_limit(double limit)
+{
+    hw_write_adc_limit(lround(limit * (1 << 15)));
+}
+
+
 bool initialise_adc_dac(void)
 {
     /* Common min/max PVs. */
@@ -176,7 +181,7 @@ bool initialise_adc_dac(void)
         .context = &adc_min_max, .persist = true);
     PUBLISH_WRITER_P(mbbo, "ADC:FILTER:DELAY", hw_write_adc_filter_delay);
     adc_skew_pv = PUBLISH_READ_VAR_I(mbbi, "ADC:SKEW", adc_skew);
-    PUBLISH_WRITER_P(longout, "ADC:LIMIT", hw_write_adc_limit);
+    PUBLISH_WRITER_P(ao, "ADC:LIMIT", write_adc_limit);
 
     /* Direct register control for DAC. */
     PUBLISH_WRITER_P(bo, "DAC:ENABLE", hw_write_dac_enable);

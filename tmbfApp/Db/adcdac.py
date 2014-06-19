@@ -5,10 +5,6 @@ from common import *
 # Both of these systems are very similar: all we have are min/max waveforms and
 # derived data (identical for both) and a couple of device specific controls.
 
-# The ADC is scaled up with an extra two bits as a result of input processing
-# and filtering.
-MAX_ADC = (1<<15) - 1       # Signed 16-bit range [-32768..32767]
-
 def dB(db): return 10.**(db/20.)
 
 def minmax_pvs(source):
@@ -41,7 +37,7 @@ mbbOut('ADC:FILTER:DELAY', '-2 ns', '0 ns', '+2 ns',
     DESC = 'Compensation filter group delay')
 mbbIn('ADC:SKEW', '0 ns', '2 ns', '4 ns', '6 ns',
     SCAN = 'I/O Intr', DESC = 'Input skew')
-longOut('ADC:LIMIT', 0, MAX_ADC, DESC = 'ADC error threshold')
+aOut('ADC:LIMIT', 0, 2 - 2**-15, PREC = 4, DESC = 'ADC error threshold')
 
 
 minmax_pvs('DAC')

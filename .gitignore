@@ -4,3 +4,6 @@
 O.*
 *.pyc
 *~
+
+/images
+/unused

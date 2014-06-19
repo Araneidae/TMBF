@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 650
-y 68
+x 2710
+y 489
 w 456
 h 474
 font "helvetica-medium-r-8.0"
@@ -245,6 +245,9 @@ y 168
 w 440
 h 200
 # Appearance
+autoScaleBothDirections
+autoScaleUpdateMs 1000
+autoScaleThreshPct 95
 graphTitle "Bunch motion amplitudes"
 fgColor index 14
 bgColor index 3
@@ -334,7 +337,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Tune Only"
 numCmds 1
 command {
-  0 "xterm -T 'Setup Tune Measurement only' -e 'setup_tunemeasurement $(device) TUNE; read -p \"press return\"'"
+  0 "xterm -T 'Setup Tune Measurement only' -e 'setup_tunemeasurement $(device) TUNE || read -p \"press return\"'"
 }
 endObjectProperties
 
@@ -356,7 +359,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Feedback On & Tune"
 numCmds 1
 command {
-  0 "xterm -T 'Setup Close Loop + SB Tune Meas.' -e 'setup_tunemeasurement $(device) SBFB; read -p \"press return\"'"
+  0 "xterm -T 'Setup Close Loop + SB Tune Meas.' -e 'setup_tunemeasurement $(device) SBFB || read -p \"press return\"'"
 }
 endObjectProperties
 
@@ -378,7 +381,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Tune Special"
 numCmds 1
 command {
-  0 "xterm -T 'Setup Tune Measurement Special' -e 'setup_tunemeasurement $(device) AP; read -p \"press return\"'"
+  0 "xterm -T 'Setup Tune Measurement Special' -e 'setup_tunemeasurement $(device) AP || read -p \"press return\"'"
 }
 endObjectProperties
 

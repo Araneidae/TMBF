@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2420
-y 100
+x 2421
+y 101
 w 632
 h 552
 font "helvetica-medium-r-18.0"
@@ -1496,7 +1496,7 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 392
+x 416
 y 328
 w 56
 h 24
@@ -1629,8 +1629,8 @@ minor 1
 release 1
 x 552
 y 176
-w 32
-h 16
+w 30
+h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
@@ -2217,7 +2217,7 @@ minor 6
 release 0
 x 208
 y 328
-w 56
+w 80
 h 24
 controlPv "$(device):ADC:LIMIT_S"
 font "helvetica-medium-r-14.0"
@@ -2602,7 +2602,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 280
+x 304
 y 328
 w 109
 h 14

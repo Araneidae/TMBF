@@ -447,6 +447,17 @@ static const char *tune_sweep_state(
         return "Partial sweep";
 }
 
+/* Converts gain enum into a string.  Alas, this replicates the corresponding
+ * definition in sequencer.py. */
+static const char *lookup_gain(unsigned int gain)
+{
+    const char *gain_lookup[] = {
+        "0dB",   "-6dB",  "-12dB", "-18dB", "-24dB", "-30dB", "-36dB", "-42dB",
+        "-48dB", "-54dB", "-60dB", "-66dB", "-72dB", "-78dB", "Off" };
+    ASSERT_OK(gain < ARRAY_SIZE(gain_lookup));
+    return gain_lookup[gain];
+}
+
 /* Inspects state of all settings involved with Tune operation and computes a
  * status string summarising the status. */
 static EPICS_STRING read_tune_mode(void)
@@ -474,11 +485,13 @@ static EPICS_STRING read_tune_mode(void)
         const char *sweep = tune_sweep_state(single_bunch, bunch, &sweep_ok);
         if (sweep_ok)
         {
+            const char *gain =
+                lookup_gain(READ_NAMED_RECORD(mbbo, "SEQ:1:GAIN"));
             EPICS_STRING result;
             if (single_bunch)
-                snprintf(result.s, 40, "%s: bunch %d", sweep, bunch);
+                snprintf(result.s, 40, "%s: bunch %d (%s)", sweep, bunch, gain);
             else
-                snprintf(result.s, 40, "%s: multibunch", sweep);
+                snprintf(result.s, 40, "%s: multibunch (%s)", sweep, gain);
             return result;
         }
         else
