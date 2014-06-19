@@ -40,12 +40,12 @@ struct peak_info {
     int *power_dd;          // Second derivative of smoothed waveform
 
     /* Waveforms for EPICS viewing. */
-    int peak_ix_wf[MAX_PEAKS];
-    int peak_val_wf[MAX_PEAKS];
-    int peak_left_wf[MAX_PEAKS];
-    int peak_right_wf[MAX_PEAKS];
-    float peak_quality[MAX_PEAKS];
-    float peak_ratio[MAX_PEAKS];
+    int peak_ix_wf[MAX_PEAKS];      // Index of peak
+    int peak_val_wf[MAX_PEAKS];     // Value at peak index
+    int peak_left_wf[MAX_PEAKS];    // Index of left boundary
+    int peak_right_wf[MAX_PEAKS];   // Index of right boundary
+    float peak_quality[MAX_PEAKS];  // Peak quality assessment
+    float peak_ratio[MAX_PEAKS];    // Peak ratio
 
     int valid_peak_count;
 };
@@ -123,6 +123,8 @@ static void compute_dd(int length, const int *wf_in, int *wf_out)
             (int64_t) wf_in[i+1];
         if (accum > INT32_MAX)
             wf_out[i] = INT32_MAX;
+        else if (accum < INT32_MIN)
+            wf_out[i] = INT32_MIN;
         else
             wf_out[i] = (int) accum;
     }

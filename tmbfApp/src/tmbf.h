@@ -22,5 +22,6 @@ static inline void float_array_to_int(
         else if (in[i] < min_val)
             in[i] = min_val;
         out[i] = lroundf(in[i] * scaling);
+        in[i] = out[i] / scaling;
     }
 }
