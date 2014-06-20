@@ -9,7 +9,7 @@ require('numpy')
 
 import sys
 import numpy
-import optparse
+import argparse
 
 from cothread import catools
 
@@ -62,29 +62,28 @@ def compute_filter_size(tune):
 # ------------------------------------------------------------------------------
 # Argument parsing
 
-parser = optparse.OptionParser(usage = '''\
-%s [flags] device mode
-
-Configure device in specified mode.  mode must be one of TUNE, AP or SBFB.\
-''' % sys.argv[0])
-parser.add_option(
+parser = argparse.ArgumentParser(
+    description = 'Configure device in specified mode.')
+parser.add_argument(
     '-c', dest = 'config', default = DEFAULT_CONFIG,
     help = 'Alternative configuration file')
-parser.add_option(
+parser.add_argument(
     '-d', dest = 'debug', default = False, action = 'store_true',
     help = 'Enable debug mode')
-parser.add_option(
+parser.add_argument(
     '-m', dest = 'ring_mode', default = None,
     help = 'Specify ring mode, otherwise PV will be consulted')
-parser.add_option(
-    '-t', dest = 'tune', default = None, type = 'float',
+parser.add_argument(
+    '-t', dest = 'tune', default = None, type = float,
     help = 'Specify tune, otherwise config file will be consulted')
-options, arglist = parser.parse_args()
-if len(arglist) != 2:
-    parser.error('Arguments should be <device> and <mode>')
+parser.add_argument('device', help = 'TMBF device name to configure')
+parser.add_argument('mode',
+    help = 'Configuration mode, must be one of TUNE, AP, SBFB')
+args = parser.parse_args()
 
+MODE = args.mode
 
-DEVICE, MODE = arglist
+DEVICE = args.device
 try:
     AXIS = DEVICE_TO_AXIS[DEVICE]
 except:
@@ -92,30 +91,30 @@ except:
 if MODE not in VALID_MODES:
     parser.error('Mode \'%s\' is invalid' % MODE)
 
-if options.debug:
+if args.debug:
     def put(pv, value):
         print '%s <= %s' % (pv, value)
     def putwf(pv, value):
         print '%s <= 936*[%s]' % (pv, value)
 
-if options.ring_mode is None:
+if args.ring_mode is None:
     RING_MODE = catools.caget('SR-CS-RING-01:MODE', datatype = str)
 else:
-    RING_MODE = options.ring_mode
+    RING_MODE = args.ring_mode
 
 
 # Load the specified configuration file.  This contains overrides for the
 # globals below together with settings for the mode specific default tune in a
 # backwards compatible format.
-CONFIG_FILE = options.config
+CONFIG_FILE = args.config
 CONFIG = {}
 execfile(CONFIG_FILE, {}, CONFIG)
 
 # Load tune from config file in its strange compatibility format
-if options.tune is None:
+if args.tune is None:
     tune = float('0.%04d' % get_config(CONFIG, 'tune'))
 else:
-    tune = options.tune
+    tune = args.tune
 cycles, length = compute_filter_size(tune)
 
 
