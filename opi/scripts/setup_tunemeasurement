@@ -22,7 +22,7 @@ DEVICE_TO_AXIS = {
     'TS-DI-TMBF-01': 'X',
 }
 
-VALID_MODES = ['TUNE', 'AP', 'SBFB']
+VALID_SETUPS = ['TUNE', 'AP', 'SBFB']
 
 
 def put(pv, value):
@@ -57,24 +57,31 @@ def compute_filter_size(tune):
                 filter = (cycles, length)
     return filter
 
-def update_globals(config, mode):
-    # Use settings in config file to override defaults set here.
-    globals().update(config)
-
-    # Finally apply mode specific overrides.
-    match = mode + '_'
+def apply_overrides(config_key):
+    match = config_key + '_'
     l = len(match)
     for key in globals().keys():
         if key[:l] == match:
-            print key, globals().get(key[l:]), globals()[key]
+            print 'override:', key, globals().get(key[l:]), '<=', globals()[key]
             globals()[key[l:]] = globals()[key]
+
+def update_globals(config, setup):
+    # Use settings in config file to override defaults set here.
+    globals().update(config)
+
+    # Apply any ring mode/axis specific overrides (should only pick up cycles
+    # and length overrides).
+    apply_overrides('%s_%s' % (AXIS, RING_MODE))
+
+    # Apply setup specific overrides.
+    apply_overrides(setup)
 
 
 # ------------------------------------------------------------------------------
 # Argument parsing
 
 parser = argparse.ArgumentParser(
-    description = 'Configure device in specified mode.')
+    description = 'Configure device in specified setup mode.')
 parser.add_argument(
     '-c', dest = 'config', default = DEFAULT_CONFIG,
     help = 'Alternative configuration file')
@@ -88,19 +95,19 @@ parser.add_argument(
     '-t', dest = 'tune', default = None, type = float,
     help = 'Specify tune, otherwise config file will be consulted')
 parser.add_argument('device', help = 'TMBF device name to configure')
-parser.add_argument('mode',
-    help = 'Configuration mode, must be one of TUNE, AP, SBFB')
+parser.add_argument('setup',
+    help = 'Configuration setup, must be one of TUNE, AP, SBFB')
 args = parser.parse_args()
 
-MODE = args.mode
+SETUP = args.setup
 
 DEVICE = args.device
 try:
     AXIS = DEVICE_TO_AXIS[DEVICE]
 except:
     parser.error('Device \'%s\' not known' % DEVICE)
-if MODE not in VALID_MODES:
-    parser.error('Mode \'%s\' is invalid' % MODE)
+if SETUP not in VALID_SETUPS:
+    parser.error('Setup mode \'%s\' is invalid' % SETUP)
 
 if args.debug:
     def put(pv, value):
@@ -169,7 +176,7 @@ AP_min_block_len = 5
 
 
 # Apply configuration and mode specific settings
-update_globals(CONFIG, MODE)
+update_globals(CONFIG, SETUP)
 
 
 # ------------------------------------------------------------------------------
@@ -199,7 +206,7 @@ put('FIR:GAIN_S', '-42dB')
 # Configure bunch bank #0 for FIR and selected operation
 putwf('BUN:0:FIRWF_S', 0)
 putwf('BUN:0:OUTWF_S', dac_output)
-putwf('BUN:0:GAINWF_S', 1023)
+putwf('BUN:0:GAINWF_S', 1)
 
 # Configure sequencer
 put('SEQ:1:HOLDOFF_S', 2)
