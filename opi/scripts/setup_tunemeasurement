@@ -57,6 +57,17 @@ def compute_filter_size(tune):
                 filter = (cycles, length)
     return filter
 
+def update_globals(config, mode):
+    # Use settings in config file to override defaults set here.
+    globals().update(config)
+
+    # Finally apply mode specific overrides.
+    match = mode + '_'
+    l = len(match)
+    for key in globals().keys():
+        if key[:l] == match:
+            print key, globals().get(key[l:]), globals()[key]
+            globals()[key[l:]] = globals()[key]
 
 
 # ------------------------------------------------------------------------------
@@ -139,30 +150,26 @@ bunch_mode = 'All Bunches'    # By default detect on all bunches
 detector_input = 'FIR'
 
 
-# Mode specific settings
-if MODE == 'TUNE':
-    # Multibunch tune measurement
-    sweep_gain = '-42dB'
-elif MODE == 'SBFB':
-    # Feedback on, single bunch tune measurement
-    sweep_gain = '-24dB'
-    dac_output = 1    # Enable FIR output in this mode
-    bunch_mode = 'Single Bunch'
-    harmonic = 0
-elif MODE == 'AP':
-    # Accelerator physics mode
-    sweep_gain = '0dB'
-    tune = 0.25
-    sweep_range = 0.245
-    alarm_range = 0.245
-    detector_input = 'ADC'
-    min_block_len = 5
-else:
-    assert False, 'Mode must be one of TUNE, AP or SBFB.'
+# Multibunch tune measurement
+TUNE_sweep_gain = '-42dB'
+
+# Feedback on, single bunch tune measurement
+SBFB_sweep_gain = '-24dB'
+SBFB_dac_output = 1    # Enable FIR output in this mode
+SBFB_bunch_mode = 'Single Bunch'
+SBFB_harmonic = 0
+
+# Accelerator physics mode
+AP_sweep_gain = '0dB'
+AP_tune = 0.25
+AP_sweep_range = 0.245
+AP_alarm_range = 0.245
+AP_detector_input = 'ADC'
+AP_min_block_len = 5
 
 
-# Use settings in config file to override defaults set here.
-globals().update(CONFIG)
+# Apply configuration and mode specific settings
+update_globals(CONFIG, MODE)
 
 
 # ------------------------------------------------------------------------------
