@@ -82,7 +82,7 @@ font "helvetica-bold-r-14.0"
 buttonLabel "?"
 numCmds 1
 command {
-  0 "diagnostics-help TMBF_bunch_select"
+  0 "diagnostics-help TMBF_sequencer"
 }
 includeHelpIcon
 endObjectProperties

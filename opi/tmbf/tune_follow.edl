@@ -142,7 +142,7 @@ font "helvetica-bold-r-14.0"
 buttonLabel "?"
 numCmds 1
 command {
-  0 "diagnostics-help TMBF_tune"
+  0 "diagnostics-help TMBF_tune_PLL"
 }
 includeHelpIcon
 endObjectProperties

@@ -1,6 +1,9 @@
 #!/bin/sh
 
 cd "$(dirname "$0")"
+
+DI_PATH="$(dirname "$(configure-ioc s -p DI-gui)")"/scripts
+
 export EPICS_CA_MAX_ARRAY_BYTES=1000000
-PATH="$(pwd)"/scripts:"$PATH"
+PATH="$(pwd)"/scripts:"$PATH":"$DI_PATH"
 edm -x -eolc tmbf_launcher.edl &
