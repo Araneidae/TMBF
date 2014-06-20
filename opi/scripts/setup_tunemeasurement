@@ -9,77 +9,136 @@ require('numpy')
 
 import sys
 import numpy
+import optparse
+
 from cothread import catools
+
+
+DEFAULT_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
+
+DEVICE_TO_AXIS = {
+    'SR23C-DI-TMBF-01': 'X',
+    'SR23C-DI-TMBF-02': 'Y',
+    'TS-DI-TMBF-01': 'X',
+}
+
+VALID_MODES = ['TUNE', 'AP', 'SBFB']
 
 
 def put(pv, value):
     catools.caput('%s:%s' % (DEVICE, pv), value)
 
 def putwf(pv, value):
-    put(pv, value * numpy.ones(936))
+    put(pv, numpy.repeat(value, 936))
+
+def get(pv, **kargs):
+    return catools.caget('%s:%s' % (DEVICE, pv), **kargs)
+
+def get_config(config, key):
+    try:
+        return config['%s_%s_%s' % (AXIS, key, RING_MODE)]
+    except:
+        print >>sys.stderr, 'Configuration for %s:%s in mode %s not found' % (
+            DEVICE, key, RING_MODE)
+        raise
+
+def compute_filter_size(tune):
+    N_TAPS = get('FIR:N_TAPS', datatype = int)
+
+    # Search for best filter size.  In this search we prefer shorter filters
+    # over longer filters.
+    best_error = 1
+    filter = (0, 0)
+    for length in range(3, N_TAPS + 1):
+        for cycles in range(1, length):
+            error = abs(tune - float(cycles) / length)
+            if error < best_error:
+                best_error = error
+                filter = (cycles, length)
+    return filter
 
 
-DeviceToAxis = {
-    'SR23C-DI-TMBF-01': 'X',
-    'SR23C-DI-TMBF-02': 'Y',
-    'TS-DI-TMBF-01': 'X',
-}
 
-
+# ------------------------------------------------------------------------------
 # Argument parsing
-DEVICE, MODE = sys.argv[1:3]
-if len(sys.argv) > 3:
-    CONFIG = sys.argv[3]
-else:
-    CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
-AXIS = DeviceToAxis[DEVICE]
 
+parser = optparse.OptionParser(usage = '''\
+%s [flags] device mode
+
+Configure device in specified mode.  mode must be one of TUNE, AP or SBFB.\
+''' % sys.argv[0])
+parser.add_option(
+    '-c', dest = 'config', default = DEFAULT_CONFIG,
+    help = 'Alternative configuration file')
+parser.add_option(
+    '-d', dest = 'debug', default = False, action = 'store_true',
+    help = 'Enable debug mode')
+parser.add_option(
+    '-m', dest = 'ring_mode', default = None,
+    help = 'Specify ring mode, otherwise PV will be consulted')
+parser.add_option(
+    '-t', dest = 'tune', default = None, type = 'float',
+    help = 'Specify tune, otherwise config file will be consulted')
+options, arglist = parser.parse_args()
+if len(arglist) != 2:
+    parser.error('Arguments should be <device> and <mode>')
+
+
+DEVICE, MODE = arglist
+try:
+    AXIS = DEVICE_TO_AXIS[DEVICE]
+except:
+    parser.error('Device \'%s\' not known' % DEVICE)
+if MODE not in VALID_MODES:
+    parser.error('Mode \'%s\' is invalid' % MODE)
+
+if options.debug:
+    def put(pv, value):
+        print '%s <= %s' % (pv, value)
+    def putwf(pv, value):
+        print '%s <= 936*[%s]' % (pv, value)
+
+if options.ring_mode is None:
+    RING_MODE = catools.caget('SR-CS-RING-01:MODE', datatype = str)
+else:
+    RING_MODE = options.ring_mode
+
+
+# Load the specified configuration file.  This contains overrides for the
+# globals below together with settings for the mode specific default tune in a
+# backwards compatible format.
+CONFIG_FILE = options.config
+CONFIG = {}
+execfile(CONFIG_FILE, {}, CONFIG)
+
+# Load tune from config file in its strange compatibility format
+if options.tune is None:
+    tune = float('0.%04d' % get_config(CONFIG, 'tune'))
+else:
+    tune = options.tune
+cycles, length = compute_filter_size(tune)
 
 
 # ------------------------------------------------------------------------------
 # Defaults and configuration
 
-HARMONIC = 80
-BUNCH = 450
+harmonic = 80
+bunch = 450
 
 tune_threshold = 0.3
 min_block_sep = 20
 min_block_len = 20
 sweep_dwell_time = 100
 
-blanking_interval = 5000
+blanking_interval = 10000
 
 sweep_range = 0.05
 alarm_range = 0.01
 
-
-
-# Pull in configured tune settings.  The config file contains settings for tune
-# and FIR fraction cycles/length for each ring mode and axis.  Currently the
-# config settings are in a bash compatible format.
-config = {}
-execfile(CONFIG, {}, config)
-
-
-# Extract the tune settings appropriate to our device, determine the nominal
-# tune and FIR shape.
-
-ring_mode = catools.caget('SR-CS-RING-01:MODE', datatype = str)
-
-def get_config(key):
-    return config['%s_%s_%s' % (AXIS, key, ring_mode)]
-
-
-cycles = get_config('cycles')
-length = get_config('length')
-# Convert tune from four digit string to numerical format
-tune = float('0.%04d' % get_config('tune'))
-
-
-# Settings with mode specific overrides
 dac_output = 0                # By default DAC output is off
 bunch_mode = 'All Bunches'    # By default detect on all bunches
 detector_input = 'FIR'
+
 
 # Mode specific settings
 if MODE == 'TUNE':
@@ -90,7 +149,7 @@ elif MODE == 'SBFB':
     sweep_gain = '-24dB'
     dac_output = 1    # Enable FIR output in this mode
     bunch_mode = 'Single Bunch'
-    HARMONIC = 0
+    harmonic = 0
 elif MODE == 'AP':
     # Accelerator physics mode
     sweep_gain = '0dB'
@@ -101,6 +160,10 @@ elif MODE == 'AP':
     min_block_len = 5
 else:
     assert False, 'Mode must be one of TUNE, AP or SBFB.'
+
+
+# Use settings in config file to override defaults set here.
+globals().update(CONFIG)
 
 
 # ------------------------------------------------------------------------------
@@ -146,11 +209,11 @@ put('DET:INPUT_S', detector_input)
 put('DET:LOOP:ADC_S', 1)
 
 # Configure tune measurement
-put('TUNE:HARMONIC_S', HARMONIC)
+put('TUNE:HARMONIC_S', harmonic)
 put('TUNE:CENTRE_S', tune)
 put('TUNE:RANGE_S', sweep_range)
 put('TUNE:ALARM_S', alarm_range)
-put('TUNE:BUNCH_S', BUNCH)
+put('TUNE:BUNCH_S', bunch)
 put('TUNE:SET_S.PROC', 0)
 
 put('TUNE:BLK:LEN_S', min_block_len)

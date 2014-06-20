@@ -43,7 +43,7 @@ class TMBF:
     def __init__(self, name):
         self.tmbf = name
 
-        self.n_taps = self.get('FIR:0:TAPS_S.NORD')
+        self.n_taps = self.get('FIR:N_TAPS')
 
     def pv(self, name):
         return '%s:%s' % (self.tmbf, name)
