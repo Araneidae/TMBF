@@ -2,4 +2,4 @@
 # Libera IOC.  The IOC files will be placed in $INSTALL_HOST/tmbf.
 INSTALL_HOST=/home/libera/nfs/testing
 
-VERSION=2.6-dev
+VERSION=2.6
