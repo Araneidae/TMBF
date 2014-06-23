@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 338
-y 627
+x 373
+y 316
 w 641
-h 512
+h 505
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -34,8 +34,8 @@ minor 0
 release 0
 x 8
 y 424
-w 224
-h 80
+w 328
+h 72
 lineColor index 14
 fill
 fillColor index 4
@@ -118,7 +118,7 @@ major 4
 minor 1
 release 0
 x 568
-y 480
+y 472
 w 64
 h 24
 fgColor index 25
@@ -207,8 +207,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 80
-y 464
+x 240
+y 456
 w 64
 h 16
 controlPv "$(device):ADC:MEAN"
@@ -234,8 +234,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 16
-y 464
+x 176
+y 456
 w 61
 h 16
 font "helvetica-medium-r-14.0"
@@ -254,8 +254,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 16
-y 480
+x 176
+y 472
 w 48
 h 16
 font "helvetica-medium-r-14.0"
@@ -274,8 +274,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 80
-y 480
+x 240
+y 472
 w 64
 h 16
 controlPv "$(device):ADC:STD"
@@ -403,7 +403,7 @@ major 4
 minor 4
 release 0
 x 456
-y 480
+y 472
 w 104
 h 24
 fgColor index 43
@@ -417,5 +417,52 @@ numDsps 1
 displayFileName {
   0 "tmbf/adc_setup.edl"
 }
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 240
+y 440
+w 64
+h 16
+controlPv "$(device):ADC:MAXDIFF"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 5
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+useHexPrefix
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 176
+y 440
+w 52
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Max diff:"
+}
+autoSize
 endObjectProperties
 

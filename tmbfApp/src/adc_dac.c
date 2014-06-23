@@ -39,6 +39,7 @@ struct min_max {
     double mean_diff;
     double var_diff;
     double max_max;
+    double max_diff;
 
     /* Support for filter coefficient update. */
     void (*write_filter)(int taps[]);
@@ -61,6 +62,7 @@ static bool read_minmax(void *context, const bool *ignore)
     int sum_diff = 0;
     long long int sum_var = 0;
     int max_max = 0;
+    int max_diff = 0;
     uint32_t scaling = min_max->scaling;
     int shift = min_max->shift;
     for (unsigned int i = 0; i < BUNCHES_PER_TURN; ++i)
@@ -70,6 +72,7 @@ static bool read_minmax(void *context, const bool *ignore)
         sum_var  += diff * diff;
         max_max = MAX(max_max, abs(max_buf[i]));
         max_max = MAX(max_max, abs(min_buf[i]));
+        max_diff = MAX(max_diff, diff);
 
         fixed_to_single(min_buf[i], &min_max->min_buf[i], scaling, shift);
         fixed_to_single(max_buf[i], &min_max->max_buf[i], scaling, shift);
@@ -77,6 +80,7 @@ static bool read_minmax(void *context, const bool *ignore)
     }
 
     min_max->max_max = (double) max_max / min_max->max_value;
+    min_max->max_diff = (double) max_diff / min_max->max_value;
     min_max->mean_diff =
         sum_diff / (double) BUNCHES_PER_TURN / min_max->max_value;
     min_max->var_diff  =
@@ -108,6 +112,7 @@ static void publish_minmax(
     PUBLISH_READ_VAR(ai, FORMAT("MEAN"), min_max->mean_diff);
     PUBLISH_READ_VAR(ai, FORMAT("STD"),  min_max->var_diff);
     PUBLISH_READ_VAR(ai, FORMAT("MAX"),  min_max->max_max);
+    PUBLISH_READ_VAR(ai, FORMAT("MAXDIFF"),  min_max->max_diff);
 #undef FORMAT
 }
 

@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 756
-y 134
+x 374
+y 317
 w 641
-h 513
+h 505
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -32,25 +32,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 168
-y 424
-w 160
-h 80
-lineColor index 14
-fill
-fillColor index 4
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
 x 8
 y 424
-w 152
-h 80
+w 328
+h 72
 lineColor index 14
 fill
 fillColor index 4
@@ -133,7 +118,7 @@ major 4
 minor 1
 release 0
 x 568
-y 480
+y 472
 w 64
 h 24
 fgColor index 25
@@ -180,7 +165,6 @@ y 224
 w 624
 h 184
 # Appearance
-autoScaleBothDirections
 graphTitle "DAC Difference"
 fgColor index 14
 bgColor index 3
@@ -223,8 +207,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 80
-y 464
+x 240
+y 456
 w 64
 h 16
 controlPv "$(device):DAC:MEAN"
@@ -250,8 +234,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 16
-y 464
+x 176
+y 456
 w 61
 h 16
 font "helvetica-medium-r-14.0"
@@ -270,8 +254,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 16
-y 480
+x 176
+y 472
 w 48
 h 16
 font "helvetica-medium-r-14.0"
@@ -290,8 +274,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 80
-y 480
+x 240
+y 472
 w 64
 h 16
 controlPv "$(device):DAC:STD"
@@ -360,189 +344,6 @@ value {
 autoSize
 endObjectProperties
 
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 240
-y 440
-w 72
-h 24
-fgColor index 14
-fgAlarm
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):DAC:ENABLE_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 240
-y 472
-w 72
-h 24
-controlPv "$(device):DAC:DELAY_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-clipToDspLimits
-noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 176
-y 440
-w 42
-h 28
-font "helvetica-medium-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Output"
-  "Enable:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 176
-y 472
-w 37
-h 28
-font "helvetica-medium-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Output"
-  "Delay:"
-}
-autoSize
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 336
-y 416
-w 136
-h 88
-# Appearance
-graphTitle "Pre-emphasis"
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "fromUser"
-xMin -0.5
-xMax 3
-# Y axis properties
-yAxisSrc "AutoScale"
-yMax 1
-yLabelIntervals 2
-yUserSpecScaleDiv 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Min 8300
-y2Max 16600
-# Trace Properties
-numTraces 1
-yPv {
-  0 "$(device):DAC:PREEMPH_S"
-}
-plotStyle {
-  0 "needle"
-}
-plotUpdateMode {
-  0 "y"
-}
-plotSymbolType {
-  0 "circle"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 27
-}
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 480
-y 480
-w 72
-h 24
-fgColor index 14
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):DAC:PREEMPH:DELAY_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 480
-y 464
-w 72
-h 14
-font "helvetica-medium-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Group delay:"
-}
-autoSize
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -558,7 +359,7 @@ fontAlign "center"
 fgColor index 1
 bgColor index 10
 value {
-  "Output Range"
+  "Input Range"
 }
 endObjectProperties
 
@@ -569,39 +370,6 @@ major 4
 minor 0
 release 0
 x 8
-y 416
-w 120
-h 16
-lineColor index 14
-fillColor index 0
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 168
-y 416
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "Output Control"
-}
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 168
 y 416
 w 120
 h 16
@@ -626,5 +394,116 @@ topShadowColor index 1
 botShadowColor index 11
 controlPv "$(device):DAC:SCAN_S.SCAN"
 font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 456
+y 472
+w 104
+h 24
+fgColor index 43
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "DAC Setup"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/dac_setup.edl"
+}
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 240
+y 440
+w 64
+h 16
+controlPv "$(device):DAC:MAXDIFF"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 5
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+useHexPrefix
+showUnits
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 176
+y 440
+w 52
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Max diff:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 344
+y 416
+w 43
+h 28
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Output"
+  "Enable:"
+}
+autoSize
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 400
+y 416
+w 72
+h 24
+fgColor index 14
+fgAlarm
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):DAC:ENABLE_S"
+font "helvetica-bold-r-12.0"
 endObjectProperties
 

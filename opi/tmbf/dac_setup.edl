@@ -1,0 +1,369 @@
+4 0 1
+beginScreenProperties
+major 4
+minor 0
+release 1
+x 757
+y 135
+w 368
+h 202
+font "helvetica-medium-r-18.0"
+ctlFont "helvetica-medium-r-18.0"
+btnFont "helvetica-medium-r-18.0"
+fgColor index 14
+bgColor index 3
+textColor index 14
+ctlFgColor1 index 14
+ctlFgColor2 index 0
+ctlBgColor1 index 0
+ctlBgColor2 index 14
+topShadowColor index 0
+botShadowColor index 14
+title "DAC data statistics"
+showGrid
+snapToGrid
+gridSize 8
+disableScroll
+endScreenProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 48
+w 184
+h 144
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 200
+y 48
+w 160
+h 80
+lineColor index 14
+fill
+fillColor index 4
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 0
+y 0
+w 368
+h 32
+font "helvetica-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 73
+value {
+  "$(device) DAC Setup"
+}
+endObjectProperties
+
+# (Exit Button)
+object activeExitButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 296
+y 168
+w 64
+h 24
+fgColor index 25
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+label "EXIT"
+font "helvetica-medium-r-12.0"
+3d
+endObjectProperties
+
+# (Shell Command)
+object shellCmdClass
+beginObjectProperties
+major 4
+minor 3
+release 0
+x 4
+y 4
+w 24
+h 24
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-14.0"
+buttonLabel "?"
+numCmds 1
+command {
+  0 "diagnostics-help TMBF_DAC_setup"
+}
+includeHelpIcon
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 272
+y 64
+w 72
+h 24
+fgColor index 14
+fgAlarm
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):DAC:ENABLE_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 272
+y 96
+w 72
+h 24
+controlPv "$(device):DAC:DELAY_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 208
+y 64
+w 42
+h 28
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Output"
+  "Enable:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 208
+y 96
+w 37
+h 28
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Output"
+  "Delay:"
+}
+autoSize
+endObjectProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 8
+release 0
+# Geometry
+x 16
+y 64
+w 160
+h 88
+# Appearance
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 2
+# X axis properties
+xAxisSrc "fromUser"
+xMin -0.5
+xMax 3
+# Y axis properties
+showYAxis
+yAxisSrc "fromUser"
+yMin -0.5
+yMax 1.5
+yLabelIntervals 2
+yUserSpecScaleDiv 1
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Min 8300
+y2Max 16600
+# Trace Properties
+numTraces 1
+yPv {
+  0 "$(device):DAC:PREEMPH_S"
+}
+plotStyle {
+  0 "needle"
+}
+plotUpdateMode {
+  0 "y"
+}
+plotSymbolType {
+  0 "circle"
+}
+ySigned {
+  0 1
+}
+plotColor {
+  0 index 27
+}
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 96
+y 160
+w 72
+h 24
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):DAC:PREEMPH:DELAY_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 168
+w 72
+h 14
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Group delay:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 200
+y 40
+w 120
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "Output Control"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 200
+y 40
+w 120
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 40
+w 184
+h 16
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 10
+value {
+  "DAC Pre-Emphasis Filter"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 40
+w 184
+h 16
+lineColor index 14
+fillColor index 0
+endObjectProperties
+

@@ -2,13 +2,12 @@
 
 from common import *
 
-MAX_EDGES = 20
 MAX_PEAKS = 4
 
 
 # Common controls for simple tune control
 setting_changed = Action('TUNE:CHANGED', DESC = 'Record tune settings changed')
-longOut('TUNE:HARMONIC', 0, BUNCHES_PER_TURN/2-1,
+longOut('TUNE:HARMONIC', 0, BUNCHES_PER_TURN - 1,
     FLNK = setting_changed, DESC = 'Select tune harmonic')
 aOut('TUNE:CENTRE', 0, 1, PREC = 4,
     FLNK = setting_changed, DESC = 'Centre tune frequency')
