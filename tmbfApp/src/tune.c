@@ -213,9 +213,9 @@ static int find_high_ix(
     int low_ix  = (blocks[0].start + blocks[0].end) / 2;
     int high_ix = (blocks[count-1].start + blocks[count-1].end) / 2;
     if (tune_scale[low_ix] < tune_scale[high_ix])
-        return 0;
-    else
         return count-1;
+    else
+        return 0;
 }
 
 static epicsAlarmSeverity measure_tune(
