@@ -236,7 +236,7 @@ put('TUNE:THRESHOLD_S', tune_threshold)
 # Trigger on external trigger.
 put('TRG:BUF:SEL_S', 'Hardware')
 put('TRG:BUF:EXT:EN_S', 'Enable')
-put('TRG:BUF:EXT:BL_S', 'Blanking')
+put('TRG:BUF:EXT:BL_S', 'All')
 put('TRG:BUF:ADC:EN_S', 'Ignore')
 put('TRG:BUF:SCLK:EN_S', 'Ignore')
 put('TRG:BUF:MODE_S', 'Retrigger')
