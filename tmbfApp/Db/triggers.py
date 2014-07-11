@@ -73,6 +73,9 @@ mbbOut('TRG:SEQ:SEL', 'Disabled', 'BUF trigger', 'DDR trigger',
 mbbIn('TRG:SEQ:STATUS', 'Ready', 'Armed', 'Busy',
     SCAN = 'I/O Intr', DESC = 'SEQ status')
 
+mbbIn('DDR:STATUS', 'Ready', 'Armed', 'Busy',
+    SCAN = 'I/O Intr', DESC = 'DDR buffer status')
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -48,6 +48,8 @@ static struct epics_record *short_trigger;
 static bool long_enable;                // Whether long data capture is enabled
 static struct in_epics_record_bi *long_data_ready;   // Status report to outside
 
+static bool ddr_autostop;
+
 
 /* Used for waiting for record processing completion callbacks. */
 static pthread_cond_t done_cond = PTHREAD_COND_INITIALIZER;
@@ -97,6 +99,8 @@ static void set_long_enable(bool enable)
  * we're in one-shot mode. */
 void process_ddr_buffer(void)
 {
+    printf("Process DDR buffer\n");
+
     LOCK();
     if (long_enable)
         trigger_record(long_trigger, 0, NULL);
@@ -111,11 +115,28 @@ void process_ddr_buffer(void)
     UNLOCK();
 }
 
+void disarm_ddr_buffer(void)
+{
+    hw_write_ddr_disable();
+}
+
+void notify_ddr_seq_ready(void)
+{
+    printf("SEQ ready notify!\n");
+    if (ddr_autostop)  // && IQ capture
+        disarm_ddr_buffer();
+}
+
 
 /* Called each time the DDR buffer is armed.  In response we have to invalidate
  * the long term data. */
 void prepare_ddr_buffer(void)
 {
+    printf("Prepare DDR buffer\n");
+    // !!!!  Write input select and record setting
+
+    hw_write_ddr_enable();  // Initiate capture of selected DDR data
+
     LOCK();
     set_long_data_ready(false);
     UNLOCK();
@@ -154,6 +175,23 @@ static void set_selected_turn(int value)
 }
 
 
+static void write_ddr_select(unsigned int select)
+{
+    hw_write_ddr_select(select);
+}
+
+
+static uint32_t read_ddr_count(void)
+{
+    uint32_t offset;
+    bool iq_select;
+    hw_read_ddr_offset(&offset, &iq_select);
+    if (iq_select)
+        return offset;
+    else
+        return 0;
+}
+
 
 bool initialise_ddr_epics(void)
 {
@@ -185,7 +223,12 @@ bool initialise_ddr_epics(void)
     PUBLISH_READ_VAR(longin, "DDR:TURNSEL", selected_turn);
 
     /* Data source. */
-    PUBLISH_WRITER_P(mbbo, "DDR:INPUT", hw_write_ddr_select);
+    PUBLISH_WRITER_P(mbbo, "DDR:INPUT", write_ddr_select);
+
+    PUBLISH_ACTION("DDR:START", hw_write_ddr_enable);
+    PUBLISH_ACTION("DDR:STOP", hw_write_ddr_disable);
+    PUBLISH_READER(ulongin, "DDR:COUNT", read_ddr_count);
+    PUBLISH_WRITE_VAR_P(bo, "DDR:AUTOSTOP", ddr_autostop);
 
     return initialise_ddr();
 }

@@ -12,6 +12,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <pthread.h>
 
 #include "error.h"
 #include "hardware.h"
@@ -55,6 +56,12 @@ static volatile struct history_buffer_fifo *fifo;
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* DDR buffer readout. */
 
+/* Need to interlock access to the DDR hardware. */
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+#define LOCK()      pthread_mutex_lock(&lock);
+#define UNLOCK()    pthread_mutex_unlock(&lock);
+
 
 #define PURGE_FIFO_LIMIT    65536
 
@@ -91,10 +98,17 @@ static void purge_read_buffer(void)
 
 #define MAX_FIFO_WAITS      20      // How long to wait for FIFO ready
 
-static void start_buffer_transfer(ssize_t offset, size_t interval, size_t count)
+static bool start_buffer_transfer(ssize_t offset, size_t interval, size_t count)
 {
     uint32_t ddr_trigger_offset;
-    TEST_OK(hw_read_ddr_offset(&ddr_trigger_offset));
+    bool iq_select;
+    if (!TEST_OK_(hw_read_ddr_offset(&ddr_trigger_offset, &iq_select),
+            "Cannot read from DDR: busy capturing data"))
+        return false;
+    /* In IQ mode the trigger offset is instead a capture count which we
+     * ignore. */
+    if (iq_select)
+        ddr_trigger_offset = 0;
 
     int ddr_delay = hw_read_ddr_delay();
     history_buffer->post_filtering = 0;
@@ -110,7 +124,7 @@ static void start_buffer_transfer(ssize_t offset, size_t interval, size_t count)
     while (waits < MAX_FIFO_WAITS  &&
            (history_buffer->transfer_status & 0x7FF) == 0)
         waits += 1;
-    TEST_OK_(waits < MAX_FIFO_WAITS, "Gave up waiting for DDR FIFO");
+    return TEST_OK_(waits < MAX_FIFO_WAITS, "Gave up waiting for DDR FIFO");
 }
 
 
@@ -157,30 +171,39 @@ static size_t get_buffer_fifo(int16_t *buffer, size_t count)
 
 
 /* Reads the given number of complete turns from the trigger point. */
-void read_ddr_turns(ssize_t start, size_t turns, int16_t *result)
+bool read_ddr_turns(ssize_t start, size_t turns, int16_t *result)
 {
     size_t count = turns * ATOMS_PER_TURN;
-    start_buffer_transfer(start * ATOMS_PER_TURN, 1, count);
+    LOCK();
+    bool ok =
+        start_buffer_transfer(start * ATOMS_PER_TURN, 1, count)  &&
 
-    FOR_FIFO_ATOMS(atoms_read, count, result)
-        result += atoms_read * SAMPLES_PER_ATOM;
-    TEST_OK_(count == 0, "Incomplete DDR buffer read: %u", count);
+        DO_(FOR_FIFO_ATOMS(atoms_read, count, result)
+            result += atoms_read * SAMPLES_PER_ATOM)  &&
+        TEST_OK_(count == 0, "Incomplete DDR buffer read: %u", count);
+    UNLOCK();
+    return ok;
 }
 
 
 /* Reads the given number of a single bunch. */
-void read_ddr_bunch(ssize_t start, size_t bunch, size_t turns, int16_t *result)
+bool read_ddr_bunch(ssize_t start, size_t bunch, size_t turns, int16_t *result)
 {
-    start_buffer_transfer(
-        start * ATOMS_PER_TURN + bunch / SAMPLES_PER_ATOM,
-        ATOMS_PER_TURN, turns);
-
     size_t offset = bunch % SAMPLES_PER_ATOM;
     int16_t buffer[MAX_FIFO_SIZE * SAMPLES_PER_ATOM];
-    FOR_FIFO_ATOMS(atoms_read, turns, buffer)
-        for (size_t i = 0; i < atoms_read; i ++)
-            *result++ = buffer[i * SAMPLES_PER_ATOM + offset];
-    TEST_OK_(turns == 0, "Incomplete DDR buffer read: %u", turns);
+
+    LOCK();
+    bool ok =
+        start_buffer_transfer(
+            start * ATOMS_PER_TURN + bunch / SAMPLES_PER_ATOM,
+            ATOMS_PER_TURN, turns)  &&
+
+        DO_(FOR_FIFO_ATOMS(atoms_read, turns, buffer)
+            for (size_t i = 0; i < atoms_read; i ++)
+                *result++ = buffer[i * SAMPLES_PER_ATOM + offset])  &&
+        TEST_OK_(turns == 0, "Incomplete DDR buffer read: %u", turns);
+    UNLOCK();
+    return ok;
 }
 
 

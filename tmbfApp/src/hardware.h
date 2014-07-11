@@ -150,7 +150,7 @@ int hw_read_ddr_delay(void);
 
 /* Reads the current DDR trigger offset.  Should return true unless called at
  * the wrong time. */
-bool hw_read_ddr_offset(uint32_t *offset);
+bool hw_read_ddr_offset(uint32_t *offset, bool *iq_select);
 
 /* Returns DDR status bits and all relevant controlling factors. */
 void hw_read_ddr_status(bool *armed, bool *busy, bool *iq_select);

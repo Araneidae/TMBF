@@ -61,10 +61,17 @@ struct seq_target {
     bool armed;             // Set if currently enabled and armed
 };
 
+struct ddr_buf {
+    struct in_epics_record_mbbi *status;
+    bool armed;
+};
+
 
 static struct trigger_target ddr_target = { .target_id = DDR_TARGET };
 static struct trigger_target buf_target = { .target_id = BUF_TARGET };
 static struct seq_target seq_target;
+static struct ddr_buf ddr_buf = { };
+
 
 /* Whether DDR and BUF triggers should be armed and fired together.  This
  * affects both arm/fire and rearming: if this flag is set, arm/fire will fire
@@ -228,7 +235,6 @@ static bool check_arm_target(
 static void do_arm_ddr(void)
 {
     prepare_ddr_buffer();   // Let software know DDR buffer is active
-    hw_write_ddr_enable();  // Initiate capture of selected DDR data
 
     ddr_target.armed = true;
     ddr_target.auto_arm_state = STATE_NORMAL;
@@ -315,7 +321,7 @@ static void stop_target(struct trigger_target *target)
         target->target_id == DDR_TARGET,
         target->target_id == BUF_TARGET);
     if (target->target_id == DDR_TARGET)
-        hw_write_ddr_disable();
+        disarm_ddr_buffer();
 
     target->auto_arm_state = STATE_STOPPED;
     target->armed = false;
@@ -333,12 +339,15 @@ static void set_source(struct trigger_target *target, bool value)
 
 /* Called as part of the event polling loop.  The ready flags indicate
  * transition from busy to ready and so represent edge triggered events. */
-static void update_target_status(bool ddr_ready, bool buf_ready, bool seq_ready)
+static void rearm_targets(
+    bool ddr_ready, bool buf_ready, bool seq_ready,
+    enum trigger_status ddr_buf_status)
 {
     /* Reset the armed status of each target. */
     if (ddr_ready)  ddr_target.armed = false;
     if (buf_ready)  buf_target.armed = false;
     if (seq_ready)  seq_target.armed = false;
+    ddr_buf.armed = ddr_buf_status != TRIGGER_READY;
 
     /* Trigger rearming as appropriate. */
     if (ddr_ready)  arm_target(&ddr_target, true);
@@ -405,7 +414,8 @@ static enum trigger_status interpret_trigger_flags(bool armed, bool busy)
 static void decode_hardware_status(
     enum trigger_status *ddr_status,
     enum trigger_status *buf_status,
-    enum trigger_status *seq_status)
+    enum trigger_status *seq_status,
+    enum trigger_status *ddr_buf_status)
 {
     bool ddr_armed, ddr_busy, ddr_iq_select;
     hw_read_ddr_status(&ddr_armed, &ddr_busy, &ddr_iq_select);
@@ -423,7 +433,7 @@ static void decode_hardware_status(
      *  - SEQ is BUF triggered and is busy. */
     *buf_status = interpret_trigger_flags(buf_armed,
         (buf_busy  &&  !buf_iq_select)  ||
-        (buf_busy  &&  buf_iq_select && seq_busy)  ||
+        (buf_busy  &&  buf_iq_select  &&  seq_busy)  ||
         (seq_busy  &&  seq_trig_source == SEQ_TRIG_BUF));
 
     /* Report the DDR trigger as busy when either:
@@ -435,8 +445,13 @@ static void decode_hardware_status(
 
     /* Report SEQ as armed if appropriate source is armed. */
     *seq_status = interpret_trigger_flags(
-        (seq_trig_source == SEQ_TRIG_BUF && buf_armed)  ||
-        (seq_trig_source == SEQ_TRIG_DDR && ddr_armed), seq_busy);
+        (seq_trig_source == SEQ_TRIG_BUF  &&  buf_armed)  ||
+        (seq_trig_source == SEQ_TRIG_DDR  &&  ddr_armed), seq_busy);
+
+    /* Report DDR buffer as triggered if it's taking triggers (not in IQ capture
+     * mode), otherwise just report busy state. */
+    *ddr_buf_status = interpret_trigger_flags(
+        ddr_armed  &&  !ddr_iq_select, ddr_busy);
 }
 
 
@@ -453,33 +468,37 @@ static void *monitor_events(void *context)
     {
         LOCK();
 
-        enum trigger_status ddr_status, buf_status, seq_status;
-        decode_hardware_status(&ddr_status, &buf_status, &seq_status);
+        enum trigger_status ddr_status, buf_status, seq_status, ddr_buf_status;
+        decode_hardware_status(
+            &ddr_status, &buf_status, &seq_status, &ddr_buf_status);
 
         bool ddr_ready = ddr_target.armed  &&  ddr_status == TRIGGER_READY;
         bool buf_ready = buf_target.armed  &&  buf_status == TRIGGER_READY;
         bool seq_ready = seq_target.armed  &&  seq_status == TRIGGER_READY;
+        bool ddr_buf_ready = ddr_buf.armed  &&  ddr_buf_status == TRIGGER_READY;
 
         /* Allow all the corresponding targets to be processed. */
         if (ddr_ready)
-        {
             update_trigger_hit(&ddr_trigger_source);
-            process_ddr_buffer();
-        }
         if (buf_ready)
         {
             update_trigger_hit(&buf_trigger_source);
             process_fast_buffer();
         }
+        if (seq_ready)
+            notify_ddr_seq_ready();
+        if (ddr_buf_ready)
+            process_ddr_buffer();
 
         /* Keep published status up to date. */
         WRITE_IN_RECORD(mbbi, ddr_target.status, ddr_status);
         WRITE_IN_RECORD(mbbi, buf_target.status, buf_status);
         WRITE_IN_RECORD(mbbi, seq_target.status, seq_status);
+        WRITE_IN_RECORD(mbbi, ddr_buf.status, ddr_buf_status);
 
         /* Clear the busy flags for all targets that have completed and handle
          * rearming as appropriate. */
-        update_target_status(ddr_ready, buf_ready, seq_ready);
+        rearm_targets(ddr_ready, buf_ready, seq_ready, ddr_buf_status);
 
         /* Update trigger phase. */
         poll_trigger_phase();
@@ -552,6 +571,8 @@ static void publish_targets(void)
 
     seq_target.status = PUBLISH_IN_VALUE_I(mbbi, "TRG:SEQ:STATUS");
     PUBLISH_WRITER_P(mbbo, "TRG:SEQ:SEL", write_seq_trig_source);
+
+    ddr_buf.status = PUBLISH_IN_VALUE_I(mbbi, "DDR:STATUS");
 
     PUBLISH_WRITE_VAR_P(bo, "TRG:SYNC", synchronise_triggers);
 }

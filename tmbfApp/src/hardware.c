@@ -322,7 +322,7 @@ static void pulse_control_bit(unsigned int bit)
     UNLOCK()
 
 #define READ_STATUS_BITS(start, length) \
-    ((config_space->system_status >> (start)) & ((1 << (length)) - 1))
+    read_bit_field(config_space->system_status, start, length)
 
 
 /* Used to compensate a value by subtracting a bunch count offset. */
@@ -566,20 +566,19 @@ int hw_read_ddr_delay(void)
     }
 }
 
-bool hw_read_ddr_offset(uint32_t *offset)
+bool hw_read_ddr_offset(uint32_t *offset, bool *iq_select)
 {
     uint32_t ddr_status = config_space->ddr_status;
-    if (ddr_selection == DDR_SELECT_IQ)
-        *offset = 0;
-    else
-        *offset = ddr_status & 0xFFFFFF;
+    *offset = ddr_status & 0xFFFFFF;
+    *iq_select = ddr_selection == DDR_SELECT_IQ;
     return !(ddr_status >> 31);
 }
 
 void hw_read_ddr_status(bool *armed, bool *busy, bool *iq_select)
 {
-    *armed = READ_STATUS_BITS(23, 1);
-    *busy = READ_STATUS_BITS(26, 1);
+    uint32_t status = config_space->system_status;
+    *armed = read_bit_field(status, 23, 1);
+    *busy  = read_bit_field(status, 26, 1);
     *iq_select = ddr_selection == DDR_SELECT_IQ;
 }
 
@@ -645,8 +644,9 @@ void hw_write_buf_select(unsigned int selection)
 
 void hw_read_buf_status(bool *armed, bool *busy, bool *iq_select)
 {
-    *armed = READ_STATUS_BITS(20, 1);
-    *busy = READ_STATUS_BITS(21, 1);
+    uint32_t status = config_space->system_status;
+    *armed = read_bit_field(status, 20, 1);
+    *busy  = read_bit_field(status, 21, 1);
     *iq_select = buf_selection == BUF_SELECT_IQ;
 }
 
