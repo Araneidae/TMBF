@@ -278,11 +278,18 @@ static void write_control_bit_field(
     *control = update;
 }
 
-static void write_control_bit_field_1(
+static void write_control_bits(
     unsigned int start, unsigned int bits, uint32_t value)
 {
     write_control_bit_field(
         &config_space->control, &control_field_1, start, bits, value);
+}
+
+static void write_control_bits_2(
+    unsigned int start, unsigned int bits, uint32_t value)
+{
+    write_control_bit_field(
+        &config_space->control2, &control_field_2, start, bits, value);
 }
 
 /* Writes mask to the pulse register.  This generates simultaneous pulse events
@@ -300,14 +307,12 @@ static void pulse_control_bit(unsigned int bit)
 
 #define WRITE_CONTROL_BITS(start, length, value) \
     LOCK(); \
-    write_control_bit_field( \
-        &config_space->control, &control_field_1, start, length, value); \
+    write_control_bits(start, length, value); \
     UNLOCK()
 
 #define WRITE_CONTROL_BITS_2(start, length, value) \
     LOCK(); \
-    write_control_bit_field( \
-        &config_space->control2, &control_field_2, start, length, value); \
+    write_control_bits_2(start, length, value); \
     UNLOCK()
 
 #define READ_STATUS_BITS(start, length) \
@@ -427,10 +432,12 @@ void hw_write_adc_offsets(short offsets[4])
 
 void hw_write_adc_filter(int taps[12])
 {
+    LOCK();
     config_space->write_select = 0;
     for (int i = 2; i >= 0; i --)
         for (int j = 0; j < 4; j ++)
             config_space->adc_filter_taps = taps[3*j + i]; // taps[j][i];
+    UNLOCK();
 }
 
 void hw_write_adc_filter_delay(unsigned int delay)
@@ -496,10 +503,12 @@ void hw_write_dac_enable(bool enable)
 
 void hw_write_dac_preemph(int taps[3])
 {
+    LOCK();
     config_space->write_select = 0;
     for (int i = 2; i >= 0; i --)
         for (int j = 0; j < 4; j ++)
             config_space->dac_preemph_taps = taps[i];
+    UNLOCK();
 }
 
 void hw_write_dac_delay(unsigned int dac_delay)
@@ -520,9 +529,11 @@ static int ddr_selection;
 
 void hw_write_ddr_select(unsigned int selection)
 {
+    LOCK();
     ddr_selection = selection;
-    WRITE_CONTROL_BITS(28, 2, selection);
-    WRITE_CONTROL_BITS(6, 1, selection == DDR_SELECT_IQ);
+    write_control_bits(28, 2, selection);
+    write_control_bits(6, 1, selection == DDR_SELECT_IQ);
+    UNLOCK();
 }
 
 void hw_write_ddr_enable(void)
@@ -558,14 +569,11 @@ bool hw_read_ddr_offset(uint32_t *offset)
     return !(ddr_status >> 31);
 }
 
-enum trigger_status hw_read_ddr_status(void)
+void hw_read_ddr_status(bool *armed, bool *busy, bool *iq_select)
 {
-    if (READ_STATUS_BITS(23, 1))
-        return TRIGGER_ARMED;
-    else if (READ_STATUS_BITS(26, 1))
-        return TRIGGER_BUSY;    // This is a *very* transient state!
-    else
-        return TRIGGER_READY;
+    *armed = READ_STATUS_BITS(23, 1);
+    *busy = READ_STATUS_BITS(26, 1);
+    *iq_select = ddr_selection == DDR_SELECT_IQ;
 }
 
 
@@ -623,27 +631,16 @@ void hw_write_buf_select(unsigned int selection)
      * debug data is routed to IQ, the top two bits are the actual selection,
      * and debug is only available on IQ. */
     bool enable_debug = selection == BUF_SELECT_DEBUG;
-    write_control_bit_field_1(10, 2, enable_debug ? BUF_SELECT_IQ : selection);
-    write_control_bit_field_1(15, 1, enable_debug);
+    write_control_bits(10, 2, enable_debug ? BUF_SELECT_IQ : selection);
+    write_control_bits(15, 1, enable_debug);
     UNLOCK();
 }
 
-
-enum trigger_status hw_read_buf_status(void)
+void hw_read_buf_status(bool *armed, bool *busy, bool *iq_select)
 {
-    if (READ_STATUS_BITS(20, 1))
-        return TRIGGER_ARMED;
-    else if (READ_STATUS_BITS(21, 1))
-    {
-        if (buf_selection == BUF_SELECT_IQ  &&  !READ_STATUS_BITS(22, 1))
-            /* When the buffer is busy but the selection is IQ we have to fudge
-             * completion of the buffer to sequencer completion. */
-            return TRIGGER_READY;
-        else
-            return TRIGGER_BUSY;
-    }
-    else
-        return TRIGGER_READY;
+    *armed = READ_STATUS_BITS(20, 1);
+    *busy = READ_STATUS_BITS(21, 1);
+    *iq_select = buf_selection == BUF_SELECT_IQ;
 }
 
 
@@ -732,17 +729,21 @@ static void update_det_bunch_select(void)
 
 void hw_write_det_input_select(unsigned int input)
 {
+    LOCK();
     det_input = input;
-    WRITE_CONTROL_BITS(2, 1, input);
+    write_control_bits(2, 1, input);
     /* As bunch offset compensation depends on which source we have to rewrite
      * the bunches when the input changes. */
     update_det_bunch_select();
+    UNLOCK();
 }
 
 void hw_write_det_bunches(const unsigned int bunch[4])
 {
+    LOCK();
     memcpy(det_bunches, bunch, sizeof(det_bunches));
     update_det_bunch_select();
+    UNLOCK();
 }
 
 void hw_write_det_gain(unsigned int gain)
@@ -833,10 +834,12 @@ enum ftun_status hw_read_ftun_status(void)
 
 void hw_read_ftun_status_bits(bool *status)
 {
+    LOCK();
     config_space->ftune_read_control = 1;
     uint32_t status_word = config_space->ftune_status;
     for (int i = 0; i < FTUN_BIT_COUNT; i ++)
         status[i] = (status_word >> i) & 1;
+    UNLOCK();
 }
 
 static void read_signed_pair(uint32_t pair, int *low, int *high)
@@ -859,15 +862,19 @@ bool hw_read_ftun_frequency(int *frequency)
 
 bool hw_read_ftun_i_minmax(int *min, int *max)
 {
+    LOCK();
     config_space->ftune_read_control = 2;
     read_signed_pair(config_space->ftune_i_minmax, min, max);
+    UNLOCK();
     return *max >= *min;
 }
 
 bool hw_read_ftun_q_minmax(int *min, int *max)
 {
+    LOCK();
     config_space->ftune_read_control = 4;
     read_signed_pair(config_space->ftune_q_minmax, min, max);
+    UNLOCK();
     return *max >= *min;
 }
 
@@ -915,6 +922,7 @@ void hw_read_ftun_delays(int *adc_delay, int *fir_delay)
 /* SEQ: Programmed Bunch and Sweep Control */
 
 static unsigned int sequencer_pc;
+static unsigned int seq_trig_source;
 
 void hw_write_seq_entries(
     unsigned int bank0, const struct seq_entry entries[MAX_SEQUENCER_COUNT])
@@ -955,15 +963,24 @@ void hw_write_seq_entries(
     UNLOCK();
 }
 
-void hw_write_seq_count(unsigned int set_sequencer_pc)
+void hw_write_seq_count(unsigned int pc)
 {
-    sequencer_pc = set_sequencer_pc;
-    WRITE_CONTROL_BITS(3, 3, sequencer_pc);
+    LOCK();
+    sequencer_pc = pc;
+    write_control_bits(3, 3, sequencer_pc);
+    UNLOCK();
 }
 
 void hw_write_seq_trig_source(unsigned int source)
 {
-    WRITE_CONTROL_BITS(7, 1, source);
+    LOCK();
+    seq_trig_source = source;
+    if (seq_trig_source == SEQ_DISABLED)
+        write_control_bits(3, 3, 0);
+    else
+        write_control_bits(3, 3, sequencer_pc);
+    write_control_bits(7, 1, source - 1);
+    UNLOCK();
 }
 
 void hw_write_seq_trig_state(int state)
@@ -981,14 +998,10 @@ unsigned int hw_read_seq_super_state(void)
     return config_space->super_count_r;
 }
 
-enum trigger_status hw_read_seq_status(void)
+void hw_read_seq_status(bool *busy, enum seq_trig_source *trig_source)
 {
-    if (sequencer_pc > 0  &&  READ_STATUS_BITS(20, 1))
-        return TRIGGER_ARMED;
-    else if (READ_STATUS_BITS(22, 1))
-        return TRIGGER_BUSY;
-    else
-        return TRIGGER_READY;
+    *busy = READ_STATUS_BITS(22, 1);
+    *trig_source = seq_trig_source;
 }
 
 void hw_write_seq_reset(void)
@@ -1032,6 +1045,11 @@ void hw_write_trg_arm(bool ddr, bool buf)
 void hw_write_trg_soft_trigger(bool ddr, bool buf)
 {
     pulse_mask(make_mask2(1, 3, ddr, buf));
+}
+
+void hw_write_trg_seq_source(unsigned int source)
+{
+    WRITE_CONTROL_BITS(7, 1, source);
 }
 
 void hw_write_trg_disarm(bool ddr, bool buf)

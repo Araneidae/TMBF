@@ -68,7 +68,8 @@ boolOut('TRG:SYNC', 'Separate', 'Synched',
 
 
 # Sequencer control.
-boolOut('TRG:SEQ:ENA', 'Disabled', 'Enabled', DESC = 'Sequencer trigger enable')
+mbbOut('TRG:SEQ:SEL', 'Disabled', 'BUF trigger', 'DDR trigger',
+    DESC = 'Sequencer trigger enable')
 mbbIn('TRG:SEQ:STATUS', 'Ready', 'Armed', 'Busy',
     SCAN = 'I/O Intr', DESC = 'SEQ status')
 

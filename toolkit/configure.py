@@ -190,9 +190,9 @@ def trigger_buf_source(tmbf, source):
 
 def sequencer_enable(tmbf, enable):
     if enable:
-        tmbf.set('TRG:SEQ:ENA_S', 'Enabled')
+        tmbf.set('TRG:SEQ:SEL_S', 'BUF trigger')
     else:
-        tmbf.set('TRG:SEQ:ENA_S', 'Disabled')
+        tmbf.set('TRG:SEQ:SEL_S', 'Disabled')
         tmbf.set('SEQ:RESET_S.PROC', 0)
 
 class WaitReady:

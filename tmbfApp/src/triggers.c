@@ -26,6 +26,13 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #define UNLOCK()    pthread_mutex_unlock(&lock)
 
 
+/* Trigger status enumeration. */
+enum trigger_status {
+    TRIGGER_READY,      // Device is ready
+    TRIGGER_ARMED,      // Device is armed and waiting for trigger
+    TRIGGER_BUSY,       // Device is processing data
+};
+
 
 /* Records state of a trigger target. */
 struct trigger_target {
@@ -50,8 +57,8 @@ struct trigger_target {
  * buffer, but has its own enable state. */
 struct seq_target {
     struct in_epics_record_mbbi *status;
-    bool enabled;           // Updated from PV
-    bool armed;             // Set if currently enabled
+    unsigned int trigger_source;           // Updated from PV
+    bool armed;             // Set if currently enabled and armed
 };
 
 
@@ -220,7 +227,7 @@ static bool check_arm_target(
 
 static void do_arm_ddr(void)
 {
-    arming_ddr_buffer();    // Let software know DDR buffer is active
+    prepare_ddr_buffer();   // Let software know DDR buffer is active
     hw_write_ddr_enable();  // Initiate capture of selected DDR data
 
     ddr_target.armed = true;
@@ -232,24 +239,31 @@ static void do_arm_ddr(void)
 
 static void do_arm_buf(void)
 {
-    prepare_sequencer(seq_target.enabled);
+    prepare_fast_buffer();
 
     buf_target.armed = true;
-    seq_target.armed = seq_target.enabled;
     buf_target.auto_arm_state = STATE_NORMAL;
 
     WRITE_IN_RECORD(mbbi, buf_target.status, TRIGGER_ARMED);
-    if (seq_target.armed)
-        WRITE_IN_RECORD(mbbi, seq_target.status, TRIGGER_ARMED);
 }
 
-static void arm_and_fire(bool arm_ddr, bool arm_buf, bool external)
+static void do_arm_seq(void)
+{
+    prepare_sequencer();
+    seq_target.armed = true;
+    WRITE_IN_RECORD(mbbi, seq_target.status, TRIGGER_ARMED);
+}
+
+static void arm_and_fire(
+    bool arm_ddr, bool arm_buf, bool arm_seq, bool external)
 {
     /* Prepare the targets. */
     if (arm_ddr)
         do_arm_ddr();
     if (arm_buf)
         do_arm_buf();
+    if (arm_seq)
+        do_arm_seq();
 
     /* Fire! */
     if (external)
@@ -272,6 +286,9 @@ static void arm_target(struct trigger_target *target, bool auto_arm)
     bool external = target->external;
     bool arm_ddr = check_arm_target(target, &ddr_target, external, auto_arm);
     bool arm_buf = check_arm_target(target, &buf_target, external, auto_arm);
+    bool arm_seq =
+        (seq_target.trigger_source == SEQ_TRIG_BUF  &&  arm_buf)  ||
+        (seq_target.trigger_source == SEQ_TRIG_DDR  &&  arm_ddr);
 
     /* Figure out whether we can accept this arming request: only if all users
      * of the source are currently idle.  If we're not in synchronise_triggers
@@ -287,7 +304,7 @@ static void arm_target(struct trigger_target *target, bool auto_arm)
             target->auto_arm_state = STATE_ARMED;
     }
     else
-        arm_and_fire(arm_ddr, arm_buf, external);
+        arm_and_fire(arm_ddr, arm_buf, arm_seq, external);
 }
 
 
@@ -329,6 +346,13 @@ static void update_target_status(bool ddr_ready, bool buf_ready, bool seq_ready)
 }
 
 
+static void write_seq_trig_source(unsigned int source)
+{
+    seq_target.trigger_source = source;
+    hw_write_seq_trig_source(seq_target.trigger_source);
+}
+
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Event processing and polling. */
 
@@ -365,6 +389,57 @@ static void poll_trigger_phase(void)
 }
 
 
+static enum trigger_status interpret_trigger_flags(bool armed, bool busy)
+{
+    if (armed)
+        return TRIGGER_ARMED;
+    else if (busy)
+        return TRIGGER_BUSY;
+    else
+        return TRIGGER_READY;
+}
+
+/* Interrogates hardware for current readback status of the two trigger sources
+ * and the three targets and computes the appropriate readiness status for each
+ * of the three software entities. */
+static void decode_hardware_status(
+    enum trigger_status *ddr_status,
+    enum trigger_status *buf_status,
+    enum trigger_status *seq_status)
+{
+    bool ddr_armed, ddr_busy, ddr_iq_select;
+    hw_read_ddr_status(&ddr_armed, &ddr_busy, &ddr_iq_select);
+
+    bool buf_armed, buf_busy, buf_iq_select;
+    hw_read_buf_status(&buf_armed, &buf_busy, &buf_iq_select);
+
+    bool seq_busy;
+    enum seq_trig_source seq_trig_source;
+    hw_read_seq_status(&seq_busy, &seq_trig_source);
+
+    /* Report the BUF trigger as busy when any one of:
+     *  - BUF is in non-IQ capture mode and is busy
+     *  - BUF is in IQ capture mode and is busy, and SEQ is busy
+     *  - SEQ is BUF triggered and is busy. */
+    *buf_status = interpret_trigger_flags(buf_armed,
+        (buf_busy  &&  !buf_iq_select)  ||
+        (buf_busy  &&  buf_iq_select && seq_busy)  ||
+        (seq_busy  &&  seq_trig_source == SEQ_TRIG_BUF));
+
+    /* Report the DDR trigger as busy when either:
+     *  - DDR buffer is in non-IQ capture mode and is busy
+     *  - SEQ is DDR triggered and is busy. */
+    *ddr_status = interpret_trigger_flags(ddr_armed,
+        (ddr_busy  &&  !ddr_iq_select)  ||
+        (seq_busy  &&  seq_trig_source == SEQ_TRIG_DDR));
+
+    /* Report SEQ as armed if appropriate source is armed. */
+    *seq_status = interpret_trigger_flags(
+        (seq_trig_source == SEQ_TRIG_BUF && buf_armed)  ||
+        (seq_trig_source == SEQ_TRIG_DDR && ddr_armed), seq_busy);
+}
+
+
 /* This thread monitors the hardware for events and dispatches them as
  * appropriate.  The following events and states are recognised and updated:
  *  - DDR trigger
@@ -378,9 +453,8 @@ static void *monitor_events(void *context)
     {
         LOCK();
 
-        enum trigger_status ddr_status = hw_read_ddr_status();
-        enum trigger_status buf_status = hw_read_buf_status();
-        enum trigger_status seq_status = hw_read_seq_status();
+        enum trigger_status ddr_status, buf_status, seq_status;
+        decode_hardware_status(&ddr_status, &buf_status, &seq_status);
 
         bool ddr_ready = ddr_target.armed  &&  ddr_status == TRIGGER_READY;
         bool buf_ready = buf_target.armed  &&  buf_status == TRIGGER_READY;
@@ -477,7 +551,7 @@ static void publish_targets(void)
     PUBLISH_WRITER_P(ulongout, "TRG:BUF:DELAY", hw_write_trg_buf_delay);
 
     seq_target.status = PUBLISH_IN_VALUE_I(mbbi, "TRG:SEQ:STATUS");
-    PUBLISH_WRITE_VAR_P(bo, "TRG:SEQ:ENA", seq_target.enabled);
+    PUBLISH_WRITER_P(mbbo, "TRG:SEQ:SEL", write_seq_trig_source);
 
     PUBLISH_WRITE_VAR_P(bo, "TRG:SYNC", synchronise_triggers);
 }

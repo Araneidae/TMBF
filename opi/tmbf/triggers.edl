@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2421
-y 101
+x 2033
+y 12
 w 632
 h 552
 font "helvetica-medium-r-18.0"
@@ -191,16 +191,16 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 64
+x 56
 y 112
-w 96
+w 104
 h 22
 fgColor index 14
 bgColor index 3
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):TRG:SEQ:ENA_S"
+controlPv "$(device):TRG:SEQ:SEL_S"
 font "helvetica-medium-r-12.0"
 endObjectProperties
 
@@ -823,32 +823,6 @@ value {
   "turns"
 }
 autoSize
-endObjectProperties
-
-# (Lines)
-object activeLineClass
-beginObjectProperties
-major 4
-minor 0
-release 1
-x 56
-y 112
-w 8
-h 16
-lineColor index 14
-fillColor index 0
-lineWidth 2
-numPoints 3
-xPoints {
-  0 56
-  1 56
-  2 64
-}
-yPoints {
-  0 112
-  1 128
-  2 128
-}
 endObjectProperties
 
 # (Static Text)

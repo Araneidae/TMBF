@@ -466,7 +466,7 @@ static void set_tune_settings(void)
 
     /* Force buffer to IQ and ensure the buffer is enabled. */
     WRITE_NAMED_RECORD(mbbo, "BUF:SELECT", BUF_SELECT_IQ);
-    WRITE_NAMED_RECORD(bo,   "TRG:SEQ:ENA", true);
+    WRITE_NAMED_RECORD(mbbo, "TRG:SEQ:SEL", SEQ_TRIG_BUF);
 
     /* Configure the sequencer with the selected tune range.  Force count and
      * capture to sensible values and set the sequencer PC to 1. */

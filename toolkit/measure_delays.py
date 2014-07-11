@@ -125,7 +125,7 @@ def setup_detector_single_bunch(tmbf, bank=1, fir=0):
     tmbf.set('DET:BUNCH0_S', 0)
 
     # Configure triggering and data capture
-    tmbf.set('TRG:SEQ:ENA_S', 'Enabled')
+    tmbf.set('TRG:SEQ:SEL_S', 'BUF trigger')
     tmbf.set('TRG:BUF:SEL_S', 'Soft 1')
     tmbf.set('BUF:SELECT_S', 'IQ')
 

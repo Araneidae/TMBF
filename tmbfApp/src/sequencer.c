@@ -51,7 +51,6 @@ static bool capture_debug;
 
 /* Sequencer program counter. */
 static unsigned int sequencer_pc;           // As updated by EPICS
-static unsigned int current_sequencer_pc;   // As currently configured
 
 /* Number of IQ points to be captured by sequencer. */
 static struct epics_interlock *info_trigger;
@@ -167,23 +166,25 @@ static void write_super_seq_state(void)
 }
 
 
-/* Called before arming the sequencer: now is the time to configure the hardware
- * for operation. */
-void prepare_sequencer(bool enable_sequencer)
+void prepare_fast_buffer(void)
 {
-    current_sequencer_pc = sequencer_pc;
-    capture_iq = buf_select == BUF_SELECT_IQ  &&  capture_count > 0;
+    capture_iq    = buf_select == BUF_SELECT_IQ     &&  capture_count > 0;
     capture_debug = buf_select == BUF_SELECT_DEBUG  &&  capture_count > 0;
 
     hw_write_buf_select(buf_select);
-    hw_write_seq_count(enable_sequencer ? current_sequencer_pc : 0);
-    if (enable_sequencer)
-    {
-        write_seq_state();
-        write_super_seq_state();
-        prepare_detector(settings_changed);
-        settings_changed = false;
-    }
+}
+
+/* Called before arming the sequencer: now is the time to configure the hardware
+ * for operation. */
+void prepare_sequencer(void)
+{
+    hw_write_seq_count(sequencer_pc);
+    write_seq_state();
+    write_super_seq_state();
+
+    prepare_detector(settings_changed,
+        sequencer_pc, current_sequencer, super_seq_count, super_offsets);
+    settings_changed = false;
 }
 
 
@@ -209,9 +210,7 @@ void process_fast_buffer(void)
     interlock_signal(buffer_trigger, NULL);
 
     if (capture_iq)
-        update_iq(buffer_low, buffer_high,
-            current_sequencer_pc, current_sequencer,
-            super_seq_count, super_offsets);
+        update_iq(buffer_low, buffer_high);
     else if (capture_debug)
         update_tune_follow_debug(buffer_raw);
 }

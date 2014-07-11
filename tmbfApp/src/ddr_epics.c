@@ -114,7 +114,7 @@ void process_ddr_buffer(void)
 
 /* Called each time the DDR buffer is armed.  In response we have to invalidate
  * the long term data. */
-void arming_ddr_buffer(void)
+void prepare_ddr_buffer(void)
 {
     LOCK();
     set_long_data_ready(false);

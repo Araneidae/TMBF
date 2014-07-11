@@ -27,17 +27,17 @@ struct sweep_info {
 
 bool initialise_detector(void);
 
-/* Called immediately before arming and triggering the sequencer so that the
- * hardware settings appropriate to the new scan can be programmed. */
-void prepare_detector(bool settings_changed);
-
 /* Converts frequency in tunes (cycles per turn) into fractions of phase advance
  * per clock cycle. */
 unsigned int tune_to_freq(double tune);
 
-/* Called on completion of buffer processing in IQ mode.  The packed I and Q
- * components are passed through for processing by the detector. */
-void update_iq(
-    const short buffer_low[], const short buffer_high[],
+/* Called immediately before arming and triggering the sequencer so that the
+ * hardware settings appropriate to the new scan can be programmed. */
+void prepare_detector(
+    bool settings_changed,
     unsigned int sequencer_pc, const struct seq_entry *sequencer_table,
     unsigned int super_count, const uint32_t offsets[]);
+
+/* Called on completion of buffer processing in IQ mode.  The packed I and Q
+ * components are passed through for processing by the detector. */
+void update_iq(const short buffer_low[], const short buffer_high[]);

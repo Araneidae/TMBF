@@ -19,13 +19,6 @@
  * processed data length. */
 #define BUF_DATA_LENGTH     (RAW_BUF_DATA_LENGTH - BUNCHES_PER_TURN)
 
-/* Trigger status enumeration. */
-enum trigger_status {
-    TRIGGER_READY,      // Device is ready
-    TRIGGER_ARMED,      // Device is armed and waiting for trigger
-    TRIGGER_BUSY,       // Device is processing data
-};
-
 
 /* To be called once at startup.  The given config_file contains hardware
  * offsets describing the FPGA behaviour. */
@@ -158,8 +151,8 @@ int hw_read_ddr_delay(void);
  * the wrong time. */
 bool hw_read_ddr_offset(uint32_t *offset);
 
-/* Returns DDR trigger status together with current buffer offset. */
-enum trigger_status hw_read_ddr_status(void);
+/* Returns DDR status bits and all relevant controlling factors. */
+void hw_read_ddr_status(bool *armed, bool *busy, bool *iq_select);
 
 
 /* * * * * * * * * * * * * * * * * * * * */
@@ -198,7 +191,7 @@ void hw_write_buf_select(unsigned int selection);
 
 /* Returns trigger and capture status of BUF.  The *iq_active flag is set if the
  * buffer is busy and capturing IQ data. */
-enum trigger_status hw_read_buf_status(void);
+void hw_read_buf_status(bool *armed, bool *busy, bool *iq_select);
 
 /* Reads buffer into two separate 16-bit arrays. */
 void hw_read_buf_data(
@@ -359,6 +352,7 @@ void hw_write_seq_entries(
 void hw_write_seq_count(unsigned int sequencer_pc);
 
 /* Selects the trigger source for the sequencer. */
+enum seq_trig_source { SEQ_DISABLED, SEQ_TRIG_BUF, SEQ_TRIG_DDR };
 void hw_write_seq_trig_source(unsigned int source);
 
 /* Configure sequencer state which will generate trigger. */
@@ -371,7 +365,7 @@ unsigned int hw_read_seq_state(void);
 unsigned int hw_read_seq_super_state(void);
 
 /* Returns true if sequencer busy, either waiting for trigger or running. */
-enum trigger_status hw_read_seq_status(void);
+void hw_read_seq_status(bool *busy, enum seq_trig_source *trig_source);
 
 /* Resets sequencer. */
 void hw_write_seq_reset(void);
@@ -393,6 +387,9 @@ void hw_write_trg_arm(bool ddr, bool buf);
 
 /* Simultaneously soft trigger one or both of DDR and BUF. */
 void hw_write_trg_soft_trigger(bool ddr, bool buf);
+
+/* Configure trigger source for sequencer. */
+void hw_write_trg_seq_source(unsigned int source);
 
 /* Disarm pending trigger.  No effect if already triggered or not armed. */
 void hw_write_trg_disarm(bool ddr, bool buf);

@@ -33,6 +33,7 @@ static bool detector_mode;
 
 /* Each time a sequencer setting changes we'll need to recompute the scale. */
 static bool tune_scale_needs_refresh = true;
+static bool tune_scale_changed = false;
 static int timebase[TUNE_LENGTH];
 static struct epics_interlock *tune_scale_trigger;
 
@@ -326,16 +327,12 @@ static bool update_overflow(void)
  * according to our current configuration into separate IQ wavforms.  One
  * separate I/Q value is extracted from each channel and rotated to compensate
  * for the precomputed group delay, and an average is also stored. */
-void update_iq(
-    const short buffer_low[], const short buffer_high[],
-    unsigned int sequencer_pc, const struct seq_entry *sequencer_table,
-    unsigned int super_count, const uint32_t offsets[])
+void update_iq(const short buffer_low[], const short buffer_high[])
 {
-    if (tune_scale_needs_refresh)
+    if (tune_scale_changed)
     {
-        interlock_wait(tune_scale_trigger);
-        update_det_scale(sequencer_pc, sequencer_table, super_count, offsets);
         interlock_signal(tune_scale_trigger, NULL);
+        tune_scale_changed = false;
     }
 
     interlock_wait(iq_trigger);
@@ -354,7 +351,10 @@ void update_iq(
 }
 
 
-void prepare_detector(bool settings_changed)
+void prepare_detector(
+    bool settings_changed,
+    unsigned int sequencer_pc, const struct seq_entry *sequencer_table,
+    unsigned int super_count, const uint32_t offsets[])
 {
     /* We don't want the following states to change during a detector sweep, so
      * we write them now immediately before starting a fresh sweep. */
@@ -362,8 +362,23 @@ void prepare_detector(bool settings_changed)
     hw_write_det_gain(detector_gain);
     hw_write_det_input_select(detector_input);
     hw_write_det_mode(detector_mode);
-    if (settings_changed)
-        tune_scale_needs_refresh = true;
+
+    /* The detector frequency scale update is a bit more delicate.  We don't
+     * want to update it on every shot ... perhaps we shouldn't be trying not
+     * to, as this makes things harder, but given this constraint ... and we
+     * don't want the update to take effect until data has arrived.  Also we
+     * don't want to update the scale while EPICS might still be reading it.
+     * The unfortunate consequence of all this is that we have interlock_wait()
+     * here and the matching interlock_signal() in update_iq(). */
+    if (settings_changed  ||  tune_scale_needs_refresh)
+    {
+        if (!tune_scale_changed)
+        {
+            interlock_wait(tune_scale_trigger);
+            tune_scale_changed = true;
+        }
+        update_det_scale(sequencer_pc, sequencer_table, super_count, offsets);
+    }
 }
 
 
@@ -470,7 +485,7 @@ static EPICS_STRING read_tune_mode(void)
     /* Start by evaluating the sequencer.  We expect a single sequencer state
      * with data capture, sequencer enabled, and IQ buffer capture. */
     const char *status = NULL;
-    if (!READ_NAMED_RECORD(bo, "TRG:SEQ:ENA"))
+    if (READ_NAMED_RECORD(mbbo, "TRG:SEQ:SEL") == SEQ_DISABLED)
         status = "Not enabled";
     else if (READ_NAMED_RECORD(ulongout, "SEQ:SUPER:COUNT") != 1)
         status = "Super sequencer active";
