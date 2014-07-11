@@ -12,6 +12,8 @@
 #define FIR_BANKS           4
 #define BUNCH_BANKS         4
 
+#define SUPER_SEQ_STATES    1024    // Max super sequencer states
+
 /* Delay compensation on ADC/FIR/DAC buffer data can result in garbage in the
  * last turn's worth of the buffer, so don't include this in the published and
  * processed data length. */
@@ -354,7 +356,10 @@ void hw_write_seq_entries(
 
 /* Programs sequencer program counter.  The sequencer will run the next time the
  * buffer is armed. */
-void hw_write_seq_count(int sequencer_pc);
+void hw_write_seq_count(unsigned int sequencer_pc);
+
+/* Selects the trigger source for the sequencer. */
+void hw_write_seq_trig_source(unsigned int source);
 
 /* Configure sequencer state which will generate trigger. */
 void hw_write_seq_trig_state(int state);
@@ -362,11 +367,19 @@ void hw_write_seq_trig_state(int state);
 /* Returns current sequencer state. */
 unsigned int hw_read_seq_state(void);
 
+/* Returns current sequencer super-state. */
+unsigned int hw_read_seq_super_state(void);
+
 /* Returns true if sequencer busy, either waiting for trigger or running. */
 enum trigger_status hw_read_seq_status(void);
 
 /* Resets sequencer. */
 void hw_write_seq_reset(void);
+
+/* Configures super sequencer: writes number of super sequencer states and
+ * writes corresponding array of sweep frequency offsets. */
+void hw_write_seq_super_state(
+    unsigned int count, const uint32_t offsets[SUPER_SEQ_STATES]);
 
 
 /* * * * * * * * * * * * */

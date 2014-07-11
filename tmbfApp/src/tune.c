@@ -480,6 +480,11 @@ static void set_tune_settings(void)
     WRITE_NAMED_RECORD(mbbo,     "SEQ:1:BANK", 1);
     WRITE_NAMED_RECORD(ulongout, "SEQ:PC", 1);
 
+    /* Effectively disable the super sequencer by setting it to 1 and resetting
+     * the offsets waveform. */
+    WRITE_NAMED_RECORD(ulongout, "SEQ:SUPER:COUNT", 0);
+    WRITE_NAMED_RECORD(bo, "SEQ:SUPER:RESET", true);
+
     /* Configure the bunch control as a copy of bank 0, but with sweep enabled
      * for output. */
     set_bunch_control();

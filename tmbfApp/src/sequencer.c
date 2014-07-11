@@ -50,12 +50,17 @@ static bool capture_iq;     // Set from buf_select when written to hardware
 static bool capture_debug;
 
 /* Sequencer program counter. */
-static unsigned int sequencer_pc;
+static unsigned int sequencer_pc;           // As updated by EPICS
+static unsigned int current_sequencer_pc;   // As currently configured
 
 /* Number of IQ points to be captured by sequencer. */
 static struct epics_interlock *info_trigger;
 static int capture_count;       // Number of IQ points to capture
 static int sequencer_duration;  // Total duration of sequence
+
+/* Super sequencer state. */
+static unsigned int super_seq_count;
+static uint32_t super_offsets[SUPER_SEQ_STATES];
 
 static bool settings_changed;
 
@@ -156,18 +161,26 @@ static void update_seq_state(void)
 }
 
 
+static void write_super_seq_state(void)
+{
+    hw_write_seq_super_state(super_seq_count, super_offsets);
+}
+
+
 /* Called before arming the sequencer: now is the time to configure the hardware
  * for operation. */
 void prepare_sequencer(bool enable_sequencer)
 {
+    current_sequencer_pc = sequencer_pc;
     capture_iq = buf_select == BUF_SELECT_IQ  &&  capture_count > 0;
     capture_debug = buf_select == BUF_SELECT_DEBUG  &&  capture_count > 0;
 
     hw_write_buf_select(buf_select);
-    hw_write_seq_count(enable_sequencer ? sequencer_pc : 0);
+    hw_write_seq_count(enable_sequencer ? current_sequencer_pc : 0);
     if (enable_sequencer)
     {
         write_seq_state();
+        write_super_seq_state();
         prepare_detector(settings_changed);
         settings_changed = false;
     }
@@ -196,7 +209,9 @@ void process_fast_buffer(void)
     interlock_signal(buffer_trigger, NULL);
 
     if (capture_iq)
-        update_iq(buffer_low, buffer_high, sequencer_pc, current_sequencer);
+        update_iq(buffer_low, buffer_high,
+            current_sequencer_pc, current_sequencer,
+            super_seq_count, super_offsets);
     else if (capture_debug)
         update_tune_follow_debug(buffer_raw);
 }
@@ -208,6 +223,34 @@ static void write_seq_count(unsigned int count)
     update_capture_count();
 }
 
+static void write_super_seq_count(unsigned int count)
+{
+    super_seq_count = count;
+    settings_changed = true;
+}
+
+static bool reset_offsets = false;
+
+static void write_super_offsets(double offsets[])
+{
+    if (reset_offsets)
+    {
+        for (int i = 0; i < BUNCHES_PER_TURN; i ++)
+            offsets[i] = i;
+        for (int i = BUNCHES_PER_TURN; i < SUPER_SEQ_STATES; i ++)
+            offsets[i] = 0;
+        reset_offsets = false;
+    }
+
+    for (int i = 0; i < SUPER_SEQ_STATES; i ++)
+        super_offsets[i] = tune_to_freq(offsets[i]);
+    settings_changed = true;
+}
+
+static void reset_super_offsets(void)
+{
+    reset_offsets = true;
+}
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -235,6 +278,13 @@ bool initialise_sequencer(void)
     PUBLISH_WF_READ_VAR(short, "BUF:WFA", BUF_DATA_LENGTH, buffer_low);
     PUBLISH_WF_READ_VAR(short, "BUF:WFB", BUF_DATA_LENGTH, buffer_high);
     PUBLISH_WRITE_VAR_P(mbbo, "BUF:SELECT", buf_select);
+
+    /* Super sequencer control and readback. */
+    PUBLISH_READER(ulongin, "SEQ:SUPER:COUNT", hw_read_seq_super_state);
+    PUBLISH_WRITER_P(ulongout, "SEQ:SUPER:COUNT", write_super_seq_count);
+    PUBLISH_WF_ACTION_P(
+        double, "SEQ:SUPER:OFFSET", SUPER_SEQ_STATES, write_super_offsets);
+    PUBLISH_ACTION("SEQ:SUPER:RESET", reset_super_offsets);
 
     return true;
 }

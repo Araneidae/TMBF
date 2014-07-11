@@ -39,4 +39,5 @@ unsigned int tune_to_freq(double tune);
  * components are passed through for processing by the detector. */
 void update_iq(
     const short buffer_low[], const short buffer_high[],
-    unsigned int sequencer_pc, const struct seq_entry *sequencer_table);
+    unsigned int sequencer_pc, const struct seq_entry *sequencer_table,
+    unsigned int super_count, const uint32_t offsets[]);

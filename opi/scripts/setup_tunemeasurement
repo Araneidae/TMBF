@@ -215,6 +215,10 @@ put('SEQ:1:GAIN_S', sweep_gain)
 put('SEQ:1:ENWIN_S', 'Windowed')
 put('SEQ:1:BLANK_S', 'Blanking')
 
+# Ensure super sequencer isn't messing us about
+put('SEQ:SUPER:COUNT_S', 1)
+put('SEQ:SUPER:RESET_S', 0)
+
 # Configure detector
 put('DET:MODE_S', bunch_mode)
 put('DET:AUTOGAIN_S', 'Autogain')

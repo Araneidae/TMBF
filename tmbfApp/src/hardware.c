@@ -113,7 +113,7 @@ struct tmbf_config_space
             //  31      Set if DDR waiting for trigger
             uint32_t unused_r_5;        //  5   (unused)
             uint32_t unused_r_6;        //  6   (unused)
-            uint32_t unused_r_7;        //  7   (unused)
+            uint32_t super_count_r;     //  7  Reads current super count
             uint32_t unused_r_8;        //  8   (unused)
             uint32_t unused_r_9;        //  9   (unused)
             uint32_t unused_r_10;       // 10   (unused)
@@ -202,7 +202,7 @@ struct tmbf_config_space
             //  15:13   Select DDR trigger source
             uint32_t bunch_select;      //  5  Detector bunch selections
             uint32_t adc_offsets;       //  6  ADC channel offsets (A/B)
-            uint32_t unused_7;          //  7   (unused)
+            uint32_t super_count;       //  7  Sequencer super state count
             uint32_t dac_preemph_taps;  //  8  DAC pre-emphasis filter
             uint32_t adc_filter_taps;   //  9  ADC compensation filter
             uint32_t unused_w_10;       // 10   (unused)
@@ -914,7 +914,7 @@ void hw_read_ftun_delays(int *adc_delay, int *fir_delay)
 /* * * * * * * * * * * * * * * * * * * * * */
 /* SEQ: Programmed Bunch and Sweep Control */
 
-static int sequencer_pc;
+static unsigned int sequencer_pc;
 
 void hw_write_seq_entries(
     unsigned int bank0, const struct seq_entry entries[MAX_SEQUENCER_COUNT])
@@ -955,10 +955,15 @@ void hw_write_seq_entries(
     UNLOCK();
 }
 
-void hw_write_seq_count(int set_sequencer_pc)
+void hw_write_seq_count(unsigned int set_sequencer_pc)
 {
     sequencer_pc = set_sequencer_pc;
     WRITE_CONTROL_BITS(3, 3, sequencer_pc);
+}
+
+void hw_write_seq_trig_source(unsigned int source)
+{
+    WRITE_CONTROL_BITS(7, 1, source);
 }
 
 void hw_write_seq_trig_state(int state)
@@ -969,6 +974,11 @@ void hw_write_seq_trig_state(int state)
 unsigned int hw_read_seq_state(void)
 {
     return READ_STATUS_BITS(16, 3);
+}
+
+unsigned int hw_read_seq_super_state(void)
+{
+    return config_space->super_count_r;
 }
 
 enum trigger_status hw_read_seq_status(void)
@@ -984,6 +994,22 @@ enum trigger_status hw_read_seq_status(void)
 void hw_write_seq_reset(void)
 {
     pulse_control_bit(7);
+}
+
+void hw_write_seq_super_state(
+    unsigned int super_count, const uint32_t offsets[SUPER_SEQ_STATES])
+{
+    ASSERT_OK(0 < super_count  &&  super_count <= SUPER_SEQ_STATES);
+
+    LOCK();
+    config_space->super_count = super_count - 1;
+    config_space->write_select = 2;     // Select sequencer offset memory
+    /* When writing the offsets memory we have to write in reverse order to
+     * match the fact that states will be read from count down to 0, and we
+     * only need to write the states that will actually be used. */
+    for (unsigned int i = 0; i < super_count; i ++)
+        config_space->sequencer_write = offsets[super_count - 1 - i];
+    UNLOCK();
 }
 
 

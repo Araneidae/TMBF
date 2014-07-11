@@ -4,6 +4,7 @@ from common import *
 
 import tune
 
+SUPER_SEQ_STATES = 1024
 
 # The sequencer has eight possible states, however state 0 has somewhat
 # different behaviour from the remaining 7.
@@ -56,19 +57,41 @@ mbbOut('SEQ:0:BANK', 'Bank 0', 'Bank 1', 'Bank 2', 'Bank 3',
     DESC = 'Bunch bank selection')
 
 duration = longIn('SEQ:DURATION', EGU = 'turns', DESC = 'Raw capture duration')
+length = longIn('SEQ:LENGTH', DESC = 'Sequencer capture count')
 Trigger('SEQ:INFO',
-    longIn('SEQ:LENGTH',
-        LOW = 0, LSV = 'MAJOR', HIGH = 4097, HSV = 'MINOR',
-        DESC = 'Sequencer capture count'),
-    duration,
+    length, duration,
     records.calc('SEQ:DURATION:S',
         CALC = 'A/B', INPA = duration, INPB = 533830, PREC = 3, EGU = 's',
         DESC = 'Capture duration'))
 
 longIn('SEQ:PC', DESC = 'Current sequencer state', SCAN = '.1 second')
-Action('SEQ:RESET', DESC = 'Halt detector if busy')
+Action('SEQ:RESET', DESC = 'Halt sequencer if busy')
 
 longOut('SEQ:TRIGGER', 0, 7, DESC = 'State to generate sequencer trigger')
+
+
+# Super-sequencer control and state
+longIn('SEQ:SUPER:COUNT', 0, SUPER_SEQ_STATES, SCAN = '.1 second',
+    DESC = 'Current super sequencer count')
+super_count = longOut('SEQ:SUPER:COUNT', 1, SUPER_SEQ_STATES,
+    FLNK = tune.setting_changed,
+    DESC = 'Super sequencer count')
+offsets = WaveformOut('SEQ:SUPER:OFFSET', SUPER_SEQ_STATES, 'DOUBLE',
+    PREC = 5, FLNK = tune.setting_changed,
+    DESC = 'Frequency offsets for super sequencer')
+Action('SEQ:SUPER:RESET', FLNK = offsets,
+    DESC = 'Reset super sequencer offsets')
+
+# Total sequencer counts
+super_duration = records.calc('SEQ:TOTAL:DURATION',
+    CALC = 'A*B', INPA = CP(super_count), INPB = CP(duration),
+    EGU = 'turns', DESC = 'Super sequence raw capture duration')
+records.calc('SEQ:TOTAL:DURATION:S',
+    CALC = 'A/B', INPA = CP(super_duration), INPB = 533830,
+    PREC = 3, EGU = 's', DESC = 'Super capture duration')
+records.calc('SEQ:TOTAL:LENGTH',
+    CALC = 'A*B', INPA = CP(super_count), INPB = CP(length),
+    DESC = 'Super sequencer capture count')
 
 
 Trigger('BUF',

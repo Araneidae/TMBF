@@ -158,7 +158,8 @@ static void store_one_tune_freq(int delay, unsigned int freq, int ix)
 /* Computes frequency scale directly from sequencer settings.  Triggered
  * whenever the sequencer state changes. */
 static void update_det_scale(
-    unsigned int state, const struct seq_entry *sequencer_table)
+    unsigned int state_count, const struct seq_entry *sequencer_table,
+    unsigned int super_count, const uint32_t offsets[])
 {
     int delay = compute_delay();
 
@@ -166,27 +167,31 @@ static void update_det_scale(
     int total_time = 0;     // Accumulates captured timebase
     int gap_time = 0;       // Accumulates non captured time
     unsigned int f0 = 0;
-    for ( ; state > 0  &&  ix < TUNE_LENGTH; state --)
-    {
-        const struct seq_entry *entry = &sequencer_table[state - 1];
-        int dwell_time = entry->dwell_time + entry->holdoff;
-        if (entry->write_enable)
+    for (unsigned int super = 0;
+         super < super_count  &&  ix < TUNE_LENGTH; super ++)
+        for (unsigned int state = state_count;
+             state > 0  &&  ix < TUNE_LENGTH; state --)
         {
-            f0 = entry->start_freq;
-            total_time += gap_time;
-            gap_time = 0;
-            for (unsigned int i = 0;
-                 i < entry->capture_count  &&  ix < TUNE_LENGTH; i ++, ix ++)
+            const struct seq_entry *entry = &sequencer_table[state - 1];
+            int dwell_time = entry->dwell_time + entry->holdoff;
+            if (entry->write_enable)
             {
-                store_one_tune_freq(delay, f0, ix);
-                f0 += entry->delta_freq;
-                total_time += dwell_time;
-                timebase[ix] = total_time;
+                f0 = entry->start_freq + offsets[super];
+                total_time += gap_time;
+                gap_time = 0;
+                for (unsigned int i = 0;
+                     i < entry->capture_count  &&  ix < TUNE_LENGTH;
+                     i ++, ix ++)
+                {
+                    store_one_tune_freq(delay, f0, ix);
+                    f0 += entry->delta_freq;
+                    total_time += dwell_time;
+                    timebase[ix] = total_time;
+                }
             }
+            else
+                gap_time += dwell_time * entry->capture_count;
         }
-        else
-            gap_time += dwell_time * entry->capture_count;
-    }
 
     /* Record how many points will actually be captured. */
     sweep_info.sweep_length = ix;
@@ -323,12 +328,13 @@ static bool update_overflow(void)
  * for the precomputed group delay, and an average is also stored. */
 void update_iq(
     const short buffer_low[], const short buffer_high[],
-    unsigned int sequencer_pc, const struct seq_entry *sequencer_table)
+    unsigned int sequencer_pc, const struct seq_entry *sequencer_table,
+    unsigned int super_count, const uint32_t offsets[])
 {
     if (tune_scale_needs_refresh)
     {
         interlock_wait(tune_scale_trigger);
-        update_det_scale(sequencer_pc, sequencer_table);
+        update_det_scale(sequencer_pc, sequencer_table, super_count, offsets);
         interlock_signal(tune_scale_trigger, NULL);
     }
 
@@ -392,7 +398,7 @@ static bool reset_window = true;
 /* Compute the appropriate windowing function for the detector.  If called after
  * reset_window has been set then the incoming window is replaced by a standard
  * window before being written to hardware. */
-static void write_detector_window(void *context, float window[], size_t *length)
+static void write_detector_window(float window[])
 {
     if (reset_window)
     {
@@ -403,7 +409,6 @@ static void write_detector_window(void *context, float window[], size_t *length)
     int window_int[DET_WINDOW_LENGTH];
     float_array_to_int(DET_WINDOW_LENGTH, window, window_int, 16, 0);
     hw_write_det_window(window_int);
-    *length = DET_WINDOW_LENGTH;
 }
 
 static void reset_detector_window(void)
@@ -467,6 +472,8 @@ static EPICS_STRING read_tune_mode(void)
     const char *status = NULL;
     if (!READ_NAMED_RECORD(bo, "TRG:SEQ:ENA"))
         status = "Not enabled";
+    else if (READ_NAMED_RECORD(ulongout, "SEQ:SUPER:COUNT") != 1)
+        status = "Super sequencer active";
     else if (READ_NAMED_RECORD(ulongout, "SEQ:PC") != 1)
         status = "Multi-state sequencer";
     else if (!READ_NAMED_RECORD(bo, "SEQ:1:CAPTURE")  ||
@@ -538,7 +545,7 @@ bool initialise_detector(void)
     wf_shift -= 32;     // Divide by 2^32.
 
     /* Program the sequencer window. */
-    PUBLISH_WAVEFORM(
+    PUBLISH_WF_ACTION(
         float, "DET:WINDOW", DET_WINDOW_LENGTH, write_detector_window);
     PUBLISH_ACTION("DET:RESET_WIN", reset_detector_window);
 
