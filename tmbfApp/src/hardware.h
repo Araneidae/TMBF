@@ -132,11 +132,21 @@ void hw_write_dac_preemph(int taps[3]);
 /* * * * * * * * * * * * * * * * * * * * * * */
 /* DDR: High Speed High Volume Data Capture */
 
+enum {
+    DDR_SELECT_ADC,
+    DDR_SELECT_FIR,
+    DDR_SELECT_RAW_DAC,
+    DDR_SELECT_DAC,
+    DDR_SELECT_IQ };
+
 /* Selects data to capture to DDR RAM, either DAC or unprocessed ADC. */
 void hw_write_ddr_select(unsigned int select);
 
 /* Starts data capture into DDR RAM.  Must be called before triggering. */
 void hw_write_ddr_enable(void);
+
+/* Halts data capture into DDR RAM. */
+void hw_write_ddr_disable(void);
 
 /* Returns delay (in clocks) from reference bunch to corresponding DDR readout.
  * This depends on the currently selected data source. */

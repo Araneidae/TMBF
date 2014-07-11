@@ -522,6 +522,7 @@ void hw_write_ddr_select(unsigned int selection)
 {
     ddr_selection = selection;
     WRITE_CONTROL_BITS(28, 2, selection);
+    WRITE_CONTROL_BITS(6, 1, selection == DDR_SELECT_IQ);
 }
 
 void hw_write_ddr_enable(void)
@@ -529,14 +530,20 @@ void hw_write_ddr_enable(void)
     pulse_control_bit(8);
 }
 
+void hw_write_ddr_disable(void)
+{
+    pulse_control_bit(16);
+}
+
 int hw_read_ddr_delay(void)
 {
     switch (ddr_selection)
     {
-        case 0: return DDR_ADC_DELAY;
-        case 1: return DDR_FIR_DELAY;
-        case 2: return DDR_RAW_DAC_DELAY;
-        case 3: return DDR_DAC_DELAY;
+        case DDR_SELECT_ADC:     return DDR_ADC_DELAY;
+        case DDR_SELECT_FIR:     return DDR_FIR_DELAY;
+        case DDR_SELECT_RAW_DAC: return DDR_RAW_DAC_DELAY;
+        case DDR_SELECT_DAC:     return DDR_DAC_DELAY;
+        case DDR_SELECT_IQ:      return 0;
         default: ASSERT_FAIL();
     }
 }
@@ -544,7 +551,10 @@ int hw_read_ddr_delay(void)
 bool hw_read_ddr_offset(uint32_t *offset)
 {
     uint32_t ddr_status = config_space->ddr_status;
-    *offset = ddr_status & 0xFFFFFF;
+    if (ddr_selection == DDR_SELECT_IQ)
+        *offset = 0;
+    else
+        *offset = ddr_status & 0xFFFFFF;
     return !(ddr_status >> 31);
 }
 

@@ -13,7 +13,6 @@
 #include "hardware.h"
 #include "epics_device.h"
 #include "epics_extra.h"
-#include "ddr.h"
 #include "ddr_epics.h"
 #include "sequencer.h"
 
@@ -298,6 +297,8 @@ static void stop_target(struct trigger_target *target)
     hw_write_trg_disarm(
         target->target_id == DDR_TARGET,
         target->target_id == BUF_TARGET);
+    if (target->target_id == DDR_TARGET)
+        hw_write_ddr_disable();
 
     target->auto_arm_state = STATE_STOPPED;
     target->armed = false;
@@ -389,7 +390,6 @@ static void *monitor_events(void *context)
         if (ddr_ready)
         {
             update_trigger_hit(&ddr_trigger_source);
-            set_ddr_offset();
             process_ddr_buffer();
         }
         if (buf_ready)

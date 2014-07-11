@@ -56,13 +56,15 @@ static volatile struct history_buffer_fifo *fifo;
 /* DDR buffer readout. */
 
 
-static uint32_t ddr_trigger_offset;
-
 #define PURGE_FIFO_LIMIT    65536
 
 /* Ensures data transfer FIFO is empty on startup. */
 static void purge_read_buffer(void)
 {
+    /* Ensure DDR isn't enabled when we start as this will mess up our ability
+     * to read the FIFO. */
+    hw_write_ddr_disable();
+
     unsigned int fifo_size = history_buffer->transfer_status & 0x7FF;
     if (fifo_size > 0)
     {
@@ -91,6 +93,9 @@ static void purge_read_buffer(void)
 
 static void start_buffer_transfer(ssize_t offset, size_t interval, size_t count)
 {
+    uint32_t ddr_trigger_offset;
+    TEST_OK(hw_read_ddr_offset(&ddr_trigger_offset));
+
     int ddr_delay = hw_read_ddr_delay();
     history_buffer->post_filtering = 0;
     history_buffer->start_address =
@@ -176,12 +181,6 @@ void read_ddr_bunch(ssize_t start, size_t bunch, size_t turns, int16_t *result)
         for (size_t i = 0; i < atoms_read; i ++)
             *result++ = buffer[i * SAMPLES_PER_ATOM + offset];
     TEST_OK_(turns == 0, "Incomplete DDR buffer read: %u", turns);
-}
-
-
-void set_ddr_offset(void)
-{
-    TEST_OK(hw_read_ddr_offset(&ddr_trigger_offset));
 }
 
 

@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 757
-y 135
+x 758
+y 136
 w 368
 h 202
 font "helvetica-medium-r-18.0"
@@ -234,7 +234,7 @@ showYAxis
 yAxisSrc "fromUser"
 yMin -0.5
 yMax 1.5
-yLabelIntervals 2
+yLabelIntervals 4
 yUserSpecScaleDiv 1
 # Y2 axis properties
 y2AxisSrc "AutoScale"
