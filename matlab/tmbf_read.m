@@ -15,16 +15,12 @@ function data = tmbf_read(tmbf, turns, start)
     assert(start + turns <= max_turns, 'Too many turns requested');
     assert(turns > 0, 'Bad number of turns requested');
 
-    ready    = [tmbf ':DDR:READY'];
-    long_ena = [tmbf ':DDR:LONGEN_S'];
+    status   = [tmbf ':DDR:STATUS'];
     set_turn = [tmbf ':DDR:TURNSEL_S'];
-    turn_rb  = [tmbf ':DDR:TURNSEL'];
     longwf   = [tmbf ':DDR:LONGWF'];
 
     % Ensure we're correctly triggered (call tmbf_trigger first).
-    assert(strcmp(lcaGet(ready), 'Triggered'), [tmbf ' is not triggered']);
-    assert(strcmp(lcaGet(long_ena), 'Long'), ...
-        [tmbf 'not configured for long DDR capture']);
+    assert(strcmp(lcaGet(status), 'Ready'), [tmbf ' is not ready']);
 
     turn_length = 936;
     window_length = lcaGet([longwf '.NELM']) / turn_length;
@@ -37,14 +33,11 @@ function data = tmbf_read(tmbf, turns, start)
     data = zeros(turns * turn_length, 1);
     turns_read = 0;
     while turns_read < turns;
-        % Move readout window to appropriate position and wait for ready.
+        % Move readout window to appropriate position.  We rely on lcaPut
+        % blocking until the window has updated.
         turns_start = turns_read + start;
         lcaPut(set_turn, turns_start);
         start_time = now;
-        while lcaGet(turn_rb) ~= turns_start;
-            assert(3600 * 24 * (now - start_time) < 1, ...
-                'Timeout waiting for window');
-        end
 
         % Read selected window into buffer
         bunches_size  = turn_length * min(window_length, turns - turns_read);

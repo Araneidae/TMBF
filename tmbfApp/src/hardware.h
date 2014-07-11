@@ -43,6 +43,10 @@ enum {
 
     OVERFLOW_ADC_FILTER = 7,    // Overflow in ADC compensation filter
 
+    OVERFLOW_IQ_FIR_DDR = 8,    // Overflow in IQ detector FIR input
+    OVERFLOW_IQ_ACC_DDR = 9,    // Overflow in IQ detector accumulator
+    OVERFLOW_IQ_SCALE_DDR = 10, // Overflow in IQ detector readout scaling
+
     TRIGGER_SCLK_IN     = 16,   // Trigger source from SCLK seen
     TRIGGER_PM_IN       = 17,   // Postmortem trigger source seen
     TRIGGER_SEQ_IN      = 18,   // Sequencer trigger state seen
@@ -150,7 +154,7 @@ int hw_read_ddr_delay(void);
 
 /* Reads the current DDR trigger offset.  Should return true unless called at
  * the wrong time. */
-bool hw_read_ddr_offset(uint32_t *offset, bool *iq_select);
+uint32_t hw_read_ddr_offset(void);
 
 /* Returns DDR status bits and all relevant controlling factors. */
 void hw_read_ddr_status(bool *armed, bool *busy, bool *iq_select);

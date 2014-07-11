@@ -439,8 +439,7 @@ static void _write_out_record(
         // writing if processing was not requested.
         dbScanLock(dbaddr.precord);
         record->out.disable_write = !process;
-        ok =
-            TEST_OK(dbPutField(&dbaddr, dbr_type, value, length) == 0);
+        ok = TEST_OK(dbPutField(&dbaddr, dbr_type, value, length) == 0);
         record->out.disable_write = false;
         dbScanUnlock(dbaddr.precord);
     }

@@ -25,11 +25,12 @@ for bunch in range(4):
 # The frequency and timebase scales will be reprocessed when necessary,
 # basically when the sequencer settings change and a detector trigger occurs.
 Trigger('DET:SCALE',
+    aIn('DET:DELAY', PREC = 3, EGU = 'turns', DESC = 'Detector delay'),
     Waveform('DET:SCALE', TUNE_LENGTH, 'DOUBLE',
         DESC = 'Scale for frequency sweep'),
     Waveform('DET:TIMEBASE', TUNE_LENGTH, 'LONG', DESC = 'Timebase scale'))
 
-# Two overflow detection bits are generated
+# Three overflow detection bits are generated
 overflows = [
     boolIn('DET:OVF:INP', 'Ok', 'Overflow', OSV = 'MAJOR',
         DESC = 'Detector input overflow'),
@@ -64,7 +65,7 @@ Action('DET:RESET_WIN', FLNK = det_window,
 
 # Total loop delay in turns.
 aOut('DET:LOOP:ADC',
-    EGU = 'turns', PREC = 1, DESC = 'Closed loop delay in turns')
+    EGU = 'turns', PREC = 3, DESC = 'Closed loop delay in turns')
 
 
 stringIn('TUNE:MODE', SCAN = '1 second', DESC = 'Tune mode')

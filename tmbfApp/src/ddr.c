@@ -100,15 +100,15 @@ static void purge_read_buffer(void)
 
 static bool start_buffer_transfer(ssize_t offset, size_t interval, size_t count)
 {
-    uint32_t ddr_trigger_offset;
-    bool iq_select;
-    if (!TEST_OK_(hw_read_ddr_offset(&ddr_trigger_offset, &iq_select),
+    bool armed, busy, iq_select;
+    hw_read_ddr_status(&armed, &busy, &iq_select);
+    if (!TEST_OK_(!armed && !busy,
             "Cannot read from DDR: busy capturing data"))
         return false;
-    /* In IQ mode the trigger offset is instead a capture count which we
-     * ignore. */
-    if (iq_select)
-        ddr_trigger_offset = 0;
+
+    /* In IQ mode we read from the start of the buffer, otherwise we can read
+     * the DDR offset. */
+    uint32_t ddr_trigger_offset = iq_select ? 0 : hw_read_ddr_offset();
 
     int ddr_delay = hw_read_ddr_delay();
     history_buffer->post_filtering = 0;

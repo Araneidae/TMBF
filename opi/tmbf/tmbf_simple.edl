@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2710
-y 489
+x 2595
+y 445
 w 456
 h 474
 font "helvetica-medium-r-8.0"
@@ -90,7 +90,7 @@ bgColor index 4
 topShadowColor index 1
 botShadowColor index 11
 label "EXIT"
-font "helvetica-medium-r-12.0"
+font "helvetica-bold-r-12.0"
 3d
 endObjectProperties
 

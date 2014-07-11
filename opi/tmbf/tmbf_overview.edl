@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2786
-y 588
+x 2785
+y 594
 w 415
 h 408
 font "helvetica-medium-r-8.0"
@@ -75,7 +75,7 @@ bgColor index 4
 topShadowColor index 1
 botShadowColor index 11
 label "EXIT"
-font "helvetica-medium-r-12.0"
+font "helvetica-bold-r-12.0"
 3d
 endObjectProperties
 
@@ -491,8 +491,8 @@ minor 6
 release 0
 x 40
 y 232
-w 184
-h 14
+w 160
+h 16
 controlPv "$(device):SE:OVF:FIR.DESC"
 font "helvetica-medium-r-12.0"
 fgColor index 14
@@ -967,8 +967,8 @@ minor 6
 release 0
 x 40
 y 184
-w 184
-h 14
+w 160
+h 16
 controlPv "$(device):SE:OVF:ADCIN.DESC"
 font "helvetica-medium-r-12.0"
 fgColor index 14
@@ -1028,8 +1028,8 @@ minor 6
 release 0
 x 40
 y 208
-w 184
-h 14
+w 160
+h 16
 controlPv "$(device):SE:OVF:ADCCOMP.DESC"
 font "helvetica-medium-r-12.0"
 fgColor index 14

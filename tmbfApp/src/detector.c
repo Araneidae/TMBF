@@ -33,7 +33,7 @@ static bool detector_mode;
 
 /* Each time a sequencer setting changes we'll need to recompute the scale. */
 static bool tune_scale_needs_refresh = true;
-static bool tune_scale_changed = false;
+static double detector_delay;
 static int timebase[TUNE_LENGTH];
 static struct epics_interlock *tune_scale_trigger;
 
@@ -163,6 +163,7 @@ static void update_det_scale(
     unsigned int super_count, const uint32_t offsets[])
 {
     int delay = compute_delay();
+    detector_delay = (double) delay / BUNCHES_PER_TURN;
 
     int ix = 0;
     int total_time = 0;     // Accumulates captured timebase
@@ -329,12 +330,6 @@ static bool update_overflow(void)
  * for the precomputed group delay, and an average is also stored. */
 void update_iq(const short buffer_low[], const short buffer_high[])
 {
-    if (tune_scale_changed)
-    {
-        interlock_signal(tune_scale_trigger, NULL);
-        tune_scale_changed = false;
-    }
-
     interlock_wait(iq_trigger);
     bool overflow = update_overflow();
 
@@ -372,12 +367,9 @@ void prepare_detector(
      * here and the matching interlock_signal() in update_iq(). */
     if (settings_changed  ||  tune_scale_needs_refresh)
     {
-        if (!tune_scale_changed)
-        {
-            interlock_wait(tune_scale_trigger);
-            tune_scale_changed = true;
-        }
+        interlock_wait(tune_scale_trigger);
         update_det_scale(sequencer_pc, sequencer_table, super_count, offsets);
+        interlock_signal(tune_scale_trigger, NULL);
     }
 }
 
@@ -549,6 +541,7 @@ bool initialise_detector(void)
     publish_channel("M", &sweep_info.mean);
     iq_trigger = create_interlock("DET", false);
 
+    PUBLISH_READ_VAR(ai, "DET:DELAY", detector_delay);
     PUBLISH_WF_READ_VAR(
         double, "DET:SCALE", TUNE_LENGTH, sweep_info.tune_scale);
     PUBLISH_WF_READ_VAR(int, "DET:TIMEBASE", TUNE_LENGTH, timebase);

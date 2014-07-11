@@ -28,7 +28,7 @@
 #define LONG_TURN_WF_COUNT        256
 
 
-/* Need to serialise some of our operations. */
+/* Need to interlock access to the DDR hardware. */
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 #define LOCK()      pthread_mutex_lock(&lock);
@@ -38,158 +38,157 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* DDR waveform readout records. */
 
+static unsigned int input_selection;
 static int selected_bunch = 0;
 static int selected_turn = 0;
-
-/* Triggers for long and short waveform readout. */
-static struct epics_record *long_trigger;
-static struct epics_record *short_trigger;
-
-static bool long_enable;                // Whether long data capture is enabled
-static struct in_epics_record_bi *long_data_ready;   // Status report to outside
+static bool bunch_waveform_fault;
+static bool long_waveform_fault;
 
 static bool ddr_autostop;
 
+/* This is updated when DDR capture is initiated and records whether we're
+ * expecting to capture IQ or standard data. */
+static bool iq_input_active;
+/* This is set during capture and reset when capture completes. */
+static bool capture_active;
 
-/* Used for waiting for record processing completion callbacks. */
-static pthread_cond_t done_cond = PTHREAD_COND_INITIALIZER;
-static bool short_done, long_done;
+static struct epics_interlock *update_trigger;
+
+/* Overflow status from the last sweep. */
+static bool overflows[PULSED_BIT_COUNT];
+static struct epics_interlock *overflows_interlock;
 
 
-/* Waveform readout methods. */
+/* Waveform readout methods.  Each of these is called as part of EPICS
+ * processing triggered in response to process_ddr_buffer. */
 
-static void read_bunch_waveform(short *waveform)
+static void read_bunch_waveform(short waveform[])
 {
-    read_ddr_bunch(0, selected_bunch, BUFFER_TURN_COUNT, waveform);
+    bunch_waveform_fault =
+        !read_ddr_bunch(0, selected_bunch, BUFFER_TURN_COUNT, waveform);
 }
 
-static void read_short_turn_waveform(short *waveform)
+static void read_short_turn_waveform(short waveform[])
 {
     read_ddr_turns(0, SHORT_TURN_WF_COUNT, waveform);
 }
 
-static void read_long_turn_waveform(short *waveform)
+static void read_long_turn_waveform(short waveform[])
 {
-    read_ddr_turns(selected_turn, LONG_TURN_WF_COUNT, waveform);
+    long_waveform_fault =
+        !read_ddr_turns(selected_turn, LONG_TURN_WF_COUNT, waveform);
 }
 
 
-/* Just writes value to DDR:READY flag. */
-static void set_long_data_ready(bool ready)
+/* Reads DDR specific overflow bits. */
+static void read_overflows(bool overflow_bits[PULSED_BIT_COUNT])
 {
-    WRITE_IN_RECORD(bi, long_data_ready, ready);
+    const bool read_mask[PULSED_BIT_COUNT] = {
+        [OVERFLOW_IQ_FIR_DDR] = true,
+        [OVERFLOW_IQ_ACC_DDR] = true,
+        [OVERFLOW_IQ_SCALE_DDR] = true,
+    };
+    hw_read_pulsed_bits(read_mask, overflow_bits);
+}
+
+/* Called periodically during IQ data capture to refresh the overflow bits. */
+static void update_overflows(void)
+{
+    bool new_overflows[PULSED_BIT_COUNT];
+    read_overflows(new_overflows);
+
+    interlock_wait(overflows_interlock);
+    for (int i = 0; i < PULSED_BIT_COUNT; i++)
+        overflows[i] |= new_overflows[i];
+    interlock_signal(overflows_interlock, NULL);
+}
+
+/* Called at the start of IQ capture. */
+static void reset_overflows(void)
+{
+    interlock_wait(overflows_interlock);
+    read_overflows(overflows);
+    interlock_signal(overflows_interlock, NULL);
 }
 
 
-static void set_long_enable(bool enable)
-{
-    LOCK();
-    if (enable != long_enable)
-    {
-        long_enable = enable;
-        if (long_enable)
-            trigger_record(long_trigger, 0, NULL);
-    }
-    UNLOCK();
-}
-
-
-/* This is called each time the DDR buffer successfully triggers.  The short
- * waveforms are always triggered, but the long waveform is only triggered when
- * we're in one-shot mode. */
-void process_ddr_buffer(void)
-{
-    printf("Process DDR buffer\n");
-
-    LOCK();
-    if (long_enable)
-        trigger_record(long_trigger, 0, NULL);
-    trigger_record(short_trigger, 0, NULL);
-
-    /* Now wait for the completion callbacks from both records (if necessary)
-     * have reported completion. */
-    short_done = false;
-    long_done = !long_enable;
-    while (!short_done  ||  !long_done)
-        pthread_cond_wait(&done_cond, &lock);
-    UNLOCK();
-}
-
-void disarm_ddr_buffer(void)
-{
-    hw_write_ddr_disable();
-}
-
-void notify_ddr_seq_ready(void)
-{
-    printf("SEQ ready notify!\n");
-    if (ddr_autostop)  // && IQ capture
-        disarm_ddr_buffer();
-}
-
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* Called each time the DDR buffer is armed.  In response we have to invalidate
  * the long term data. */
 void prepare_ddr_buffer(void)
 {
-    printf("Prepare DDR buffer\n");
-    // !!!!  Write input select and record setting
-
-    hw_write_ddr_enable();  // Initiate capture of selected DDR data
-
     LOCK();
-    set_long_data_ready(false);
+    if (capture_active)
+        print_error("Ignoring unexpected DDR start: already running");
+    else
+    {
+        iq_input_active = input_selection == DDR_SELECT_IQ;
+        hw_write_ddr_select(input_selection);
+        hw_write_ddr_enable();  // Initiate capture of selected DDR data
+        reset_overflows();
+        capture_active = true;
+    }
     UNLOCK();
 }
 
 
-/* Called on completion of short buffer processing.  Report completion to
- * waiting process_ddr_buffer call. */
-static void short_trigger_done(void)
+/* This is called each time the DDR buffer successfully triggers. */
+void process_ddr_buffer(void)
 {
     LOCK();
-    short_done = true;
-    pthread_cond_signal(&done_cond);
+    if (!capture_active)
+        print_error("Unexpected DDR process: not running?");
+
+    update_overflows();
+    capture_active = false;
+
+    /* Now read out the processed waveforms. */
+    interlock_signal(update_trigger, NULL);
+    interlock_wait(update_trigger);
     UNLOCK();
 }
 
 
-/* Called on completion of long buffer processing.  Update ready status. */
-static void long_trigger_done(void)
+/* Called when the DDR trigger is deliberately disarmed.*/
+void disarm_ddr_buffer(void)
 {
     LOCK();
-    long_done = true;
-    pthread_cond_signal(&done_cond);
-    set_long_data_ready(true);
+    /* Only halt the DDR buffer if in normal capture mode, as otherwise it's
+     * possible that the DDR trigger is being used to trigger the sequencer in
+     * multi-shot mode. */
+    if (!iq_input_active)
+        hw_write_ddr_disable();
     UNLOCK();
 }
 
 
-static void set_selected_turn(int value)
+/* Called when the sequencer has finished a round of activity. */
+void notify_ddr_seq_ready(void)
 {
-    selected_turn = value;
     LOCK();
-    if (long_enable)
-        trigger_record(long_trigger, 0, NULL);
+    if (ddr_autostop  &&  iq_input_active)
+        hw_write_ddr_disable();
     UNLOCK();
 }
 
 
-static void write_ddr_select(unsigned int select)
-{
-    hw_write_ddr_select(select);
-}
-
-
+/* Reads current capture count from DDR.  Only meaningful if the currently
+ * selected source is IQ. */
 static uint32_t read_ddr_count(void)
 {
-    uint32_t offset;
-    bool iq_select;
-    hw_read_ddr_offset(&offset, &iq_select);
-    if (iq_select)
-        return offset;
+    LOCK();
+    uint32_t count;
+    if (iq_input_active)
+    {
+        update_overflows();
+        /* Convert count into number of IQ samples. */
+        count = hw_read_ddr_offset() / 2;
+    }
     else
-        return 0;
+        count = 0;
+    UNLOCK();
+    return count;
 }
 
 
@@ -203,32 +202,29 @@ bool initialise_ddr_epics(void)
         SHORT_TURN_WF_COUNT * BUNCHES_PER_TURN, read_short_turn_waveform);
     PUBLISH_WF_ACTION(short, "DDR:LONGWF",
         LONG_TURN_WF_COUNT * BUNCHES_PER_TURN, read_long_turn_waveform);
+    PUBLISH_READ_VAR(bi, "DDR:BUNCHWF:STATUS", bunch_waveform_fault);
+    PUBLISH_READ_VAR(bi, "DDR:LONGWF:STATUS", long_waveform_fault);
 
-    /* These two interlock chains are used to process the waveforms. */
-    short_trigger = PUBLISH_TRIGGER("DDR:SHORT:TRIG");
-    long_trigger  = PUBLISH_TRIGGER("DDR:LONG:TRIG");
-    PUBLISH_ACTION("DDR:SHORT:DONE", short_trigger_done);
-    PUBLISH_ACTION("DDR:LONG:DONE",  long_trigger_done);
+    /* Interlock for record update when ready.  We use the interlock backwards
+     * so that we block until they've all processed. */
+    update_trigger = create_interlock("DDR:UPDATE", false);
 
-    /* Used to report completion of long record updates. */
-    long_data_ready = PUBLISH_IN_VALUE_I(bi, "DDR:READY");
-
-    /* Select bunch for single bunch waveform. */
+    /* Control variables for record readout. */
     PUBLISH_WRITE_VAR(longout, "DDR:BUNCHSEL", selected_bunch);
+    PUBLISH_WRITE_VAR(longout, "DDR:TURNSEL", selected_turn);
+    PUBLISH_WRITE_VAR_P(mbbo, "DDR:INPUT", input_selection);
 
-    /* Turn selection and readback.  Readback is triggered after completion of
-     * long record processing. */
-    PUBLISH_WRITER_P(bo, "DDR:LONGEN", set_long_enable);
-    PUBLISH_WRITER(longout, "DDR:TURNSEL", set_selected_turn);
-    PUBLISH_READ_VAR(longin, "DDR:TURNSEL", selected_turn);
-
-    /* Data source. */
-    PUBLISH_WRITER_P(mbbo, "DDR:INPUT", write_ddr_select);
-
-    PUBLISH_ACTION("DDR:START", hw_write_ddr_enable);
+    /* DDR control and status readbacks. */
+    PUBLISH_ACTION("DDR:START", prepare_ddr_buffer);
     PUBLISH_ACTION("DDR:STOP", hw_write_ddr_disable);
     PUBLISH_READER(ulongin, "DDR:COUNT", read_ddr_count);
     PUBLISH_WRITE_VAR_P(bo, "DDR:AUTOSTOP", ddr_autostop);
+
+    /* Overflow detection. */
+    PUBLISH_READ_VAR(bi, "DDR:OVF:INP", overflows[OVERFLOW_IQ_FIR_DDR]);
+    PUBLISH_READ_VAR(bi, "DDR:OVF:ACC", overflows[OVERFLOW_IQ_ACC_DDR]);
+    PUBLISH_READ_VAR(bi, "DDR:OVF:IQ",  overflows[OVERFLOW_IQ_SCALE_DDR]);
+    overflows_interlock = create_interlock("DDR:OVF", false);
 
     return initialise_ddr();
 }

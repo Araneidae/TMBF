@@ -108,7 +108,7 @@ struct tmbf_config_space
             //  4   IQ FIR input overflow
             //  5   IQ accumulator overflow
             //  6   IQ readout overflow
-            uint32_t ddr_status;        //  4  DDR status and offset
+            uint32_t ddr_offset;        //  4  DDR offset and status
             //  23:0    Trigger offset into DDR buffer
             //  31      Set if DDR waiting for trigger
             uint32_t unused_r_5;        //  5   (unused)
@@ -566,12 +566,9 @@ int hw_read_ddr_delay(void)
     }
 }
 
-bool hw_read_ddr_offset(uint32_t *offset, bool *iq_select)
+uint32_t hw_read_ddr_offset(void)
 {
-    uint32_t ddr_status = config_space->ddr_status;
-    *offset = ddr_status & 0xFFFFFF;
-    *iq_select = ddr_selection == DDR_SELECT_IQ;
-    return !(ddr_status >> 31);
+    return config_space->ddr_offset & 0xFFFFFF;
 }
 
 void hw_read_ddr_status(bool *armed, bool *busy, bool *iq_select)

@@ -17,7 +17,7 @@ mbbOut('DDR:INPUT',
     'ADC', 'FIR', 'Raw DAC', 'DAC', 'IQ', DESC = 'DDR input select')
 
 # Triggering and control for IQ mode
-boolOut('DDR:AUTOSTOP', 'Multi-shot', 'One-shot',
+boolOut('DDR:AUTOSTOP', 'Manual stop', 'Auto-stop',
     DESC = 'Action when sequencer completes')
 Action('DDR:START', DESC = 'Initiate DDR data capture')
 Action('DDR:STOP', DESC = 'Halt DDR data capture')
@@ -25,30 +25,35 @@ Action('DDR:STOP', DESC = 'Halt DDR data capture')
 longIn('DDR:COUNT', SCAN = '.2 second', DESC = 'Captured sample count')
 
 
-# The short waveforms will be updated on any DDR trigger.
-ddr_bunch_buffer = Waveform('DDR:BUNCHWF', BUFFER_TURN_COUNT, 'SHORT',
+# All three waveforms are updated when capture is completed, and the long and
+# bunch waveforms are also updated when their corresponding control parameters
+# are updated.
+bunch_waveform = Waveform('DDR:BUNCHWF', BUFFER_TURN_COUNT, 'SHORT',
+    FLNK = boolIn('DDR:BUNCHWF:STATUS', 'Ok', 'Fault', OSV = 'MAJOR',
+        DESC = 'DDR bunch waveform status'),
     DESC = 'Single bunch waveform')
-Trigger('DDR:SHORT',
-    ddr_bunch_buffer,
-    Waveform('DDR:SHORTWF', SHORT_TURN_WF_LENGTH, 'SHORT',
-        DESC = 'Short turn by turn waveform'))
-# Updating BUNCHSEL will always update BUNCHWF
-longOut('DDR:BUNCHSEL', 0, BUNCHES_PER_TURN-1,
-    FLNK = ddr_bunch_buffer,
-    DESC = 'Select bunch for DDR readout')
+long_waveform = Waveform('DDR:LONGWF', LONG_TURN_WF_LENGTH, 'SHORT',
+    FLNK = boolIn('DDR:LONGWF:STATUS', 'Ok', 'Fault', OSV = 'MAJOR',
+        DESC = 'DDR long waveform status'),
+    DESC = 'Long turn by turn waveform')
+short_waveform = Waveform('DDR:SHORTWF', SHORT_TURN_WF_LENGTH, 'SHORT',
+    DESC = 'Short turn by turn waveform')
+Trigger('DDR:UPDATE', short_waveform, bunch_waveform, long_waveform)
 
-
-# The long waveform and its records are only processed when selected.
-boolOut('DDR:LONGEN', 'No', 'Long', DESC = 'Enable long waveform update')
-Trigger('DDR:LONG',
-    Waveform('DDR:LONGWF', LONG_TURN_WF_LENGTH, 'SHORT',
-        DESC = 'Long turn by turn waveform'),
-    longIn('DDR:TURNSEL', DESC = 'Turn selection readback'))
-# Updating TURNSEL will trigger reprocessing of LONGWF and the readback, but
-# this may not happen immediately.
+# Control parameters for long and bunch waveforms.
 longOut('DDR:TURNSEL', -BUFFER_TURN_COUNT, BUFFER_TURN_COUNT,
-    DESC = 'Select start turn for readout')
+    FLNK = long_waveform, DESC = 'Select start turn for readout')
+longOut('DDR:BUNCHSEL', 0, BUNCHES_PER_TURN-1,
+    FLNK = bunch_waveform, DESC = 'Select bunch for DDR readout')
 
-# This reflects the state of the long waveform.
-boolIn('DDR:READY', 'Not Ready', 'Triggered',
-    SCAN = 'I/O Intr', DESC = 'Long buffer status')
+# Three overflow detection bits are generated
+overflows = [
+    boolIn('DDR:OVF:INP', 'Ok', 'Overflow', OSV = 'MAJOR',
+        DESC = 'Detector input overflow'),
+    boolIn('DDR:OVF:ACC', 'Ok', 'Overflow', OSV = 'MAJOR',
+        DESC = 'Detector accumulator overflow'),
+    boolIn('DDR:OVF:IQ',  'Ok', 'Overflow', OSV = 'MAJOR',
+        DESC = 'IQ scaling overflow')]
+overflows.append(
+    AggregateSeverity('DDR:OVF', 'Detector overflow', overflows))
+Trigger('DDR:OVF', *overflows)
