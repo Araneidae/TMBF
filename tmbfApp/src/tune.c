@@ -413,7 +413,7 @@ static void set_tune_setting(bool setting)
     }
 }
 
-void tune_setting_changed(void)
+static void tune_setting_changed(void)
 {
     set_tune_setting(false);
 }
@@ -464,9 +464,16 @@ static void set_tune_settings(void)
     sprintf(bunch_channel, "DET:BUNCH%d", selected_bunch % 4);
     WRITE_NAMED_RECORD(ulongout, bunch_channel, selected_bunch / 4);
 
-    /* Force buffer to IQ and ensure the buffer is enabled. */
+    /* Force buffer to IQ and configure triggering into standard mode. */
     WRITE_NAMED_RECORD(mbbo, "BUF:SELECT", BUF_SELECT_IQ);
     WRITE_NAMED_RECORD(mbbo, "TRG:SEQ:SEL", SEQ_TRIG_BUF);
+    WRITE_NAMED_RECORD(bo, "TRG:BUF:SEL", true);
+    WRITE_NAMED_RECORD(bo, "TRG:BUF:MODE", true);
+
+    /* Configure triggering on external trigger only. */
+    WRITE_NAMED_RECORD(bo, "TRG:BUF:EXT:EN", true);
+    WRITE_NAMED_RECORD(bo, "TRG:BUF:ADC:EN", false);
+    WRITE_NAMED_RECORD(bo, "TRG:BUF:SCLK:EN", false);
 
     /* Configure the sequencer with the selected tune range.  Force count and
      * capture to sensible values and set the sequencer PC to 1. */

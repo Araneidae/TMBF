@@ -31,21 +31,20 @@ for state in range(1, 8):
         -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 7,
         FLNK = update, DESC = 'Sweep NCO step frequency')
     longOut('SEQ:%d:DWELL' % state, 1, 1<<16,
-        FLNK = update, EGU = 'turns', DESC = 'Sweep dwell time')
+        EGU = 'turns', DESC = 'Sweep dwell time')
     longOut('SEQ:%d:COUNT' % state, 1, 1<<12,
         FLNK = update, DESC = 'Sweep count')
     mbbOut('SEQ:%d:BANK' % state, 'Bank 0', 'Bank 1', 'Bank 2', 'Bank 3',
         FLNK = update, DESC = 'Bunch bank selection')
-    mbbOut('SEQ:%d:GAIN' % state, DESC = 'Sweep NCO gain', FLNK = update,
+    mbbOut('SEQ:%d:GAIN' % state, DESC = 'Sweep NCO gain',
         *dBrange(14, -6) + ['Off'])
     boolOut('SEQ:%d:ENWIN' % state, 'Disabled', 'Windowed',
-        FLNK = update, DESC = 'Enable detector window')
+        DESC = 'Enable detector window')
     boolOut('SEQ:%d:CAPTURE' % state, 'Discard', 'Capture',
         FLNK = update, DESC = 'Enable data capture')
-    longOut('SEQ:%d:HOLDOFF' % state, 0, 65535,
-        FLNK = update, DESC = 'Detector holdoff')
+    longOut('SEQ:%d:HOLDOFF' % state, 0, 65535, DESC = 'Detector holdoff')
     boolOut('SEQ:%d:BLANK' % state, 'Off', 'Blanking',
-        FLNK = update, DESC = 'Detector blanking control')
+        DESC = 'Detector blanking control')
 
     # This fellow is treated a little differently and is processed internally.
     aOut('SEQ:%d:END_FREQ' % state,

@@ -7,9 +7,6 @@ struct channel_sweep;
  * by the detector are passed through for detailed tune detection processing. */
 void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow);
 
-/* To be called any time the tune setup has changed. */
-void tune_setting_changed(void);
-
 
 /* Returns value of maximum element of array. */
 int find_max_val(int length, const int array[]);
