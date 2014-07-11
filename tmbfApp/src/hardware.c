@@ -266,6 +266,12 @@ static uint32_t control_field_1 = 0;
 static uint32_t control_field_2 = 0;
 
 
+static uint32_t read_bit_field(
+    uint32_t value, unsigned int start, unsigned int length)
+{
+    return (value >> start) & ((1U << length) - 1);
+}
+
 /* Writes to a sub field of a register by reading the register and writing
  * the appropriately masked value.  The register *must* be locked. */
 static void write_control_bit_field(
@@ -354,11 +360,12 @@ static void read_minmax(
 
 /******************************************************************************/
 
+unsigned int fpga_version;
 
 
-int hw_read_version(void)
+unsigned int hw_read_version(void)
 {
-    return config_space->fpga_version & 0xFFFF;
+    return fpga_version;
 }
 
 
@@ -1120,7 +1127,7 @@ void hw_read_trg_buf_source(bool source[BUF_SOURCE_COUNT])
 
 /******************************************************************************/
 
-bool initialise_hardware(const char *config_file)
+bool initialise_hardware(const char *config_file, unsigned int expected_version)
 {
     hardware_config_file = config_file;
     int mem;
@@ -1132,5 +1139,11 @@ bool initialise_hardware(const char *config_file)
         TEST_IO(config_space = mmap(
             0, CONTROL_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
             mem, TMBF_CONFIG_ADDRESS))  &&
-        DO_(fir_filter_length = (config_space->fpga_version >> 16) & 0xF);
+        DO_(
+            fpga_version = read_bit_field(config_space->fpga_version, 0, 16);
+            fir_filter_length =
+                read_bit_field(config_space->fpga_version, 16, 4))  &&
+        TEST_OK_((fpga_version & 0xFFF0) == expected_version,
+            "FPGA version %04x seen, expected version %04x",
+            fpga_version, expected_version);
 }

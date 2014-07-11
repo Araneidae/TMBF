@@ -315,7 +315,7 @@ static EPICS_STRING version_string = { TMBF_VERSION };
 static bool initialise_subsystems(void)
 {
     PUBLISH_READ_VAR(stringin, "VERSION", version_string);
-    PUBLISH_READER(longin, "FPGAVER", hw_read_version);
+    PUBLISH_READER(ulongin, "FPGAVER", hw_read_version);
     PUBLISH_WRITER(bo, "LOOPBACK", hw_write_loopback_enable);
     PUBLISH_WRITER(bo, "COMPENSATE", hw_write_compensate_disable);
     PUBLISH_ACTION("RESTART", do_restart);
@@ -344,7 +344,7 @@ int main(int argc,char *argv[])
 
         initialise_persistent_state(
             persistence_state_file, persistence_interval)  &&
-        initialise_hardware(hardware_config_file)  &&
+        initialise_hardware(hardware_config_file, FPGA_VERSION)  &&
         InitialiseSignals()  &&
 
         initialise_epics_device()  &&

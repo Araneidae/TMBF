@@ -22,11 +22,12 @@
 
 /* To be called once at startup.  The given config_file contains hardware
  * offsets describing the FPGA behaviour. */
-bool initialise_hardware(const char *config_file);
+bool initialise_hardware(
+    const char *config_file, unsigned int expected_version);
 
 
 /* Returns version number. */
-int hw_read_version(void);
+unsigned int hw_read_version(void);
 
 /* All bits will be read into overflow_bits[], but only those bits selected in
  * read_bits[] will be updated and correctly reset. */

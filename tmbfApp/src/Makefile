@@ -27,9 +27,15 @@ USR_CFLAGS += -Wno-system-headers
 # this because the EPICS headers have non strict prototypes in places.
 USR_CPPFLAGS += -isystem $(EPICS_BASE)/include
 
+
 # Make sure that we pick up the version from install_d/CONFIG.
 TMBF_VERSION = $(shell . $(TOP)/install_d/CONFIG; echo $$VERSION)
 USR_CFLAGS += -DTMBF_VERSION='"$(TMBF_VERSION)"'
+
+# Similarly for the FGPA_VERSION (a number this time).
+FPGA_VERSION = $(shell . $(TOP)/install_d/CONFIG; echo $$FPGA_VERSION)
+USR_CFLAGS += -DFPGA_VERSION=$(FPGA_VERSION)
+
 # Compute a sensible format of build date
 USR_CFLAGS += -DBUILD_DATE_TIME='"$(shell date '+%Y-%m-%d %H:%M')"'
 
