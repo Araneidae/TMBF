@@ -9,6 +9,7 @@
 #include <semaphore.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <execinfo.h>
 
 #include <epicsThread.h>
 #include <iocsh.h>
@@ -118,6 +119,16 @@ void panic_error(const char *filename, int line)
     print_error("Unrecoverable error at %s, line %d", filename, line);
     fflush(stderr);
     fflush(stdout);
+
+    /* Now try and create useable backtrace. */
+    void *backtrace_buffer[128];
+    int count = backtrace(backtrace_buffer, ARRAY_SIZE(backtrace_buffer));
+    backtrace_symbols_fd(backtrace_buffer, count, STDERR_FILENO);
+    char last_line[128];
+    int char_count = snprintf(last_line, sizeof(last_line),
+        "End of backtrace: %d lines written\n", count);
+    write(STDERR_FILENO, last_line, char_count);
+
     _exit(255);
 }
 

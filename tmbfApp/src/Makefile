@@ -39,6 +39,13 @@ USR_CFLAGS += -DFPGA_VERSION=$(FPGA_VERSION)
 # Compute a sensible format of build date
 USR_CFLAGS += -DBUILD_DATE_TIME='"$(shell date '+%Y-%m-%d %H:%M')"'
 
+ifdef DEBUG_TRACEBACK
+# Allow panic_error() backtrace to show a backtrace with useful information.
+USR_CFLAGS += -O0
+USR_CFLAGS += -g
+USR_CFLAGS += -mapcs-frame
+USR_LDFLAGS += -rdynamic
+endif
 
 STATIC_BUILD = YES
 
