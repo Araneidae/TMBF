@@ -28,9 +28,13 @@
 
 /* High efficiency numeric support routines. */
 
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdarg.h>
 #include <limits.h>
 #include <stdint.h>
 
+#include "error.h"
 #include "numeric.h"
 
 #include "numeric-lookup.h"
@@ -39,14 +43,6 @@
 
 #define SINGLE_EXPONENT_BIAS 127
 #define DOUBLE_EXPONENT_BIAS 1023
-
-/* Special casting operation to bypass strict aliasing warnings. */
-#define CAST(type, value) \
-    ( { \
-        union { typeof(value) a; type b; } __u; \
-        __u.a = (value); \
-        __u.b; \
-    } )
 
 
 
@@ -567,7 +563,7 @@ void fixed_to_single(
  * normalised number; any errors are completely ignored. */
 void compute_scaling(float target, uint32_t *scaling, int *scaling_shift)
 {
-    uint32_t itarget = CAST(uint32_t, target);
+    uint32_t itarget = REINTERPRET_CAST(uint32_t, target);
     *scaling = 0x80000000 | (itarget << 8);
     /* The exponent scaling is a little delicate.  Put t=target, s=*scaling,
      * h=*scaling_shift, e=raw extracted exponent, itarget[23:30], and

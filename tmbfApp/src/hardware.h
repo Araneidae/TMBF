@@ -33,7 +33,7 @@ unsigned int hw_read_version(void);
  * read_bits[] will be updated and correctly reset. */
 enum {
     OVERFLOW_FIR        = 0,    // Overflow in FIR gain control output
-    OVERFLOW_DAC        = 1,    // Overflow in DAC multiplexor and scaling
+    OVERFLOW_DAC        = 1,    // Overflow in DAC multiplexer and scaling
     OVERFLOW_DAC_COMP   = 2,    // Overflow in DAC pre-emphasis filter
     OVERFLOW_ADC_LIMIT  = 3,    // ADC input hard overflow
 

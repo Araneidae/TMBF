@@ -248,7 +248,7 @@ struct tmbf_config_space
     };
 };
 
-/* These two pointers directly overlay the FF memory. */
+/* TMBF register control space. */
 static volatile struct tmbf_config_space *config_space;
 
 
@@ -384,16 +384,16 @@ static void bits_to_bool_array(size_t count, bool array[], uint32_t bits)
 }
 
 
-/* This routine is a bit more involved that most because we want to read a
- * programmable set of bits: all the bits we set are reset after being read. */
 void hw_read_pulsed_bits(
     const bool read_bits[PULSED_BIT_COUNT],
     bool pulsed_bits[PULSED_BIT_COUNT])
 {
-    uint32_t read_mask = bool_array_to_bits(PULSED_BIT_COUNT, read_bits);
-    config_space->latch_pulsed = read_mask;
+    LOCK();
+    config_space->latch_pulsed =
+        bool_array_to_bits(PULSED_BIT_COUNT, read_bits);
     bits_to_bool_array(
         PULSED_BIT_COUNT, pulsed_bits, config_space->latch_pulsed_r);
+    UNLOCK();
 }
 
 
@@ -432,9 +432,11 @@ bool hw_read_clock_dropout(void)
 
 void hw_write_adc_offsets(short offsets[4])
 {
+    LOCK();
     config_space->write_select = 0;
     for (int i = 0; i < 4; i ++)
         config_space->adc_offsets = (uint32_t) offsets[i];
+    UNLOCK();
 }
 
 void hw_write_adc_filter(int taps[12])
@@ -842,9 +844,7 @@ void hw_read_ftun_status_bits(bool *status)
 {
     LOCK();
     config_space->ftune_read_control = 1;
-    uint32_t status_word = config_space->ftune_status;
-    for (int i = 0; i < FTUN_BIT_COUNT; i ++)
-        status[i] = (status_word >> i) & 1;
+    bits_to_bool_array(FTUN_BIT_COUNT, status, config_space->ftune_status);
     UNLOCK();
 }
 
