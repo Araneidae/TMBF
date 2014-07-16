@@ -137,7 +137,8 @@ enum {
     DDR_SELECT_FIR,
     DDR_SELECT_RAW_DAC,
     DDR_SELECT_DAC,
-    DDR_SELECT_IQ };
+    DDR_SELECT_IQ,
+    DDR_SELECT_DEBUG };
 
 /* Selects data to capture to DDR RAM, either DAC or unprocessed ADC. */
 void hw_write_ddr_select(unsigned int select);

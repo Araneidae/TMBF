@@ -38,7 +38,11 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* DDR waveform readout records. */
 
-static unsigned int input_selection;
+/* The input selection can be changed at any time, but is only written to
+ * hardware when enabling the DDR input. */
+static unsigned int new_input_selection;    // written by EPICS
+static unsigned int input_selection;        // written to hardware
+
 static int selected_bunch = 0;
 static int selected_turn = 0;
 static bool bunch_waveform_fault;
@@ -46,9 +50,6 @@ static bool long_waveform_fault;
 
 static bool ddr_autostop;
 
-/* This is updated when DDR capture is initiated and records whether we're
- * expecting to capture IQ or standard data. */
-static bool iq_input_active;
 /* This is set during capture and reset when capture completes. */
 static bool capture_active;
 
@@ -123,7 +124,7 @@ void prepare_ddr_buffer(void)
         print_error("Ignoring unexpected DDR start: already running");
     else
     {
-        iq_input_active = input_selection == DDR_SELECT_IQ;
+        input_selection = new_input_selection;
         hw_write_ddr_select(input_selection);
         hw_write_ddr_enable();  // Initiate capture of selected DDR data
         reset_overflows();
@@ -157,7 +158,7 @@ void disarm_ddr_buffer(void)
     /* Only halt the DDR buffer if in normal capture mode, as otherwise it's
      * possible that the DDR trigger is being used to trigger the sequencer in
      * multi-shot mode. */
-    if (!iq_input_active)
+    if (!input_selection < DDR_SELECT_IQ)
         hw_write_ddr_disable();
     UNLOCK();
 }
@@ -167,19 +168,19 @@ void disarm_ddr_buffer(void)
 void notify_ddr_seq_ready(void)
 {
     LOCK();
-    if (ddr_autostop  &&  iq_input_active)
+    if (ddr_autostop  &&  input_selection == DDR_SELECT_IQ)
         hw_write_ddr_disable();
     UNLOCK();
 }
 
 
 /* Reads current capture count from DDR.  Only meaningful if the currently
- * selected source is IQ. */
+ * selected source is IQ or Debug. */
 static uint32_t read_ddr_count(void)
 {
     LOCK();
     uint32_t count;
-    if (iq_input_active)
+    if (input_selection >= DDR_SELECT_IQ)
     {
         update_overflows();
         /* Convert count into number of IQ samples. */
@@ -212,7 +213,7 @@ bool initialise_ddr_epics(void)
     /* Control variables for record readout. */
     PUBLISH_WRITE_VAR(longout, "DDR:BUNCHSEL", selected_bunch);
     PUBLISH_WRITE_VAR(longout, "DDR:TURNSEL", selected_turn);
-    PUBLISH_WRITE_VAR_P(mbbo, "DDR:INPUT", input_selection);
+    PUBLISH_WRITE_VAR_P(mbbo, "DDR:INPUT", new_input_selection);
 
     /* DDR control and status readbacks. */
     PUBLISH_ACTION("DDR:START", prepare_ddr_buffer);

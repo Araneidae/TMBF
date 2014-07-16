@@ -108,7 +108,7 @@ struct tmbf_config_space
             //  4   IQ FIR input overflow
             //  5   IQ accumulator overflow
             //  6   IQ readout overflow
-            uint32_t ddr_offset;        //  4  DDR offset and status
+            uint32_t ddr_offset;        //  4  DDR capture count or offset
             //  23:0    Trigger offset into DDR buffer
             //  31      Set if DDR waiting for trigger
             uint32_t unused_r_5;        //  5   (unused)
@@ -539,7 +539,7 @@ void hw_write_ddr_select(unsigned int selection)
     LOCK();
     ddr_selection = selection;
     write_control_bits(28, 2, selection);
-    write_control_bits(6, 1, selection == DDR_SELECT_IQ);
+    write_control_bits(6, 1, selection >= DDR_SELECT_IQ);
     UNLOCK();
 }
 
@@ -562,6 +562,7 @@ int hw_read_ddr_delay(void)
         case DDR_SELECT_RAW_DAC: return DDR_RAW_DAC_DELAY;
         case DDR_SELECT_DAC:     return DDR_DAC_DELAY;
         case DDR_SELECT_IQ:      return 0;
+        case DDR_SELECT_DEBUG:   return 0;
         default: ASSERT_FAIL();
     }
 }
@@ -576,7 +577,7 @@ void hw_read_ddr_status(bool *armed, bool *busy, bool *iq_select)
     uint32_t status = config_space->system_status;
     *armed = read_bit_field(status, 23, 1);
     *busy  = read_bit_field(status, 26, 1);
-    *iq_select = ddr_selection == DDR_SELECT_IQ;
+    *iq_select = ddr_selection >= DDR_SELECT_IQ;
 }
 
 

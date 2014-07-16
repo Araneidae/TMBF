@@ -19,7 +19,7 @@ function data = tmbf_read(tmbf, turns, start)
     set_turn = [tmbf ':DDR:TURNSEL_S'];
     longwf   = [tmbf ':DDR:LONGWF'];
 
-    % Ensure we're correctly triggered (call tmbf_trigger first).
+    % Ensure DDR capture isn't running before trying to read
     assert(strcmp(lcaGet(status), 'Ready'), [tmbf ' is not ready']);
 
     turn_length = 936;

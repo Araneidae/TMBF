@@ -5,10 +5,10 @@
 # range 0..233 as they record clock count offsets within a machine revolution.
 
 # DDR readout delays
-DDR_ADC_DELAY = 229
-DDR_FIR_DELAY = 0
-DDR_RAW_DAC_DELAY = 4
-DDR_DAC_DELAY = 10
+DDR_ADC_DELAY = 228
+DDR_FIR_DELAY = 223
+DDR_RAW_DAC_DELAY = 3
+DDR_DAC_DELAY = 9
 
 # Buffer trigger delays
 BUF_ADC_DELAY = 229

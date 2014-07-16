@@ -14,7 +14,7 @@ LONG_TURN_WF_LENGTH = BUNCHES_PER_TURN * LONG_TURN_WF_COUNT
 # Input mode selection.  Note that when input mode IQ is selected the trigger
 # behaviour of the DDR buffer is very different.
 mbbOut('DDR:INPUT',
-    'ADC', 'FIR', 'Raw DAC', 'DAC', 'IQ', DESC = 'DDR input select')
+    'ADC', 'FIR', 'Raw DAC', 'DAC', 'IQ', 'Debug', DESC = 'DDR input select')
 
 # Triggering and control for IQ mode
 boolOut('DDR:AUTOSTOP', 'Manual stop', 'Auto-stop',
