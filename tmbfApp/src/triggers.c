@@ -332,8 +332,11 @@ static void stop_target(struct trigger_target *target)
  * the new source won't be processed. */
 static void set_source(struct trigger_target *target, bool value)
 {
-    stop_target(target);
-    target->external = value;
+    if (target->external != value)
+    {
+        stop_target(target);
+        target->external = value;
+    }
 }
 
 
