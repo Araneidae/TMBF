@@ -21,7 +21,7 @@
 
 /* Definition of hardware offsets.  These all define internal delays in the FPGA
  * which we compensate for when reading and writing data.  In all cases the
- * reference bunch "zero" is that selected by the output multiplexor.  Also, all
+ * reference bunch "zero" is that selected by the output multiplexer.  Also, all
  * offsets assume bunches are aligned in the closed loop. */
 static int DDR_ADC_DELAY;       // Offset into DDR of ADC bunch zero
 static int DDR_FIR_DELAY;       //                    FIR
@@ -278,7 +278,7 @@ static void write_control_bit_field(
     volatile uint32_t *control, uint32_t *memory,
     unsigned int start, unsigned int bits, uint32_t value)
 {
-    uint32_t mask = ((1 << bits) - 1) << start;
+    uint32_t mask = ((1U << bits) - 1U) << start;
     uint32_t update = (*memory & ~mask) | ((value << start) & mask);
     *memory = update;
     *control = update;
@@ -308,7 +308,7 @@ static void pulse_mask(uint32_t mask)
 /* Sets the selected bit and resets it back to zero. */
 static void pulse_control_bit(unsigned int bit)
 {
-    pulse_mask(1 << bit);
+    pulse_mask(1U << bit);
 }
 
 #define WRITE_CONTROL_BITS(start, length, value) \
@@ -338,7 +338,7 @@ static int subtract_offset(int value, int offset, int max_count)
 /* Reads packed array of min/max values using readout selector.  Used for ADC
  * and DAC readouts. */
 static void read_minmax(
-    int pulse_bit, volatile const uint32_t *read_register,
+    unsigned int pulse_bit, volatile const uint32_t *read_register,
     int delay, short *min_out, short *max_out)
 {
     LOCK();
@@ -405,9 +405,9 @@ void hw_write_loopback_enable(bool loopback)
 
 void hw_write_compensate_disable(bool disable)
 {
-    int config_defs_count = ARRAY_SIZE(hardware_config_defs);
+    size_t config_defs_count = ARRAY_SIZE(hardware_config_defs);
     if (disable)
-        for (int i = 0; i < config_defs_count; i ++)
+        for (size_t i = 0; i < config_defs_count; i ++)
             *hardware_config_defs[i].result = 0;
     else
         config_parse_file(
@@ -434,7 +434,7 @@ void hw_write_adc_offsets(short offsets[4])
 {
     config_space->write_select = 0;
     for (int i = 0; i < 4; i ++)
-        config_space->adc_offsets = offsets[i];
+        config_space->adc_offsets = (uint32_t) offsets[i];
 }
 
 void hw_write_adc_filter(int taps[12])
@@ -443,7 +443,7 @@ void hw_write_adc_filter(int taps[12])
     config_space->write_select = 0;
     for (int i = 2; i >= 0; i --)
         for (int j = 0; j < 4; j ++)
-            config_space->adc_filter_taps = taps[3*j + i]; // taps[j][i];
+            config_space->adc_filter_taps = (uint32_t) taps[3*j + i];
     UNLOCK();
 }
 
@@ -465,30 +465,30 @@ void hw_write_adc_skew(unsigned int skew)
 
 void hw_write_adc_limit(int limit)
 {
-    config_space->adc_limit = limit;
+    config_space->adc_limit = (uint32_t) limit;
 }
 
 
 /* * * * * * * * * * * * * * * */
 /* FIR: Filtering for Feedback */
 
-static int fir_filter_length;      // Initialised at startup
+static unsigned int fir_filter_length;      // Initialised at startup
 
 void hw_write_fir_gain(unsigned int gain)
 {
     WRITE_CONTROL_BITS(20, 3, gain);
 }
 
-void hw_write_fir_taps(int bank, const int taps[])
+void hw_write_fir_taps(unsigned int bank, const int taps[])
 {
     LOCK();
-    config_space->write_select = (uint32_t) bank;
-    for (int i = 0; i < fir_filter_length; i++)
-        config_space->fir_write = taps[fir_filter_length - i - 1];
+    config_space->write_select = bank;
+    for (unsigned int i = 0; i < fir_filter_length; i++)
+        config_space->fir_write = (uint32_t) taps[fir_filter_length - i - 1];
     UNLOCK();
 }
 
-int hw_read_fir_length(void)
+unsigned int hw_read_fir_length(void)
 {
     return fir_filter_length;
 }
@@ -514,7 +514,7 @@ void hw_write_dac_preemph(int taps[3])
     config_space->write_select = 0;
     for (int i = 2; i >= 0; i --)
         for (int j = 0; j < 4; j ++)
-            config_space->dac_preemph_taps = taps[i];
+            config_space->dac_preemph_taps = (uint32_t) taps[i];
     UNLOCK();
 }
 
@@ -532,14 +532,14 @@ void hw_write_dac_filter_delay(unsigned int preemph_delay)
 /* * * * * * * * * * * * * * * * * * * * * * */
 /* DDR: High Speed High Volume Data Capture */
 
-static int ddr_selection;
+static unsigned int ddr_selection;
 
 void hw_write_ddr_select(unsigned int selection)
 {
     LOCK();
     ddr_selection = selection;
     write_control_bits(28, 2, selection);
-    write_control_bits(6, 1, selection >= DDR_SELECT_IQ);
+    write_control_bits(6, 1, selection >> 2);
     UNLOCK();
 }
 
@@ -585,19 +585,19 @@ void hw_read_ddr_status(bool *armed, bool *busy, bool *iq_select)
 /* BUN: Bunch by Bunch Banked Selection */
 
 void hw_write_bun_entry(
-    int bank, const struct bunch_entry entries[BUNCHES_PER_TURN])
+    unsigned int bank, const struct bunch_entry entries[BUNCHES_PER_TURN])
 {
     LOCK();
-    config_space->write_select = (uint32_t) bank;
+    config_space->write_select = bank;
     for (int i = 0; i < BUNCHES_PER_TURN; i ++)
     {
         /* Take bunch offsets into account when writing the bunch entry. */
         int gain_ix = subtract_offset(i, 4*BUNCH_GAIN_OFFSET, BUNCHES_PER_TURN);
         int output_ix = i;  // Reference bunch, no offset required
         int fir_ix  = subtract_offset(i, 4*BUNCH_FIR_OFFSET, BUNCHES_PER_TURN);
-        unsigned int bunch_gain    = entries[gain_ix].bunch_gain;
-        unsigned int output_select = entries[output_ix].output_select;
-        unsigned int fir_select    = entries[fir_ix].fir_select;
+        uint32_t bunch_gain    = (uint32_t) entries[gain_ix].bunch_gain;
+        uint32_t output_select = (uint32_t) entries[output_ix].output_select;
+        uint32_t fir_select    = (uint32_t) entries[fir_ix].fir_select;
         config_space->bunch_write =
             (bunch_gain & 0x7FF) |
             ((output_select & 0x7) << 11) |
@@ -611,12 +611,12 @@ void hw_write_bun_sync(void)
     pulse_control_bit(4);
 }
 
-void hw_write_bun_zero_bunch(int bunch)
+void hw_write_bun_zero_bunch(unsigned int bunch)
 {
     config_space->bunch_zero_offset = bunch;
 }
 
-int hw_read_bun_trigger_phase(void)
+unsigned int hw_read_bun_trigger_phase(void)
 {
     return READ_STATUS_BITS(4, 4);
 }
@@ -625,7 +625,7 @@ int hw_read_bun_trigger_phase(void)
 /* * * * * * * * * * * * * * * * * */
 /* BUF: High Speed Internal Buffer */
 
-static int buf_selection;
+static unsigned int buf_selection;
 
 void hw_write_buf_select(unsigned int selection)
 {
@@ -679,9 +679,9 @@ void hw_read_buf_data(
     {
         uint32_t data = config_space->fast_buffer_read;
 
-        raw[i] = data;
-        low [(i - 4*low_delay ) % RAW_BUF_DATA_LENGTH] = data & 0xFFFF;
-        high[(i - 4*high_delay) % RAW_BUF_DATA_LENGTH] = data >> 16;
+        raw[i] = (int) data;
+        low [(i - 4*low_delay) % RAW_BUF_DATA_LENGTH] = (short) (data & 0xFFFF);
+        high[(i - 4*high_delay) % RAW_BUF_DATA_LENGTH] = (short) (data >> 16);
     }
     UNLOCK();
 }
@@ -724,7 +724,8 @@ static void update_det_bunch_select(void)
     }
     unsigned int bunch[4];
     for (int i = 0; i < 4; i ++)
-        bunch[i] = subtract_offset(det_bunches[i], offset, BUNCHES_PER_TURN/4);
+        bunch[i] = (unsigned int) subtract_offset(
+            (int) det_bunches[i], offset, BUNCHES_PER_TURN/4);
     config_space->bunch_select =
         (bunch[0] & 0xFF) |
         ((bunch[1] & 0xFF) << 8) |
@@ -761,7 +762,7 @@ void hw_write_det_window(const int window[DET_WINDOW_LENGTH])
     LOCK();
     config_space->write_select = 1;    // Select sequencer window
     for (int i = 0; i < DET_WINDOW_LENGTH; i ++)
-        config_space->sequencer_write = window[i];
+        config_space->sequencer_write = (uint32_t) window[i];
     UNLOCK();
 }
 
@@ -794,13 +795,13 @@ void hw_write_ftun_control(const struct ftun_control *control)
     config_space->ftune_target =
         (control->target_phase & 0x3FFFF) |     // bits 17:0
         (control->iir_rate & 0x7) << 18;        //      20:18
-    config_space->ftune_i_scale = -control->i_scale;
+    config_space->ftune_i_scale = (uint32_t) -control->i_scale;
     config_space->ftune_min_mag =
         (control->min_magnitude & 0xFFFF) |
         (control->iq_iir_rate & 0x7) << 16 |
         (control->freq_iir_rate & 0x7) << 22;
     config_space->ftune_max_offset = control->max_offset;
-    config_space->ftune_p_scale = -control->p_scale;
+    config_space->ftune_p_scale = (uint32_t) -control->p_scale;
     UNLOCK();
 }
 
@@ -860,9 +861,9 @@ void hw_read_ftun_iq(int *I, int *Q)
 
 bool hw_read_ftun_frequency(int *frequency)
 {
-    int freq_word = config_space->ftune_freq_offset;
-    *frequency = (freq_word << 2) >> 2;
-    return (freq_word >> 31) & 1;
+    uint32_t freq_word = config_space->ftune_freq_offset;
+    *frequency = (int) (freq_word << 2) >> 2;
+    return freq_word >> 31;
 }
 
 bool hw_read_ftun_i_minmax(int *min, int *max)
@@ -988,7 +989,7 @@ void hw_write_seq_trig_source(unsigned int source)
     UNLOCK();
 }
 
-void hw_write_seq_trig_state(int state)
+void hw_write_seq_trig_state(unsigned int state)
 {
     WRITE_CONTROL_BITS(12, 3, state);
 }
@@ -1087,7 +1088,7 @@ void hw_write_trg_arm_raw_phase(void)
     pulse_control_bit(11);
 }
 
-int hw_read_trg_raw_phase(void)
+unsigned int hw_read_trg_raw_phase(void)
 {
     return READ_STATUS_BITS(0, 4);
 }

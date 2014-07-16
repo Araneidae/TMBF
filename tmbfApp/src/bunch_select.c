@@ -22,7 +22,7 @@
 
 
 struct bunch_bank {
-    int index;
+    unsigned int index;
 
     int fir_wf[BUNCHES_PER_TURN];
     int out_wf[BUNCHES_PER_TURN];
@@ -135,7 +135,7 @@ static void out_name(int out, char result[])
 
 static void gain_name(int gain, char result[])
 {
-    sprintf(result, "%.3g", gain / (float) GAIN_SCALE);
+    sprintf(result, "%.3g", (double) gain / GAIN_SCALE);
 }
 
 
@@ -186,7 +186,7 @@ static void write_gain_wf_float(void *context, float gain[], size_t *length)
 }
 
 
-static void publish_bank(int ix, struct bunch_bank *bank)
+static void publish_bank(unsigned int ix, struct bunch_bank *bank)
 {
     bank->index = ix;
 
@@ -216,12 +216,12 @@ static struct bunch_bank banks[BUNCH_BANKS];
 
 static void publish_bank_control(void)
 {
-    for (int i = 0; i < BUNCH_BANKS; i ++)
+    for (unsigned int i = 0; i < BUNCH_BANKS; i ++)
         publish_bank(i, &banks[i]);
 }
 
 
-const int *read_bank_out_wf(int bank)
+const int *read_bank_out_wf(unsigned int bank)
 {
     return banks[bank].out_wf;
 }
@@ -233,7 +233,7 @@ const int *read_bank_out_wf(int bank)
 
 static EPICS_STRING read_feedback_mode(void)
 {
-    int current_bank = READ_NAMED_RECORD(mbbo, "SEQ:0:BANK");
+    unsigned int current_bank = READ_NAMED_RECORD(mbbo, "SEQ:0:BANK");
     struct bunch_bank *bank = &banks[current_bank];
 
     /* Evaluate DAC out and FIR waveforms. */
@@ -273,8 +273,8 @@ static EPICS_STRING read_feedback_mode(void)
  * trigger occurs. */
 
 static struct epics_interlock *sync_interlock;
-static int zero_bunch_offset;
-static int sync_phase;
+static unsigned int zero_bunch_offset;
+static unsigned int sync_phase;
 enum sync_status {
     SYNC_NO_SYNC,   // Initial startup state, need to synchronise
     SYNC_ZERO,      // Bunch reset to sync on bunch zero
@@ -290,7 +290,7 @@ enum { SYNC_ACTION_RESET, SYNC_ACTION_SYNC } sync_action;
 
 
 /* Updates reported phase and status. */
-static void update_status(int phase, enum sync_status status)
+static void update_status(unsigned int phase, enum sync_status status)
 {
     interlock_wait(sync_interlock);
     sync_phase = phase;
@@ -300,13 +300,13 @@ static void update_status(int phase, enum sync_status status)
 
 /* Triggers bunch synchronisation and busy waits for completion.  Returns
  * measured phase after successful synchronisation. */
-static int wait_for_bunch_sync(void)
+static unsigned int wait_for_bunch_sync(void)
 {
     /* Configure selected zero bunch offset and request synchronisation. */
     hw_write_bun_sync();
 
     /* Busy loop until trigger seen. */
-    int phase;
+    unsigned int phase;
     while (phase = hw_read_bun_trigger_phase(),
            phase == 0)
         usleep(20000);     // 20 ms
@@ -314,7 +314,7 @@ static int wait_for_bunch_sync(void)
 }
 
 /* Each valid phase bit pattern corresponds to a clock skew in bunches. */
-static bool phase_to_skew(int phase, unsigned int *skew)
+static bool phase_to_skew(unsigned int phase, unsigned int *skew)
 {
     switch (phase)
     {
@@ -334,7 +334,7 @@ static void do_reset_bunch_sync(void)
 {
     update_status(0, SYNC_WAITING);
     hw_write_bun_zero_bunch(0);
-    int phase = wait_for_bunch_sync();
+    unsigned int phase = wait_for_bunch_sync();
 
     unsigned int skew;
     if (phase_to_skew(phase, &skew))
@@ -353,7 +353,7 @@ static void do_sync_bunch_sync(void)
     /* Discover trigger skew.  At this stage we leave the bunch offset alone, we
      * need the skew to determine the final offset. */
     update_status(0, SYNC_WAITING);
-    int phase = wait_for_bunch_sync();
+    unsigned int phase = wait_for_bunch_sync();
 
     /* Decode the skew and set up for the second trigger. */
     unsigned int base_skew;
@@ -364,15 +364,15 @@ static void do_sync_bunch_sync(void)
          * hasn't changed, for consistency and a sanity check on the phase. */
 
         /* Compute adc skew and figure out corresponding offset. */
-        int offset = (BUNCHES_PER_TURN - zero_bunch_offset) / 4;
-        int skew = 4 - zero_bunch_offset % 4 + base_skew;
+        unsigned int offset = (BUNCHES_PER_TURN - zero_bunch_offset) / 4;
+        unsigned int skew = 4 - zero_bunch_offset % 4 + base_skew;
         offset += skew / 4;
         skew = skew % 4;
         set_adc_skew(skew);
         hw_write_bun_zero_bunch(offset);
 
         update_status(phase, SYNC_FIRST);
-        int second_phase = wait_for_bunch_sync();
+        unsigned int second_phase = wait_for_bunch_sync();
 
         /* We expect the trigger phases to be identical between the two
          * triggers, if not there is a problem. */
@@ -381,7 +381,7 @@ static void do_sync_bunch_sync(void)
         else
         {
             print_error(
-                "Bunch sync phase discrepancy: %d != %d\n",
+                "Bunch sync phase discrepancy: %u != %u\n",
                 phase, second_phase);
             update_status(second_phase, SYNC_FAILED);
         }
@@ -423,12 +423,12 @@ static void sync_bunch_sync(void)
 
 static bool publish_bunch_sync(void)
 {
-    PUBLISH_WRITE_VAR_P(longout, "BUN:OFFSET", zero_bunch_offset);
+    PUBLISH_WRITE_VAR_P(ulongout, "BUN:OFFSET", zero_bunch_offset);
     PUBLISH_ACTION("BUN:RESET", reset_bunch_sync);
     PUBLISH_ACTION("BUN:SYNC", sync_bunch_sync);
 
     sync_interlock = create_interlock("BUN:SYNC", false);
-    PUBLISH_READ_VAR(longin, "BUN:PHASE", sync_phase);
+    PUBLISH_READ_VAR(ulongin, "BUN:PHASE", sync_phase);
     PUBLISH_READ_VAR(mbbi, "BUN:STATUS", sync_status);
 
     PUBLISH_READER(stringin, "BUN:MODE", read_feedback_mode);

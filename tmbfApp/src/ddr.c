@@ -112,8 +112,8 @@ static bool start_buffer_transfer(ssize_t offset, size_t interval, size_t count)
 
     int ddr_delay = hw_read_ddr_delay();
     history_buffer->post_filtering = 0;
-    history_buffer->start_address =
-        (offset + ddr_delay + ddr_trigger_offset) & 0xFFFFFF;
+    history_buffer->start_address = (uint32_t)
+        (offset + ddr_delay + (int) ddr_trigger_offset) & 0xFFFFFF;
     history_buffer->address_step = interval;
     history_buffer->transfer_size = 1;
     /* Writing to this register initiates transfer.  count is in "atoms". */
@@ -195,7 +195,7 @@ bool read_ddr_bunch(ssize_t start, size_t bunch, size_t turns, int16_t *result)
     LOCK();
     bool ok =
         start_buffer_transfer(
-            start * ATOMS_PER_TURN + bunch / SAMPLES_PER_ATOM,
+            start * ATOMS_PER_TURN + (ssize_t) bunch / SAMPLES_PER_ATOM,
             ATOMS_PER_TURN, turns)  &&
 
         DO_(FOR_FIFO_ATOMS(atoms_read, turns, buffer)

@@ -14,7 +14,7 @@ struct channel_sweep {
 
 /* Full information about a successful detector sweep. */
 struct sweep_info {
-    int sweep_length;
+    unsigned int sweep_length;
     bool single_bunch_mode;
     double tune_scale[TUNE_LENGTH];
     /* Aggregate sweep info for the four individual channels below. */

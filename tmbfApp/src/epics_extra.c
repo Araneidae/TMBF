@@ -164,7 +164,7 @@ static void init_hook(initHookState state)
 struct in_epics_record_ {
     enum record_type record_type;
     struct epics_record *record;
-    int field_size;
+    size_t field_size;
     bool force_update;
     char value[] __attribute__((aligned(__BIGGEST_ALIGNMENT__)));
 };
@@ -196,7 +196,7 @@ struct in_epics_record_ *_publish_write_epics_record(
     enum record_type record_type, const char *name,
     const struct publish_in_epics_record_args *args)
 {
-    int field_size = record_field_size(record_type);
+    size_t field_size = record_field_size(record_type);
     struct in_epics_record_ *record = malloc(
         sizeof(struct in_epics_record_) + field_size);
     record->record_type = record_type;

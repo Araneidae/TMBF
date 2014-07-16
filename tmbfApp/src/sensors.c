@@ -122,7 +122,7 @@ static bool InitialiseRamfsUsage(void)
         strcpy(ramfs_list, string);
 
         /* Split the string up and count the number of entries. */
-        int ramfs_count = 1;
+        unsigned int ramfs_count = 1;
         for (char *ramfs = strchr(ramfs_list, ' '); ramfs != NULL;
              ramfs = strchr(ramfs, ' '))
         {
@@ -132,7 +132,7 @@ static bool InitialiseRamfsUsage(void)
 
         /* Assemble the final list of file systems for fts_... to scan. */
         RamFileSystems = malloc((ramfs_count + 1) * sizeof(char *));
-        for (int i = 0; i < ramfs_count; i ++)
+        for (unsigned int i = 0; i < ramfs_count; i ++)
         {
             RamFileSystems[i] = ramfs_list;
             ramfs_list += strlen(ramfs_list) + 1;
@@ -174,7 +174,7 @@ static int FindRamfsUsage(void)
  * and returns the integer result. */
 static bool ReadMeminfoLine(FILE *MemInfo, const char *Prefix, int *Result)
 {
-    const int PrefixLength = strlen(Prefix);
+    const size_t PrefixLength = strlen(Prefix);
     char Line[1024];
     while (fgets(Line, sizeof(Line), MemInfo))
     {
@@ -382,14 +382,14 @@ struct ntp_pkt {
  * silent, as this is operationally normal and reported elsewhere.
  *     The timeout is in milliseconds, and cannot be more than 999. */
 static bool UdpExchange(
-    const char *address, int port, time_t timeout_ms,
+    const char *address, in_port_t port, time_t timeout_ms,
     const void *tx_buffer, size_t tx_length,
     void *rx_buffer, size_t *rx_length)
 {
     struct sockaddr_in ntp_server;
     memset(&ntp_server, 0, sizeof(ntp_server));
     ntp_server.sin_family = AF_INET;
-    ntp_server.sin_port = htons(port);
+    ntp_server.sin_port = (in_port_t) htons(port);  // bug in htons!
     inet_aton(address, &ntp_server.sin_addr);
 
     int sock;
@@ -397,7 +397,7 @@ static bool UdpExchange(
     bool Ok = TEST_IO(sock = socket(AF_INET, SOCK_DGRAM, 0));
     if (Ok)
     {
-        size_t sent;
+        ssize_t sent;
 
         fd_set rx_ready;
         FD_ZERO(&rx_ready);
@@ -409,7 +409,7 @@ static bool UdpExchange(
             TEST_IO(connect(sock,
                 (const struct sockaddr *) &ntp_server, sizeof(ntp_server)))  &&
             TEST_IO(sent = send(sock, tx_buffer, tx_length, 0))  &&
-            TEST_OK(sent == tx_length)  &&
+            TEST_OK((size_t) sent == tx_length)  &&
             TEST_IO(sel = select(sock+1, &rx_ready, NULL, NULL, &timeout))  &&
             /* Fail if select timed out. */
             sel > 0  &&
@@ -420,7 +420,7 @@ static bool UdpExchange(
         TEST_IO(close(sock));
     }
 
-    *rx_length = Ok ? rx : 0;
+    *rx_length = Ok ? (size_t) rx : 0;
     return Ok;
 }
 
@@ -468,7 +468,7 @@ static void ProcessNtpHealth(void)
     {
         int LI = (pkt.li_vn_mode >> 6) & 3;
         NTP_status = LI == 3 ?
-            (LastUptime < NTP_startup_window ?
+            (unsigned int) (LastUptime < NTP_startup_window ?
                 NTP_STARTUP : NTP_NO_SYNC) : NTP_OK;
         NTP_stratum = pkt.stratum == 0 ? 16 : pkt.stratum;
         refid_to_string(pkt.stratum, pkt.refid, &NTP_server);

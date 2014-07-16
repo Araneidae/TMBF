@@ -43,7 +43,7 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 static unsigned int new_input_selection;    // written by EPICS
 static unsigned int input_selection;        // written to hardware
 
-static int selected_bunch = 0;
+static unsigned int selected_bunch = 0;
 static int selected_turn = 0;
 static bool bunch_waveform_fault;
 static bool long_waveform_fault;
@@ -211,7 +211,7 @@ bool initialise_ddr_epics(void)
     update_trigger = create_interlock("DDR:UPDATE", false);
 
     /* Control variables for record readout. */
-    PUBLISH_WRITE_VAR(longout, "DDR:BUNCHSEL", selected_bunch);
+    PUBLISH_WRITE_VAR(ulongout, "DDR:BUNCHSEL", selected_bunch);
     PUBLISH_WRITE_VAR(longout, "DDR:TURNSEL", selected_turn);
     PUBLISH_WRITE_VAR_P(mbbo, "DDR:INPUT", new_input_selection);
 

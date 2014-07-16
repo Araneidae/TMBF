@@ -104,7 +104,7 @@ unsigned int Reciprocal(unsigned int D, int *shift)
      * possible (and is required for the rest of the algorithm to work). */
     unsigned int norm = CLZ(D);
     D <<= norm;
-    *shift += 63 - norm;
+    *shift += 63 - (int) norm;
 
     if (unlikely(D == 0x80000000))
     {
@@ -238,15 +238,15 @@ int log2i(unsigned int X)
     if (X >= 0xFFFFFF80)
         return 0x7FFFFFFF;
     else if (X == 0)
-        return 0x80000000;
+        return (int) 0x80000000;
     else
     {
-        int shift = CLZ(X);
+        unsigned int shift = CLZ(X);
         X <<= shift;
         unsigned int A = (X & 0x7FFFFFFF) >> LOG2_M_BITS;
-        int B = (X & LOG2_M_MASK) - LOG2_B_OFFSET;
+        int B = (int) (X & LOG2_M_MASK) - LOG2_B_OFFSET;
         struct LOG2_LOOKUP Lookup = Log2Lookup[A];
-        return ((15 - shift) << 27) + Lookup.Log + MulSS(Lookup.Scale, B);
+        return ((15 - (int) shift) << 27) + Lookup.Log + MulSS(Lookup.Scale, B);
     }
 }
 
@@ -286,10 +286,10 @@ int log2i(unsigned int X)
 unsigned int exp2i(int X, int *shift)
 {
     *shift += 15 - (X >> 27);
-    unsigned int A = (X & 0x07FFFFFF) >> EXP2_M_BITS;
+    unsigned int A = (unsigned int) (X & 0x07FFFFFF) >> EXP2_M_BITS;
     int B = (X & EXP2_M_MASK) - EXP2_B_OFFSET;
     unsigned int E = Exp2Lookup[A];
-    return E + MulSS(B << 6, MulUU(E, EXP2_LN2));
+    return E + (unsigned int) MulSU(B << 6, MulUU(E, EXP2_LN2));
 }
 
 
@@ -518,7 +518,8 @@ void unsigned_fixed_to_single(
          *             = fraction' * 2**(scaling_shift + 32 - shift_in) ,
          * in other words we want
          *      exponent - BIAS - 32 = scaling_shift + 32 - shift_in */
-        int exponent = SINGLE_EXPONENT_BIAS + 64 + scaling_shift - shift_in;
+        int exponent =
+            SINGLE_EXPONENT_BIAS + 64 + scaling_shift - (int) shift_in;
         if (exponent <= 0)
         {
             /* Whoops: underflow.  Need to treat underflow to zero
@@ -547,11 +548,12 @@ void unsigned_fixed_to_single(
 void fixed_to_single(
     int32_t input, float *result, uint32_t scaling, int scaling_shift)
 {
-    uint32_t sign = input & 0x80000000;
+    uint32_t uinput = (uint32_t) input;
+    uint32_t sign = uinput & 0x80000000;
     if (sign != 0)
-        input = -input;
+        uinput = -uinput;
 
-    unsigned_fixed_to_single(input, result, scaling, scaling_shift);
+    unsigned_fixed_to_single(uinput, result, scaling, scaling_shift);
     uint32_t *iresult = (uint32_t *) result;
     *iresult |= sign;
 }
@@ -577,5 +579,5 @@ void compute_scaling(float target, uint32_t *scaling, int *scaling_shift)
      *
      * We have computed s = f * 2**8, and as we want t = s * 2**h we compute
      * h = e - 158. */
-    *scaling_shift = ((itarget >> 23) & 0xFF) - 158;
+    *scaling_shift = (int) ((itarget >> 23) & 0xFF) - 158;
 }

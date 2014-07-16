@@ -369,10 +369,10 @@ static void write_seq_trig_source(unsigned int source)
 /* Event processing and polling. */
 
 static struct epics_interlock *trigger_tick;
-static int last_trig_phase;
-static int raw_trig_phase;
-static int trigger_count;
-static int jitter_count;
+static unsigned int last_trig_phase;
+static unsigned int raw_trig_phase;
+static unsigned int trigger_count;
+static unsigned int jitter_count;
 
 /* Reset trigger and jitter counts. */
 static void reset_trigger_count(void)
@@ -385,7 +385,7 @@ static void reset_trigger_count(void)
  * triggers.  We also watch for and record phase changes. */
 static void poll_trigger_phase(void)
 {
-    int phase = hw_read_trg_raw_phase();
+    unsigned int phase = hw_read_trg_raw_phase();
     if (phase != 0)
     {
         hw_write_trg_arm_raw_phase();
@@ -586,9 +586,9 @@ bool initialise_triggers(void)
     publish_targets();
 
     trigger_tick = create_interlock("TRG:TICK", false);
-    PUBLISH_READ_VAR(longin, "TRG:RAWPHASE", raw_trig_phase);
-    PUBLISH_READ_VAR(longin, "TRG:COUNT", trigger_count);
-    PUBLISH_READ_VAR(longin, "TRG:JITTER", jitter_count);
+    PUBLISH_READ_VAR(ulongin, "TRG:RAWPHASE", raw_trig_phase);
+    PUBLISH_READ_VAR(ulongin, "TRG:COUNT", trigger_count);
+    PUBLISH_READ_VAR(ulongin, "TRG:JITTER", jitter_count);
     PUBLISH_ACTION("TRG:RESET_COUNT", reset_trigger_count);
 
     PUBLISH_WRITER(bo, "FPLED", hw_write_front_panel_led);

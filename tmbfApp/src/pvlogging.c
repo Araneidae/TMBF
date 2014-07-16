@@ -74,7 +74,7 @@ static void EpicsPvPutHook(asTrapWriteMessage *pmessage, int after)
 {
     dbAddr *dbaddr = (dbAddr *) pmessage->serverSpecific;
     long length = dbaddr->no_elements;
-    dbr_string_t *value = (dbr_string_t *) calloc(length, sizeof(dbr_string_t));
+    dbr_string_t *value = calloc((size_t) length, sizeof(dbr_string_t));
     FormatField(dbaddr, value);
 
     if (after)

@@ -100,8 +100,8 @@ void update_tune_follow_debug(const int *buffer_raw)
     {
         int j = 4 * i;
         /* IQ data from detector. */
-        debug_i[i]      = buffer_raw[j] & 0xFFFF;
-        debug_q[i]      = buffer_raw[j] >> 16;
+        debug_i[i]      = (int16_t) (buffer_raw[j] & 0xFFFF);
+        debug_q[i]      = (int16_t) (buffer_raw[j] >> 16);
         /* IQ angle in degrees. */
         fixed_to_single(
             (int) (buffer_raw[j+1] & 0xFFFF0000) >> 14,
@@ -117,7 +117,7 @@ void update_tune_follow_debug(const int *buffer_raw)
             ((buffer_raw[j+3] & 0x3FFFF) << 14) >> 14, &debug_deltaf[i],
             freq_scaling, freq_scaling_shift);
         /* Point by point status. */
-        debug_status[i] = buffer_raw[j+3] >> 18;
+        debug_status[i] = (int16_t) (buffer_raw[j+3] >> 18);
     }
     interlock_signal(debug_interlock, NULL);
 }
@@ -142,7 +142,7 @@ static void update_delay_offset(void)
     int delay =
         ftun_control.input_select == FTUN_IN_ADC ? adc_delay : fir_delay;
     delay += lround(closed_loop_delay * BUNCHES_PER_TURN);
-    delay_offset_degrees = 360.0 / pow(2, 32) * (nco_freq * delay);
+    delay_offset_degrees = 360.0 / pow(2, 32) * (double) nco_freq * delay;
 }
 
 
@@ -279,7 +279,7 @@ static void update_ftun_buffer(void)
     interlock_wait(ftun_interlock);
     memcpy(raw_freq_wf, freq_wf_buffer, FTUN_FREQ_LENGTH * sizeof(int));
     for (size_t i = 0; i < buffer_wf_length; i ++)
-        fixed_to_single(nco_freq_fraction + freq_wf_buffer[i],
+        fixed_to_single((int) nco_freq_fraction + freq_wf_buffer[i],
             &freq_wf[i], freq_scaling, freq_scaling_shift);
     for (size_t i = buffer_wf_length; i < FTUN_FREQ_LENGTH; i ++)
         freq_wf[i] = freq_wf[buffer_wf_length - 1];

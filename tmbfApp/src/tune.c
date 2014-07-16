@@ -23,10 +23,10 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Tune helper functions. */
 
-int find_max_val(int length, const int array[])
+int find_max_val(unsigned int length, const int array[])
 {
     int max_val = array[0];
-    for (int i = 1; i < length; i ++)
+    for (unsigned int i = 1; i < length; i ++)
         if (array[i] > max_val)
             max_val = array[i];
     return max_val;
@@ -82,13 +82,13 @@ int find_max_val(int length, const int array[])
  * ie,
  *      b = (M0 M4 - M2^2) Y1
  *      c = M0 M2 Y2 - M2^2 Y0 . */
-bool fit_quadratic(int length, const int wf[], double *result)
+bool fit_quadratic(unsigned int length, const int wf[], double *result)
 {
     /* Confusingly, here M[n] = M2n from the context above. */
     double M[3] = { length, 0, 0 };
     double Y[3] = { 0, 0, 0 };
     double centre = (length - 1) / 2.0;
-    for (int i = 0; i < length; i ++)
+    for (unsigned int i = 0; i < length; i ++)
     {
         double n = i - centre;
         double n2 = n * n;
@@ -145,24 +145,24 @@ void index_to_tune(
 /* Tune measurement. */
 
 static double threshold_fraction = 0.3;
-static int min_block_separation = 20;
-static int min_block_length = 20;
+static unsigned int min_block_separation = 20;
+static unsigned int min_block_length = 20;
 
 
 /* Searches given waveform for blocks meeting the peak detection criteria,
  * returns number of blocks found.  Only MAX_BLOCKS blocks will be searched for,
  * returns MAX_BLOCKS if at least this many blocks found. */
 #define MAX_BLOCKS  3
-struct block { int start; int end; };
-static int find_blocks(
-    int length, const int wf[], int threshold,
+struct block { unsigned int start; unsigned int end; };
+static unsigned int find_blocks(
+    unsigned int length, const int wf[], int threshold,
     struct block blocks[MAX_BLOCKS])
 {
-    int count = 0;
+    unsigned int count = 0;
 
     struct block dummy = { 0, 0 };
     struct block *last_block = &dummy;
-    int ix = 0;
+    unsigned int ix = 0;
     while (count < MAX_BLOCKS)
     {
         struct block *block = &blocks[count];
@@ -207,19 +207,19 @@ static enum tune_status find_peak(
 }
 
 
-static int find_high_ix(
-    const struct block *blocks, int count, const double tune_scale[])
+static unsigned int find_high_ix(
+    const struct block *blocks, unsigned int count, const double tune_scale[])
 {
-    int low_ix  = (blocks[0].start + blocks[0].end) / 2;
-    int high_ix = (blocks[count-1].start + blocks[count-1].end) / 2;
+    unsigned int low_ix  = (blocks[0].start + blocks[0].end) / 2;
+    unsigned int high_ix = (blocks[count-1].start + blocks[count-1].end) / 2;
     if (tune_scale[low_ix] < tune_scale[high_ix])
-        return count-1;
+        return count - 1;
     else
         return 0;
 }
 
 static epicsAlarmSeverity measure_tune(
-    int length, const struct channel_sweep *sweep,
+    unsigned int length, const struct channel_sweep *sweep,
     const double tune_scale[], bool overflow,
     unsigned int *tune_status, double *tune, double *phase)
 {
@@ -235,7 +235,8 @@ static epicsAlarmSeverity measure_tune(
     int peak_val = find_max_val(length, sweep->power);
     int threshold = (int) (threshold_fraction * peak_val);
     struct block blocks[MAX_BLOCKS];
-    int block_count = find_blocks(length, sweep->power, threshold, blocks);
+    unsigned int block_count =
+        find_blocks(length, sweep->power, threshold, blocks);
 
     double tune_ix;
     switch (block_count)
@@ -252,7 +253,7 @@ static epicsAlarmSeverity measure_tune(
         case 2:
         {
             // Take the peak with the higher frequency
-            int block_ix = find_high_ix(blocks, 2, tune_scale);
+            unsigned int block_ix = find_high_ix(blocks, 2, tune_scale);
             *tune_status = find_peak(sweep->power, &blocks[block_ix], &tune_ix);
             break;
         }
@@ -281,7 +282,7 @@ static double centre_tune;      // Centre of tune sweep
 static double half_range;       // Min/max tune setting
 static double alarm_range;      // Alarm range to test
 static bool reverse_tune;       // Set to sweep tune backwards
-static int selected_bunch;      // Selected single bunch
+static unsigned int selected_bunch; // Selected single bunch
 
 /* Waveforms from last detector sweep. */
 static struct channel_sweep sweep;
@@ -312,7 +313,7 @@ static void update_iq_power(const struct sweep_info *sweep_info)
     /* Update the total and max power statistics. */
     double total_power = 0;
     max_power = 0;
-    for (int i = 0; i < sweep_info->sweep_length; i ++)
+    for (unsigned int i = 0; i < sweep_info->sweep_length; i ++)
     {
         int power = sweep.power[i];
         total_power += power;
@@ -326,14 +327,15 @@ static void update_iq_power(const struct sweep_info *sweep_info)
 static void update_phase_wf(void)
 {
     for (int i = 0; i < TUNE_LENGTH; i ++)
-        phase_waveform[i] = 180.0 / M_PI * atan2f(sweep.wf_q[i], sweep.wf_i[i]);
+        phase_waveform[i] =
+            180.0F / (float) M_PI * atan2f(sweep.wf_q[i], sweep.wf_i[i]);
 }
 
 
 static void update_cumsum(const struct sweep_info *sweep_info)
 {
     int sum_i = 0, sum_q = 0;
-    for (int i = 0; i < sweep_info->sweep_length; i ++)
+    for (unsigned int i = 0; i < sweep_info->sweep_length; i ++)
     {
         sum_i += sweep.wf_i[i];
         sum_q += sweep.wf_q[i];
@@ -342,7 +344,7 @@ static void update_cumsum(const struct sweep_info *sweep_info)
     }
 
     /* Pad the rest of the waveform with repeats of the last point. */
-    for (int i = sweep_info->sweep_length; i < TUNE_LENGTH; i ++)
+    for (unsigned int i = sweep_info->sweep_length; i < TUNE_LENGTH; i ++)
     {
         cumsum_i[i] = sum_i;
         cumsum_q[i] = sum_q;
@@ -509,7 +511,7 @@ bool initialise_tune(void)
     PUBLISH_WRITE_VAR_P(ao, "TUNE:RANGE", half_range);
     PUBLISH_WRITE_VAR_P(bo, "TUNE:DIRECTION", reverse_tune);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:ALARM", alarm_range);
-    PUBLISH_WRITE_VAR_P(longout, "TUNE:BUNCH", selected_bunch);
+    PUBLISH_WRITE_VAR_P(ulongout, "TUNE:BUNCH", selected_bunch);
 
     PUBLISH_WF_READ_VAR(short, "TUNE:I", TUNE_LENGTH, sweep.wf_i);
     PUBLISH_WF_READ_VAR(short, "TUNE:Q", TUNE_LENGTH, sweep.wf_q);
@@ -530,8 +532,8 @@ bool initialise_tune(void)
 
     /* Control parameters for tune measurement algorithm. */
     PUBLISH_WRITE_VAR_P(ao, "TUNE:THRESHOLD", threshold_fraction);
-    PUBLISH_WRITE_VAR_P(longout, "TUNE:BLK:SEP", min_block_separation);
-    PUBLISH_WRITE_VAR_P(longout, "TUNE:BLK:LEN", min_block_length);
+    PUBLISH_WRITE_VAR_P(ulongout, "TUNE:BLK:SEP", min_block_separation);
+    PUBLISH_WRITE_VAR_P(ulongout, "TUNE:BLK:LEN", min_block_length);
 
     PUBLISH_WAVEFORM(int, "TUNE:INJECT:P", TUNE_LENGTH, inject_test_data);
 

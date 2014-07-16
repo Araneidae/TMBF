@@ -33,7 +33,7 @@ struct persistent_action {
     size_t size;
     /* Write value to output buffer (which must be long enough!), returns number
      * of characters written. */
-    size_t (*write)(FILE *out, const void *variable);
+    int (*write)(FILE *out, const void *variable);
     /* Reads value from given character buffer, advancing the character pointer
      * past the characters read, returns false and generates an error message if
      * there is a parsing error. */
@@ -48,7 +48,7 @@ struct persistent_action {
 #define EPICS_STRING_LENGTH     40
 
 #define DEFINE_WRITE(type, format) \
-    static size_t write_##type(FILE *out, const void *variable) \
+    static int write_##type(FILE *out, const void *variable) \
     { \
         type value; \
         memcpy(&value, variable, sizeof(type)); \
@@ -88,7 +88,7 @@ DEFINE_READ_NUM(float, strtof)
 DEFINE_READ_NUM(double, strtod)
 
 
-static size_t write_bool(FILE *out, const void *variable)
+static int write_bool(FILE *out, const void *variable)
 {
     bool value = *(const bool *) variable;
     fputc(value ? 'Y' : 'N', out);
@@ -106,9 +106,9 @@ static bool read_bool(const char **in, void *variable)
 
 /* We go for the simplest possible escaping: octal escape for everything.  Alas,
  * this can quadruple the size of the output to 160 chars. */
-static size_t write_string(FILE *out, const void *variable)
+static int write_string(FILE *out, const void *variable)
 {
-    size_t length = 2;      // Account for enclosing quotes
+    int length = 2;      // Account for enclosing quotes
     const char *string = variable;
     fputc('"', out);
     for (int i = 0; i < EPICS_STRING_LENGTH; i ++)
@@ -138,7 +138,7 @@ static bool parse_octal(const char **in, char *result)
     bool ok = true;
     for (int i = 0; ok  &&  i < 3; i ++)
     {
-        char ch = *(*in)++;
+        unsigned int ch = *(*in)++;
         ok = TEST_OK_('0' <= ch  &&  ch <= '7', "Expected octal digit");
         value = (value << 3) + (ch - '0');
     }
@@ -439,7 +439,7 @@ static void write_lines(
 {
     const void *variable = persistence->variable;
     size_t size = persistence->action->size;
-    size_t line_length = fprintf(out, "%s=", name);
+    int line_length = fprintf(out, "%s=", name);
     for (size_t i = 0; i < persistence->length; i ++)
     {
         if (line_length > 72)

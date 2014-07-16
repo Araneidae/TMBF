@@ -45,7 +45,7 @@
 static inline unsigned int clz_64(uint64_t x)
 {
     if (x >> 32)
-        return CLZ(x >> 32);
+        return CLZ((uint32_t) (x >> 32));
     else
         return 32 + CLZ((uint32_t) (x & 0xFFFFFFFF));
 }
@@ -72,7 +72,7 @@ static inline unsigned int MulUU(unsigned int x, unsigned int y)
 
 static inline int MulSS(int x, int y)
 {
-    unsigned int result, temp;
+    int result, temp;
     __asm__("smull   %1, %0, %2, %3" :
         "=&r"(result), "=&r"(temp) : "r"(x), "r"(y));
     return result;
@@ -96,10 +96,15 @@ static inline int MulSS(int x, int y)
  * value) then it will be faster to use MulSS instead. */
 static inline int MulUS(unsigned int x, int y)
 {
-    int result = (int) MulUU(x, y);
+    int result = (int) MulUU(x, (unsigned int) y);
     if (y < 0)
-        result -= x;
+        result = (int) ((unsigned int) result - x);
     return result;
+}
+
+static inline int MulSU(int x, unsigned int y)
+{
+    return MulUS(y, x);
 }
 
 
@@ -114,8 +119,8 @@ static inline int MulUS(unsigned int x, int y)
 static inline unsigned int MulUUshift(
     unsigned int x, unsigned int y, int *shift)
 {
-    int sx = CLZ(x);
-    int sy = CLZ(y);
+    int sx = (int) CLZ(x);
+    int sy = (int) CLZ(y);
     *shift += sx + sy - 32;
     return MulUU(x << sx, y << sy);
 }

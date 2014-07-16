@@ -43,7 +43,7 @@ struct min_max {
 
     /* Support for filter coefficient update. */
     void (*write_filter)(int taps[]);
-    int tap_count;
+    size_t tap_count;
 };
 
 
@@ -82,9 +82,9 @@ static bool read_minmax(void *context, const bool *ignore)
     min_max->max_max = (double) max_max / min_max->max_value;
     min_max->max_diff = (double) max_diff / min_max->max_value;
     min_max->mean_diff =
-        sum_diff / (double) BUNCHES_PER_TURN / min_max->max_value;
+        (double) sum_diff / BUNCHES_PER_TURN / min_max->max_value;
     min_max->var_diff  =
-        sum_var  / (double) BUNCHES_PER_TURN /
+        (double) sum_var / BUNCHES_PER_TURN /
             min_max->max_value / min_max->max_value -
         min_max->mean_diff * min_max->mean_diff;
     return true;
@@ -94,7 +94,7 @@ static void publish_minmax(
     const char *name, struct min_max *min_max, int max_value)
 {
     min_max->max_value = max_value;
-    compute_scaling(1.0 / max_value, &min_max->scaling, &min_max->shift);
+    compute_scaling(1 / (float) max_value, &min_max->scaling, &min_max->shift);
 
     char buffer[20];
 #define FORMAT(record_name) \

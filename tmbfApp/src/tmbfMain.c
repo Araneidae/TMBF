@@ -107,7 +107,7 @@ void print_error(const char * Message, ...)
          * Ah well.  We go with the GNU definition, so here is a buffer to
          * maybe use for the message. */
         char StrError[256];
-        snprintf(ErrorMessage + Count, MESSAGE_LENGTH - Count,
+        snprintf(ErrorMessage + Count, MESSAGE_LENGTH - (size_t) Count,
             ": (%d) %s", Error, strerror_r(Error, StrError, sizeof(StrError)));
     }
     fprintf(stderr, "%s\n", ErrorMessage);
@@ -127,7 +127,7 @@ void panic_error(const char *filename, int line)
     char last_line[128];
     int char_count = snprintf(last_line, sizeof(last_line),
         "End of backtrace: %d lines written\n", count);
-    write(STDERR_FILENO, last_line, char_count);
+    write(STDERR_FILENO, last_line, (size_t) char_count);
 
     _exit(255);
 }

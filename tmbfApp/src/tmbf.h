@@ -12,9 +12,9 @@ static inline void float_array_to_int(
     size_t count, float in[], int out[], int bits, int scale_bits)
 {
     int fraction_bits = bits - scale_bits - 1;
-    float scaling = 1 << fraction_bits;
-    float max_val = (1 << scale_bits) - 1.0 / scaling;
-    float min_val = - (1 << scale_bits);
+    float scaling = (float) (1 << fraction_bits);
+    float max_val = (float) (1 << scale_bits) - 1.0F / scaling;
+    float min_val = - (float) (1 << scale_bits);
     for (size_t i = 0; i < count; i ++)
     {
         if (in[i] > max_val)
@@ -22,6 +22,6 @@ static inline void float_array_to_int(
         else if (in[i] < min_val)
             in[i] = min_val;
         out[i] = lroundf(in[i] * scaling);
-        in[i] = out[i] / scaling;
+        in[i] = (float) out[i] / scaling;
     }
 }

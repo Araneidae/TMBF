@@ -103,10 +103,10 @@ void hw_write_adc_limit(int limit);
 void hw_write_fir_gain(unsigned int gain);
 
 /* FIR tap coefficients for selected bank.  Taps are signed 18-bit integers. */
-void hw_write_fir_taps(int bank, const int taps[]);
+void hw_write_fir_taps(unsigned int bank, const int taps[]);
 
 /* Returns the number of coefficients in the FIR filters. */
-int hw_read_fir_length(void);
+unsigned int hw_read_fir_length(void);
 
 
 /* * * * * * * * * * * * * */
@@ -168,23 +168,23 @@ enum { DAC_OUT_FIR = 1, DAC_OUT_NCO = 2, DAC_OUT_SWEEP = 4 };
 
 struct bunch_entry {
     int bunch_gain;                 // FIR gain for this bunch
-    unsigned int output_select;     // Output selection for this bunch
-    unsigned int fir_select;        // Filter selection
+    int output_select;              // Output selection for this bunch
+    int fir_select;                 // Filter selection
 };
 
 /* Writes the selected bunch entries to the selected bank. */
 void hw_write_bun_entry(
-    int bank, const struct bunch_entry entries[BUNCHES_PER_TURN]);
+    unsigned int bank, const struct bunch_entry entries[BUNCHES_PER_TURN]);
 
 /* Enables bunch counter synchronsation. */
 void hw_write_bun_sync(void);
 
 /* Configure zero bunch offset for bunch synchronisation. */
-void hw_write_bun_zero_bunch(int bunch);
+void hw_write_bun_zero_bunch(unsigned int bunch);
 
 /* Returns zero if bunch counter not yet triggered, otherwise returns
  * sub-trigger phase bits. */
-int hw_read_bun_trigger_phase(void);
+unsigned int hw_read_bun_trigger_phase(void);
 
 
 /* * * * * * * * * * * * * * * * * */
@@ -262,7 +262,7 @@ struct ftun_control {
     int i_scale;                // Integral Scaling factor
     int p_scale;                // Proportional scaling factor
     int min_magnitude;          // Minimum magnitude for feedback
-    int max_offset;             // Maximum frequency offset for feedback
+    unsigned int max_offset;    // Maximum frequency offset for feedback
 
     unsigned int iq_iir_rate;   // IIR rate for IQ readback
     unsigned int freq_iir_rate;
@@ -362,7 +362,7 @@ enum seq_trig_source { SEQ_DISABLED, SEQ_TRIG_BUF, SEQ_TRIG_DDR };
 void hw_write_seq_trig_source(unsigned int source);
 
 /* Configure sequencer state which will generate trigger. */
-void hw_write_seq_trig_state(int state);
+void hw_write_seq_trig_state(unsigned int state);
 
 /* Returns current sequencer state. */
 unsigned int hw_read_seq_state(void);
@@ -434,4 +434,4 @@ void hw_write_trg_buf_blanking(const bool blanking[BUF_SOURCE_COUNT]);
 void hw_read_trg_buf_source(bool source[BUF_SOURCE_COUNT]);
 
 /* Returns raw phase bits from trigger. */
-int hw_read_trg_raw_phase(void);
+unsigned int hw_read_trg_raw_phase(void);

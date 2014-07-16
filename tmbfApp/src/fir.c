@@ -20,9 +20,9 @@
 
 /* Represents the internal state of a single FIR bank. */
 struct fir_bank {
-    int index;
-    int cycles;
-    int length;
+    unsigned int index;
+    unsigned int cycles;
+    unsigned int length;
     double phase;
     float *current_taps;
     float *set_taps;
@@ -31,7 +31,7 @@ struct fir_bank {
     bool waveform_set;
 };
 
-static int fir_filter_length;
+static size_t fir_filter_length;
 static struct fir_bank banks[FIR_BANKS];
 
 
@@ -42,10 +42,10 @@ static void compute_fir_taps(struct fir_bank *bank)
 
     /* Calculate FIR coeffs and the mean value. */
     float *taps = bank->current_taps;
-    for (int i = 0; i < bank->length; i++)
-        taps[i] = sin(2*M_PI * (tune * (i+0.5) + bank->phase / 360.0));
+    for (unsigned int i = 0; i < bank->length; i++)
+        taps[i] = (float) sin(2*M_PI * (tune * (i+0.5) + bank->phase / 360.0));
     /* Pad end of filter with zeros. */
-    for (int i = bank->length; i < fir_filter_length; i++)
+    for (size_t i = bank->length; i < fir_filter_length; i++)
         taps[i] = 0;
 }
 
@@ -113,7 +113,7 @@ static bool set_use_waveform(void *context, const bool *use_waveform)
 }
 
 
-static void publish_bank(int ix, struct fir_bank *bank)
+static void publish_bank(unsigned int ix, struct fir_bank *bank)
 {
     bank->index = ix;
     bank->current_taps = calloc(fir_filter_length, sizeof(float));
@@ -131,8 +131,8 @@ static void publish_bank(int ix, struct fir_bank *bank)
         set_use_waveform, .context = bank, .persist = true);
 
     /* These writes all forward link to reload_fir above. */
-    PUBLISH_WRITE_VAR_P(longout, FORMAT("LENGTH"), bank->length);
-    PUBLISH_WRITE_VAR_P(longout, FORMAT("CYCLES"), bank->cycles);
+    PUBLISH_WRITE_VAR_P(ulongout, FORMAT("LENGTH"), bank->length);
+    PUBLISH_WRITE_VAR_P(ulongout, FORMAT("CYCLES"), bank->cycles);
     PUBLISH_WRITE_VAR_P(ao, FORMAT("PHASE"), bank->phase);
 
     PUBLISH_WAVEFORM(
@@ -149,7 +149,7 @@ bool initialise_fir(void)
 {
     fir_filter_length = hw_read_fir_length();
     PUBLISH_WRITER_P(mbbo, "FIR:GAIN", hw_write_fir_gain);
-    for (int i = 0; i < FIR_BANKS; i ++)
+    for (unsigned int i = 0; i < FIR_BANKS; i ++)
         publish_bank(i, &banks[i]);
     return true;
 }

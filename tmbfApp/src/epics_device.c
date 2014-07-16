@@ -369,7 +369,7 @@ static bool is_out_record(enum record_type record_type)
 
 /* Returns DBR code associated with record type.  This needs to be compatible
  * with the data type returned by TYPEOF(record). */
-static int record_type_dbr(enum record_type record_type)
+static short record_type_dbr(enum record_type record_type)
 {
     switch (record_type)
     {
@@ -391,7 +391,7 @@ static int record_type_dbr(enum record_type record_type)
     }
 }
 
-static int waveform_type_dbr(enum waveform_type waveform_type)
+static short waveform_type_dbr(enum waveform_type waveform_type)
 {
     switch (waveform_type)
     {
@@ -428,18 +428,17 @@ static bool record_to_dbaddr(
 /* Wrapper around dbPutField to write value to EPICS database. */
 static void _write_out_record(
     enum record_type record_type, struct epics_record *record,
-    int dbr_type, const void *value, size_t length, bool process)
+    short dbr_type, const void *value, size_t length, bool process)
 {
     struct dbAddr dbaddr;
-    bool ok =
-        record_to_dbaddr(record_type, record, length, &dbaddr);
+    bool ok = record_to_dbaddr(record_type, record, length, &dbaddr);
     if (ok)
     {
         // Finally write the desired value under the database lock: we disable
         // writing if processing was not requested.
         dbScanLock(dbaddr.precord);
         record->out.disable_write = !process;
-        ok = TEST_OK(dbPutField(&dbaddr, dbr_type, value, length) == 0);
+        ok = TEST_OK(dbPutField(&dbaddr, dbr_type, value, (long) length) == 0);
         record->out.disable_write = false;
         dbScanUnlock(dbaddr.precord);
     }
@@ -472,9 +471,9 @@ void _write_out_record_waveform(
 /* Wrapper around dbGetField to read value from EPICS. */
 static void _read_record(
     enum record_type record_type, struct epics_record *record,
-    int dbr_type, void *value, size_t length)
+    short dbr_type, void *value, size_t length)
 {
-    long get_length = length;
+    long get_length = (long) length;
     struct dbAddr dbaddr;
     bool ok =
         record_to_dbaddr(record_type, record, length, &dbaddr)  &&
@@ -814,7 +813,7 @@ static bool process_out_record(dbCommon *pr, size_t value_size, void *result)
             ADAPTER(init_out_record, \
                 TYPEOF(record), pr->VAL, \
                 (dbCommon *) pr, sizeof(TYPEOF(record))); \
-            MLST(pr->mlst = pr->VAL); \
+            MLST(pr->mlst = (typeof(pr->mlst)) pr->VAL); \
         } \
         return ok ? INIT_OK : EPICS_ERROR; \
     }

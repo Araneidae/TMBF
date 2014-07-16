@@ -54,8 +54,8 @@ static unsigned int sequencer_pc;           // As updated by EPICS
 
 /* Number of IQ points to be captured by sequencer. */
 static struct epics_interlock *info_trigger;
-static int capture_count;       // Number of IQ points to capture
-static int sequencer_duration;  // Total duration of sequence
+static unsigned int capture_count;       // Number of IQ points to capture
+static unsigned int sequencer_duration;  // Total duration of sequence
 
 /* Super sequencer state. */
 static unsigned int super_seq_count;
@@ -265,11 +265,11 @@ bool initialise_sequencer(void)
     PUBLISH_WRITER_P(ulongout, "SEQ:PC", write_seq_count);
     PUBLISH_READER(ulongin, "SEQ:PC", hw_read_seq_state);
     PUBLISH_ACTION("SEQ:RESET", hw_write_seq_reset);
-    PUBLISH_WRITER_P(longout, "SEQ:TRIGGER", hw_write_seq_trig_state);
+    PUBLISH_WRITER_P(ulongout, "SEQ:TRIGGER", hw_write_seq_trig_state);
 
     info_trigger = create_interlock("SEQ:INFO", false);
-    PUBLISH_READ_VAR(longin, "SEQ:LENGTH", capture_count);
-    PUBLISH_READ_VAR(longin, "SEQ:DURATION", sequencer_duration);
+    PUBLISH_READ_VAR(ulongin, "SEQ:LENGTH", capture_count);
+    PUBLISH_READ_VAR(ulongin, "SEQ:DURATION", sequencer_duration);
 
     /* Fast buffer configuration settings. */
     buffer_trigger = create_interlock("BUF", false);

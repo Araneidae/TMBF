@@ -9,11 +9,11 @@ void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow);
 
 
 /* Returns value of maximum element of array. */
-int find_max_val(int length, const int array[]);
+int find_max_val(unsigned int length, const int array[]);
 
 /* Returns centre from fitting quadratic to the given data, fails if the centre
  * is outside the waveform. */
-bool fit_quadratic(int length, const int wf[], double *result);
+bool fit_quadratic(unsigned int length, const int wf[], double *result);
 
 /* Given index into sweep and the corresponding tune scale computes the tune and
  * phase for the given index. */

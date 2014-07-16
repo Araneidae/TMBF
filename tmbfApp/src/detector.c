@@ -149,11 +149,11 @@ static void unsigned_fixed_to_double(
     *result = ldexp((double) input * scaling, scaling_shift);
 }
 
-static void store_one_tune_freq(int delay, unsigned int freq, int ix)
+static void store_one_tune_freq(int delay, unsigned int freq, unsigned int ix)
 {
     unsigned_fixed_to_double(
         freq, &sweep_info.tune_scale[ix], wf_scaling, wf_shift);
-    cos_sin(-freq * delay, &rotate_I[ix], &rotate_Q[ix]);
+    cos_sin(-(int) freq * delay, &rotate_I[ix], &rotate_Q[ix]);
 }
 
 /* Computes frequency scale directly from sequencer settings.  Triggered
@@ -165,9 +165,9 @@ static void update_det_scale(
     int delay = compute_delay();
     detector_delay = (double) delay / BUNCHES_PER_TURN;
 
-    int ix = 0;
-    int total_time = 0;     // Accumulates captured timebase
-    int gap_time = 0;       // Accumulates non captured time
+    unsigned int ix = 0;
+    unsigned int total_time = 0;     // Accumulates captured timebase
+    unsigned int gap_time = 0;       // Accumulates non captured time
     unsigned int f0 = 0;
     for (unsigned int super = 0;
          super < super_count  &&  ix < TUNE_LENGTH; super ++)
@@ -175,7 +175,7 @@ static void update_det_scale(
              state > 0  &&  ix < TUNE_LENGTH; state --)
         {
             const struct seq_entry *entry = &sequencer_table[state - 1];
-            int dwell_time = entry->dwell_time + entry->holdoff;
+            unsigned int dwell_time = entry->dwell_time + entry->holdoff;
             if (entry->write_enable)
             {
                 f0 = entry->start_freq + offsets[super];
@@ -188,7 +188,7 @@ static void update_det_scale(
                     store_one_tune_freq(delay, f0, ix);
                     f0 += entry->delta_freq;
                     total_time += dwell_time;
-                    timebase[ix] = total_time;
+                    timebase[ix] = (int) total_time;
                 }
             }
             else
@@ -203,7 +203,7 @@ static void update_det_scale(
     for ( ; ix < TUNE_LENGTH; ix ++)
     {
         store_one_tune_freq(delay, f0, ix);
-        timebase[ix] = total_time;
+        timebase[ix] = (int) total_time;
     }
 
     tune_scale_needs_refresh = false;
@@ -236,10 +236,10 @@ static int32_t dot_product(int32_t a, int32_t b, int32_t c, int32_t d)
 /* Extracts and scales IQ for one channel from the incoming raw IQ buffer.  Also
  * updates *abs_max for autogain calculation. */
 static void extract_iq(
-    const short buffer_low[], const short buffer_high[], int channel,
+    const short buffer_low[], const short buffer_high[], unsigned int channel,
     struct channel_sweep *sweep, int *abs_max)
 {
-    for (int i = 0; i < sweep_info.sweep_length; i ++)
+    for (unsigned int i = 0; i < sweep_info.sweep_length; i ++)
     {
         int raw_I = buffer_low[4 * i + channel];
         int raw_Q = buffer_high[4 * i + channel];
@@ -248,14 +248,14 @@ static void extract_iq(
 
         int rot_I = rotate_I[i];
         int rot_Q = rotate_Q[i];
-        sweep->wf_i[i] = dot_product(raw_I, raw_Q, rot_I, -rot_Q);
-        sweep->wf_q[i] = dot_product(raw_I, raw_Q, rot_Q, rot_I);
+        sweep->wf_i[i] = (short) dot_product(raw_I, raw_Q, rot_I, -rot_Q);
+        sweep->wf_q[i] = (short) dot_product(raw_I, raw_Q, rot_Q, rot_I);
     }
 
     /* Ensure the entire array is filled.  If IQ capture was short we extend the
      * last read value to fill the rest of the waveform.  This makes the
      * resulting display look better on a display tool like EDM. */
-    for (int i = sweep_info.sweep_length; i < TUNE_LENGTH; i ++)
+    for (unsigned int i = sweep_info.sweep_length; i < TUNE_LENGTH; i ++)
     {
         sweep->wf_i[i] = sweep->wf_i[sweep_info.sweep_length-1];
         sweep->wf_q[i] = sweep->wf_q[sweep_info.sweep_length-1];
@@ -276,8 +276,8 @@ static void compute_mean_iq(void)
             I_sum += sweep->wf_i[i];
             Q_sum += sweep->wf_q[i];
         }
-        sweep_info.mean.wf_i[i] = (I_sum + 2) / 4;  // Rounded average of four
-        sweep_info.mean.wf_q[i] = (Q_sum + 2) / 4;
+        sweep_info.mean.wf_i[i] = (short) ((I_sum + 2) / 4);  // Rounded average
+        sweep_info.mean.wf_q[i] = (short) ((Q_sum + 2) / 4);  // of 4 channels
     }
 }
 
@@ -297,7 +297,7 @@ static void update_sweep_info(
     const short buffer_low[], const short buffer_high[], int *abs_max)
 {
     *abs_max = 0;
-    for (int channel = 0; channel < 4; channel ++)
+    for (unsigned int channel = 0; channel < 4; channel ++)
     {
         struct channel_sweep *sweep = &sweep_info.channels[channel];
         extract_iq(buffer_low, buffer_high, channel, sweep, abs_max);
@@ -393,10 +393,11 @@ static void compute_default_window(float window[])
     /* Let's use the Hamming window.  As this is only done once at startup it
      * doesn't matter if we take our time and use full floating point
      * arithmetic. */
-    double a = 0.54;
-    double b = 1 - a;
+    float a = 0.54F;
+    float b = 1 - a;
+    float f = 2 * (float) M_PI / (DET_WINDOW_LENGTH - 1);
     for (int i = 0; i < DET_WINDOW_LENGTH; i ++)
-        window[i] = (a - b * cos(2 * M_PI * i / (DET_WINDOW_LENGTH - 1)));
+        window[i] = a - b * cosf(f * (float) i);
 }
 
 
@@ -425,16 +426,16 @@ static void reset_detector_window(void)
 
 
 static const char *tune_sweep_state(
-    bool single_bunch, int bunch, bool *sweep_ok)
+    bool single_bunch, unsigned int bunch, bool *sweep_ok)
 {
-    int sweep_bank = READ_NAMED_RECORD(mbbo, "SEQ:1:BANK");
+    unsigned int sweep_bank = READ_NAMED_RECORD(mbbo, "SEQ:1:BANK");
     const int *out_wf = read_bank_out_wf(sweep_bank);
 
     /* Check whether the configured bank is performing sweeps. */
     bool any_sweep = false;
     bool full_sweep = true;
     bool pure_sweep = true;
-    for (int i = 0; i < BUNCHES_PER_TURN; i ++)
+    for (unsigned int i = 0; i < BUNCHES_PER_TURN; i ++)
     {
         /* Ignore bunch state for bunches outside of detector. */
         if (!single_bunch  ||  i == bunch)
@@ -492,7 +493,7 @@ static EPICS_STRING read_tune_mode(void)
          * assess whether we're generating a sweep and whether it's consistent
          * with the detector mode. */
         bool single_bunch = READ_NAMED_RECORD(bo, "DET:MODE");
-        int bunch = READ_NAMED_RECORD(longout, "TUNE:BUNCH");
+        unsigned int bunch = READ_NAMED_RECORD(ulongout, "TUNE:BUNCH");
 
         /* Check whether the configured bank is performing sweeps. */
         bool sweep_ok;
@@ -503,7 +504,7 @@ static EPICS_STRING read_tune_mode(void)
                 lookup_gain(READ_NAMED_RECORD(mbbo, "SEQ:1:GAIN"));
             EPICS_STRING result;
             if (single_bunch)
-                snprintf(result.s, 40, "%s: bunch %d (%s)", sweep, bunch, gain);
+                snprintf(result.s, 40, "%s: bunch %u (%s)", sweep, bunch, gain);
             else
                 snprintf(result.s, 40, "%s: multibunch (%s)", sweep, gain);
             return result;
