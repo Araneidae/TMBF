@@ -35,6 +35,7 @@ static int BUF_DAC_DELAY;       //                    DAC
 static int MINMAX_ADC_DELAY;    // Offset into minmax buffer of ADC bunch zero
 static int MINMAX_DAC_DELAY;    //                              DAC
 
+static int BUNCH_OUTPUT_OFFSET; // Offset of DAC output selection
 static int BUNCH_FIR_OFFSET;    // Offset of FIR selection
 static int BUNCH_GAIN_OFFSET;   // Offset of DAC gain selection
 
@@ -61,6 +62,7 @@ static const struct config_entry hardware_config_defs[] = {
     CONFIG(MINMAX_ADC_DELAY),
     CONFIG(MINMAX_DAC_DELAY),
 
+    CONFIG(BUNCH_OUTPUT_OFFSET),
     CONFIG(BUNCH_FIR_OFFSET),
     CONFIG(BUNCH_GAIN_OFFSET),
 
@@ -595,7 +597,8 @@ void hw_write_bun_entry(
     {
         /* Take bunch offsets into account when writing the bunch entry. */
         int gain_ix = subtract_offset(i, 4*BUNCH_GAIN_OFFSET, BUNCHES_PER_TURN);
-        int output_ix = i;  // Reference bunch, no offset required
+        int output_ix =
+            subtract_offset(i, 4*BUNCH_OUTPUT_OFFSET, BUNCHES_PER_TURN);
         int fir_ix  = subtract_offset(i, 4*BUNCH_FIR_OFFSET, BUNCHES_PER_TURN);
         uint32_t bunch_gain    = (uint32_t) entries[gain_ix].bunch_gain;
         uint32_t output_select = (uint32_t) entries[output_ix].output_select;
