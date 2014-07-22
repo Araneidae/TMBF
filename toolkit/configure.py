@@ -59,34 +59,6 @@ class TMBF:
 
 
 
-class MinMax:
-    def __init__(self, tmbf, source):
-        self.tmbf = tmbf
-        self.source = source
-
-    def wait(self):
-        '''Waits for a fresh value from the specified source.'''
-
-    def get_max(self):
-        '''Returns MAX waveform.'''
-        return self.tmbf.get('%s:MAXBUF' % self.source)
-
-    def get_min(self):
-        '''Returns MIN waveform.'''
-        return self.tmbf.get('%s:MINBUF' % self.source)
-
-
-class Trigger:
-    def __init__(self, tmbf, name):
-        self.tmbf = tmbf
-        self.name = name
-
-
-class DataSource:
-    def __init__(self):
-        pass
-
-
 # ------------------------------------------------------------------------------
 # FIR setup
 
@@ -141,8 +113,9 @@ def state0(tmbf, bank = 0):
     tmbf.set('SEQ:0:BANK_S', bank)
 
 # Programs a single sequencer state
-def state(tmbf, state,
-        start, step, dwell, gain, count=4096, bank=1, window=True, holdoff=2):
+def state(tmbf, state = 1,
+        start = 0, step = 0, dwell = 20, gain = '0dB',
+        count = 4096, bank = 1, window = True, holdoff = 0):
     tmbf.set('SEQ:%d:START_FREQ_S' % state, start)
     tmbf.set('SEQ:%d:STEP_FREQ_S' % state, step)
     tmbf.set('SEQ:%d:DWELL_S' % state, dwell)
@@ -151,20 +124,12 @@ def state(tmbf, state,
     tmbf.set('SEQ:%d:GAIN_S' % state, gain)
     tmbf.set('SEQ:%d:ENWIN_S' % state, window)
     tmbf.set('SEQ:%d:HOLDOFF_S' % state, holdoff)
+    tmbf.set('SEQ:%d:BLANK_S' % state, 'Off')
 
-def sequencer_pc(tmbf, count):
-    tmbf.set('SEQ:PC_S', count)
 
 
 # ------------------------------------------------------------------------------
 # Detector setup
-
-def nco(tmbf, frequency, gain):
-    tmbf.set('NCO:FREQ_S', frequency)
-    tmbf.set('NCO:GAIN_S', gain)
-
-def detector_input(tmbf, source):
-    tmbf.set('DET:INPUT_S', source)
 
 def detector_gain(tmbf, gain):
     tmbf.set('DET:AUTOGAIN_S', 'Fixed Gain')
@@ -179,40 +144,9 @@ def detector_bunches(tmbf, *bunches):
         tmbf.set('DET:MODE_S', 'All Bunches')
 
 
-# ------------------------------------------------------------------------------
-# Trigger setup
+def sequencer_disable(tmbf):
+    tmbf.set('TRG:SEQ:SEL_S', 'Disabled')
+    tmbf.set('SEQ:RESET_S.PROC', 0)
 
-def trigger_ddr_source(tmbf, source):
-    tmbf.set('TRG:DDR:SEL_S', source)
-
-def trigger_buf_source(tmbf, source):
-    tmbf.set('TRG:BUF:SEL_S', source)
-
-def sequencer_enable(tmbf, enable):
-    if enable:
-        tmbf.set('TRG:SEQ:SEL_S', 'BUF trigger')
-    else:
-        tmbf.set('TRG:SEQ:SEL_S', 'Disabled')
-        tmbf.set('SEQ:RESET_S.PROC', 0)
-
-class WaitReady:
-    def __init__(self, tmbf, status):
-        self.monitor = camonitor(
-            tmbf.pv(status), self.update, datatype = str, all_updates = True)
-        self.state = 'Passive'
-        self.event = cothread.Event()
-        self.Wait = self.event.Wait
-    def update(self, value):
-#         print 'update', self.state, value.name, value
-        if self.state == 'Passive':
-            if value == 'Busy' or value == 'Armed':
-                self.state = 'Busy'
-        elif self.state == 'Busy':
-            if value == 'Ready':
-                self.event.Signal()
-                self.monitor.close()
-
-def fire_and_wait(tmbf, target):
-    waiter = WaitReady(tmbf, 'TRG:%s:STATUS' % target)
-    tmbf.set('TRG:%s:ARM_S.PROC' % target, 0)
-    waiter.Wait()
+def sequencer_enable(tmbf, trigger):
+    tmbf.set('TRG:SEQ:SEL_S', '%s trigger' % trigger)

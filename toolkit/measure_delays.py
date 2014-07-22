@@ -27,16 +27,101 @@ class DAC_OUT:
 
 
 # ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 # Basic TMBF setup support
 
 
 
-# Configure for tune sweep.
-def configure_sweep(tmbf, detector_gain, bunches=[], **sweep_args):
-    configure.state(tmbf, 1, **sweep_args)
-    configure.sequencer_pc(tmbf, 1)
-    configure.detector_gain(tmbf, detector_gain)
-    configure.detector_bunches(tmbf, bunches)
+# Configures basic set up for timing test: we use loopback with internal delay
+# compensation turned off and a standard DAC preemphasis.  This establishes a
+# setup that can be assumed by all other tests.
+def configure_timing_test(tmbf, compensate = False):
+    # Turn DAC output in case there's something connected
+    tmbf.set('DAC:ENABLE_S', 'Off')
+
+    # Ensure nothing is running
+    tmbf.set('TRG:DDR:RESET_S', 0)
+    tmbf.set('TRG:BUF:RESET_S', 0)
+    tmbf.set('SEQ:RESET_S', 0)
+
+    # Disable delay compensation so we meaure raw delays and use loopback data
+    tmbf.set('COMPENSATE_S', 'Normal' if compensate else 'Disabled')
+    tmbf.set('LOOPBACK_S', 'Loopback')
+
+    # Configure ADC and DAC filters with identity filters.
+    tmbf.set('ADC:OFFSET_S', 4 * [0])
+    tmbf.set('ADC:FILTER_S', 4 * [0, 1, 0])
+    tmbf.set('ADC:FILTER:DELAY_S', '0 ns')
+    tmbf.set('DAC:PREEMPH_S', [0, 1, 0])
+    tmbf.set('DAC:PREEMPH:DELAY_S', '0 ns')
+
+    # For a sensible starting state, disable the sequencer and select bank 0.
+    # Each test will need to configure the bank setup it needs.
+    configure.state0(tmbf, 0)
+    configure.sequencer_disable(tmbf)
+    # Configure FIR 0 to default pass-through mode
+    configure.fir_wf(tmbf, 0, 1)
+
+    # Configure NCO for DC output at maximum gain: this makes a useful pulse
+    # source when routed into a single bunch.
+    tmbf.set('NCO:FREQ_S', 0)
+    tmbf.set('NCO:GAIN_S', '0dB')
+
+    # We'll be using soft triggering.  Ensure it's in one shot state
+    tmbf.set('TRG:SYNC_S', 'Separate')
+    tmbf.set('TRG:DDR:MODE_S', 'One Shot')
+    tmbf.set('TRG:BUF:MODE_S', 'One Shot')
+    tmbf.set('TRG:DDR:SEL_S', 'Soft')
+    tmbf.set('TRG:BUF:SEL_S', 'Soft')
+
+    # Reset detector window in case it's been messed with
+    tmbf.set('DET:RESET_WIN_S.PROC', 0)
+
+    # When we use the sequencer it's always for a single state
+    tmbf.set('SEQ:PC_S', 1)
+    tmbf.set('SEQ:SUPER:COUNT_S', 1)
+
+
+
+# Configure bank for single pulse output from NCO
+def configure_dac_single_pulse(tmbf):
+    configure.bank_wf(tmbf, 0, 1, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.OFF))
+
+
+# Configure for single one-shot bunch:
+def configure_one_shot_pulse(tmbf, trigger):
+    configure.bank_wf(tmbf, 0, 1, 0, DAC_OUT.OFF)
+    configure.bank_wf(tmbf, 1, 1, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.OFF))
+    configure.state(tmbf, dwell = 1, count = 1)
+
+    configure.sequencer_enable(tmbf, trigger)
+
+
+
+def setup_detector_single_bunch(tmbf, bank=1, fir=0):
+    # Configure the sequencer for a simple scan over a narrow range.
+    configure.state(tmbf, 1, 1.31, 1e-5, 20, '0dB', bank = bank)
+
+    # Configure the selected bank for sweep
+    configure.bank_wf(tmbf, bank, 1, fir, DAC_OUT.SWEEP)
+
+    # Configure detector for single bunch capture
+    tmbf.set('DET:MODE_S', 'Single Bunch')
+    tmbf.set('DET:GAIN_S', '0dB')
+    tmbf.set('DET:AUTOGAIN_S', 'Fixed Gain')
+    tmbf.set('DET:BUNCH0_S', 0)
+
+    # Configure triggering and data capture
+    tmbf.set('TRG:SEQ:SEL_S', 'BUF trigger')
+    tmbf.set('TRG:BUF:SEL_S', 'Soft 1')
+    tmbf.set('BUF:SELECT_S', 'IQ')
+
+
+def setup_tune_sweep(tmbf, *args, **kargs):
+    configure.state(tmbf, 1, *args, **kargs)
+    tmbf.set('BUF:SELECT_S', 'IQ')
+    configure.sequencer_enable(tmbf, 'BUF')
 
 
 # ------------------------------------------------------------------------------
@@ -61,97 +146,9 @@ def find_second_peak(value):
     return numpy.argsort(value)[-2]
 
 
-# ------------------------------------------------------------------------------
-# Timing test setup
-
-
-# Configures basic set up for timing test: we use loopback with internal delay
-# compensation turned off and a standard DAC preemphasis.
-def configure_timing_test(tmbf, compensate = False):
-    # Disable delay compensation so we meaure raw delays
-    tmbf.set('COMPENSATE_S', 'Normal' if compensate else 'Disabled')
-    # This is our nominal zero delay for the DAC pre-emphasis
-    tmbf.set('DAC:PREEMPH_S', [0, 1, 0])
-    tmbf.set('DAC:PREEMPH:DELAY_S', '0 ns')
-    # Similarly reset ADC pre-emphasis filter and offsets
-    tmbf.set('ADC:OFFSET_S', 4 * [0])
-    tmbf.set('ADC:FILTER_S', 4 * [0, 1, 0])
-    tmbf.set('ADC:FILTER:DELAY_S', '0 ns')
-
-    # For inputs use internal loopback
-    tmbf.set('LOOPBACK_S', 'Loopback')
-    # Turn off DAC output delay (until we need it...)
-    tmbf.set('DAC:DELAY_S', 0)
-    # Turn DAC output in case there's something connected
-    tmbf.set('DAC:ENABLE_S', 'Off')
-
-    # For a sensible starting state, disable the sequencer and select bank 0
-    configure.state0(tmbf, 0)
-    configure.sequencer_enable(tmbf, False)
-
-    # We'll be using soft triggering.  Ensure it's in one shot state
-    tmbf.set('TRG:SYNC_S', 'Separate')
-    tmbf.set('TRG:DDR:MODE_S', 'One Shot')
-    tmbf.set('TRG:BUF:MODE_S', 'One Shot')
-    tmbf.set('TRG:DDR:SEL_S', 'Soft')
-    tmbf.set('TRG:BUF:SEL_S', 'Soft')
-
-    # Reset detector window in case it's been messed with
-    tmbf.set('DET:RESET_WIN_S.PROC', 0)
-
-    # Configure NCO for DC output at maximum gain: this makes a useful pulse
-    # source when routed into a single bunch.
-    configure.nco(tmbf, 0, '0dB')
-
-
-# Configure bank for single pulse output from NCO
-def configure_dac_single_pulse(tmbf, bank = 0):
-    configure.bank_wf(tmbf, bank, 1, 0, one_bunch(DAC_OUT.NCO, DAC_OUT.OFF))
-
-
-
-def setup_detector_single_bunch(tmbf, bank=1, fir=0):
-    # Configure the sequencer for a simple scan over a narrow range.
-    configure.state(tmbf, 1, 1.31, 1e-5, 20, '0dB', bank = bank)
-    configure.sequencer_pc(tmbf, 1)
-
-    # Configure the selected bank for sweep
-    configure.bank_wf(tmbf, bank, 1, fir, DAC_OUT.SWEEP)
-
-    # Configure detector for single bunch capture
-    tmbf.set('DET:MODE_S', 'Single Bunch')
-    tmbf.set('DET:GAIN_S', '0dB')
-    tmbf.set('DET:AUTOGAIN_S', 'Fixed Gain')
-    tmbf.set('DET:BUNCH0_S', 0)
-
-    # Configure triggering and data capture
-    tmbf.set('TRG:SEQ:SEL_S', 'BUF trigger')
-    tmbf.set('TRG:BUF:SEL_S', 'Soft 1')
-    tmbf.set('BUF:SELECT_S', 'IQ')
-
-def setup_tune_sweep(tmbf, *args, **kargs):
-    configure.state(tmbf, 1, *args, **kargs)
-    configure.sequencer_pc(tmbf, 1)
-    tmbf.set('BUF:SELECT_S', 'IQ')
-    configure.sequencer_enable(tmbf, True)
-
-
-# Simplest test of all: measure delay from DAC reference bunch to minmax
-# waveform.
-def dac_to_minmax(tmbf, maxval):
-    # Bunch zero will be our reference pulse
-    configure_dac_single_pulse(tmbf)
-
-    # Now fetch the next waveform with this data
-    return find_one_peak(maxval.get_new(0.25))
-
-
 # Measures closed loop delay.  For this configuration we need to pass data
 # through the FIR for all bunches except the reference bunch.
 def dac_to_dac_closed_loop(tmbf, maxdac):
-    # Configure FIR 0 for passthrough
-    configure.fir_wf(tmbf, 0, 1)
-
     # Need quite strong attenuation to ensure the peak dies down before it comes
     # around again.
     tmbf.set('FIR:GAIN_S', '-24dB')
@@ -165,18 +162,18 @@ def dac_to_dac_closed_loop(tmbf, maxdac):
 
 
 # Measures delay from reference bunch to selected buffer waveforms
-def dac_to_buf(tmbf, bufa, bufb, sources):
+def dac_to_buf(tmbf, bufa, bufb, sources, length = -1):
     tmbf.set('BUF:SELECT_S', sources)
-    configure.fire_and_wait(tmbf, 'BUF')
-    a = bufa.get()[:BUNCH_COUNT]
-    b = bufb.get()[:BUNCH_COUNT]
+    tmbf.set('TRG:BUF:ARM_S', 0)
+    a = bufa.get()[BUNCH_COUNT:][:length]
+    b = bufb.get()[BUNCH_COUNT:][:length]
     return find_one_peak(a), find_one_peak(b)
 
 # Measures delay from reference bunch to selected DDR waveform
-def dac_to_ddr(tmbf, ddr_buf, source):
+def dac_to_ddr(tmbf, ddr_buf, source, length = -1):
     tmbf.set('DDR:INPUT_S', source)
-    configure.fire_and_wait(tmbf, 'DDR')
-    return find_one_peak(ddr_buf.get()[:BUNCH_COUNT])
+    tmbf.set('TRG:DDR:ARM_S', 0)
+    return find_one_peak(ddr_buf.get()[:length])
 
 
 # Measures which bunch has its gain controlled by bunch select 0
@@ -210,7 +207,7 @@ def binary_search(start, end, test):
 # Performs binary search to discover which bunch is detected for bunch zero
 def search_det_bunch(tmbf, det_power, source):
     # Configure source
-    configure.detector_input(tmbf, source)
+    tmbf.set('DET:INPUT_S', source)
 
     # Binary search.
     outwf = numpy.zeros(BUNCH_COUNT)
@@ -258,12 +255,12 @@ def compute_group_delay(scale, iq):
 
 def search_det_delay(tmbf, det_i, det_q, source):
     # Configure source
-    configure.detector_input(tmbf, source)
+    tmbf.set('DET:INPUT_S', source)
 
     # Capture data
-    configure.fire_and_wait(tmbf, 'BUF')
-    scale = tmbf.get('DET:SCALE')
+    tmbf.set('TRG:BUF:ARM_S', 0)
     iq = numpy.dot([1, 1j], [det_i.get(), det_q.get()])
+    scale = tmbf.get('DET:SCALE')
     return compute_group_delay(scale, iq)
 
 
@@ -291,6 +288,11 @@ class Results:
         self.items.append(name)
         self.__dict__[name] = value
 
+    def set4(self, name, value):
+        assert value % 4 == 0, \
+            'Value %s = %d out of phase' % (name, value)
+        self.set(name, value / 4)
+
     def __setattr__(self, name, value):
         # Ensure value is positive
         if value < 0:
@@ -306,10 +308,14 @@ class Results:
             print item, '=', getattr(self, item)
 
 
-# Performs initial calibration: measures DAC to ADC and DAC maxbuf and closes
-# the loop for the remaining measurements.
-def measure_maxbuf(tmbf, results):
-    print >>sys.stderr, 'Measuring DAC/ADC maxbuf'
+# Performs initial calibration: measures DAC to ADC and DAC min/max buffer and
+# closes the loop for the remaining measurements.
+def measure_minmax(tmbf, results):
+    print >>sys.stderr, 'Measuring DAC/ADC min/max buffer'
+
+    configure_dac_single_pulse(tmbf)
+    # Turn off DAC output delay for initial measurement.
+    tmbf.set('DAC:DELAY_S', 0)
 
     maxdac = tmbf.PV('DAC:MAXBUF')
     maxadc = tmbf.PV('ADC:MAXBUF')
@@ -317,7 +323,7 @@ def measure_maxbuf(tmbf, results):
     # Start by taking DAC output mux select bunch zero as the reference bunch
     # and measuring delays to DAC max.  This allows us to measure the closed
     # loop delay and close the loop for all remaining measurements.
-    dac_minmax_delay = dac_to_minmax(tmbf, maxdac)
+    dac_minmax_delay = find_one_peak(maxdac.get_new(0.25))
     loop_delay = dac_to_dac_closed_loop(tmbf, maxdac)
     results.MINMAX_DAC_DELAY = dac_minmax_delay
 
@@ -329,7 +335,7 @@ def measure_maxbuf(tmbf, results):
     tmbf.set('DAC:DELAY_S', BUNCH_COUNT - loop_delay + dac_minmax_delay)
 
     # Now we can capture the max ADC offset
-    results.MINMAX_ADC_DELAY = dac_to_minmax(tmbf, maxadc)
+    results.MINMAX_ADC_DELAY = find_one_peak(maxadc.get_new(0.25))
 
     maxdac.close()
     maxadc.close()
@@ -344,10 +350,25 @@ def measure_buf(tmbf, results):
     buf_a.get()
     buf_b.get()
 
-    results.BUF_ADC_DELAY, results.BUF_DAC_DELAY = \
-        dac_to_buf(tmbf, buf_a, buf_b, 'ADC+DAC')
-    results.BUF_FIR_DELAY, _ = \
-        dac_to_buf(tmbf, buf_a, buf_b, 'FIR+DAC')
+    # First get the baseline DAC delay.
+    configure_dac_single_pulse(tmbf)
+
+    _, base_dac_delay = dac_to_buf(tmbf, buf_a, buf_b, 'ADC+DAC', BUNCH_COUNT)
+    results.set4('BUF_DAC_DELAY', base_dac_delay)
+
+    # Now grab all the delays including processing time.
+    configure_one_shot_pulse(tmbf, 'BUF')
+
+    adc_delay, dac_delay = dac_to_buf(tmbf, buf_a, buf_b, 'ADC+DAC')
+    fir_delay, _ = dac_to_buf(tmbf, buf_a, buf_b, 'FIR+DAC')
+
+    # Figure out how much delay there is in the DAC pulse, and add one more turn
+    # to this for the loop delay for measuring ADC and FIR.
+    loop_delay = dac_delay - base_dac_delay + BUNCH_COUNT
+    assert loop_delay % BUNCH_COUNT == 0, \
+        'Unexpected loop_delay: %d' % loop_delay
+    results.set4('BUF_ADC_DELAY', adc_delay - loop_delay)
+    results.set4('BUF_FIR_DELAY', fir_delay - loop_delay)
 
     buf_a.close()
     buf_b.close()
@@ -361,14 +382,28 @@ def measure_ddr(tmbf, results):
     ddr_buf = tmbf.PV('DDR:SHORTWF')
     ddr_buf.get()
 
-    results.DDR_ADC_DELAY = dac_to_ddr(tmbf, ddr_buf, 'ADC')
-    dac_to_ddr_fir_delay = dac_to_ddr(tmbf, ddr_buf, 'FIR')
-    results.DDR_FIR_DELAY = dac_to_ddr_fir_delay
-    results.DDR_RAW_DAC_DELAY = dac_to_ddr(tmbf, ddr_buf, 'Raw DAC')
-    results.DDR_DAC_DELAY = dac_to_ddr(tmbf, ddr_buf, 'DAC')
+    # As for BUF, first get the baseline DAC delay.
+    configure_dac_single_pulse(tmbf)
+    configure.sequencer_disable(tmbf)
+    base_dac_delay = dac_to_ddr(tmbf, ddr_buf, 'DAC', BUNCH_COUNT)
+    results.set4('DDR_DAC_DELAY', base_dac_delay)
 
+    dac_to_ddr_fir_delay = dac_to_ddr(tmbf, ddr_buf, 'FIR', BUNCH_COUNT)
     fir_bunch_zero = fir_to_ddr(tmbf, ddr_buf)
     results.BUNCH_FIR_OFFSET = dac_to_ddr_fir_delay - fir_bunch_zero
+
+    # Now get all delays using one shot sequencer
+    configure_one_shot_pulse(tmbf, 'DDR')
+
+    dac_delay = dac_to_ddr(tmbf, ddr_buf, 'DAC')
+    raw_dac_delay = dac_to_ddr(tmbf, ddr_buf, 'Raw DAC')
+    adc_delay = dac_to_ddr(tmbf, ddr_buf, 'ADC')
+    fir_delay = dac_to_ddr(tmbf, ddr_buf, 'FIR')
+    loop_delay = dac_delay - base_dac_delay + BUNCH_COUNT
+
+    results.set4('DDR_ADC_DELAY', adc_delay - loop_delay)
+    results.set4('DDR_FIR_DELAY', fir_delay - loop_delay)
+    results.set4('DDR_RAW_DAC_DELAY', raw_dac_delay - loop_delay + BUNCH_COUNT)
 
     ddr_buf.close()
 
@@ -382,7 +417,6 @@ def measure_detector_bunch(tmbf, results):
     configure.detector_bunches(tmbf, 0)
     configure.detector_gain(tmbf, '-24dB')
 
-    configure.fir_wf(tmbf, 0, 1)
     configure.bank_wf(tmbf, 1, 1, 0, DAC_OUT.SWEEP)
 
     det_power = tmbf.PV('DET:POWER:0')
@@ -400,18 +434,18 @@ def measure_detector_delay(tmbf, results):
     configure.detector_bunches(tmbf)
     configure.detector_gain(tmbf, '-72dB')
 
-    configure.fir_wf(tmbf, 0, 1)
     configure.bank(tmbf, 1, 1, 0, DAC_OUT.SWEEP)
 
     tmbf.set('DET:LOOP:ADC_S', 1)
 
     det_i = tmbf.PV('DET:I:M')
     det_q = tmbf.PV('DET:Q:M')
+    det_i.get(); det_q.get()
 
     results.set('DET_ADC_DELAY',
         search_det_delay(tmbf, det_i, det_q, 'ADC'))
     results.set('DET_FIR_DELAY',
-        search_det_delay(tmbf, det_i, det_q, 'FIR') - 936)
+        search_det_delay(tmbf, det_i, det_q, 'FIR') - BUNCH_COUNT)
 
     det_i.close()
     det_q.close()
@@ -420,7 +454,6 @@ def measure_detector_delay(tmbf, results):
 def measure_tune_follow_bunch(tmbf, results):
     print >>sys.stderr, 'Measuring Tune Follow Bunch Offset'
 
-    configure.fir_wf(tmbf, 0, 1)
     configure.bank(tmbf, 0, 1, 0, DAC_OUT.SWEEP)
 
     tmbf.set('FTUN:DWELL_S', 10)
@@ -438,7 +471,6 @@ def measure_tune_follow_bunch(tmbf, results):
 def measure_tune_follow_delay(tmbf, results):
     print >>sys.stderr, 'Measuring Tune Follow Delay'
 
-    configure.fir_wf(tmbf, 0, 1)
     configure.bank(tmbf, 0, 1, 0, DAC_OUT.NCO)
 
     tmbf.set('FTUN:DWELL_S', 100)
@@ -458,12 +490,25 @@ def measure_tune_follow_delay(tmbf, results):
 
 # ------------------------------------------------------------------------------
 
+actions = [
+    'minmax',
+    'buf',
+    'ddr',
+    'detector_bunch',
+    'detector_delay',
+    'tune_follow_bunch',
+    'tune_follow_delay',
+]
+
+
 import argparse
 parser = argparse.ArgumentParser(description = 'Measure internal TMBF delays')
 parser.add_argument('-t', '--test', action = 'store_true',
     help = 'Verify current delays')
 parser.add_argument('tmbf', nargs = '?', default = 'TS-DI-TMBF-01',
     help = 'TMBF machine name to test')
+parser.add_argument('-m', '--measure', action = 'append',
+    help = 'Specify measurements to perform, any of: ' + ', '.join(actions))
 args = parser.parse_args()
 
 
@@ -472,12 +517,9 @@ results = Results()
 
 configure_timing_test(tmbf, args.test)
 
-measure_maxbuf(tmbf, results)
-measure_buf(tmbf, results)
-measure_ddr(tmbf, results)
-measure_detector_bunch(tmbf, results)
-measure_detector_delay(tmbf, results)
-measure_tune_follow_bunch(tmbf, results)
-measure_tune_follow_delay(tmbf, results)
+if args.measure:
+    actions = args.measure
+for action in actions:
+    globals()['measure_' + action](tmbf, results)
 
 results.print_results()

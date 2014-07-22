@@ -666,12 +666,31 @@ static void get_buf_delays(int *low_delay, int *high_delay)
     }
 }
 
-/* Annoyingly close to identical to min/max readout, but different channel
- * control. */
+
+static void reset_buf(short buf[RAW_BUF_DATA_LENGTH])
+{
+    memset(buf, 0, sizeof(short) * BUNCHES_PER_TURN);
+    memset(buf + RAW_BUF_DATA_LENGTH - BUNCHES_PER_TURN,
+        0, sizeof(short) * BUNCHES_PER_TURN);
+}
+
+static void update_buf(
+    short buf[RAW_BUF_DATA_LENGTH], int delay, int ix, short value)
+{
+    ix -= 4 * delay;
+    if (0 <= ix  &&  ix < RAW_BUF_DATA_LENGTH)
+        buf[ix] = value;
+}
+
 void hw_read_buf_data(
     int raw[RAW_BUF_DATA_LENGTH],
     short low[RAW_BUF_DATA_LENGTH], short high[RAW_BUF_DATA_LENGTH])
 {
+    /* Reset ends of buffers in case we don't overwrite them because of delay
+     * compensation. */
+    reset_buf(low);
+    reset_buf(high);
+
     LOCK();
     int low_delay, high_delay;
     get_buf_delays(&low_delay, &high_delay);
@@ -682,8 +701,8 @@ void hw_read_buf_data(
         uint32_t data = config_space->fast_buffer_read;
 
         raw[i] = (int) data;
-        low [(i - 4*low_delay) % RAW_BUF_DATA_LENGTH] = (short) (data & 0xFFFF);
-        high[(i - 4*high_delay) % RAW_BUF_DATA_LENGTH] = (short) (data >> 16);
+        update_buf(low, low_delay, i, (short) (data & 0xFFFF));
+        update_buf(high, high_delay, i, (short) (data >> 16));
     }
     UNLOCK();
 }
