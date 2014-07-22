@@ -1,6 +1,7 @@
-% data = tmbf_read_raw(tmbf, count)
+% data = tmbf_read_raw(expect, tmbf, count)
 %
-% Reads raw number of samples from DDR buffer, returns as 4 x 2 x count waveform
+% Reads raw number of samples from DDR buffer, returns as 4 x 2 x count
+% waveform.  The expect argument should match the input source of the buffer.
 
 function data = tmbf_read_raw(expect, tmbf, count)
     % Check DDR is in the expected capture mode

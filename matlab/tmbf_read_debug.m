@@ -1,9 +1,10 @@
-% [iq, angle, mag, freq, status] = tmbf_read_debug(tmbf [,count])
+% [iq, mag, raw_angle, filtered_angle, feedback_freq, status ...
+%     ] = tmbf_read_debug(varargin)
 %
-% Reads tune following debug data from TMBF buffer.
+% Reads tune following debug data from TMBF buffer, which must be in Debug mode.
 
-function [iq, mag, raw_angle, filtered_angle, feedback_freq, status] = ...
-    tmbf_read_debug(varargin)
+function [iq, mag, raw_angle, filtered_angle, feedback_freq, status ...
+    ] = tmbf_read_debug(varargin)
 
     data = tmbf_read_raw('Debug', varargin{:});
 
