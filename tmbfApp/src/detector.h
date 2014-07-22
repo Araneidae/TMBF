@@ -1,6 +1,6 @@
 /* Detector and sweep control. */
 
-#define TUNE_LENGTH    (RAW_BUF_DATA_LENGTH / 4)
+#define TUNE_LENGTH    (BUF_DATA_LENGTH / 4)
 
 
 struct seq_entry;

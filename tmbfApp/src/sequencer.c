@@ -198,9 +198,9 @@ static void set_state0_bunch_bank(unsigned int bank)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 static struct epics_interlock *buffer_trigger;
-static int buffer_raw[RAW_BUF_DATA_LENGTH];
-static short buffer_low[RAW_BUF_DATA_LENGTH];
-static short buffer_high[RAW_BUF_DATA_LENGTH];
+static int buffer_raw[BUF_DATA_LENGTH];
+static short buffer_low[BUF_DATA_LENGTH];
+static short buffer_high[BUF_DATA_LENGTH];
 
 /* This will be called when the fast buffer is triggered. */
 void process_fast_buffer(void)

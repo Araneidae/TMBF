@@ -50,7 +50,7 @@ static bool dropout_seen;
 static bool data_dropout;
 
 /* Waveforms extracted from raw debug buffer. */
-#define DATA_LENGTH     (RAW_BUF_DATA_LENGTH / 4)
+#define DATA_LENGTH     (BUF_DATA_LENGTH / 4)
 static int16_t debug_i[DATA_LENGTH];
 static int16_t debug_q[DATA_LENGTH];
 static int32_t debug_mag[DATA_LENGTH];

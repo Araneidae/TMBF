@@ -7,17 +7,12 @@
 
 /* Some standard array size definitions. */
 #define BUNCHES_PER_TURN    936     // Bunches in a single turn
-#define RAW_BUF_DATA_LENGTH 16384   // Points in internal fast buffer
+#define BUF_DATA_LENGTH     16384   // Points in internal fast buffer
 #define MAX_SEQUENCER_COUNT 7       // Steps in sequencer, not counting state 0
 #define FIR_BANKS           4
 #define BUNCH_BANKS         4
 
 #define SUPER_SEQ_STATES    1024    // Max super sequencer states
-
-/* Delay compensation on ADC/FIR/DAC buffer data can result in garbage in the
- * last turn's worth of the buffer, so don't include this in the published and
- * processed data length. */
-#define BUF_DATA_LENGTH     (RAW_BUF_DATA_LENGTH - BUNCHES_PER_TURN)
 
 
 /* To be called once at startup.  The given config_file contains hardware
@@ -201,8 +196,8 @@ void hw_read_buf_status(bool *armed, bool *busy, bool *iq_select);
 
 /* Reads buffer into two separate 16-bit arrays. */
 void hw_read_buf_data(
-    int raw[RAW_BUF_DATA_LENGTH],
-    short low[RAW_BUF_DATA_LENGTH], short high[RAW_BUF_DATA_LENGTH]);
+    int raw[BUF_DATA_LENGTH],
+    short low[BUF_DATA_LENGTH], short high[BUF_DATA_LENGTH]);
 
 
 /* * * * * * * * * * * * * * * * * * * * * * */

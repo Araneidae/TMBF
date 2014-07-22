@@ -56,7 +56,7 @@ Action('FTUN:ARM', DESC = 'Arm triggered tune following')
 Action('FTUN:STOP', DESC = 'Stop tune following')
 
 # Detailed data about internal processing of tune following data stream
-DATA_LENGTH = RAW_BUF_DATA_LENGTH / 4
+DATA_LENGTH = BUF_DATA_LENGTH / 4
 Trigger('FTUN:DEBUG',
     Waveform('FTUN:DEBUG:I', DATA_LENGTH, 'SHORT', DESC = 'Detected I'),
     Waveform('FTUN:DEBUG:Q', DATA_LENGTH, 'SHORT', DESC = 'Detected Q'),
