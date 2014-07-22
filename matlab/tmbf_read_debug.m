@@ -15,16 +15,12 @@ function [iq, mag, raw_angle, filtered_angle, feedback_freq, status] = ...
     filtered_angle = 360 * 2^-18 * double(row3);
 
     row4 = typecast(int16(reshape(data(4, :, :), [], 1)), 'uint32');
-    feedback_freq = 936 * 2^-32 * double( ...
-        sign_extend(bitand(row4, hex2dec('3FFFF')), 14));
+    feedback_freq = 936 * 2^-32 * 2^-14 * double( ...
+        typecast(bitshift(row4, 14), 'int32'));
 
     raw_status = bitshift(row4, -18);
     status = logical(zeros(length(raw_status), 12));
     for n = 1:12
         status(:, n) = bitget(raw_status, n);
     end
-end
-
-function data = sign_extend(data, bits)
-    data = bitshift(bitshift(typecast(data, 'int32'), bits), -bits);
 end
