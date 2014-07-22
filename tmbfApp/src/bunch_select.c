@@ -8,7 +8,6 @@
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
-#include <semaphore.h>
 #include <math.h>
 
 #include "error.h"
@@ -285,8 +284,29 @@ enum sync_status {
 };
 static unsigned int sync_status = SYNC_NO_SYNC;
 
-static sem_t bunch_sync_sem;
-enum { SYNC_ACTION_RESET, SYNC_ACTION_SYNC } sync_action;
+static pthread_mutex_t bunch_sync_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t bunch_sync_signal = PTHREAD_COND_INITIALIZER;
+enum sync_action { SYNC_ACTION_RESET, SYNC_ACTION_SYNC } sync_action;
+
+
+/* Called from bunch synchronisation thread to block until action requested. */
+static enum sync_action wait_for_sync_action(void)
+{
+    ASSERT_0(pthread_mutex_lock(&bunch_sync_mutex));
+    ASSERT_0(pthread_cond_wait(&bunch_sync_signal, &bunch_sync_mutex));
+    enum sync_action action = sync_action;
+    ASSERT_0(pthread_mutex_unlock(&bunch_sync_mutex));
+    return action;
+}
+
+/* Requests specified action from bunch synchronisation thread. */
+static void request_sync_action(enum sync_action action)
+{
+    ASSERT_0(pthread_mutex_lock(&bunch_sync_mutex));
+    sync_action = action;
+    ASSERT_0(pthread_cond_signal(&bunch_sync_signal));
+    ASSERT_0(pthread_mutex_unlock(&bunch_sync_mutex));
+}
 
 
 /* Updates reported phase and status. */
@@ -313,15 +333,17 @@ static unsigned int wait_for_bunch_sync(void)
     return phase;
 }
 
-/* Each valid phase bit pattern corresponds to a clock skew in bunches. */
+/* Each valid phase bit pattern corresponds to a clock skew in bunches: this is
+ * the delay in 2ns bunch clocks from the start of the 8ns FPGA clock to the
+ * trigger. */
 static bool phase_to_skew(unsigned int phase, unsigned int *skew)
 {
     switch (phase)
     {
-        case 8:     *skew = 0;  break;
-        case 12:    *skew = 1;  break;
-        case 14:    *skew = 2;  break;
-        case 15:    *skew = 3;  break;
+        case 8:     *skew = 3;  break;
+        case 12:    *skew = 2;  break;
+        case 14:    *skew = 1;  break;
+        case 15:    *skew = 0;  break;
         default:    return FAIL_("Invalid phase: %d\n", phase);
     }
     return true;
@@ -339,12 +361,35 @@ static void do_reset_bunch_sync(void)
     unsigned int skew;
     if (phase_to_skew(phase, &skew))
     {
-        set_adc_skew(skew);
+        /* Correct for trigger delay by adding extra delay in ADC input. */
+        set_adc_skew(3 - skew);
         update_status(phase, SYNC_ZERO);
     }
     else
         update_status(phase, SYNC_FAILED);
 }
+
+
+/* Computes ADC skew and bunch synchronisation offset to ensure that the
+ * selected zero bunch is reported as bunch zero. */
+static void select_bunch_zero(unsigned int base_skew)
+{
+    /* Total offset of target bunch from trigger point. */
+    unsigned int skewed_offset = zero_bunch_offset + base_skew;
+    /* Compute the index of the clock containing the zero bunch relative to the
+     * current trigger; in this case we assume that bunch zero has been
+     * configured with bunch synchronisation reset. */
+    unsigned int clock_delay = skewed_offset / 4;
+    unsigned int zero_clock =
+        clock_delay == 0 ? 0 : BUNCHES_PER_TURN / 4 - clock_delay;
+    /* The final adjustment needs a fine delay of 0 to 3 bunches within a single
+     * FPGA capture clock. */
+    unsigned int adc_skew = 3 - skewed_offset % 4;
+
+    set_adc_skew(adc_skew);
+    hw_write_bun_zero_bunch(zero_clock);
+}
+
 
 /* Use double triggering to discover the trigger skew and then offset the bunch
  * zero so the selected bunch becomes bunch zero. */
@@ -363,13 +408,7 @@ static void do_sync_bunch_sync(void)
          * offset and retrigger.  We always retrigger, even if the bin offset
          * hasn't changed, for consistency and a sanity check on the phase. */
 
-        /* Compute adc skew and figure out corresponding offset. */
-        unsigned int offset = (BUNCHES_PER_TURN - zero_bunch_offset) / 4;
-        unsigned int skew = 4 - zero_bunch_offset % 4 + base_skew;
-        offset += skew / 4;
-        skew = skew % 4;
-        set_adc_skew(skew);
-        hw_write_bun_zero_bunch(offset);
+        select_bunch_zero(base_skew);
 
         update_status(phase, SYNC_FIRST);
         unsigned int second_phase = wait_for_bunch_sync();
@@ -399,8 +438,7 @@ static void *bunch_sync_thread(void *context)
     while (true)
     {
         /* Block until sync button pressed, perform requested action. */
-        sem_wait(&bunch_sync_sem);
-        switch (sync_action)
+        switch (wait_for_sync_action())
         {
             case SYNC_ACTION_RESET: do_reset_bunch_sync(); break;
             case SYNC_ACTION_SYNC:  do_sync_bunch_sync();  break;
@@ -411,15 +449,14 @@ static void *bunch_sync_thread(void *context)
 
 static void reset_bunch_sync(void)
 {
-    sync_action = SYNC_ACTION_RESET;
-    sem_post(&bunch_sync_sem);
+    request_sync_action(SYNC_ACTION_RESET);
 }
 
 static void sync_bunch_sync(void)
 {
-    sync_action = SYNC_ACTION_SYNC;
-    sem_post(&bunch_sync_sem);
+    request_sync_action(SYNC_ACTION_SYNC);
 }
+
 
 static bool publish_bunch_sync(void)
 {
@@ -434,9 +471,7 @@ static bool publish_bunch_sync(void)
     PUBLISH_READER(stringin, "BUN:MODE", read_feedback_mode);
 
     pthread_t thread_id;
-    return
-        TEST_IO(sem_init(&bunch_sync_sem, 0, 0))  &&
-        TEST_0(pthread_create(&thread_id, NULL, bunch_sync_thread, NULL));
+    return TEST_0(pthread_create(&thread_id, NULL, bunch_sync_thread, NULL));
 }
 
 
