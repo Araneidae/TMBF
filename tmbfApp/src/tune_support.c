@@ -257,6 +257,16 @@ static unsigned int extract_threshold_data(
 }
 
 
+complex double eval_one_pole_model(
+    unsigned int peak_count, const struct one_pole fits[], double s)
+{
+    complex double result = 0;
+    for (unsigned int i = 0; i < peak_count; i ++)
+        result += fits[i].a / (s - fits[i].b);
+    return result;
+}
+
+
 /* Take existing fits into account and adjust the data we're fitting. */
 static void adjust_iq_with_model(
     unsigned int peak_count, const struct one_pole fits[],
@@ -335,8 +345,8 @@ unsigned int fit_multiple_peaks(
         /* If performing fit refinement then we need a weights vector, so
          * compute this if necessary. */
         double weights[count];
-        double *fit_weights = maybe_compute_weights(
-            count, refine_fit, weights, scale, fit);
+        const double *fit_weights =
+            maybe_compute_weights(count, refine_fit, weights, scale, fit);
 
         /* Perform the fit, if this fails discard this and all subsequent fit
          * candidates. */

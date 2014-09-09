@@ -6,14 +6,11 @@ function [pp, nn, ee, dd] = run_fit_peaks(s, iq, peak_count, varargin)
     wf_len = size(iq, 1);
     try_count = size(iq, 2);
 
-%     pp = zeros(2 * peak_count, try_count);
-%     nn = zeros(peak_count, try_count);
-%     ee = zeros(peak_count, try_count);
-%     dd = zeros(peak_count, try_count);
     pp = zeros(try_count, 2 * peak_count);
     nn = zeros(try_count, peak_count);
     ee = zeros(try_count, peak_count);
     dd = zeros(try_count, peak_count);
+    bg = zeros(try_count, 1);
 
     for n = 1:try_count
         [p, r] = fit_peaks(s, iq(:, n), 'count', peak_count, varargin{:});
@@ -21,6 +18,7 @@ function [pp, nn, ee, dd] = run_fit_peaks(s, iq, peak_count, varargin)
         ee(n, :) = r.e;
         dd(n, :) = r.d2h;
         nn(n, :) = r.n;
+        bg(n) = r.bg;
     end
 
     alpha = abs(pp(:, 1:2:end));
@@ -60,12 +58,12 @@ function [pp, nn, ee, dd] = run_fit_peaks(s, iq, peak_count, varargin)
     subplot 236
     plot_semilogy(dd, '.')
     hold all
-    semilogy([1 try_count], 1e2 * [1 1], 'r--')
+    semilogy(bg, 'r')
     title('Second derivative peak height')
 end
 
 function plot_semilogy(data, varargin)
     least = min(min(data(find(data > 0))));
-    data(find(data <= 0)) = least;
+    data(find(data <= 0)) = least / 10;
     semilogy(data, varargin{:});
 end

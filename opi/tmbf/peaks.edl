@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 539
-y 153
+x 391
+y 100
 w 656
 h 770
 font "helvetica-medium-r-18.0"
@@ -43,25 +43,6 @@ bgColor index 73
 value {
   "$(device) Tune Peak Detection"
 }
-endObjectProperties
-
-# (Exit Button)
-object activeExitButtonClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 568
-y 736
-w 64
-h 24
-fgColor index 25
-bgColor index 3
-topShadowColor index 1
-botShadowColor index 11
-label "EXIT"
-font "helvetica-medium-r-12.0"
-3d
 endObjectProperties
 
 # (Shell Command)
@@ -288,33 +269,6 @@ plotColor {
 }
 endObjectProperties
 
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 344
-y 704
-w 56
-h 20
-controlPv "$(device):TUNE:PEAK:MIND2_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-noExecuteClipMask
-endObjectProperties
-
 # (X-Y Graph)
 object xyGraphClass
 beginObjectProperties
@@ -472,10 +426,9 @@ xMin -1
 xMax 4
 # Y axis properties
 showYAxis
-yAxisStyle "log10"
 yAxisSrc "fromUser"
-yMin 10
-yMax 10000
+yMin 0
+yMax 1
 yLabelIntervals 1
 yUserSpecScaleDiv 1
 # Y2 axis properties
@@ -528,10 +481,9 @@ xMin -1
 xMax 4
 # Y axis properties
 showYAxis
-yAxisStyle "log10"
 yAxisSrc "fromUser"
-yMin 10
-yMax 10000
+yMin 0
+yMax 1
 yLabelIntervals 1
 yUserSpecScaleDiv 1
 # Y2 axis properties
@@ -584,10 +536,9 @@ xMin -1
 xMax 4
 # Y axis properties
 showYAxis
-yAxisStyle "log10"
 yAxisSrc "fromUser"
-yMin 10
-yMax 10000
+yMin 0
+yMax 1
 yLabelIntervals 1
 yUserSpecScaleDiv 1
 # Y2 axis properties
@@ -800,25 +751,6 @@ value {
 autoSize
 endObjectProperties
 
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 544
-y 704
-w 80
-h 24
-fgColor index 14
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):TUNE:PEAK:SEL_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
 # (Text Monitor)
 object activeXTextDspClass:noedit
 beginObjectProperties
@@ -892,75 +824,6 @@ useHexPrefix
 newPos
 objType "monitors"
 noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 280
-y 704
-w 51
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "D2 ratio:"
-}
-autoSize
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 344
-y 736
-w 56
-h 20
-controlPv "$(device):TUNE:PEAK:THRESHOLD_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-clipToDspLimits
-noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 280
-y 736
-w 59
-h 28
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Fit"
-  "threshold:"
-}
-autoSize
 endObjectProperties
 
 # (Static Text)
@@ -1320,6 +1183,93 @@ bgColor index 0
 useDisplayBg
 value {
   "Phase:"
+}
+autoSize
+endObjectProperties
+
+# (Exit Button)
+object activeExitButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 584
+y 736
+w 64
+h 24
+fgColor index 46
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+label "EXIT"
+font "helvetica-bold-r-12.0"
+3d
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 560
+y 688
+w 88
+h 22
+fgColor index 43
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "Setup"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/peak_setup.edl"
+}
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 352
+y 696
+w 104
+h 16
+controlPv "$(device):TUNE:PEAK:COUNT"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 288
+y 696
+w 56
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Fit count:"
 }
 autoSize
 endObjectProperties

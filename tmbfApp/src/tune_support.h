@@ -41,6 +41,9 @@ void index_to_tune(
     const double tune_scale[], const short wf_i[], const short wf_q[],
     double ix, double *tune, double *phase);
 
+/* Evaluates one pole model at given frequency. */
+complex double eval_one_pole_model(
+    unsigned int peak_count, const struct one_pole fits[], double s);
 
 /* Computes second derivative of input curve.  The waveform length is preserved,
  * so the two end points are set to zero. */

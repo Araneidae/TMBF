@@ -1,5 +1,5 @@
 % Retrieve IQ data from archiver
-function [s, wfiq, t] = fetch_iq(xy, start)
+function [wfiq, s, t] = fetch_iq(xy, start)
     tmbf = sprintf('SR23C-DI-TMBF-%02d', xy);
     s = ar([tmbf ':DET:SCALE'], start, 1);
     [wfi, ti] = ar([tmbf ':TUNE:I'], start, 250);

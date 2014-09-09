@@ -33,7 +33,7 @@
 %   real(b)
 %       Frequence of the peak centre frequency
 %
-%   imag(b)
+%   -imag(b)
 %       Peak width factor: larger numbers here correspond to wider peaks, and
 %       the power under the peak is proportional to this value.
 function [p_out, detail] = fit_peaks(s, iq, varargin)
@@ -112,11 +112,12 @@ end
 % Find peaks using smoothed second derivative and then use direct fit for each
 % peak found.  Most of the time the result of this is good enough.
 function pp = fit_all_peaks(s, iq, count, smoothing, threshold, refit)
-    [rr, d2h] = find_peaks(iq, count, smoothing, threshold);
+    [rr, d2h, bg] = find_peaks(iq, count, smoothing, threshold);
 
     pp = {};
     pp.r = rr;
     pp.d2h = d2h;
+    pp.bg = bg;
     pp.iq = zeros(size(iq, 1), count);
     pp.p = {};
     pp.p = zeros(2 * count, 1);
@@ -158,7 +159,7 @@ end
 
 
 % Returns list of peaks as a list of ranges to fit.
-function [rr, d2h] = find_peaks(iq, count, smoothing, threshold)
+function [rr, d2h, background] = find_peaks(iq, count, smoothing, threshold)
     % Do the filtering in the same rough and ready way as the IOC.
     aiq = abs(iq);
     smoothed_power = sum(reshape(aiq.^2, smoothing, []));
@@ -176,7 +177,7 @@ function [rr, d2h] = find_peaks(iq, count, smoothing, threshold)
 
     % Scale detected 2d peaks by residual rms background.
     background = sqrt(sum(dd.^2) / (length(dd) - knockout_len));
-    d2h = -d2h / background;
+    d2h = -d2h;
 end
 
 
@@ -230,14 +231,14 @@ end
 % Computes parameters (a, b) for best fit of model z = a/(f-b) weighted by w.
 function p = fit_peak(f, z, w)
     z2 = z.*conj(z);
-    sw = sum(w);
+    s = sum(w);
     sz = sum(w.*z);
     sz2 = sum(w.*z2);
-    swz = sum(w.*f.*z);
-    swz2 = sum(w.*f.*z2);
+    sfz = sum(w.*f.*z);
+    sfz2 = sum(w.*f.*z2);
 
-    M = [sw sz; conj(sz) sz2];
-    V = [swz; swz2];
+    M = [s sz; conj(sz) sz2];
+    V = [sfz; sfz2];
     p = M\V;
 end
 
