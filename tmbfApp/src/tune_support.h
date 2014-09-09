@@ -30,7 +30,7 @@ void decode_one_pole(
  * ranges       List of ranges for each peak
  * fits         List of fitting results */
 unsigned int fit_multiple_peaks(
-    unsigned int peak_count, double threshold,
+    unsigned int peak_count, double threshold, bool refine_fit,
     const double tune_scale[], const short wf_i[], const short wf_q[],
     const int power[],
     const struct peak_range ranges[], struct one_pole fits[]);

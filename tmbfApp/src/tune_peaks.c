@@ -395,8 +395,6 @@ static unsigned int extract_peak_tune(
         default:
         case 4: return TUNE_EXTRA_PEAKS;
     }
-printf("a = %g+%gi; b = %g+%gi;\n", creal(fit->a), cimag(fit->a),
-creal(fit->b), cimag(fit->b));
 
     double harmonic;
     *tune = modf(creal(fit->b), &harmonic);
@@ -411,13 +409,20 @@ static void process_peak_tune(
     unsigned int *status, double *tune, double *phase)
 {
     unsigned int peak_count = info->peak_count;
-    struct one_pole fits[peak_count];
     struct peak_range ranges[peak_count];
     extract_peak_ranges(info, ranges);
+
+    struct one_pole fits[peak_count];
+    /* First compute the fit without any preconceptions.  This means an
+     * unweighted fit which doesn't take any preexisting fit into account. */
     peak_count = fit_multiple_peaks(
-        peak_count, peak_fit_threshold, tune_scale,
-        sweep->wf_i, sweep->wf_q, sweep->power,
-        ranges, fits);
+        peak_count, peak_fit_threshold, false,
+        tune_scale, sweep->wf_i, sweep->wf_q, sweep->power, ranges, fits);
+    /* Next repeat the fit to refine it taking the existing fits into account
+     * with weights and data correction. */
+    peak_count = fit_multiple_peaks(
+        peak_count, peak_fit_threshold, true,
+        tune_scale, sweep->wf_i, sweep->wf_q, sweep->power, ranges, fits);
 
     update_peak_fit_detail(peak_count, fits);
 

@@ -240,11 +240,11 @@ static bool fit_one_pole(
 static unsigned int extract_threshold_data(
     const struct peak_range *range, double threshold, const int power[],
     const double scale_in[], const short wf_i[], const short wf_q[],
-    double scale_out[], double complex iq[], unsigned int buf_size)
+    double scale_out[], double complex iq[])
 {
     unsigned int count = 0;
-    int maxval = find_max_val(
-        range->right - range->left + 1, power + range->left);
+    int maxval =
+        find_max_val(range->right - range->left + 1, power + range->left);
     int minval = lround(threshold * maxval);
     for (unsigned int ix = range->left; ix <= range->right; ix ++)
         if (power[ix] >= minval)
@@ -252,131 +252,56 @@ static unsigned int extract_threshold_data(
             scale_out[count] = scale_in[ix];
             iq[count] = wf_i[ix] + I * wf_q[ix];
             count += 1;
-            /* Simplest way to protect against buffer overrun is to abort copy
-             * early.  This shouldn't really happen if we've got things right
-             * elsewhere, but it's safest to just bail out here if necessary. */
-            if (!TEST_OK_(count < buf_size, "Fit buffer full"))
-                break;
         }
     return count;
 }
 
 
-/* Extracts all data for all peaks into working buffers.  As we'll be rescanning
- * the data we hang onto it. */
-static unsigned int extract_raw_data(
-    unsigned int peak_count, double threshold,
-    const double scale_in[], const short wf_i[], const short wf_q[],
-    const int power[], const struct peak_range ranges[],
-
-    /* scale_buf and iq_buf are large enough to accomodate all possible peaks,
-     * we assume that TUNE_LENGTH is quite long enough. */
-    double scale_buf[], double complex iq_buf[],
-    /* Each of these arrays is peak_count entries long and contains indices into
-     * the buffers above. */
-    unsigned int count_out[], double *scale_out[], double complex *iq_out[])
+/* Take existing fits into account and adjust the data we're fitting. */
+static void adjust_iq_with_model(
+    unsigned int peak_count, const struct one_pole fits[],
+    unsigned int peak_ix, bool refine_fit,
+    unsigned int count, const double scale[], double complex iq[])
 {
-    unsigned int buf_size = TUNE_LENGTH;
-    unsigned int peak_ix = 0;
-    for (; peak_ix < peak_count; peak_ix ++)
+    /* Refine the data by subtracting existing fits from the data. */
+    for (unsigned int j = 0; j < peak_count; j ++)
     {
-        unsigned int count = extract_threshold_data(
-            &ranges[peak_ix], threshold, power, scale_in, wf_i, wf_q,
-            scale_buf, iq_buf, buf_size);
-        if (!TEST_OK_(count > 0, "Empty peak"))
-            break;
-
-        buf_size -= count;
-
-        count_out[peak_ix] = count;
-        scale_out[peak_ix] = scale_buf;
-        iq_out[peak_ix] = iq_buf;
-
-        scale_buf += count;
-        iq_buf += count;
+        if (j == peak_ix)
+        {
+            /* If we're not refining then subsequent fits are unknown, so we sto
+             * processing at this point, otherwise we'll go on and subtract all
+             * the old first pass fits as well. */
+            if (!refine_fit)
+                break;
+        }
+        else
+        {
+            /* Subtract the model from the data. */
+            const struct one_pole *fit = &fits[j];
+            for (unsigned int i = 0; i < count; i ++)
+                iq[i] -= fit->a / (scale[i] - fit->b);
+        }
     }
-    return peak_ix;
-}
-
-
-/* Updates iq[] by subtracting model fit evaluated at scale[]. */
-static void subtract_model(
-    unsigned int length, const struct one_pole *fit,
-    const double scale[], double complex iq[])
-{
-    for (unsigned int i = 0; i < length; i ++)
-        iq[i] -= fit->a / (scale[i] - fit->b);
-}
-
-
-/* First fitting step.  Fit each peak in turn to the residual data derived from
- * subtracting the fits so far.  At this stage we have no prior fits and so
- * cannot do any weighting.  We return the number of peaks for which the fit
- * succeeds, bailing out on the first failing fit. */
-static unsigned int first_fit(
-    unsigned int peak_count, unsigned int counts[],
-    double *scales[], double complex *iq_in[], struct one_pole fits[])
-{
-    unsigned int peak_ix = 0;
-    for (; peak_ix < peak_count; peak_ix ++)
-    {
-        unsigned int count = counts[peak_ix];
-        double *scale = scales[peak_ix];
-
-        double complex iq[count];
-        memcpy(iq, iq_in[peak_ix], sizeof(iq));    // Hang on to original iq
-
-        /* As we go subtract the models we've managed to fit so far. */
-        for (unsigned int j = 0; j < peak_ix; j ++)
-            subtract_model(count, &fits[j], scale, iq);
-
-        if (!fit_one_pole(count, scale, iq, NULL, &fits[peak_ix]))
-            /* If this fit fails then abandon all remaining peaks. */
-            break;
-    }
-    return peak_ix;
 }
 
 
 /* The weight function here is 1/|z-b|^2 and helps to ensure a cleaner curve
  * fit.  The first 1/|z-b| factor helps cancel out a weighting error in the
- * model, and the second factor puts more emphasis on fitting the peak. */
-static void compute_weights(
-    unsigned int length, const struct one_pole *fit,
-    const double scale[], double w[])
+ * model, and the second factor puts more emphasis on fitting the peak.
+ *    Here we compute the weights if requested, using the given workspace which
+ * is returned, otherwise NULL is returned. */
+static const double *maybe_compute_weights(
+    unsigned int count, bool compute, double weights[],
+    const double scale[], const struct one_pole *fit)
 {
-    for (unsigned int i = 0; i < length; i ++)
-        w[i] = 1 / cabs2(scale[i] - fit->b);
-}
-
-
-/* Refinement fitting step.  In this case we use the fit from the previous step
- * for weighting the fit and now we compute the residual from all other fits
- * when computing the values to fit.  Generally this step makes surprisingly
- * little difference. */
-static unsigned int second_fit(
-    unsigned int peak_count, unsigned int counts[],
-    double *scales[], double complex *iq_in[], struct one_pole fits[])
-{
-    unsigned int peak_ix = 0;
-    for (; peak_ix < peak_count; peak_ix ++)
+    if (compute)
     {
-        unsigned int count = counts[peak_ix];
-        double *scale = scales[peak_ix];
-        double complex *iq = iq_in[peak_ix];    // Can overwrite iq this time
-
-        /* Subtract all other models from the data. */
-        for (unsigned int j = 0; j < peak_count; j ++)
-            if (peak_ix != j)
-                subtract_model(count, &fits[j], scale, iq);
-
-        /* Compute weights using the fit from last time. */
-        double weights[count];
-        compute_weights(count, &fits[peak_ix], scale, weights);
-        if (!fit_one_pole(count, scale, iq, weights, &fits[peak_ix]))
-            break;
+        for (unsigned int i = 0; i < count; i ++)
+            weights[i] = 1 / cabs2(scale[i] - fit->b);
+        return weights;
     }
-    return peak_ix;
+    else
+        return NULL;
 }
 
 
@@ -386,25 +311,39 @@ static unsigned int second_fit(
  * second time we refine the data by redoing the fit with weighting and
  * subtracting the best model from the data. */
 unsigned int fit_multiple_peaks(
-    unsigned int peak_count, double threshold,
+    unsigned int peak_count, double threshold, bool refine_fit,
     const double scale_in[], const short wf_i[], const short wf_q[],
     const int power[], const struct peak_range ranges[], struct one_pole fits[])
 {
-    /* First extract the data to fit for each peak into local workspace. */
-    double scale_buf[TUNE_LENGTH];
-    double complex iq_buf[TUNE_LENGTH];
-    double *scales[peak_count];
-    double complex *iq[peak_count];
-    unsigned int counts[peak_count];
-    peak_count = extract_raw_data(
-        peak_count, threshold, scale_in, wf_i, wf_q, power, ranges,
-        scale_buf, iq_buf, counts, scales, iq);
+    unsigned int peak_ix = 0;
+    for (; peak_ix < peak_count; peak_ix ++)
+    {
+        const struct peak_range *range = &ranges[peak_ix];
+        struct one_pole *fit = &fits[peak_ix];
 
-    /* Perform fit twice to produce refined result, reducing the peak count as
-     * appropriate if fits fail. */
-    peak_count = first_fit(peak_count, counts, scales, iq, fits);
-    peak_count = second_fit(peak_count, counts, scales, iq, fits);
-    return peak_count;
+        /* Extract a block of (frequency, iq) data to fit this peak to. */
+        unsigned int max_count = range->right - range->left + 1;
+        double scale[max_count];
+        double complex iq[max_count];
+        unsigned int count = extract_threshold_data(
+            range, threshold, power, scale_in, wf_i, wf_q, scale, iq);
+
+        /* Adjust the iq data block according to our current model knowledge. */
+        adjust_iq_with_model(
+            peak_count, fits, peak_ix, refine_fit, count, scale, iq);
+
+        /* If performing fit refinement then we need a weights vector, so
+         * compute this if necessary. */
+        double weights[count];
+        double *fit_weights = maybe_compute_weights(
+            count, refine_fit, weights, scale, fit);
+
+        /* Perform the fit, if this fails discard this and all subsequent fit
+         * candidates. */
+        if (!fit_one_pole(count, scale, iq, fit_weights, fit))
+            break;
+    }
+    return peak_ix;
 }
 
 
