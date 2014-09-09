@@ -28,7 +28,7 @@ cd "$(dirname "$0")/.."
 # First check that we're publishing the version we expect.
 VERSION="$(
     svn cat "$SVN_TRUNK"/install_d/CONFIG |
-    sed -n '/^VERSION=/{s///;p;q;}')"
+    sed -n '/^TMBF_VERSION=/{s///;p;q;}')"
 [ "$VERSION" = "${1?Specify release version}" ]  ||
     Error "Release version mismatch: $1 != $VERSION"
 

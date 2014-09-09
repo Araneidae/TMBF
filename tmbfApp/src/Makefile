@@ -29,16 +29,15 @@ USR_CFLAGS += -Wno-system-headers
 USR_CPPFLAGS += -isystem $(EPICS_BASE)/include
 
 
-# Make sure that we pick up the version from install_d/CONFIG.
-TMBF_VERSION = $(shell . $(TOP)/install_d/CONFIG; echo $$VERSION)
-USR_CFLAGS += -DTMBF_VERSION='"$(TMBF_VERSION)"'
+# Pick up configuration symbols and pass them through to the IOC build
+include $(TOP)/install_d/CONFIG
 
-# Similarly for the FGPA_VERSION (a number this time).
-FPGA_VERSION = $(shell . $(TOP)/install_d/CONFIG; echo $$FPGA_VERSION)
+USR_CFLAGS += -DTMBF_VERSION='"$(TMBF_VERSION)"'
 USR_CFLAGS += -DFPGA_VERSION=$(FPGA_VERSION)
 
 # Compute a sensible format of build date
 USR_CFLAGS += -DBUILD_DATE_TIME='"$(shell date '+%Y-%m-%d %H:%M')"'
+
 
 ifdef DEBUG_TRACEBACK
 # Allow panic_error() backtrace to show a backtrace with useful information.
@@ -50,8 +49,8 @@ endif
 
 STATIC_BUILD = YES
 
+
 #=============================
-# build an ioc application
 
 PROD_IOC = tmbf
 
