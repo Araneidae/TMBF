@@ -22,6 +22,10 @@ boolOut('DDR:AUTOSTOP', 'Manual stop', 'Auto-stop',
 Action('DDR:START', DESC = 'Initiate DDR data capture')
 Action('DDR:STOP', DESC = 'Halt DDR data capture')
 
+mbbOut('DDR:IQMODE',
+    'All', 'Mean', 'Channel 0', 'Channel 1', 'Channel 2', 'Channel 3',
+    DESC = 'Select IQ readout mode')
+
 longIn('DDR:COUNT', SCAN = '.2 second', DESC = 'Captured sample count')
 
 

@@ -411,6 +411,6 @@ void smooth_waveform_4(unsigned int length, const int wf_in[], int wf_out[])
         int64_t accum = 0;
         for (unsigned int j = 0; j < 4; j ++)
             accum += wf_in[4*i + j];
-        wf_out[i] = (int) ((accum + 1) >> 2);   // Rounded division by 4
+        wf_out[i] = (int) ((accum + 2) >> 2);   // Rounded division by 4
     }
 }

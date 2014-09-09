@@ -27,6 +27,10 @@
 #define SHORT_TURN_WF_COUNT       8
 #define LONG_TURN_WF_COUNT        256
 
+/* Buffer size that will comfortably fit on the stack.  Also needs to be
+ * sub-multiple of LONG_TURN_WF_COUNT. */
+#define LONG_TURN_BUF_COUNT       16
+
 
 /* Need to interlock access to the DDR hardware. */
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -49,6 +53,8 @@ static bool bunch_waveform_fault;
 static bool long_waveform_fault;
 
 static bool ddr_autostop;
+enum { IQ_ALL, IQ_MEAN, IQ_CH0, IQ_CH1, IQ_CH2, IQ_CH3 };
+static unsigned int iq_readout_mode;
 
 /* This is set during capture and reset when capture completes. */
 static bool capture_active;
@@ -74,10 +80,61 @@ static void read_short_turn_waveform(short waveform[])
     read_ddr_turns(0, SHORT_TURN_WF_COUNT, waveform);
 }
 
+
+/* The IQ data is stored in the input buffer as four I values (one for each
+ * channel) followed by four Q values (again, one per channel).  This function
+ * selects the appropriate channel or computes the mean of all four and
+ * generates a single IQ pair for each result. */
+static void digest_iq_buffer(
+    unsigned int iq_count, const short input[], short output[])
+{
+    if (iq_readout_mode == IQ_MEAN)
+    {
+        for (unsigned int i = 0; i < 2 * iq_count; i ++)
+        {
+            int sum = 0;
+            for (unsigned int j = 0; j < 4; j ++)
+                sum += input[4*i + j];
+            output[i] = (short) ((sum + 2) >> 2);
+        }
+    }
+    else
+    {
+        /* For single channel readout we offset the input by the selected
+         * channel. */
+        input += iq_readout_mode - IQ_CH0;
+        for (unsigned int i = 0; i < 2 * iq_count; i ++)
+            output[i] = input[4*i];
+    }
+}
+
 static void read_long_turn_waveform(short waveform[])
 {
-    long_waveform_fault =
-        !read_ddr_turns(selected_turn, LONG_TURN_WF_COUNT, waveform);
+    bool ok = true;
+    if (input_selection != DDR_SELECT_IQ || iq_readout_mode == IQ_ALL)
+        /* For normal operation read out precisely the selected data. */
+        ok = read_ddr_turns(selected_turn, LONG_TURN_WF_COUNT, waveform);
+    else
+    {
+        /* In IQ capture mode with a special readout mode process the data in
+         * multiple chunks and digest it.  The turn selection has the same
+         * meaning, but we're processing four turns into one. */
+        const int step_count = 4 * LONG_TURN_WF_COUNT / LONG_TURN_BUF_COUNT;
+        const int buffer_size = LONG_TURN_BUF_COUNT * BUNCHES_PER_TURN;
+        COMPILE_ASSERT(
+            step_count * LONG_TURN_BUF_COUNT == 4 * LONG_TURN_WF_COUNT);
+
+        for (int step = 0; ok  &&  step < step_count; step ++)
+        {
+            short buffer[buffer_size];
+            ok = read_ddr_turns(
+                4 * selected_turn + step * LONG_TURN_BUF_COUNT,
+                LONG_TURN_BUF_COUNT, buffer);
+            digest_iq_buffer(buffer_size / 8, buffer, waveform);
+            waveform += buffer_size / 4;
+        }
+    }
+    long_waveform_fault = !ok;
 }
 
 
@@ -220,6 +277,7 @@ bool initialise_ddr_epics(void)
     PUBLISH_ACTION("DDR:STOP", hw_write_ddr_disable);
     PUBLISH_READER(ulongin, "DDR:COUNT", read_ddr_count);
     PUBLISH_WRITE_VAR_P(bo, "DDR:AUTOSTOP", ddr_autostop);
+    PUBLISH_WRITE_VAR_P(mbbo, "DDR:IQMODE", iq_readout_mode);
 
     /* Overflow detection. */
     PUBLISH_READ_VAR(bi, "DDR:OVF:INP", overflows[OVERFLOW_IQ_FIR_DDR]);
