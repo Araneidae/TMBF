@@ -39,7 +39,7 @@ def peak_readbacks(suffix):
         Waveform('TUNE:PEAKR:%d' % suffix, MAX_PEAKS, 'LONG',
             DESC = 'Peak right'),
         Waveform('TUNE:PEAKQ:%d' % suffix, MAX_PEAKS, 'FLOAT',
-            DESC = 'Peak quality'),
+            DESC = 'Peak D2 ratio'),
         Waveform('TUNE:PDD:%d' % suffix, TUNE_LENGTH/suffix, 'LONG',
             DESC = 'Second derivative of power'),
         longIn('TUNE:PEAKC:%d' % suffix, DESC = 'Peaks detected'),
@@ -81,15 +81,20 @@ Trigger('TUNE',
     Waveform('TUNE:CUMSUMI', TUNE_LENGTH, 'LONG', DESC = 'Cumsum I'),
     Waveform('TUNE:CUMSUMQ', TUNE_LENGTH, 'LONG', DESC = 'Cumsum Q'),
 
+    # Waveforms for reading tune peak detection results
+    Waveform('TUNE:PEAK:WFHEIGHT', MAX_PEAKS, 'DOUBLE', DESC = 'Peak height'),
+    Waveform('TUNE:PEAK:WFPHASE', MAX_PEAKS, 'DOUBLE', DESC = 'Peak height'),
+    Waveform('TUNE:PEAK:WFWIDTH', MAX_PEAKS, 'DOUBLE', DESC = 'Peak height'),
+    Waveform('TUNE:PEAK:WFCENTRE', MAX_PEAKS, 'DOUBLE', DESC = 'Peak height'),
+
     # Tune measurement.  We include an alias for :TUNE for backwards
     # compatibility.
-    *
-    tune_results('', '$(DEVICE):TUNE') +
-    tune_results(':BASIC') +
-    tune_results(':PEAK') +
+    *tune_results('', '$(DEVICE):TUNE') +
+     tune_results(':BASIC') +
+     tune_results(':PEAK') +
 
     # Peak detection support
-    peak_readbacks(4) + peak_readbacks(16) + peak_readbacks(64))
+     peak_readbacks(4) + peak_readbacks(16) + peak_readbacks(64))
 
 mbbOut('TUNE:SELECT', 'Basic', 'Peak Fit',
     DESC = 'Select tune measurement algorithm')
@@ -100,9 +105,11 @@ longOut('TUNE:BLK:SEP', DESC = 'Minimum block separation')
 longOut('TUNE:BLK:LEN', DESC = 'Minimum block length')
 
 # Controls for new peak finding algorithm
-aOut('TUNE:PEAK:MINQ', 0, 100, PREC = 1, DESC = 'Minimum peak quality')
-aOut('TUNE:PEAK:MINH', 0, 1, PREC = 1, DESC = 'Minimum peak height')
-aOut('TUNE:PEAK:FIT', 0, 1, PREC = 2, DESC = 'Fit threshold')
+aOut('TUNE:PEAK:MIND2', DESC = 'Minimum peak D2 threshold')
+aOut('TUNE:PEAK:THRESHOLD', 0, 1, PREC = 2,
+    DESC = 'Fit data selection threshold')
+aOut('TUNE:PEAK:MINWIDTH', 0, 1, PREC = 4, DESC = 'Minimum valid peak width')
+
 mbbOut('TUNE:PEAK:SEL', '/4', '/16', '/64', DESC = 'Select smoothing')
 
 # Waveforms for injecting test data into tune measurement.

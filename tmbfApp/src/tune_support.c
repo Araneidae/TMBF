@@ -130,8 +130,7 @@ void index_to_tune(
 
     double harmonic;
     *tune = modf(INTERPOLATE(ix0, frac, tune_scale), &harmonic);
-    *phase = 180.0 / M_PI * atan2(
-        INTERPOLATE(ix0, frac, wf_q), INTERPOLATE(ix0, frac, wf_i));
+    *phase = atan2(INTERPOLATE(ix0, frac, wf_q), INTERPOLATE(ix0, frac, wf_i));
 }
 
 
@@ -141,7 +140,7 @@ void index_to_tune(
 
 /* More efficient calculation of |z|^2 than squaring cabs(z).  Do wonder why
  * this isn't in the standard library. */
-static double cabs2(double complex z)
+double cabs2(double complex z)
 {
     return creal(z)*creal(z) + cimag(z)*cimag(z);
 }
@@ -423,7 +422,7 @@ void decode_one_pole(
     double *height, double *width, double *centre, double *phase)
 {
     *centre = creal(fit->b);
-    *phase = carg(fit->a);
+    *phase = carg(-I * fit->a);
     *width = -cimag(fit->b);
     *height = cabs(fit->a) / *width;
 }

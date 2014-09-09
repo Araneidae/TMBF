@@ -4,6 +4,9 @@ struct peak_range { unsigned int left; unsigned int right; };
 struct one_pole { double complex a; double complex b; };
 
 
+/* Returns |z|^2, really ought to be in standard C library. */
+double cabs2(double complex z);
+
 /* Returns value of maximum element of array. */
 int find_max_val(unsigned int length, const int array[]);
 

@@ -187,9 +187,12 @@ static void compute_tune_result(
     }
     else
     {
+        double phase;
         measure_tune(
             length, sweep, tune_scale,
-            &result->status, &result->tune, &result->phase);
+            &result->status, &result->tune, &phase);
+        result->phase = 180.0 / M_PI * phase;
+
         if (result->status == TUNE_OK)
         {
             /* Check for tune within alarm range. */

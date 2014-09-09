@@ -20,6 +20,11 @@
 #include "tune_peaks.h"
 
 
+/* Some externally configured control parameters. */
+static double min_peak_d2_ratio;
+static double peak_fit_threshold;
+static double min_peak_width;
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Peak detection and extraction. */
@@ -129,7 +134,7 @@ struct peak_info {
     int peak_val_wf[MAX_PEAKS];     // Value at peak index
     int peak_left_wf[MAX_PEAKS];    // Index of left boundary
     int peak_right_wf[MAX_PEAKS];   // Index of right boundary
-    float peak_quality[MAX_PEAKS];  // Peak quality assessment
+    float d2_ratio[MAX_PEAKS];      // Size of D2 peaks relative to noise
 };
 
 
@@ -141,7 +146,7 @@ static void extract_peak_data(
     memset(info->peak_val_wf, 0, sizeof(info->peak_val_wf));
     memset(info->peak_left_wf, 0, sizeof(info->peak_left_wf));
     memset(info->peak_right_wf, 0, sizeof(info->peak_right_wf));
-    memset(info->peak_quality, 0, sizeof(info->peak_quality));
+    memset(info->d2_ratio, 0, sizeof(info->d2_ratio));
 
     for (unsigned int i = 0; i < info->peak_count; i ++)
     {
@@ -181,18 +186,20 @@ static void compute_d2_peak_quality(
     struct raw_peak_data peak_data[], float deviation, struct peak_info *info)
 {
     for (unsigned int i = 0; i < info->peak_count; i ++)
-        info->peak_quality[i] = (float) -info->power_dd[peak_data[i].ix];
+        info->d2_ratio[i] = (float) -info->power_dd[peak_data[i].ix];
 
     if (deviation > 0)
         for (unsigned int i = 0; i < info->peak_count; i ++)
-            info->peak_quality[i] /= deviation;
+            info->d2_ratio[i] /= deviation;
 }
 
 
-static void qualify_d2_peaks(struct peak_info *info, double min_quality)
+/* If any peak's D2 ratio is smaller than the minimum ratio then discard it and
+ * all smaller peaks. */
+static void qualify_d2_peaks(struct peak_info *info)
 {
     for (unsigned int i = 0; i < info->peak_count; i ++)
-        if (info->peak_quality[i] < min_quality)
+        if (info->d2_ratio[i] < min_peak_d2_ratio)
         {
             info->peak_count = i;
             break;
@@ -202,7 +209,7 @@ static void qualify_d2_peaks(struct peak_info *info, double min_quality)
 
 /* Top level routine for peak processing.  Takes as input smoothed peak data and
  * from this computes the second derivatives and extracts low level peaks. */
-static void process_peak_info(struct peak_info *info, double min_quality)
+static void process_peak_info(struct peak_info *info)
 {
     /* Compute second derivative of smoothed data for peak detection. */
     compute_dd(info->length, info->power, info->power_dd);
@@ -224,7 +231,7 @@ static void process_peak_info(struct peak_info *info, double min_quality)
     compute_d2_peak_quality(peak_data, deviation, info);
 
     /* Use relative d2 quality to qualify peaks. */
-    qualify_d2_peaks(info, min_quality);
+    qualify_d2_peaks(info);
 }
 
 
@@ -246,7 +253,7 @@ static void publish_peak_info(struct peak_info *info, unsigned int ratio)
     PUBLISH_WF_READ_VAR(int, FORMAT("PEAKV"), MAX_PEAKS, info->peak_val_wf);
     PUBLISH_WF_READ_VAR(int, FORMAT("PEAKL"), MAX_PEAKS, info->peak_left_wf);
     PUBLISH_WF_READ_VAR(int, FORMAT("PEAKR"), MAX_PEAKS, info->peak_right_wf);
-    PUBLISH_WF_READ_VAR(float, FORMAT("PEAKQ"), MAX_PEAKS, info->peak_quality);
+    PUBLISH_WF_READ_VAR(float, FORMAT("PEAKQ"), MAX_PEAKS, info->d2_ratio);
     PUBLISH_READ_VAR(ulongin, FORMAT("PEAKC"), info->peak_count);
 #undef FORMAT
 }
@@ -278,6 +285,12 @@ static void publish_peak_info(struct peak_info *info, unsigned int ratio)
 #endif
 
 
+static double peak_height[MAX_PEAKS];
+static double peak_phase[MAX_PEAKS];
+static double peak_width[MAX_PEAKS];
+static double peak_centre[MAX_PEAKS];
+
+
 /* Converts peak bounds on the filtered data into enclosing bounds on the raw
  * data for peak fitting. */
 static void extract_peak_ranges(
@@ -292,23 +305,126 @@ static void extract_peak_ranges(
 }
 
 
+/* Convert fit coefficients into physically significant numbers. */
+static void update_peak_fit_detail(
+    unsigned int peak_count, const struct one_pole fits[])
+{
+    for (unsigned int i = 0; i < peak_count; i ++)
+        decode_one_pole(&fits[i],
+            &peak_height[i], &peak_width[i], &peak_centre[i], &peak_phase[i]);
+
+    for (unsigned int i = peak_count; i < MAX_PEAKS; i ++)
+    {
+        peak_height[i] = 0;
+        peak_width[i] = 0;
+        peak_centre[i] = 0;
+        peak_phase[i] = 0;
+    }
+}
+
+
+static bool threshold_peak(const struct one_pole *fit)
+{
+    /* For the moment just a simple width threshold. */
+    return -cimag(fit->b) > min_peak_width;
+}
+
+
+/* Discard all peaks which fail the selection critera. */
+static unsigned int threshold_peaks(
+    unsigned int peak_count, struct one_pole fits[])
+{
+    bool valid_peak[peak_count];
+    for (unsigned int i = 0; i < peak_count; i ++)
+        valid_peak[i] = threshold_peak(&fits[i]);
+
+    unsigned int count = 0;
+    for (unsigned int i = 0; i < peak_count; i ++)
+        if (valid_peak[i])
+        {
+            if (i != count) fits[count] = fits[i];
+            count += 1;
+        }
+    return count;
+}
+
+
+/* Once we've filtered out the peaks we don't want we sort the remainer into
+ * ascending order of peak centre frequency. */
+static void sort_peak_fits(
+    unsigned int peak_count, struct one_pole fits[])
+{
+    /* Sort peak fits in ascending order of real(.b), this being the true tune
+     * centre for each peak.  The list is tiny (up to four points), so a simple
+     * insertion sort is just fine. */
+    for (unsigned int n = 1; n < peak_count; n ++)
+    {
+        struct one_pole fit = fits[n];
+        unsigned int i = n;
+        while (i > 0  &&  creal(fits[i - 1].b) > creal(fit.b))
+        {
+            fits[i] = fits[i - 1];
+            i -= 1;
+        }
+        fits[i] = fit;
+    }
+}
+
+
+static const struct one_pole *choose_larger(
+    const struct one_pole *fit1, const struct one_pole *fit2)
+{
+    if (cabs2(fit1->a) > cabs2(fit2->a))
+        return fit1;
+    else
+        return fit2;
+}
+
+
+static unsigned int extract_peak_tune(
+    unsigned int peak_count, const struct one_pole fits[],
+    double *tune, double *phase)
+{
+    const struct one_pole *fit = NULL;
+    switch (peak_count)
+    {
+        case 0: return TUNE_NO_PEAK;
+        case 1: fit = &fits[0];                             break;
+        case 2: fit = choose_larger(&fits[0], &fits[1]);    break;
+        case 3: fit = &fits[1];                             break;
+        default:
+        case 4: return TUNE_EXTRA_PEAKS;
+    }
+printf("a = %g+%gi; b = %g+%gi;\n", creal(fit->a), cimag(fit->a),
+creal(fit->b), cimag(fit->b));
+
+    double harmonic;
+    *tune = modf(creal(fit->b), &harmonic);
+    *phase = carg(-I * fit->a);
+    return TUNE_OK;
+}
+
+
 static void process_peak_tune(
     const struct channel_sweep *sweep, const double tune_scale[],
-    struct peak_info *info)
+    struct peak_info *info,
+    unsigned int *status, double *tune, double *phase)
 {
     unsigned int peak_count = info->peak_count;
     struct one_pole fits[peak_count];
     struct peak_range ranges[peak_count];
     extract_peak_ranges(info, ranges);
     peak_count = fit_multiple_peaks(
-        peak_count, 0.3, tune_scale,
+        peak_count, peak_fit_threshold, tune_scale,
         sweep->wf_i, sweep->wf_q, sweep->power,
         ranges, fits);
 
-    for (unsigned int i = 0; i < peak_count; i ++)
-        printf("P%d = [%g+%gi, %g+%gi];\n",
-            i, creal(fits[i].a), cimag(fits[i].a),
-               creal(fits[i].b), cimag(fits[i].b));
+    update_peak_fit_detail(peak_count, fits);
+
+    peak_count = threshold_peaks(peak_count, fits);
+    sort_peak_fits(peak_count, fits);
+
+    *status = extract_peak_tune(peak_count, fits, tune, phase);
 }
 
 
@@ -321,9 +437,6 @@ static struct peak_info peak_info_64;
 enum { PEAK_4, PEAK_16, PEAK_64 };
 static unsigned int peak_select;
 
-static double min_peak_quality;
-static double min_peak_height;
-static double peak_fit_ratio;
 
 
 static struct peak_info *select_peak_info(void)
@@ -348,16 +461,12 @@ void measure_tune_peaks(
     smooth_waveform_4(TUNE_LENGTH/4,  peak_info_4.power,  peak_info_16.power);
     smooth_waveform_4(TUNE_LENGTH/16, peak_info_16.power, peak_info_64.power);
 
-    process_peak_info(&peak_info_4, min_peak_quality);
-    process_peak_info(&peak_info_16, min_peak_quality);
-    process_peak_info(&peak_info_64, min_peak_quality);
+    process_peak_info(&peak_info_4);
+    process_peak_info(&peak_info_16);
+    process_peak_info(&peak_info_64);
 
     struct peak_info *peak_info = select_peak_info();
-    process_peak_tune(sweep, tune_scale, peak_info);
-
-    *status = TUNE_INVALID;
-    *tune = 0;
-    *phase = 180;
+    process_peak_tune(sweep, tune_scale, peak_info, status, tune, phase);
 }
 
 
@@ -367,10 +476,16 @@ bool initialise_tune_peaks(void)
     publish_peak_info(&peak_info_16, 16);
     publish_peak_info(&peak_info_64, 64);
 
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINQ", min_peak_quality);
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINH", min_peak_height);
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:FIT", peak_fit_ratio);
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MIND2", min_peak_d2_ratio);
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:THRESHOLD", peak_fit_threshold);
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINWIDTH", min_peak_width);
+
     PUBLISH_WRITE_VAR_P(mbbo, "TUNE:PEAK:SEL", peak_select);
+
+    PUBLISH_WF_READ_VAR(double, "TUNE:PEAK:WFHEIGHT", MAX_PEAKS, peak_height);
+    PUBLISH_WF_READ_VAR(double, "TUNE:PEAK:WFPHASE",  MAX_PEAKS, peak_phase);
+    PUBLISH_WF_READ_VAR(double, "TUNE:PEAK:WFWIDTH",  MAX_PEAKS, peak_width);
+    PUBLISH_WF_READ_VAR(double, "TUNE:PEAK:WFCENTRE", MAX_PEAKS, peak_centre);
 
     return true;
 }
