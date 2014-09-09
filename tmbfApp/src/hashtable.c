@@ -58,14 +58,6 @@ static bool compare_string(const void *key1, const void *key2)
 }
 
 
-static void *copy_string(const void *key)
-{
-    size_t length = strlen(key) + 1;
-    void *copy = malloc(length);
-    memcpy(copy, key, length);
-    return copy;
-}
-
 static hash_t hash_ptr(const void *key)
 {
     return (hash_t) (uintptr_t) key;
@@ -81,7 +73,7 @@ static bool compare_ptr(const void *key1, const void *key2)
 static struct hash_table_ops copy_string_ops = {
     .hash = hash_string,
     .compare = compare_string,
-    .copy_key = copy_string,
+    .copy_key = (void *(*)(const void *)) strdup,   // void *(*)(const char *)
     .release_key = free,
 };
 

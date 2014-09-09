@@ -233,8 +233,7 @@ struct epics_record *publish_epics_record(
     /* Construct lookup key of form <record-type>:<name>. */
     BUILD_KEY(key, name, record_type);
     base->record_type = record_type;
-    base->key = malloc(strlen(key) + 1);
-    strcpy(base->key, key);
+    base->key = strdup(key);
 
     base->record_name = NULL;
     base->ioscanpvt = NULL;

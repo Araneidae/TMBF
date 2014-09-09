@@ -118,8 +118,7 @@ static bool InitialiseRamfsUsage(void)
     bool Ok = TEST_NULL(string = getenv("TEMP_FS_LIST"));
     if (Ok)
     {
-        char *ramfs_list = malloc(strlen(string) + 1);
-        strcpy(ramfs_list, string);
+        char *ramfs_list = strdup(string);
 
         /* Split the string up and count the number of entries. */
         unsigned int ramfs_count = 1;
