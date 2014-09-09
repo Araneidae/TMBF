@@ -8,6 +8,9 @@
 #include <complex.h>
 
 #include "error.h"
+#include "hardware.h"
+#include "detector.h"
+
 #include "tune_support.h"
 
 
@@ -25,7 +28,7 @@ int find_max_val(unsigned int length, const int array[])
 }
 
 
-/* We are given a waveform of points wf[] to which we wish to fit a quatratic
+/* We are given a waveform of points wf[] to which we wish to fit a quadratic
  * and return the index of axis.  If we fit a polynomial y = a + b x + c x^2
  * then the centre line is at y' = 0, ie at x = - b / 2 c.
  *
@@ -110,78 +113,37 @@ bool fit_quadratic(unsigned int length, const int wf[], double *result)
 }
 
 
+
+/* Interpolate between two adjacent indicies in a waveform */
+#define INTERPOLATE(ix, frac, wf) \
+    ((1 - (frac)) * (wf)[ix] + (frac) * (wf)[(ix) + 1])
+
+
+/* Converts a tune, detected as an index into the tune sweep waveform, into the
+ * corresponding tune frequency offset and phase. */
+void index_to_tune(
+    const double tune_scale[], const short wf_i[], const short wf_q[],
+    double ix, double *tune, double *phase)
+{
+    double base;
+    double frac = modf(ix, &base);
+    int ix0 = (int) base;
+
+    double harmonic;
+    *tune = modf(INTERPOLATE(ix0, frac, tune_scale), &harmonic);
+    *phase = 180.0 / M_PI * atan2(
+        INTERPOLATE(ix0, frac, wf_q), INTERPOLATE(ix0, frac, wf_i));
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Fitting one-pole model to IQ. */
+
 /* More efficient calculation of |z|^2 than squaring cabs(z).  Do wonder why
  * this isn't in the standard library. */
 static double cabs2(double complex z)
 {
     return creal(z)*creal(z) + cimag(z)*cimag(z);
-}
-
-/* Performs the matrix solution step for fit_one_pole below.  The weights vector
- * can be NULL in which case the data is not weighted.  Computing inverse of
- *
- *      [ S(w)      S(w iq)     ] [a] = [ S(w s iq)     ]
- *      [ S(w iq)*  S(w |iq|^2) ] [b]   [ S(w s |iq|^2) ]
- * ie
- *      [a] = 1/D [ S(w |iq|^2)  -S(w iq) ] [ S(w s iq)     ]
- *      [b]       [ -S(w iq*)    S(w)     ] [ S(w s |iq|^2) ]
- * where
- *      D = S(2) S(2 |iq|^2) - |S(w iq)|^2 */
-static bool fit_one_pole_step(
-    unsigned int length, const double scale[], const double complex iq[],
-    const double *weights,
-    double complex *a, double complex *b)
-{
-    /* Compute the components of M^H W M and M^H W y. */
-    double complex S_w_iq = 0;          // S(w iq)
-    double S_w_iq2 = 0;                 // S(w |iq|^2)
-    double complex S_w_s_iq = 0;        // S(w s iq)
-    double S_w_s_iq2 = 0;               // S(w s |iq|^2)
-
-    double S_w = weights ? 0 : length;  // S(w)
-    for (unsigned int i = 0; i < length; i ++)
-    {
-        double complex w_iq = iq[i];
-        double w_iq2 = cabs2(w_iq);
-        if (weights)
-        {
-            double w = weights[i];
-            S_w += w;
-            w_iq  *= w;
-            w_iq2 *= w;
-        }
-
-        S_w_iq    += w_iq;
-        S_w_iq2   += w_iq2;
-        double s = scale[i];
-        S_w_s_iq  += s * w_iq;
-        S_w_s_iq2 += s * w_iq2;
-    }
-
-    double det = S_w * S_w_iq2 - cabs2(S_w_iq2);
-    if (TEST_OK_(fabs(det) > S_w, "One pole fit failed"))
-    {
-        *a = (S_w_iq2 * S_w_s_iq - S_w_iq * S_w_s_iq2) / det;
-        *b = (S_w * S_w_s_iq2 - conj(S_w_iq) * S_w_s_iq) / det;
-        return true;
-    }
-    else
-        return false;
-}
-
-
-/* Compute mean of scale_in[] and subtract to yield scale_out[]. */
-static void subtract_mean(
-    unsigned int length, const double scale_in[],
-    double *mean_out, double scale_out[])
-{
-    double mean = 0;
-    for (unsigned int i = 0; i < length; i ++)
-        mean += scale_in[i];
-    mean /= length;
-    for (unsigned int i = 0; i < length; i ++)
-        scale_out[i] = scale_in[i] - mean;
-    *mean_out = mean;
 }
 
 
@@ -222,42 +184,259 @@ static void subtract_mean(
  * away from the centre frequency b.  This can be fixed by performing the fit
  * twice: once with w = 1 and a second time with w = 1 / |s - b|^2; assuming the
  * first fit is acceptable, this second fit will refine the fit with more
- * emphasis on the points nearer the centre frequency. */
-bool fit_one_pole(
+ * emphasis on the points nearer the centre frequency.
+ *
+ * The inverse of M^H W M is
+ *
+ *      [a] = 1/D [ S(w |iq|^2)  -S(w iq) ] [ S(w s iq)     ]
+ *      [b]       [ -S(w iq*)    S(w)     ] [ S(w s |iq|^2) ]
+ * where
+ *      D = S(2) S(2 |iq|^2) - |S(w iq)|^2
+ */
+static bool fit_one_pole(
     unsigned int length, const double scale[], const double complex iq[],
-    struct one_pole *fit)
+    const double *weights, struct one_pole *fit)
 {
-    /* Subtract the mean scale from the selected scale vector.  This reduces the
-     * hazard of subtracting large values from each other.  We get away without
-     * doing this for iq because the iq values cluster around a central value
-     * which is not too large. */
-    double mean_scale;
-    double norm_scale[length];
-    subtract_mean(length, scale, &mean_scale, norm_scale);
+    /* Compute the components of M^H W M and M^H W y. */
+    double complex S_w_iq = 0;          // S(w iq)
+    double S_w_iq2 = 0;                 // S(w |iq|^2)
+    double complex S_w_s_iq = 0;        // S(w s iq)
+    double S_w_s_iq2 = 0;               // S(w s |iq|^2)
 
-    double complex a, b;
+    double S_w = weights ? 0 : length;  // S(w)
+    for (unsigned int i = 0; i < length; i ++)
+    {
+        double complex w_iq = iq[i];
+        double w_iq2 = cabs2(w_iq);
+        if (weights)
+        {
+            double w = weights[i];
+            S_w += w;
+            w_iq  *= w;
+            w_iq2 *= w;
+        }
+
+        S_w_iq    += w_iq;
+        S_w_iq2   += w_iq2;
+        double s = scale[i];
+        S_w_s_iq  += s * w_iq;
+        S_w_s_iq2 += s * w_iq2;
+    }
+
+    double det = S_w * S_w_iq2 - cabs2(S_w_iq2);
     return
-        TEST_OK_(length >= 2, "Not enough points to attempt fit")  &&
-
-        /* Initial fit without weighting.  Hugely relies on the caller having
-         * selected a promising looking peak in the first place, in which case
-         * the fit should be acceptable. */
-        fit_one_pole_step(length, norm_scale, iq, NULL, &a, &b)  &&
-
-        /* Next compute a weighting vector to cancel out the error offset and to
-         * further emphasise the discovered peak and repeat the fit. */
-        ( {
-            double weights[length];
-            for (unsigned int i = 0; i < length; i ++)
-                weights[i] = 1 / cabs2(scale[i] - b);
-            fit_one_pole_step(length, norm_scale, iq, weights, &a, &b);
-        } )  &&
-
-        /* Finally restore the subtracted mean and return the results. */
+        TEST_OK_(length >= 2, "Singular data to fit")  &&
+        TEST_OK_(fabs(det) > S_w, "One pole fit failed")  &&
         DO_(
-            fit->a = a;
-            fit->b = b + mean_scale;
+            fit->a = (S_w_iq2 * S_w_s_iq - S_w_iq * S_w_s_iq2) / det;
+            fit->b = (S_w * S_w_s_iq2 - conj(S_w_iq) * S_w_s_iq) / det
         );
+}
+
+
+/* Given data to process (scale_in, wf_i, wf_q) together with the associated
+ * power already computed, and a data range with a threshold, scan the selected
+ * data set and extract all points with relative power greater than the given
+ * threshold.  Returns the number of points extracted. */
+static unsigned int extract_threshold_data(
+    const struct peak_range *range, double threshold, const int power[],
+    const double scale_in[], const short wf_i[], const short wf_q[],
+    double scale_out[], double complex iq[], unsigned int buf_size)
+{
+    unsigned int count = 0;
+    int maxval = find_max_val(
+        range->right - range->left + 1, power + range->left);
+    int minval = lround(threshold * maxval);
+    for (unsigned int ix = range->left; ix <= range->right; ix ++)
+        if (power[ix] >= minval)
+        {
+            scale_out[count] = scale_in[ix];
+            iq[count] = wf_i[ix] + I * wf_q[ix];
+            count += 1;
+            /* Simplest way to protect against buffer overrun is to abort copy
+             * early.  This shouldn't really happen if we've got things right
+             * elsewhere, but it's safest to just bail out here if necessary. */
+            if (!TEST_OK_(count < buf_size, "Fit buffer full"))
+                break;
+        }
+    return count;
+}
+
+
+/* Extracts all data for all peaks into working buffers.  As we'll be rescanning
+ * the data we hang onto it. */
+static unsigned int extract_raw_data(
+    unsigned int peak_count, double threshold,
+    const double scale_in[], const short wf_i[], const short wf_q[],
+    const int power[], const struct peak_range ranges[],
+
+    /* scale_buf and iq_buf are large enough to accomodate all possible peaks,
+     * we assume that TUNE_LENGTH is quite long enough. */
+    double scale_buf[], double complex iq_buf[],
+    /* Each of these arrays is peak_count entries long and contains indices into
+     * the buffers above. */
+    unsigned int count_out[], double *scale_out[], double complex *iq_out[])
+{
+    unsigned int buf_size = TUNE_LENGTH;
+    unsigned int peak_ix = 0;
+    for (; peak_ix < peak_count; peak_ix ++)
+    {
+        unsigned int count = extract_threshold_data(
+            &ranges[peak_ix], threshold, power, scale_in, wf_i, wf_q,
+            scale_buf, iq_buf, buf_size);
+        if (!TEST_OK_(count > 0, "Empty peak"))
+            break;
+
+        buf_size -= count;
+
+        count_out[peak_ix] = count;
+        scale_out[peak_ix] = scale_buf;
+        iq_out[peak_ix] = iq_buf;
+
+        scale_buf += count;
+        iq_buf += count;
+    }
+    return peak_ix;
+}
+
+
+/* Mean subtraction from the scales helps a little with numerical stability. */
+static void subtract_means(
+    unsigned int peak_count, unsigned int counts[],
+    double *scales[], double scale_mean[])
+{
+    for (unsigned int peak_ix = 0; peak_ix < peak_count; peak_ix ++)
+    {
+        double *scale = scales[peak_ix];
+        unsigned int count = counts[peak_ix];
+
+        double mean = 0;
+        for (unsigned int i = 0; i < count; i ++)
+            mean += scale[i];
+        mean /= count;
+        for (unsigned int i = 0; i < count; i ++)
+            scale[i] -= mean;
+
+        scale_mean[peak_ix] = mean;
+    }
+}
+
+
+/* Updates iq[] by subtracting model fit evaluated at scale[]. */
+static void subtract_model(
+    unsigned int length, const struct one_pole *fit,
+    const double scale[], double complex iq[])
+{
+    for (unsigned int i = 0; i < length; i ++)
+        iq[i] -= fit->a / (scale[i] - fit->b);
+}
+
+
+/* First fitting step.  Fit each peak in turn to the residual data derived from
+ * subtracting the fits so far.  At this stage we have no prior fits and so
+ * cannot do any weighting.  We return the number of peaks for which the fit
+ * succeeds, bailing out on the first failing fit. */
+static unsigned int first_fit(
+    unsigned int peak_count, unsigned int counts[],
+    double *scales[], double complex *iq_in[], struct one_pole fits[])
+{
+    unsigned int peak_ix = 0;
+    for (; peak_ix < peak_count; peak_ix ++)
+    {
+        unsigned int count = counts[peak_ix];
+        double *scale = scales[peak_ix];
+
+        double complex iq[count];
+        memcpy(iq, iq_in[peak_ix], sizeof(iq));    // Hang on to original iq
+
+        /* As we go subtract the models we've managed to fit so far. */
+        for (unsigned int j = 0; j < peak_ix; j ++)
+            subtract_model(count, &fits[j], scale, iq);
+
+        if (!fit_one_pole(count, scale, iq, NULL, &fits[peak_ix]))
+            /* If this fit fails then abandon all remaining peaks. */
+            break;
+    }
+    return peak_ix;
+}
+
+
+/* The weight function here is 1/|z-b|^2 and helps to ensure a cleaner curve
+ * fit.  The first 1/|z-b| factor helps cancel out a weighting error in the
+ * model, and the second factor puts more emphasis on fitting the peak. */
+static void compute_weights(
+    unsigned int length, const struct one_pole *fit,
+    const double scale[], double w[])
+{
+    for (unsigned int i = 0; i < length; i ++)
+        w[i] = 1 / cabs2(scale[i] - fit->b);
+}
+
+
+/* Refinement fitting step.  In this case we use the fit from the previous step
+ * for weighting the fit and now we compute the residual from all other fits
+ * when computing the values to fit. */
+static unsigned int second_fit(
+    unsigned int peak_count, unsigned int counts[],
+    double *scales[], double complex *iq_in[], struct one_pole fits[])
+{
+    unsigned int peak_ix = 0;
+    for (; peak_ix < peak_count; peak_ix ++)
+    {
+        unsigned int count = counts[peak_ix];
+        double *scale = scales[peak_ix];
+        double complex *iq = iq_in[peak_ix];    // Can overwrite iq this time
+
+        /* Subtract all other models from the data. */
+        for (unsigned int j = 0; j < peak_count; j ++)
+            if (peak_ix != j)
+                subtract_model(count, &fits[j], scale, iq);
+
+        /* Compute weights using the fit from last time. */
+        double weights[count];
+        compute_weights(count, &fits[peak_ix], scale, weights);
+        if (!fit_one_pole(count, scale, iq, weights, &fits[peak_ix]))
+            break;
+    }
+    return peak_ix;
+}
+
+
+/* Given a list of data ranges fit a one-pole filter to each of the ranges.  The
+ * fit process is repeated twice for each peak: the first time we perform an
+ * unweighted fit to the residual data after subtracting previous fits, the
+ * second time we refine the data by redoing the fit with weighting and
+ * subtracting the best model from the data. */
+unsigned int fit_multiple_peaks(
+    unsigned int peak_count, double threshold,
+    const double scale_in[], const short wf_i[], const short wf_q[],
+    const int power[], const struct peak_range ranges[], struct one_pole fits[])
+{
+    /* First extract the data to fit for each peak into local workspace. */
+    double scale_buf[TUNE_LENGTH];
+    double complex iq_buf[TUNE_LENGTH];
+    double *scales[peak_count];
+    double complex *iq[peak_count];
+    unsigned int counts[peak_count];
+    peak_count = extract_raw_data(
+        peak_count, threshold, scale_in, wf_i, wf_q, power, ranges,
+        scale_buf, iq_buf, counts, scales, iq);
+
+    /* Next to help the fitting and avoid numerical problems perform mean
+     * subtraction from the frequency scale.  We don't need to do this for the
+     * iq data. */
+    double scale_mean[peak_count];
+    subtract_means(peak_count, counts, scales, scale_mean);
+
+    /* Perform fit twice to produce refined result, reducing the peak count as
+     * appropriate if fits fail. */
+    peak_count = first_fit(peak_count, counts, scales, iq, fits);
+    peak_count = second_fit(peak_count, counts, scales, iq, fits);
+
+    /* Finally fix up the fits by restoring the subtracted means. */
+    for (unsigned int peak_ix = 0; peak_ix < peak_count; peak_ix ++)
+        fits[peak_ix].b += scale_mean[peak_ix];
+    return peak_count;
 }
 
 
@@ -279,88 +458,3 @@ void decode_one_pole(
     *width = -cimag(fit->b);
     *height = cabs(fit->a) / *width;
 }
-
-
-static unsigned int extract_threshold_data(
-    const struct peak_range *range, double threshold, const int power[],
-    const double scale_in[], const short wf_i[], const short wf_q[],
-    double scale_out[], double complex iq[])
-{
-    unsigned int count = 0;
-    int maxval = find_max_val(
-        range->right - range->left + 1, power + range->left);
-    int minval = lround(threshold * maxval);
-    for (unsigned int ix = range->left; ix <= range->right; ix ++)
-        if (power[ix] >= minval)
-        {
-            scale_out[count] = scale_in[ix];
-            iq[count] = wf_i[ix] + I * wf_q[ix];
-            count += 1;
-        }
-    return count;
-}
-
-static void subtract_model(
-    unsigned int length, const struct one_pole *fit,
-    const double scale[], double complex iq[])
-{
-    for (unsigned int i = 0; i < length; i ++)
-        iq[i] -= fit->a / (scale[i] - fit->b);
-}
-
-/* Extracts data to fit and invokes fit_one_pole() for each of the peaks
- * given. */
-unsigned int fit_multiple_peaks(
-    unsigned int data_length, unsigned int peak_count, double threshold,
-    const double scale_in[], const short wf_i[], const short wf_q[],
-    const int power[],
-    const struct peak_range ranges[], struct one_pole fits[])
-{
-    for (unsigned int peak_ix = 0; peak_ix < peak_count; peak_ix ++)
-    {
-        const struct peak_range *range = &ranges[peak_ix];
-        size_t range_length = range->right - range->left + 1;
-
-        /* Extract all data with power above specified threshold fraction of
-         * maximum value within the detected peak range. */
-        double scale[range_length];
-        double complex iq[range_length];
-        unsigned int length = extract_threshold_data(
-            range, threshold, power, scale_in, wf_i, wf_q, scale, iq);
-
-        /* Ensure we fit to the residual data by subtracting the model for peaks
-         * already found. */
-        for (unsigned int ix = 0; ix < peak_ix; ix ++)
-            subtract_model(length, &fits[ix], scale, iq);
-
-        /* Do the fit.  If this fails then we bail out with what we have. */
-        if (!fit_one_pole(length, scale, iq, &fits[peak_ix]))
-            return peak_ix;
-    }
-    return peak_count;
-}
-
-
-
-/* Interpolate between two adjacent indicies in a waveform */
-#define INTERPOLATE(ix, frac, wf) \
-    ((1 - (frac)) * (wf)[ix] + (frac) * (wf)[(ix) + 1])
-
-
-/* Converts a tune, detected as an index into the tune sweep waveform, into the
- * corresponding tune frequency offset and phase. */
-void index_to_tune(
-    const double tune_scale[], const short wf_i[], const short wf_q[],
-    double ix, double *tune, double *phase)
-{
-    double base;
-    double frac = modf(ix, &base);
-    int ix0 = (int) base;
-
-    double harmonic;
-    *tune = modf(INTERPOLATE(ix0, frac, tune_scale), &harmonic);
-    *phase = 180.0 / M_PI * atan2(
-        INTERPOLATE(ix0, frac, wf_q), INTERPOLATE(ix0, frac, wf_i));
-}
-
-

@@ -11,11 +11,6 @@ int find_max_val(unsigned int length, const int array[]);
  * is outside the waveform. */
 bool fit_quadratic(unsigned int length, const int wf[], double *result);
 
-/* Performs least squares fit of model iq = a / (s - b) to given data points. */
-bool fit_one_pole(
-    unsigned int length, const double scale[], const double complex iq[],
-    struct one_pole *fit);
-
 /* Decodes iq model in (a,b) format into corresponding peak height, width,
  * centre frequency and phase. */
 void decode_one_pole(
@@ -25,7 +20,6 @@ void decode_one_pole(
 /* Given a list of discovered peaks (ordered by size) performs sequential fits
  * of one pole filters to each peak.  The following parameters are passed:
  *
- * data_length  Number of points in tune sweep waveform (normally 4096)
  * peak_count   Number of peaks to fit (normally up to 3)
  * tune_scale   Frequency scale
  * wf_i, wf_q   Raw IQ detector data
@@ -33,7 +27,7 @@ void decode_one_pole(
  * ranges       List of ranges for each peak
  * fits         List of fitting results */
 unsigned int fit_multiple_peaks(
-    unsigned int data_length, unsigned int peak_count, double threshold,
+    unsigned int peak_count, double threshold,
     const double tune_scale[], const short wf_i[], const short wf_q[],
     const int power[],
     const struct peak_range ranges[], struct one_pole fits[]);
