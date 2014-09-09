@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
+#include <complex.h>
 #include <math.h>
 
 #include "error.h"
@@ -15,6 +16,7 @@
 #include "hardware.h"
 #include "detector.h"
 #include "sequencer.h"
+#include "tune_support.h"
 #include "tune_peaks.h"
 
 #include "tune.h"
@@ -26,125 +28,6 @@ struct tune_sweep_info {
     double *tune_scale;
     struct channel_sweep *sweep;
 };
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Tune helper functions. */
-
-int find_max_val(unsigned int length, const int array[])
-{
-    int max_val = array[0];
-    for (unsigned int i = 1; i < length; i ++)
-        if (array[i] > max_val)
-            max_val = array[i];
-    return max_val;
-}
-
-
-/* We are given a waveform of points wf[] to which we wish to fit a quatratic
- * and return the index of axis.  If we fit a polynomial y = a + b x + c x^2
- * then the centre line is at y' = 0, ie at x = - b / 2 c.
- *
- * We'll start with a classic presentation, eg
- *  http://en.wikipedia.org/wiki/Polynomial_regression
- * Write V for the Vandermonde matrix, for i ranging over the length of input
- * and j = 0, 1, 2:
- *
- *           j
- *  V    = x  ,
- *   i,j    i
- *
- * where each x_i is one of the input indexes.  In our case the x_i are just
- * indexes into the input data wf[], and for a technical reason which we'll see
- * in a moment we'll offset them so that Sum_i x_i = 0.
- *
- * Given this definition of V, and writing y_i = wf[x_i] (before applying the
- * offset mentioned above), then we want to construct a 3 element vector
- * A = [a, b, c] to minimise the error  V A - y .  The next step I don't really
- * understand, but the trick is to take:
- *   T        T                           T   -1 T
- *  V  V A = V y  and then compute  A = (V  V)  V y .
- *
- * When we multiply it out we discover that M = V^T V is very uniform in
- * structure, and indeed
- *               i+j
- *  M    = Sum  x
- *   i,j      i
- * Now by taking the x_i to be symmetrically arranged we can ensure that M_i,j
- * is zero when i+j is odd, and so in the end our problem reduces to the very
- * simple form:
- *
- *  [a]   [M_0  0    M_2]-1 [Y_0]
- *  [b] = [0    M_2  0  ]   [Y_1]
- *  [c]   [M_2  0    M_4]   [Y_2]
- *
- * where  M_n = Sum_i x^n  and  Y_n = Sum_i x^n y_i .
- *
- * We still need to invert V^T V, but its form is particularly simple.  Also,
- * we're not interested in the first row of the result (a), and as we're taking
- * the ratio of b and c we're not interested in the determinant.  Taking both
- * these into account we get the result (for concision we're writing Mn for M_n)
- *                                      [Y0]
- *  [b] = [  0     M0 M4 - M2^2    0  ] [Y1]
- *  [c]   [-M2^2        0        M0 M2] [Y2] ,
- * ie,
- *      b = (M0 M4 - M2^2) Y1
- *      c = M0 M2 Y2 - M2^2 Y0 . */
-bool fit_quadratic(unsigned int length, const int wf[], double *result)
-{
-    /* Confusingly, here M[n] = M2n from the context above. */
-    double M[3] = { length, 0, 0 };
-    double Y[3] = { 0, 0, 0 };
-    double centre = (length - 1) / 2.0;
-    for (unsigned int i = 0; i < length; i ++)
-    {
-        double n = i - centre;
-        double n2 = n * n;
-        M[1] += n2;
-        M[2] += n2 * n2;
-
-        int y = wf[i];
-        Y[0] += y;
-        Y[1] += n * y;
-        Y[2] += n2 * y;
-    }
-
-    double b = (M[0] * M[2] - M[1] * M[1]) * Y[1];
-    double c = M[0] * M[1] * Y[2] - M[1] * M[1] * Y[0];
-
-    /* Now sanity check before calculating result: we expect final result in the
-     * range 0..N-1, or before correcting for the offset, we expect
-     * abs(-b/2c - (N-1)/2) < (N-1)/2; after some rearrangement, we get the test
-     * below. */
-    if (fabs(b) < fabs((length - 1) * c))
-    {
-        *result = centre - 0.5 * b / c;
-        return true;
-    }
-    else
-        return false;
-}
-
-
-/* Interpolate between two adjacent indicies in a waveform */
-#define INTERPOLATE(ix, frac, wf) \
-    ((1 - (frac)) * (wf)[ix] + (frac) * (wf)[(ix) + 1])
-
-
-/* Converts a tune, detected as an index into the tune sweep waveform, into the
- * corresponding tune frequency offset and phase. */
-void index_to_tune(
-    const struct channel_sweep sweep[], const double tune_scale[],
-    double ix, double *tune, double *phase)
-{
-    double base;
-    double frac = modf(ix, &base);
-    int ix0 = (int) base;
-
-    double harmonic;
-    *tune = modf(INTERPOLATE(ix0, frac, tune_scale), &harmonic);
-    *phase = 180.0 / M_PI * atan2(
-        INTERPOLATE(ix0, frac, sweep->wf_q),
-        INTERPOLATE(ix0, frac, sweep->wf_i));
-}
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -384,7 +267,7 @@ static void do_tune_sweep(
     }
     else
     {
-        process_peaks(&sweep, tune_sweep->tune_scale);
+        process_peaks(tune_sweep->sweep_length, &sweep, tune_sweep->tune_scale);
 
         severity = measure_tune(
             tune_sweep->sweep_length, &sweep, tune_sweep->tune_scale, overflow,
@@ -443,21 +326,14 @@ static void publish_inject_pvs(void)
 }
 
 
-static bool tune_setting;
-static struct epics_record *tune_setting_rec;
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-static void set_tune_setting(bool setting)
-{
-    if (tune_setting != setting)
-    {
-        tune_setting = setting;
-        trigger_record(tune_setting_rec, 0, NULL);
-    }
-}
+
+static struct in_epics_record_bi *tune_setting;
 
 static void tune_setting_changed(void)
 {
-    set_tune_setting(false);
+    WRITE_IN_RECORD(bi, tune_setting, false);
 }
 
 
@@ -495,6 +371,7 @@ static double clip_freq_range(double frequency)
     else
         return frequency;
 }
+
 
 /* When the user wishes to use the tune settings this function will force the
  * sequencer and detector to use the settings configured here. */
@@ -539,7 +416,7 @@ static void set_tune_settings(void)
     set_bunch_control();
 
     /* Let the user know that the settings are now valid. */
-    set_tune_setting(true);
+    WRITE_IN_RECORD(bi, tune_setting, true);
 }
 
 
@@ -567,7 +444,7 @@ bool initialise_tune(void)
     measured_phase_rec = PUBLISH_READ_VAR(ai, "TUNE:PHASE", measured_phase);
 
     PUBLISH_ACTION("TUNE:CHANGED", tune_setting_changed);
-    tune_setting_rec = PUBLISH_READ_VAR_I(bi, "TUNE:SETTING", tune_setting);
+    tune_setting = PUBLISH_IN_VALUE_I(bi, "TUNE:SETTING");
     PUBLISH_ACTION("TUNE:SET", set_tune_settings);
 
     /* Control parameters for tune measurement algorithm. */

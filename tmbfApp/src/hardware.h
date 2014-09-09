@@ -306,7 +306,7 @@ enum {
 void hw_read_ftun_status_bits(bool status[FTUN_BIT_COUNT]);
 
 /* Reads snapshot of current (filtered) IQ value. */
-void hw_read_ftun_iq(int *I, int *Q);
+void hw_read_ftun_iq(int *ftun_i, int *ftun_q);
 
 /* Reads current frequency offset.  Returns true if frequency offset active,
  * false if NCO set to programmed frequency.  The frequency returned is filtered

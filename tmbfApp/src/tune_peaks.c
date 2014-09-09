@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
+#include <complex.h>
 #include <math.h>
 
 #include "error.h"
@@ -13,6 +14,7 @@
 #include "epics_extra.h"
 #include "hardware.h"
 #include "detector.h"
+#include "tune_support.h"
 #include "tune.h"
 
 #include "tune_peaks.h"
@@ -342,7 +344,8 @@ static unsigned int compute_peak_tune(
     double result;
     if (fit_quadratic(right - left + 1, sweep->power + left, &result))
     {
-        index_to_tune(sweep, tune_scale, left + result, tune, phase);
+        index_to_tune(
+            tune_scale, sweep->wf_i, sweep->wf_q, left + result, tune, phase);
         return TUNE_OK;
     }
     else
@@ -424,7 +427,9 @@ static struct peak_info *select_peak_info(void)
 
 /* Process each waveform in turn by smoothing it and then searching for peaks.
  * Once done, process the selected smoothing level to calculate the tune. */
-void process_peaks(const struct channel_sweep *sweep, const double *tune_scale)
+void process_peaks(
+    unsigned int length, const struct channel_sweep *sweep,
+    const double *tune_scale)
 {
     smooth_waveform(TUNE_LENGTH,    sweep->power,       peak_info_4.power);
     smooth_waveform(TUNE_LENGTH/4,  peak_info_4.power,  peak_info_16.power);

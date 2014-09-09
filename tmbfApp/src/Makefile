@@ -88,6 +88,7 @@ tmbf_SRCS += sequencer.c        # State sequencer control
 tmbf_SRCS += triggers.c         # Trigger control and selection
 tmbf_SRCS += detector.c         # I/Q detector
 tmbf_SRCS += tune.c             # Tune measurement and high level control
+tmbf_SRCS += tune_support.c     # Support library for tune measurement
 tmbf_SRCS += tune_peaks.c       # High level tune peak detection
 tmbf_SRCS += sensors.c          # Miscellaneous system health sensors
 tmbf_SRCS += tune_follow.c      # Support for tune following

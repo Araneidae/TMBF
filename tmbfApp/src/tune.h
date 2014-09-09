@@ -1,26 +1,6 @@
 /* High level tune processing. */
 
 struct sweep_info;
-struct channel_sweep;
-
-/* This is called each time a tune sweep completes.  All the waveforms generated
- * by the detector are passed through for detailed tune detection processing. */
-void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow);
-
-
-/* Returns value of maximum element of array. */
-int find_max_val(unsigned int length, const int array[]);
-
-/* Returns centre from fitting quadratic to the given data, fails if the centre
- * is outside the waveform. */
-bool fit_quadratic(unsigned int length, const int wf[], double *result);
-
-/* Given index into sweep and the corresponding tune scale computes the tune and
- * phase for the given index. */
-void index_to_tune(
-    const struct channel_sweep *sweep, const double tune_scale[],
-    double ix, double *tune, double *phase);
-
 
 /* Tune status enumerations used when reporting tune to users. */
 enum tune_status {
@@ -34,5 +14,8 @@ enum tune_status {
 };
 
 
+/* This is called each time a tune sweep completes.  All the waveforms generated
+ * by the detector are passed through for detailed tune detection processing. */
+void update_tune_sweep(struct sweep_info *sweep_info, bool overflow);
 
 bool initialise_tune(void);

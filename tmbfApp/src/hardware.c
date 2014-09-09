@@ -873,9 +873,9 @@ static void read_signed_pair(uint32_t pair, int *low, int *high)
     *high = (int) pair >> 16;
 }
 
-void hw_read_ftun_iq(int *I, int *Q)
+void hw_read_ftun_iq(int *ftun_i, int *ftun_q)
 {
-    read_signed_pair(config_space->ftune_iq, I, Q);
+    read_signed_pair(config_space->ftune_iq, ftun_i, ftun_q);
 }
 
 bool hw_read_ftun_frequency(int *frequency)
