@@ -3,7 +3,7 @@
 INSTALL_HOST=/home/libera/nfs/testing
 
 # Version string as presented to users.
-VERSION=2.7
+VERSION=2.8-dev
 
 # Expected FPGA API version.  Bottom four bits are ignored so that API
 # preserving point releases can be allowed.
