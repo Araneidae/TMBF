@@ -1,5 +1,16 @@
-% [p_out, m_out, pp] = fit_peaks(s, iq, [, 'noplot'] [, 'refine'] ...
-%       [, 'count', count] [, 'threshold', threshold])
+% [p_out, m_out, pp] = fit_peaks(s, iq, varargin)
+%
+% The following arguments can be passed as varargin (with defaults shown for
+% arguments taking parameters):
+%   'noplot'            Suppresses plotting of results
+%   'refit'             Refine linear fit by refitting with weights
+%   'repeat'            Repeat linear fit with corrected data and weigths
+%   'lmrefine'          Triggers post-fit non-linear refinement
+%   'count', 3          Specify number of peaks to fit
+%   'threshold', 0.3    Height threshold for selecting points to include in fit
+%   'smoothing', 16     Smoothing factor (must be power of 2)
+%   'figure', 1         Figure to use for plotting results
+%   'xlim', []          Zoom in to range for plotted results
 %
 % Fits a sum of one-pole filters to the given (s, iq) data.  By default 3 peaks
 % are fitted, and the data threshold for the initial peak fit is taken as 0.3.
@@ -25,34 +36,35 @@
 %   imag(b)
 %       Peak width factor: larger numbers here correspond to wider peaks, and
 %       the power under the peak is proportional to this value.
-function [p_out, m_out, pp] = fit_peaks(s, iq, varargin) % count, threshold)
+function [p_out, detail] = fit_peaks(s, iq, varargin)
+    % Parse optional parameters
     params = parse_arguments(varargin);
-    no_plot = params.no_plot;
-    do_refine = params.do_refine;
     count = params.count;
-    threshold = params.threshold;
-    smoothing = params.smoothing;
 
     % Ensure both s and iq are column vectors
     s = s(:);
     iq = iq(:);
 
     % Perform initial fit using simple peak discovery and fitting.
-    [pp, rr, iqrr] = quick_fit_peaks(s, iq, count, smoothing, threshold);
+    detail = fit_all_peaks( ...
+        s, iq, count, params.smoothing, params.threshold, params.refit);
+
+    if params.repeat
+        detail = repeat_fit(s, iq, count, detail.r, detail);
+    end
 
     % Refine the fit by full model error minimisation.  This adjusts the peak
     % parameters for a better fit.  Note that for small peaks this can make the
     % fit significantly worse.
-    if do_refine
-        p_out = refine_model(s, iq, flatten_model(pp));
-    else
-        p_out = flatten_model(pp);
+    p_out = detail.p;
+    if params.lmrefine
+        p_out = refine_model(s, iq, p_out);
     end
-    m_out = eval_model(p_out, s);
+    detail.m_out = eval_model(p_out, s);
 
-
-    if ~no_plot
-        plot_results(s, iq, pp, iqrr, p_out, m_out);
+    % Show results
+    if ~params.noplot
+        plot_results(s, iq, count, detail, p_out, params.figure, params.xlim);
     end
 end
 
@@ -61,45 +73,87 @@ end
 function params = parse_arguments(argsin)
     function [match, argsin] = pop(arg, argsin)
         match = false;
-        for n = 1:length(argsin)
-            if strcmp(arg, argsin{n})
+        for m = 1:length(argsin)
+            if strcmp(arg, argsin{m})
                 match = true;
-                argsin(n) = [];
-                return
+                argsin(m) = [];
+                break
             end
         end
     end
 
-    % Consume the optional single word arguments first.
-    [no_plot, argsin] = pop('noplot', argsin);
-    [do_refine, argsin] = pop('refine', argsin);
+    flag_args = {'noplot', 'refit', 'repeat', 'lmrefine'};
+
+    % Consume single word arguments before using the parser to consume the
+    % keyword value pair arguments.
+    sN = length(flag_args);
+    flags = [];
+    for n = 1:sN
+        [flags(n), argsin] = pop(flag_args{n}, argsin);
+    end
 
     % Use the parser to consume the keyword arguments
     p = inputParser;
     addParamValue(p, 'count', 3);
     addParamValue(p, 'threshold', 0.3);
     addParamValue(p, 'smoothing', 16);
+    addParamValue(p, 'figure', 1);
+    addParamValue(p, 'xlim', []);
     parse(p, argsin{:});
     params = p.Results;
 
-    params.no_plot = no_plot;
-    params.do_refine = do_refine;
+    % Convert all the single word arguments into returned attributes
+    for n = 1:sN
+        params = setfield(params, flag_args{n}, flags(n));
+    end
 end
 
 
 % Find peaks using smoothed second derivative and then use direct fit for each
 % peak found.  Most of the time the result of this is good enough.
-function [pp, rr, iqrr] = quick_fit_peaks(s, iq, count, smoothing, threshold)
+function pp = fit_all_peaks(s, iq, count, smoothing, threshold, refit)
     [rr, d2h] = find_peaks(iq, count, smoothing, threshold);
 
     pp = {};
-    iqr = iq;
-    iqrr = {};
+    pp.r = rr;
+    pp.d2h = d2h;
+    pp.iq = zeros(size(iq, 1), count);
+    pp.p = {};
+    pp.p = zeros(2 * count, 1);
+    pp.m = zeros(size(iq, 1), count);
+    pp.e = zeros(1, count);
+    pp.n = zeros(1, count);
+
+    iqr = iq;       % Residual IQ for fitting
     for n = 1:count
-        [pp{n}, iqr] = fit_one_peak(s, iqr, rr{n});
-        iqrr{n} = iqr;
-        pp{n}.d2h = d2h(n);
+        pp.iq(:, n) = iqr;
+        [p, m, e] = fit_one_peak(s, iqr, rr{n}, refit);
+        % Compute residual IQ for next fit by subtracting model from data
+        iqr = iqr - m;
+
+        pp.m(:, n) = m;
+        pp.p(2*n-1:2*n) = p;
+        pp.e(n) = e;
+        pp.n(n) = length(rr{n});
     end
+end
+
+
+% Repeats peak fit using existing model
+function detail = repeat_fit(s, iq, count, ranges, detail)
+    fit = reshape(detail.p, 2, []);
+    for n = 1:count
+        r = ranges{n};
+        sr = s(r);
+        iqr = iq(r);
+        for m = 1:count
+            if m ~= n
+                iqr = iqr - fit(1,m)./(sr - fit(2,m));
+            end
+        end
+        fit(:,n) = fit_peak(sr, iqr, 1./abs(sr - fit(2,n)).^2);
+    end
+    detail.p = reshape(fit, [], 1);
 end
 
 
@@ -113,17 +167,25 @@ function [rr, d2h] = find_peaks(iq, count, smoothing, threshold)
 
     rr = {};
     d2h = zeros(count, 1);
+    knockout_len = 0;
     for n = 1:count
-        [rr{n}, dd, d2h(n)] = ...
+        [rr{n}, dd, d2h(n), len] = ...
             find_one_peak(aiq, smoothed_power, dd, smoothing, threshold);
+        knockout_len = knockout_len + len;
     end
+
+    % Scale detected 2d peaks by residual rms background.
+    background = sqrt(sum(dd.^2) / (length(dd) - knockout_len));
+    d2h = -d2h / background;
 end
 
 
 % Discovers a single peak by searching computed second derivative dd,
 % eliminates the discovered peak from further matching, and computes a range
 % over which to fit the peak.
-function [full_range, dd, m] = find_one_peak(aiq, fp, dd, smoothing, threshold)
+function [full_range, dd, m, len] = ...
+    find_one_peak(aiq, fp, dd, smoothing, threshold)
+
     [m, ix] = min(dd);
 
     left = ix;
@@ -136,6 +198,7 @@ function [full_range, dd, m] = find_one_peak(aiq, fp, dd, smoothing, threshold)
     while right < limit && fp(right+1) <= fp(right); right = right + 1; end
 
     dd(left:right) = 0;
+    len = right - left + 1;
 
     left_right = smoothing*(left - 1) + 1 : smoothing*right;
     max_p = max(aiq(left_right));
@@ -145,26 +208,22 @@ end
 
 % Initial peak fit.  First find peak by rough detection of data maximum, and
 % then slice out surrounding peak for subsequent fitting.
-function [result, iq_out] = fit_one_peak(s, iq, range)
+function [fit, model, e] = fit_one_peak(s, iq, range, refit)
     sr = s(range);
     iqr = iq(range);
-    p = fit_peak(sr, iqr, ones(length(range), 1));
+
+    fit = fit_peak(sr, iqr, ones(length(range), 1));
 
     % Fit the peak twice.  Use the first peak to compute weights to refine
     % results for the second final fit.
-    p = fit_peak(sr, iqr, 1 ./ abs(sr - p(2)).^2);
+    if refit
+        fit = fit_peak(sr, iqr, 1 ./ abs(sr - fit(2)).^2);
+    end
 
-    m = p(1) ./ (s - p(2));
-    iq_out = iq - m;
+    model = fit(1) ./ (s - fit(2));
 
-    result = {};
-    result.iq = iq;
-    result.p = p;
-    result.r = range;
-    result.m = m;
-
-    % Peak quality estimate: mean error scaled by peak height.
-    result.q = mean(abs(m(range) - iq(range)).^2) / abs(p(1)) * -imag(p(2));
+    % Raw fit error.
+    e = sum(abs(model(range) - iq(range)).^2);
 end
 
 
@@ -180,14 +239,6 @@ function p = fit_peak(f, z, w)
     M = [sw sz; conj(sz) sz2];
     V = [swz; swz2];
     p = M\V;
-end
-
-
-function model = flatten_model(pp)
-    model = zeros(2 * length(pp), 1);
-    for n = 1:length(pp)
-        model(2*n - 1 : 2*n) = pp{n}.p;
-    end
 end
 
 
@@ -216,7 +267,7 @@ function p_out = refine_model(s, iq, p_in)
     % Compute weights to focus on the located peaks.
     weights = zeros(size(s));
     for p = reshape(p_in, 2, [])
-        weights = weights + 1 ./ (s - p(2)).^2;
+        weights = weights + 1 ./ abs(s - p(2));
     end
 
     p_out = levmar_core(@eval_error, @eval_error_d, p_in, 1e-3);
@@ -275,40 +326,31 @@ function a = levmar_core(f, df, a, ftol, lambda, maxiter, max_lambda)
 end
 
 
-% function plot_results(s, iq, p1, p2, p3, iq1, iq2, p_out, m_out)
-function plot_results(s, iq, pp, iqrr, p_out, m_out)
+function plot_results(s, iq, count, detail, p_out, fig, x_lim)
     function c = colour(n)
         colours = 'brmgcky';
         c = colours(mod(n - 1, length(colours)) + 1);
     end
 
 
-    initial_model = zeros(size(s));
-    for p = pp
-        initial_model = initial_model + p{1}.m;
-    end
-
-    r = 0.3;
-    x_lim = [1-r r; r 1-r] * [s(1); s(end)];
-
-    figure(1); clf;
+    figure(fig); clf;
 
     subplot 221
     hold all
-    for n = 1:length(pp)
-        p = pp{n};
+    for n = 1:count
         plot( ...
-            s, abs(p.m), ['--' colour(n)], ...
+            s, abs(detail.m(:, n)), ['--' colour(n)], ...
             s, abs(p_out(2*n-1)./(s-p_out(2*n))), colour(n));
     end
+    if x_lim; xlim(x_lim); end
 
     subplot 222
     hold all
     strings = {};
-    for n = 1:length(pp)
-        p = pp{n};
-        plot(p.iq(p.r), ['.' colour(n)]);
-        plot(p.m(p.r), colour(n));
+    for n = 1:count
+        r = detail.r{n};
+        plot(detail.iq(r, n), ['.' colour(n)]);
+        plot(detail.m(r, n), colour(n));
         strings{2*n-1} = sprintf('P%d data', n);
         strings{2*n} = sprintf('P%d fit', n);
     end
@@ -316,12 +358,14 @@ function plot_results(s, iq, pp, iqrr, p_out, m_out)
     axis equal
 
     subplot 223
-    semilogy(s, abs(iq), ':', s, abs(m_out))
+    semilogy(s, abs(iq), ':', s, abs(detail.m_out))
+    if x_lim; xlim(x_lim); end
 
     subplot 224
+    initial_model = sum(detail.m, 2);
     plot(real(iq), imag(iq), ':', ...
         real(initial_model), imag(initial_model), '--', ...
-        real(m_out), imag(m_out));
+        real(detail.m_out), imag(detail.m_out));
     legend('Raw data', 'Initial fit', 'Final fit')
     axis equal
 end
