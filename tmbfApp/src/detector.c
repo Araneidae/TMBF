@@ -284,7 +284,7 @@ static void compute_mean_iq(void)
 
 /* The power waveform for each sweep is simply the sum of squares. */
 #define SQR(x)      ((x) * (x))
-static void compute_power(struct channel_sweep *sweep)
+void compute_power(struct channel_sweep *sweep)
 {
     for (int i = 0; i < TUNE_LENGTH; i ++)
         sweep->power[i] = SQR(sweep->wf_i[i]) + SQR(sweep->wf_q[i]);
@@ -358,13 +358,7 @@ void prepare_detector(
     hw_write_det_input_select(detector_input);
     hw_write_det_mode(detector_mode);
 
-    /* The detector frequency scale update is a bit more delicate.  We don't
-     * want to update it on every shot ... perhaps we shouldn't be trying not
-     * to, as this makes things harder, but given this constraint ... and we
-     * don't want the update to take effect until data has arrived.  Also we
-     * don't want to update the scale while EPICS might still be reading it.
-     * The unfortunate consequence of all this is that we have interlock_wait()
-     * here and the matching interlock_signal() in update_iq(). */
+    /* Update detector or tune scale at start of tune sweep. */
     if (settings_changed  ||  tune_scale_needs_refresh)
     {
         interlock_wait(tune_scale_trigger);

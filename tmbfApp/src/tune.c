@@ -20,6 +20,12 @@
 #include "tune.h"
 
 
+/* Slightly digested detector sweep information needed for tune measurement. */
+struct tune_sweep_info {
+    unsigned int sweep_length;
+    double *tune_scale;
+    struct channel_sweep *sweep;
+};
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Tune helper functions. */
 
@@ -261,7 +267,8 @@ static epicsAlarmSeverity measure_tune(
 
     if (*tune_status == TUNE_OK)
     {
-        index_to_tune(sweep, tune_scale, tune_ix, tune, phase);
+        index_to_tune(
+            tune_scale, sweep->wf_i, sweep->wf_q, tune_ix, tune, phase);
         return epicsSevNone;
     }
     else
@@ -299,28 +306,37 @@ static struct epics_record *measured_tune_rec;
 static struct epics_record *measured_phase_rec;
 static unsigned int tune_status;
 
-/* Fake data for test injection. */
-static struct sweep_info injection_sweep;
 
-
-static void update_iq_power(const struct sweep_info *sweep_info)
+/* Extracts tune sweep info from detector sweep info taking our channel selectio
+ * into account. */
+static void extract_sweep_info(
+    struct tune_sweep_info *tune_sweep,
+    struct sweep_info *sweep_info)
 {
-    const struct channel_sweep *channel = sweep_info->single_bunch_mode ?
-        &sweep_info->channels[selected_bunch % 4] :
-        &sweep_info->mean;
-    memcpy(&sweep, channel, sizeof(sweep));
+    tune_sweep->sweep_length = sweep_info->sweep_length;
+    tune_sweep->tune_scale = sweep_info->tune_scale;
+    tune_sweep->sweep = sweep_info->single_bunch_mode ?
+        &sweep_info->channels[selected_bunch % 4] : &sweep_info->mean;
+}
+
+
+static void update_iq_power(const struct tune_sweep_info *tune_sweep)
+{
+    /* Take copy of selected sweep so we can publish selection specific PVs for
+     * I, Q and power. */
+    memcpy(&sweep, tune_sweep->sweep, sizeof(sweep));
 
     /* Update the total and max power statistics. */
     double total_power = 0;
     max_power = 0;
-    for (unsigned int i = 0; i < sweep_info->sweep_length; i ++)
+    for (unsigned int i = 0; i < tune_sweep->sweep_length; i ++)
     {
-        int power = sweep.power[i];
+        int power = tune_sweep->sweep->power[i];
         total_power += power;
         if (power > max_power)
             max_power = power;
     }
-    mean_power = total_power / sweep_info->sweep_length;
+    mean_power = total_power / tune_sweep->sweep_length;
 }
 
 
@@ -332,10 +348,10 @@ static void update_phase_wf(void)
 }
 
 
-static void update_cumsum(const struct sweep_info *sweep_info)
+static void update_cumsum(const struct tune_sweep_info *tune_sweep)
 {
     int sum_i = 0, sum_q = 0;
-    for (unsigned int i = 0; i < sweep_info->sweep_length; i ++)
+    for (unsigned int i = 0; i < tune_sweep->sweep_length; i ++)
     {
         sum_i += sweep.wf_i[i];
         sum_q += sweep.wf_q[i];
@@ -344,7 +360,7 @@ static void update_cumsum(const struct sweep_info *sweep_info)
     }
 
     /* Pad the rest of the waveform with repeats of the last point. */
-    for (unsigned int i = sweep_info->sweep_length; i < TUNE_LENGTH; i ++)
+    for (unsigned int i = tune_sweep->sweep_length; i < TUNE_LENGTH; i ++)
     {
         cumsum_i[i] = sum_i;
         cumsum_q[i] = sum_q;
@@ -352,12 +368,13 @@ static void update_cumsum(const struct sweep_info *sweep_info)
 }
 
 
-void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow)
+static void do_tune_sweep(
+    const struct tune_sweep_info *tune_sweep, bool overflow)
 {
     interlock_wait(tune_trigger);
-    update_iq_power(sweep_info);
+    update_iq_power(tune_sweep);
     update_phase_wf();
-    update_cumsum(sweep_info);
+    update_cumsum(tune_sweep);
 
     epicsAlarmSeverity severity;
     if (overflow)
@@ -367,10 +384,10 @@ void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow)
     }
     else
     {
-        process_peaks(&sweep, sweep_info->tune_scale);
+        process_peaks(&sweep, tune_sweep->tune_scale);
 
         severity = measure_tune(
-            sweep_info->sweep_length, &sweep, sweep_info->tune_scale, overflow,
+            tune_sweep->sweep_length, &sweep, tune_sweep->tune_scale, overflow,
             &tune_status, &measured_tune, &measured_phase);
         if (severity == epicsSevNone  &&
             /* Check for measured tune within given alarm range. */
@@ -386,20 +403,43 @@ void update_tune_sweep(const struct sweep_info *sweep_info, bool overflow)
 }
 
 
+void update_tune_sweep(struct sweep_info *sweep_info, bool overflow)
+{
+    struct tune_sweep_info tune_sweep;
+    extract_sweep_info(&tune_sweep, sweep_info);
+    do_tune_sweep(&tune_sweep, overflow);
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Injection support. */
+
+/* Fake data for test injection. */
+static struct tune_sweep_info injection_info = {
+    .sweep_length = TUNE_LENGTH,
+    .tune_scale = (double [TUNE_LENGTH]) {},
+    .sweep = &(struct channel_sweep) {}
+};
+
+
 /* Inject given test data as power sweep by forcing call to update_tune_sweep
  * with synthetic sweep info structure. */
-static void inject_test_data(void *context, int *array, size_t *length)
+static void inject_test_data(void)
 {
-    injection_sweep.sweep_length = *length;
-    injection_sweep.single_bunch_mode = false;
-    memcpy(injection_sweep.mean.power, array,
-        sizeof(injection_sweep.mean.power));
+    compute_power(injection_info.sweep);
+    do_tune_sweep(&injection_info, false);
+}
 
-    /* We don't have ready access to the frequency scale, so just fake one. */
-    for (int i = 0; i < TUNE_LENGTH; i ++)
-        injection_sweep.tune_scale[i] = (double) i / TUNE_LENGTH;
 
-    update_tune_sweep(&injection_sweep, false);
+static void publish_inject_pvs(void)
+{
+    PUBLISH_WF_WRITE_VAR(short, "TUNE:INJECT:I", TUNE_LENGTH,
+        injection_info.sweep->wf_i);
+    PUBLISH_WF_WRITE_VAR(short, "TUNE:INJECT:Q", TUNE_LENGTH,
+        injection_info.sweep->wf_q);
+    PUBLISH_WF_WRITE_VAR(double, "TUNE:INJECT:S", TUNE_LENGTH,
+        injection_info.tune_scale);
+    PUBLISH_ACTION("TUNE:INJECT", inject_test_data);
 }
 
 
@@ -535,9 +575,7 @@ bool initialise_tune(void)
     PUBLISH_WRITE_VAR_P(ulongout, "TUNE:BLK:SEP", min_block_separation);
     PUBLISH_WRITE_VAR_P(ulongout, "TUNE:BLK:LEN", min_block_length);
 
-    PUBLISH_WAVEFORM(int, "TUNE:INJECT:P", TUNE_LENGTH, inject_test_data);
-
-    trigger_record(tune_setting_rec, 0, NULL);
+    publish_inject_pvs();
 
     return true;
 }

@@ -100,9 +100,14 @@ aOut('TUNE:PEAK:MINR', 0, 100, PREC = 1, DESC = 'Minimum peak ratio')
 aOut('TUNE:PEAK:FIT', 0, 1, PREC = 2, DESC = 'Fit threshold')
 mbbOut('TUNE:PEAK:SEL', '/4', '/16', '/64', DESC = 'Select smoothing')
 
-# Waveform for injecting test data into tune measurement.
-WaveformOut('TUNE:INJECT:P', TUNE_LENGTH, 'LONG',
+# Waveforms for injecting test data into tune measurement.
+WaveformOut('TUNE:INJECT:I', TUNE_LENGTH, 'SHORT',
     PINI = 'NO', DESC = 'Test injection')
+WaveformOut('TUNE:INJECT:Q', TUNE_LENGTH, 'SHORT',
+    PINI = 'NO', DESC = 'Test injection')
+WaveformOut('TUNE:INJECT:S', TUNE_LENGTH, 'DOUBLE',
+    PINI = 'NO', DESC = 'Test injection')
+Action('TUNE:INJECT', DESC = 'Process injected data')
 
 
 # Tune measurement alias for backwards compatibility

@@ -31,6 +31,8 @@ bool initialise_detector(void);
  * per clock cycle. */
 unsigned int tune_to_freq(double tune);
 
+void compute_power(struct channel_sweep *sweep);
+
 /* Called immediately before arming and triggering the sequencer so that the
  * hardware settings appropriate to the new scan can be programmed. */
 void prepare_detector(
