@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 614
-y 60
+x 615
+y 61
 w 641
 h 770
 font "helvetica-medium-r-18.0"
@@ -503,28 +503,24 @@ yUserSpecScaleDiv 1
 y2AxisSrc "AutoScale"
 y2Max 1
 # Trace Properties
-numTraces 2
+numTraces 1
 yPv {
   0 "$(device):TUNE:PEAKQ:4"
-  1 "$(device):TUNE:PEAKH:4"
 }
 plotStyle {
   0 "needle"
-  1 "needle"
 }
 plotUpdateMode {
   0 "xOrY"
 }
 plotSymbolType {
   0 "circle"
-  1 "circle"
 }
 ySigned {
   0 1
 }
 plotColor {
   0 index 26
-  1 index 21
 }
 endObjectProperties
 
@@ -563,28 +559,24 @@ yUserSpecScaleDiv 1
 y2AxisSrc "AutoScale"
 y2Max 1
 # Trace Properties
-numTraces 2
+numTraces 1
 yPv {
   0 "$(device):TUNE:PEAKQ:16"
-  1 "$(device):TUNE:PEAKH:16"
 }
 plotStyle {
   0 "needle"
-  1 "needle"
 }
 plotUpdateMode {
   0 "xOrY"
 }
 plotSymbolType {
   0 "circle"
-  1 "circle"
 }
 ySigned {
   0 1
 }
 plotColor {
   0 index 26
-  1 index 21
 }
 endObjectProperties
 
@@ -623,28 +615,24 @@ yUserSpecScaleDiv 1
 y2AxisSrc "AutoScale"
 y2Max 1
 # Trace Properties
-numTraces 2
+numTraces 1
 yPv {
   0 "$(device):TUNE:PEAKQ:64"
-  1 "$(device):TUNE:PEAKH:64"
 }
 plotStyle {
   0 "needle"
-  1 "needle"
 }
 plotUpdateMode {
   0 "xOrY"
 }
 plotSymbolType {
   0 "circle"
-  1 "circle"
 }
 ySigned {
   0 1
 }
 plotColor {
   0 index 26
-  1 index 21
 }
 endObjectProperties
 
@@ -973,54 +961,6 @@ useHexPrefix
 newPos
 objType "monitors"
 noExecuteClipMask
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 472
-y 704
-w 56
-h 20
-controlPv "$(device):TUNE:PEAK:MINR_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-clipToDspLimits
-noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 416
-y 704
-w 35
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Ratio:"
-}
-autoSize
 endObjectProperties
 
 # (Static Text)

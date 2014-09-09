@@ -107,9 +107,9 @@ static unsigned int find_high_ix(
         return 0;
 }
 
-static epicsAlarmSeverity measure_tune(
+static void measure_tune_basic(
     unsigned int length, const struct channel_sweep *sweep,
-    const double tune_scale[], bool overflow,
+    const double tune_scale[],
     unsigned int *tune_status, double *tune, double *phase)
 {
     /* Very crude algorithm:
@@ -127,7 +127,7 @@ static epicsAlarmSeverity measure_tune(
     unsigned int block_count =
         find_blocks(length, sweep->power, threshold, blocks);
 
-    double tune_ix;
+    double tune_ix = 0;
     switch (block_count)
     {
         case 0:
@@ -149,13 +149,87 @@ static epicsAlarmSeverity measure_tune(
     }
 
     if (*tune_status == TUNE_OK)
-    {
         index_to_tune(
             tune_scale, sweep->wf_i, sweep->wf_q, tune_ix, tune, phase);
-        return epicsSevNone;
+}
+
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Generic tune results. */
+
+struct tune_result {
+    unsigned int status;
+    double tune;
+    double phase;
+    epicsAlarmSeverity severity;
+    struct epics_record *tune_pv;
+    struct epics_record *phase_pv;
+};
+
+
+/* Updates tune results with result of calling given tune measurement function
+ * on the given tune sweep data.  Nothing is called if detector measurement
+ * overflowed. */
+static void compute_tune_result(
+    bool overflow, double centre_tune, double alarm_range,
+    unsigned int length, const struct channel_sweep *sweep,
+    const double tune_scale[], struct tune_result *result,
+    void (*measure_tune)(
+        unsigned int length, const struct channel_sweep *sweep,
+        const double tune_scale[],
+        unsigned int *tune_status, double *tune, double *phase))
+{
+    if (overflow)
+    {
+        result->status = TUNE_OVERFLOW;
+        result->severity = epicsSevMajor;
     }
     else
-        return epicsSevInvalid;
+    {
+        measure_tune(
+            length, sweep, tune_scale,
+            &result->status, &result->tune, &result->phase);
+        if (result->status == TUNE_OK)
+        {
+            /* Check for tune within alarm range. */
+            if (fabs(result->tune - centre_tune) >= alarm_range)
+            {
+                result->status = TUNE_RANGE;
+                result->severity = epicsSevMinor;
+            }
+            else
+                result->severity = epicsSevNone;
+        }
+        else
+            result->severity = epicsSevInvalid;
+    }
+    trigger_record(result->tune_pv,  result->severity, NULL);
+    trigger_record(result->phase_pv, result->severity, NULL);
+}
+
+
+/* Copy core tune results from selected source to destination including
+ * associated record severity. */
+static void copy_tune_result(struct tune_result *src, struct tune_result *dest)
+{
+    dest->status = src->status;
+    dest->tune = src->tune;
+    dest->phase = src->phase;
+    dest->severity = src->severity;
+    trigger_record(dest->tune_pv,  dest->severity, NULL);
+    trigger_record(dest->phase_pv, dest->severity, NULL);
+}
+
+
+static void publish_tune_result(struct tune_result *result, const char *prefix)
+{
+    char buffer[40];
+#define FORMAT(field) (sprintf(buffer, "TUNE%s:%s", prefix, field), buffer)
+    PUBLISH_READ_VAR(mbbi, FORMAT("STATUS"), result->status);
+    result->tune_pv  = PUBLISH_READ_VAR(ai, FORMAT("TUNE"), result->tune);
+    result->phase_pv = PUBLISH_READ_VAR(ai, FORMAT("PHASE"), result->phase);
+#undef FORMAT
 }
 
 
@@ -183,11 +257,11 @@ static double mean_power;
 static int max_power;
 
 /* Tune measurements. */
-static double measured_tune;    // Tune measurement
-static double measured_phase;   // and associated phase
-static struct epics_record *measured_tune_rec;
-static struct epics_record *measured_phase_rec;
-static unsigned int tune_status;
+static struct tune_result tune_result_selected;
+static struct tune_result tune_result_basic;
+static struct tune_result tune_result_peaks;
+enum { SELECT_TUNE_BASIC, SELECT_TUNE_PEAKS };
+static unsigned int selected_tune_result;
 
 
 /* Extracts tune sweep info from detector sweep info taking our channel selectio
@@ -251,37 +325,35 @@ static void update_cumsum(const struct tune_sweep_info *tune_sweep)
 }
 
 
+static struct tune_result *select_tune_result(void)
+{
+    switch (selected_tune_result)
+    {
+        default:
+        case SELECT_TUNE_BASIC: return &tune_result_basic;
+        case SELECT_TUNE_PEAKS: return &tune_result_peaks;
+    }
+}
+
 static void do_tune_sweep(
     const struct tune_sweep_info *tune_sweep, bool overflow)
 {
     interlock_wait(tune_trigger);
+
     update_iq_power(tune_sweep);
     update_phase_wf();
     update_cumsum(tune_sweep);
 
-    epicsAlarmSeverity severity;
-    if (overflow)
-    {
-        severity = epicsSevMajor;
-        tune_status = TUNE_OVERFLOW;
-    }
-    else
-    {
-        process_peaks(tune_sweep->sweep_length, &sweep, tune_sweep->tune_scale);
+    compute_tune_result(
+        overflow, centre_tune, alarm_range,
+        tune_sweep->sweep_length, &sweep, tune_sweep->tune_scale,
+        &tune_result_basic, measure_tune_basic);
+    compute_tune_result(
+        overflow, centre_tune, alarm_range,
+        tune_sweep->sweep_length, &sweep, tune_sweep->tune_scale,
+        &tune_result_peaks, measure_tune_peaks);
+    copy_tune_result(select_tune_result(), &tune_result_selected);
 
-        severity = measure_tune(
-            tune_sweep->sweep_length, &sweep, tune_sweep->tune_scale, overflow,
-            &tune_status, &measured_tune, &measured_phase);
-        if (severity == epicsSevNone  &&
-            /* Check for measured tune within given alarm range. */
-            fabs(measured_tune - centre_tune) >= alarm_range)
-        {
-            severity = epicsSevMinor;
-            tune_status = TUNE_RANGE;
-        }
-    }
-    trigger_record(measured_tune_rec, severity, NULL);
-    trigger_record(measured_phase_rec, severity, NULL);
     interlock_signal(tune_trigger, NULL);
 }
 
@@ -295,7 +367,7 @@ void update_tune_sweep(struct sweep_info *sweep_info, bool overflow)
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Injection support. */
+/* Test data injection support. */
 
 /* Fake data for test injection. */
 static struct tune_sweep_info injection_info = {
@@ -323,6 +395,10 @@ static void publish_inject_pvs(void)
     PUBLISH_WF_WRITE_VAR(double, "TUNE:INJECT:S", TUNE_LENGTH,
         injection_info.tune_scale);
     PUBLISH_ACTION("TUNE:INJECT", inject_test_data);
+
+    /* Create sensible initial value for tune scale. */
+    for (int i = 0; i < TUNE_LENGTH; i ++)
+        injection_info.tune_scale[i] = (double) i / TUNE_LENGTH;
 }
 
 
@@ -439,9 +515,10 @@ bool initialise_tune(void)
     PUBLISH_WF_READ_VAR(int, "TUNE:CUMSUMI", TUNE_LENGTH, cumsum_i);
     PUBLISH_WF_READ_VAR(int, "TUNE:CUMSUMQ", TUNE_LENGTH, cumsum_q);
 
-    PUBLISH_READ_VAR(mbbi, "TUNE:STATUS", tune_status);
-    measured_tune_rec  = PUBLISH_READ_VAR(ai, "TUNE:TUNE",  measured_tune);
-    measured_phase_rec = PUBLISH_READ_VAR(ai, "TUNE:PHASE", measured_phase);
+    publish_tune_result(&tune_result_selected, "");
+    publish_tune_result(&tune_result_basic, ":BASIC");
+    publish_tune_result(&tune_result_peaks, ":PEAK");
+    PUBLISH_WRITE_VAR_P(mbbo, "TUNE:SELECT", selected_tune_result);
 
     PUBLISH_ACTION("TUNE:CHANGED", tune_setting_changed);
     tune_setting = PUBLISH_IN_VALUE_I(bi, "TUNE:SETTING");

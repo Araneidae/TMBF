@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 716
-y 84
-w 240
-h 250
+x 427
+y 376
+w 537
+h 185
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -19,7 +19,7 @@ ctlBgColor1 index 0
 ctlBgColor2 index 14
 topShadowColor index 0
 botShadowColor index 14
-title "Debug Settings"
+title "Tune Measurement"
 showGrid
 snapToGrid
 gridSize 8
@@ -34,14 +34,14 @@ minor 1
 release 1
 x 0
 y 0
-w 240
+w 536
 h 32
 font "helvetica-medium-r-18.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 73
 value {
-  "Debug Settings"
+  "$(device) Basic Tune Measurement"
 }
 endObjectProperties
 
@@ -51,16 +51,16 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 168
-y 216
+x 464
+y 152
 w 64
 h 24
-fgColor index 25
+fgColor index 46
 bgColor index 3
 topShadowColor index 1
 botShadowColor index 11
 label "EXIT"
-font "helvetica-medium-r-12.0"
+font "helvetica-bold-r-12.0"
 3d
 endObjectProperties
 
@@ -82,7 +82,7 @@ font "helvetica-bold-r-14.0"
 buttonLabel "?"
 numCmds 1
 command {
-  0 "diagnostics-help TMBF_debug"
+  0 "diagnostics-help TMBF_tune"
 }
 includeHelpIcon
 endObjectProperties
@@ -95,51 +95,11 @@ minor 0
 release 0
 x 8
 y 48
-w 224
-h 72
+w 288
+h 96
 lineColor index 14
 fill
 fillColor index 4
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 128
-y 64
-w 96
-h 22
-fgColor index 14
-fgAlarm
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):LOOPBACK_S"
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 128
-y 88
-w 96
-h 22
-fgColor index 14
-fgAlarm
-bgColor index 3
-inconsistentColor index 0
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(device):COMPENSATE_S"
-font "helvetica-medium-r-12.0"
 endObjectProperties
 
 # (Static Text)
@@ -157,7 +117,7 @@ fontAlign "center"
 fgColor index 1
 bgColor index 10
 value {
-  "Test Control"
+  "Measurement"
 }
 endObjectProperties
 
@@ -175,6 +135,77 @@ lineColor index 14
 fillColor index 0
 endObjectProperties
 
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 120
+y 88
+w 104
+h 16
+controlPv "$(device):TUNE:BASIC:STATUS"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 72
+y 64
+w 72
+h 21
+controlPv "$(device):TUNE:BASIC:TUNE"
+font "helvetica-medium-r-18.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 168
+y 64
+w 55
+h 21
+font "helvetica-medium-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Phase:"
+}
+autoSize
+endObjectProperties
+
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -183,16 +214,42 @@ minor 1
 release 1
 x 16
 y 64
-w 100
-h 16
-font "helvetica-medium-r-14.0"
+w 47
+h 21
+font "helvetica-medium-r-18.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Data Loopback:"
+  "Tune:"
 }
 autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 224
+y 64
+w 64
+h 21
+controlPv "$(device):TUNE:BASIC:PHASE"
+font "helvetica-medium-r-18.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
 endObjectProperties
 
 # (Static Text)
@@ -203,16 +260,88 @@ minor 1
 release 1
 x 16
 y 88
-w 68
-h 16
-font "helvetica-medium-r-14.0"
+w 85
+h 14
+font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Fix delays:"
+  "Measurement:"
 }
 autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 104
+w 106
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Max/mean power:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 24
+y 120
+w 88
+h 16
+controlPv "$(device):TUNE:MAXPOWER"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+useHexPrefix
+showUnits
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 120
+y 120
+w 88
+h 16
+controlPv "$(device):TUNE:MEANPOWER"
+font "helvetica-medium-r-14.0"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+fastUpdate
+useHexPrefix
+showUnits
+newPos
+objType "monitors"
 endObjectProperties
 
 # (Rectangle)
@@ -221,10 +350,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
-y 136
+x 304
+y 48
 w 224
-h 72
+h 96
 lineColor index 14
 fill
 fillColor index 4
@@ -236,11 +365,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 112
-y 152
+x 408
+y 64
 w 56
 h 20
-controlPv "$(device):SE:TEMP:KP_S"
+controlPv "$(device):TUNE:THRESHOLD_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -254,6 +383,7 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -263,16 +393,16 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 16
-y 152
-w 21
+x 312
+y 64
+w 62
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "KP:"
+  "Threshold:"
 }
 autoSize
 endObjectProperties
@@ -283,11 +413,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 112
-y 176
+x 408
+y 88
 w 56
 h 20
-controlPv "$(device):SE:TEMP:KI_S"
+controlPv "$(device):TUNE:BLK:SEP_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -310,16 +440,63 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 16
-y 176
-w 17
+x 312
+y 88
+w 71
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "KI:"
+  "Min blk sep:"
+}
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 408
+y 112
+w 56
+h 20
+controlPv "$(device):TUNE:BLK:LEN_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 312
+y 112
+w 86
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Min blk length:"
 }
 autoSize
 endObjectProperties
@@ -330,8 +507,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 8
-y 128
+x 304
+y 40
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -339,7 +516,7 @@ fontAlign "center"
 fgColor index 1
 bgColor index 10
 value {
-  "Fan Control"
+  "Peak Detect Setup"
 }
 endObjectProperties
 
@@ -349,8 +526,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
-y 128
+x 304
+y 40
 w 120
 h 16
 lineColor index 14

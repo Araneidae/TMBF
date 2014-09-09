@@ -40,16 +40,18 @@ def peak_readbacks(suffix):
             DESC = 'Peak right'),
         Waveform('TUNE:PEAKQ:%d' % suffix, MAX_PEAKS, 'FLOAT',
             DESC = 'Peak quality'),
-        Waveform('TUNE:PEAKH:%d' % suffix, MAX_PEAKS, 'FLOAT',
-            DESC = 'Peak height ratio'),
         Waveform('TUNE:PDD:%d' % suffix, TUNE_LENGTH/suffix, 'LONG',
             DESC = 'Second derivative of power'),
         longIn('TUNE:PEAKC:%d' % suffix, DESC = 'Peaks detected'),
     ]
 
-def tune_results(prefix = ''):
+def tune_results(prefix, alias = None):
+    tune = aIn('TUNE%s:TUNE' % prefix, 0, 1, PREC = 4, DESC = 'Measured tune')
+    if alias is not None:
+        tune.add_alias(alias)
+
     return [
-        aIn('TUNE%s:TUNE' % prefix, 0, 1, PREC = 4, DESC = 'Measured tune'),
+        tune,
         aIn('TUNE%s:PHASE' % prefix, -180, 180, 'deg',
             PREC = 1, DESC = 'Measured tune phase'),
         mbbIn('TUNE%s:STATUS' % prefix,
@@ -64,8 +66,6 @@ def tune_results(prefix = ''):
     ]
 
 
-# tune_measurement = aIn('TUNE:TUNE', 0, 1, PREC = 4, DESC = 'Measured tune')
-tune_measurement = tune_results()
 Trigger('TUNE',
     # Readouts for the selected tune control.  These are copies of the
     # appropriate detector waveforms.
@@ -81,12 +81,18 @@ Trigger('TUNE',
     Waveform('TUNE:CUMSUMI', TUNE_LENGTH, 'LONG', DESC = 'Cumsum I'),
     Waveform('TUNE:CUMSUMQ', TUNE_LENGTH, 'LONG', DESC = 'Cumsum Q'),
 
-    # Tune measurement
-    *tune_measurement +
+    # Tune measurement.  We include an alias for :TUNE for backwards
+    # compatibility.
+    *
+    tune_results('', '$(DEVICE):TUNE') +
+    tune_results(':BASIC') +
+    tune_results(':PEAK') +
 
     # Peak detection support
-    peak_readbacks(4) + peak_readbacks(16) + peak_readbacks(64) +
-    tune_results(':PEAK'))
+    peak_readbacks(4) + peak_readbacks(16) + peak_readbacks(64))
+
+mbbOut('TUNE:SELECT', 'Basic', 'Peak Fit',
+    DESC = 'Select tune measurement algorithm')
 
 # Controls for tune peak finding
 aOut('TUNE:THRESHOLD', 0, 1, PREC = 2, DESC = 'Peak fraction threshold')
@@ -96,7 +102,6 @@ longOut('TUNE:BLK:LEN', DESC = 'Minimum block length')
 # Controls for new peak finding algorithm
 aOut('TUNE:PEAK:MINQ', 0, 100, PREC = 1, DESC = 'Minimum peak quality')
 aOut('TUNE:PEAK:MINH', 0, 1, PREC = 1, DESC = 'Minimum peak height')
-aOut('TUNE:PEAK:MINR', 0, 100, PREC = 1, DESC = 'Minimum peak ratio')
 aOut('TUNE:PEAK:FIT', 0, 1, PREC = 2, DESC = 'Fit threshold')
 mbbOut('TUNE:PEAK:SEL', '/4', '/16', '/64', DESC = 'Select smoothing')
 
@@ -108,7 +113,3 @@ WaveformOut('TUNE:INJECT:Q', TUNE_LENGTH, 'SHORT',
 WaveformOut('TUNE:INJECT:S', TUNE_LENGTH, 'DOUBLE',
     PINI = 'NO', DESC = 'Test injection')
 Action('TUNE:INJECT', DESC = 'Process injected data')
-
-
-# Tune measurement alias for backwards compatibility
-tune_measurement[0].add_alias('$(DEVICE):TUNE')

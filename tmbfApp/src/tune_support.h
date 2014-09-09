@@ -37,3 +37,12 @@ unsigned int fit_multiple_peaks(
 void index_to_tune(
     const double tune_scale[], const short wf_i[], const short wf_q[],
     double ix, double *tune, double *phase);
+
+
+/* Computes second derivative of input curve.  The waveform length is preserved,
+ * so the two end points are set to zero. */
+void compute_dd(unsigned int length, const int wf_in[], int wf_out[]);
+
+/* Smooths and decimates waveform by factor of four.  Output waveform must be
+ * length/4 points long. */
+void smooth_waveform_4(unsigned int length, const int wf_in[], int wf_out[]);

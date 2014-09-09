@@ -113,7 +113,6 @@ bool fit_quadratic(unsigned int length, const int wf[], double *result)
 }
 
 
-
 /* Interpolate between two adjacent indicies in a waveform */
 #define INTERPOLATE(ix, frac, wf) \
     ((1 - (frac)) * (wf)[ix] + (frac) * (wf)[(ix) + 1])
@@ -134,6 +133,7 @@ void index_to_tune(
     *phase = 180.0 / M_PI * atan2(
         INTERPOLATE(ix0, frac, wf_q), INTERPOLATE(ix0, frac, wf_i));
 }
+
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -223,7 +223,7 @@ static bool fit_one_pole(
         S_w_s_iq2 += s * w_iq2;
     }
 
-    double det = S_w * S_w_iq2 - cabs2(S_w_iq2);
+    double det = S_w * S_w_iq2 - cabs2(S_w_iq);
     return
         TEST_OK_(length >= 2, "Singular data to fit")  &&
         TEST_OK_(fabs(det) > S_w, "One pole fit failed")  &&
@@ -300,28 +300,6 @@ static unsigned int extract_raw_data(
 }
 
 
-/* Mean subtraction from the scales helps a little with numerical stability. */
-static void subtract_means(
-    unsigned int peak_count, unsigned int counts[],
-    double *scales[], double scale_mean[])
-{
-    for (unsigned int peak_ix = 0; peak_ix < peak_count; peak_ix ++)
-    {
-        double *scale = scales[peak_ix];
-        unsigned int count = counts[peak_ix];
-
-        double mean = 0;
-        for (unsigned int i = 0; i < count; i ++)
-            mean += scale[i];
-        mean /= count;
-        for (unsigned int i = 0; i < count; i ++)
-            scale[i] -= mean;
-
-        scale_mean[peak_ix] = mean;
-    }
-}
-
-
 /* Updates iq[] by subtracting model fit evaluated at scale[]. */
 static void subtract_model(
     unsigned int length, const struct one_pole *fit,
@@ -375,7 +353,8 @@ static void compute_weights(
 
 /* Refinement fitting step.  In this case we use the fit from the previous step
  * for weighting the fit and now we compute the residual from all other fits
- * when computing the values to fit. */
+ * when computing the values to fit.  Generally this step makes surprisingly
+ * little difference. */
 static unsigned int second_fit(
     unsigned int peak_count, unsigned int counts[],
     double *scales[], double complex *iq_in[], struct one_pole fits[])
@@ -422,20 +401,10 @@ unsigned int fit_multiple_peaks(
         peak_count, threshold, scale_in, wf_i, wf_q, power, ranges,
         scale_buf, iq_buf, counts, scales, iq);
 
-    /* Next to help the fitting and avoid numerical problems perform mean
-     * subtraction from the frequency scale.  We don't need to do this for the
-     * iq data. */
-    double scale_mean[peak_count];
-    subtract_means(peak_count, counts, scales, scale_mean);
-
     /* Perform fit twice to produce refined result, reducing the peak count as
      * appropriate if fits fail. */
     peak_count = first_fit(peak_count, counts, scales, iq, fits);
     peak_count = second_fit(peak_count, counts, scales, iq, fits);
-
-    /* Finally fix up the fits by restoring the subtracted means. */
-    for (unsigned int peak_ix = 0; peak_ix < peak_count; peak_ix ++)
-        fits[peak_ix].b += scale_mean[peak_ix];
     return peak_count;
 }
 
@@ -457,4 +426,43 @@ void decode_one_pole(
     *phase = carg(fit->a);
     *width = -cimag(fit->b);
     *height = cabs(fit->a) / *width;
+}
+
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Waveform processing for supporting peak detection. */
+
+
+/* Computes second derivative over given waveform with saturation. */
+void compute_dd(unsigned int length, const int wf_in[], int wf_out[])
+{
+    wf_out[0] = 0;
+    for (unsigned int i = 1; i < length - 1; i ++)
+    {
+        int64_t accum =
+            (int64_t) wf_in[i-1] -
+            (int64_t) 2 * wf_in[i] +
+            (int64_t) wf_in[i+1];
+        if (accum > INT32_MAX)
+            wf_out[i] = INT32_MAX;
+        else if (accum < INT32_MIN)
+            wf_out[i] = INT32_MIN;
+        else
+            wf_out[i] = (int) accum;
+    }
+    wf_out[length - 1] = 0;
+}
+
+
+/* Hard-wired bin size of 4 to allow for optimisations. */
+void smooth_waveform_4(unsigned int length, const int wf_in[], int wf_out[])
+{
+    for (unsigned int i = 0; i < length / 4; i ++)
+    {
+        int64_t accum = 0;
+        for (unsigned int j = 0; j < 4; j ++)
+            accum += wf_in[4*i + j];
+        wf_out[i] = (int) ((accum + 1) >> 2);   // Rounded division by 4
+    }
 }
