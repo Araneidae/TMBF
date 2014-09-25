@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 677
-y 3
+x 678
+y 4
 w 370
-h 535
+h 554
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -35,7 +35,7 @@ release 0
 x 8
 y 136
 w 352
-h 248
+h 264
 lineColor index 14
 fill
 fillColor index 4
@@ -275,7 +275,7 @@ major 4
 minor 1
 release 0
 x 296
-y 504
+y 520
 w 64
 h 24
 fgColor index 46
@@ -925,7 +925,7 @@ major 4
 minor 0
 release 0
 x 8
-y 400
+y 416
 w 352
 h 96
 lineColor index 14
@@ -940,7 +940,7 @@ major 4
 minor 1
 release 1
 x 8
-y 392
+y 408
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -959,7 +959,7 @@ major 4
 minor 0
 release 0
 x 8
-y 392
+y 408
 w 120
 h 16
 lineColor index 14
@@ -973,7 +973,7 @@ major 4
 minor 6
 release 0
 x 104
-y 416
+y 432
 w 64
 h 24
 controlPv "$(device):TUNE:PEAK:THRESHOLD_S"
@@ -1001,7 +1001,7 @@ major 4
 minor 1
 release 1
 x 16
-y 416
+y 432
 w 78
 h 14
 font "helvetica-bold-r-12.0"
@@ -1021,7 +1021,7 @@ major 4
 minor 1
 release 1
 x 16
-y 464
+y 480
 w 72
 h 14
 font "helvetica-bold-r-12.0"
@@ -1041,7 +1041,7 @@ major 4
 minor 6
 release 0
 x 104
-y 464
+y 480
 w 104
 h 24
 controlPv "$(device):TUNE:PEAK:MINWIDTH_S"
@@ -1070,7 +1070,7 @@ major 4
 minor 6
 release 0
 x 104
-y 440
+y 456
 w 64
 h 24
 controlPv "$(device):TUNE:PEAK:FITERROR_S"
@@ -1098,7 +1098,7 @@ major 4
 minor 1
 release 1
 x 16
-y 440
+y 456
 w 79
 h 14
 font "helvetica-bold-r-12.0"
@@ -1118,7 +1118,7 @@ major 4
 minor 0
 release 0
 x 264
-y 416
+y 432
 w 80
 h 24
 fgColor index 14
@@ -1137,7 +1137,7 @@ major 4
 minor 1
 release 1
 x 192
-y 416
+y 432
 w 67
 h 14
 font "helvetica-bold-r-12.0"
@@ -1157,7 +1157,7 @@ major 4
 minor 4
 release 0
 x 208
-y 504
+y 520
 w 80
 h 24
 fgColor index 43
@@ -1416,7 +1416,7 @@ major 4
 minor 6
 release 0
 x 104
-y 336
+y 352
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:LEFT:RHEIGHT"
@@ -1442,7 +1442,7 @@ major 4
 minor 1
 release 1
 x 16
-y 336
+y 352
 w 69
 h 14
 font "helvetica-bold-r-12.0"
@@ -1540,7 +1540,7 @@ major 4
 minor 6
 release 0
 x 224
-y 336
+y 352
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:RIGHT:RHEIGHT"
@@ -1566,7 +1566,7 @@ major 4
 minor 6
 release 0
 x 240
-y 464
+y 480
 w 104
 h 24
 controlPv "$(device):TUNE:PEAK:MAXWIDTH_S"
@@ -1595,7 +1595,7 @@ major 4
 minor 6
 release 0
 x 160
-y 360
+y 376
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:SYNCTUNE"
@@ -1621,7 +1621,7 @@ major 4
 minor 1
 release 1
 x 16
-y 360
+y 376
 w 108
 h 14
 font "helvetica-bold-r-12.0"
@@ -1632,5 +1632,77 @@ value {
   "Synchrotron tune:"
 }
 autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 104
+y 336
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:LEFT:RWIDTH"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 336
+w 63
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Rel. Width:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 224
+y 336
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:RIGHT:RWIDTH"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
 endObjectProperties
 

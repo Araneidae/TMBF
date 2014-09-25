@@ -89,6 +89,8 @@ def peak_rel_results(prefix):
             PREC = 1, DESC = '%s delta phase' % name),
         aIn('TUNE:PEAK:%s:RAREA' % prefix,
             PREC = 3, DESC = '%s relative area' % name),
+        aIn('TUNE:PEAK:%s:RWIDTH' % prefix,
+            PREC = 3, DESC = '%s relative width' % name),
         aIn('TUNE:PEAK:%s:RHEIGHT' % prefix,
             PREC = 3, DESC = '%s relative height' % name),
     ]

@@ -439,6 +439,7 @@ struct peak_result_relative {
     double delta_tune;
     double delta_phase;
     double rel_area;
+    double rel_width;
     double rel_height;
 };
 
@@ -495,6 +496,7 @@ static void update_peak_result_relative(
     result->delta_tune  = fabs(absolute->tune - centre_peak.tune);
     result->delta_phase = wrap_angle(absolute->phase - centre_peak.phase);
     result->rel_area    = absolute->area / centre_peak.area;
+    result->rel_width   = absolute->width / centre_peak.width;
     result->rel_height  = absolute->height / centre_peak.height;
 }
 
@@ -617,6 +619,7 @@ static void publish_peak_result_relative(
     PUBLISH_READ_VAR(ai, FORMAT(":DTUNE"),   result->delta_tune);
     PUBLISH_READ_VAR(ai, FORMAT(":DPHASE"),  result->delta_phase);
     PUBLISH_READ_VAR(ai, FORMAT(":RAREA"),   result->rel_area);
+    PUBLISH_READ_VAR(ai, FORMAT(":RWIDTH"),  result->rel_width);
     PUBLISH_READ_VAR(ai, FORMAT(":RHEIGHT"), result->rel_height);
 #undef FORMAT
 }
