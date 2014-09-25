@@ -46,6 +46,7 @@ static void take_interlock(struct epics_interlock *interlock)
     ASSERT_0(pthread_mutex_lock(&interlock->mutex));
     while (interlock->busy)
         ASSERT_0(pthread_cond_wait(&interlock->signal, &interlock->mutex));
+    interlock->busy = true;
     ASSERT_0(pthread_mutex_unlock(&interlock->mutex));
 }
 
@@ -65,7 +66,6 @@ void interlock_wait(struct epics_interlock *interlock)
 
 void interlock_signal(struct epics_interlock *interlock, struct timespec *ts)
 {
-    interlock->busy = true;
     trigger_record(interlock->trigger, 0, ts);
 }
 
@@ -151,6 +151,12 @@ static void init_hook(initHookState state)
         }
         UNLOCK_READY();
     }
+}
+
+
+bool check_epics_ready(void)
+{
+    return epics_ready;
 }
 
 

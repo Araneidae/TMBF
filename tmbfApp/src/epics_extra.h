@@ -60,6 +60,10 @@ bool initialise_epics_extra(void);
  * first to ensure that interlock_wait(...) will not block. */
 void wait_for_epics_start(void);
 
+/* Returns true if EPICS initialisation has finished, false if
+ * wait_for_epics_start() will block. */
+bool check_epics_ready(void);
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Support for records with data stored as part of the record.
