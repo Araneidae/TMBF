@@ -21,7 +21,6 @@
 
 
 /* Some externally configured control parameters. */
-static double min_peak_d2_ratio;
 static double peak_fit_threshold;
 static double min_peak_width;
 static double max_fit_error;
@@ -135,7 +134,6 @@ struct peak_info {
     int peak_val_wf[MAX_PEAKS];     // Value at peak index
     int peak_left_wf[MAX_PEAKS];    // Index of left boundary
     int peak_right_wf[MAX_PEAKS];   // Index of right boundary
-    float d2_ratio[MAX_PEAKS];      // Size of D2 peaks relative to noise
 };
 
 
@@ -147,7 +145,6 @@ static void extract_peak_data(
     memset(info->peak_val_wf, 0, sizeof(info->peak_val_wf));
     memset(info->peak_left_wf, 0, sizeof(info->peak_left_wf));
     memset(info->peak_right_wf, 0, sizeof(info->peak_right_wf));
-    memset(info->d2_ratio, 0, sizeof(info->d2_ratio));
 
     for (unsigned int i = 0; i < info->peak_count; i ++)
     {
@@ -157,30 +154,6 @@ static void extract_peak_data(
         info->peak_left_wf[i] = (int) peak->left;
         info->peak_right_wf[i] = (int) peak->right;
     }
-}
-
-
-/* Very simple assessment of D2 peak: always accept the first peak, then try
- * filtering the remaining simply by ratio against the the size of the first and
- * largest. */
-static void assess_d2_peaks(
-    struct raw_peak_data peak_data[], struct peak_info *info)
-{
-    float dd_0 = (float) -info->power_dd[peak_data[0].ix];
-    if (info->peak_count > 0  &&  dd_0 > 0)
-    {
-        for (unsigned int i = 0; i < info->peak_count; i ++)
-            info->d2_ratio[i] = (float) -info->power_dd[peak_data[i].ix] / dd_0;
-
-        for (unsigned int i = 0; i < info->peak_count; i ++)
-            if (info->d2_ratio[i] < min_peak_d2_ratio)
-            {
-                info->peak_count = i;
-                break;
-            }
-    }
-    else
-        info->peak_count = 0;
 }
 
 
@@ -201,9 +174,6 @@ static void process_peak_info(struct peak_info *info)
 
     /* Convert peak data into presentation format. */
     extract_peak_data(peak_data, info);
-
-    /* Assess D2 peaks and reject those that are too small. */
-    assess_d2_peaks(peak_data, info);
 }
 
 
@@ -225,8 +195,6 @@ static void publish_peak_info(struct peak_info *info, unsigned int ratio)
     PUBLISH_WF_READ_VAR(int, FORMAT("PEAKV"), MAX_PEAKS, info->peak_val_wf);
     PUBLISH_WF_READ_VAR(int, FORMAT("PEAKL"), MAX_PEAKS, info->peak_left_wf);
     PUBLISH_WF_READ_VAR(int, FORMAT("PEAKR"), MAX_PEAKS, info->peak_right_wf);
-    PUBLISH_WF_READ_VAR(float, FORMAT("PEAKQ"), MAX_PEAKS, info->d2_ratio);
-    PUBLISH_READ_VAR(ulongin, FORMAT("PEAKC"), info->peak_count);
 #undef FORMAT
 }
 
@@ -380,40 +348,49 @@ static unsigned int extract_final_fits(
 
 /* Published results from final fitting and evaluation stage. */
 
-static double peak_height[MAX_PEAKS];
-static double peak_phase[MAX_PEAKS];
-static double peak_width[MAX_PEAKS];
-static double peak_centre[MAX_PEAKS];
+struct peak_result {
+    double tune;
+    double phase;
+    double area;
+    double width;
+    bool valid;
+};
 
 static unsigned fitted_peak_count;
 
+static struct peak_result left_peak;
+static struct peak_result centre_peak;
+static struct peak_result right_peak;
 
 
-/* Convert fit coefficients into physically significant numbers. */
-static void update_peak_fit_detail(
-    unsigned int peak_count, const struct one_pole fits[])
+static void update_peak_result(
+    struct peak_result *restrict result, const struct one_pole *restrict fit)
 {
-    for (unsigned int i = 0; i < peak_count; i ++)
-        decode_one_pole(&fits[i],
-            &peak_height[i], &peak_width[i], &peak_centre[i], &peak_phase[i]);
-
-    for (unsigned int i = peak_count; i < MAX_PEAKS; i ++)
+    result->valid = fit != NULL;
+    if (fit)
     {
-        peak_height[i] = 0;
-        peak_width[i] = 0;
-        peak_centre[i] = 0;
-        peak_phase[i] = 0;
+        double harmonic;
+        result->tune = modf(creal(fit->b), &harmonic);
+        result->phase = 180 / M_PI * carg(-I * fit->a);
+        result->width = -cimag(fit->b);
+        result->area = cabs(fit->a) / result->width;
+    }
+    else
+    {
+        result->tune = 0;
+        result->phase = 0;
+        result->area = 0;
+        result->width = 0;
     }
 }
 
 
-
-static const struct one_pole *choose_larger(
+static bool compare_peaks(
     const struct one_pole *fit1, const struct one_pole *fit2)
 {
     double area1 = cabs2(fit1->a) / -cimag(fit1->b);
     double area2 = cabs2(fit2->a) / -cimag(fit2->b);
-    return area1 >= area2 ? fit1 : fit2;
+    return area1 >= area2;
 }
 
 
@@ -421,18 +398,43 @@ static unsigned int extract_peak_tune(
     unsigned int peak_count, const struct one_pole fits[],
     double *tune, double *phase)
 {
+    /* Default all the peak results to invalid, we'll set the valid ones in a
+     * moment. */
+    update_peak_result(&left_peak, NULL);
+    update_peak_result(&centre_peak, NULL);
+    update_peak_result(&right_peak, NULL);
+
     const struct one_pole *fit = NULL;
     switch (peak_count)
     {
         default:
-        case 0: return TUNE_NO_PEAK;
-        case 1: fit = &fits[0];                             break;
-        case 2: fit = choose_larger(&fits[0], &fits[1]);    break;
-        case 3: fit = &fits[1];                             break;
+        case 0:
+            return TUNE_NO_PEAK;
+        case 1:
+            fit = &fits[0];
+            break;
+        case 2:
+            if (compare_peaks(&fits[0], &fits[1]))  // Is fit[0] > fit[1] ?
+            {
+                fit = &fits[0];
+                update_peak_result(&right_peak, &fits[1]);
+            }
+            else
+            {
+                update_peak_result(&right_peak, &fits[0]);
+                fit = &fits[1];
+            }
+            break;
+        case 3:
+            update_peak_result(&left_peak, &fits[0]);
+            fit = &fits[1];
+            update_peak_result(&right_peak, &fits[2]);
+            break;
     }
 
-    double harmonic;
-    *tune = modf(creal(fit->b), &harmonic);
+    update_peak_result(&centre_peak, fit);
+    *tune = centre_peak.tune;
+    /* For the reported phase use the entire model to compute this. */
     *phase = 180 / M_PI *
         carg(eval_one_pole_model(peak_count, fits, creal(fit->b)));
     return TUNE_OK;
@@ -456,8 +458,22 @@ static void process_peak_tune(
 
     struct one_pole final_fits[MAX_PEAKS];
     fitted_peak_count = extract_final_fits(&second_fit, final_fits);
-    update_peak_fit_detail(fitted_peak_count, final_fits);
     *status = extract_peak_tune(fitted_peak_count, final_fits, tune, phase);
+}
+
+
+static void publish_peak_result(const char *prefix, struct peak_result *result)
+{
+    char buffer[40];
+#define FORMAT(name) \
+    (sprintf(buffer, "TUNE:PEAK:%s%s", prefix, name), buffer)
+
+    PUBLISH_READ_VAR(ai, FORMAT(""),      result->tune);
+    PUBLISH_READ_VAR(ai, FORMAT(":PHASE"), result->phase);
+    PUBLISH_READ_VAR(ai, FORMAT(":AREA"),  result->area);
+    PUBLISH_READ_VAR(ai, FORMAT(":WIDTH"), result->width);
+    PUBLISH_READ_VAR(bi, FORMAT(":VALID"), result->valid);
+#undef FORMAT
 }
 
 
@@ -510,21 +526,20 @@ bool initialise_tune_peaks(void)
     publish_peak_info(&peak_info_16, 16);
     publish_peak_info(&peak_info_64, 64);
 
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MIND2", min_peak_d2_ratio);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:THRESHOLD", peak_fit_threshold);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINWIDTH", min_peak_width);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:FITERROR", max_fit_error);
 
     PUBLISH_WRITE_VAR_P(mbbo, "TUNE:PEAK:SEL", peak_select);
 
-    PUBLISH_WF_READ_VAR(double, "TUNE:PEAK:WFHEIGHT", MAX_PEAKS, peak_height);
-    PUBLISH_WF_READ_VAR(double, "TUNE:PEAK:WFPHASE",  MAX_PEAKS, peak_phase);
-    PUBLISH_WF_READ_VAR(double, "TUNE:PEAK:WFWIDTH",  MAX_PEAKS, peak_width);
-    PUBLISH_WF_READ_VAR(double, "TUNE:PEAK:WFCENTRE", MAX_PEAKS, peak_centre);
     PUBLISH_READ_VAR(ulongin, "TUNE:PEAK:COUNT", fitted_peak_count);
 
     PUBLISH_PEAK_FIT("TUNE:PEAK:FIRSTFIT", first_fit);
     PUBLISH_PEAK_FIT("TUNE:PEAK:SECONDFIT", second_fit);
+
+    publish_peak_result("LEFT",   &left_peak);
+    publish_peak_result("CENTRE", &centre_peak);
+    publish_peak_result("RIGHT",  &right_peak);
 
     return true;
 }

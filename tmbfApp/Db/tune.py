@@ -40,11 +40,8 @@ def peak_readbacks(suffix):
             DESC = 'Peak left'),
         Waveform('TUNE:PEAKR:%d' % suffix, MAX_PEAKS, 'LONG',
             DESC = 'Peak right'),
-        Waveform('TUNE:PEAKQ:%d' % suffix, MAX_PEAKS, 'FLOAT',
-            DESC = 'Peak D2 ratio'),
         Waveform('TUNE:PDD:%d' % suffix, TUNE_LENGTH/suffix, 'LONG',
             DESC = 'Second derivative of power'),
-        longIn('TUNE:PEAKC:%d' % suffix, DESC = 'Peaks detected'),
     ]
 
 def tune_results(prefix, alias = None):
@@ -67,6 +64,21 @@ def tune_results(prefix, alias = None):
             DESC = 'Status of last tune measurement'),
     ]
 
+def peak_results(prefix):
+    name = prefix.capitalize()
+    return [
+        aIn('TUNE:PEAK:%s' % prefix, 0, 1,
+            PREC = 5, DESC = '%s peak frequency' % name),
+        aIn('TUNE:PEAK:%s:PHASE' % prefix, -180, 180, 'dec',
+            PREC = 1, DESC = '%s peak phase' % name),
+        aIn('TUNE:PEAK:%s:AREA' % prefix,
+            PREC = 3, DESC = '%s peak area' % name),
+        aIn('TUNE:PEAK:%s:WIDTH' % prefix, 0, 1,
+            PREC = 5, DESC = '%s peak width' % name),
+        boolIn('TUNE:PEAK:%s:VALID' % prefix, 'Invalid', 'Ok',
+            ZSV = 'MINOR', DESC = '%s peak valid' % name),
+    ]
+
 
 Trigger('TUNE',
     # Readouts for the selected tune control.  These are copies of the
@@ -84,25 +96,22 @@ Trigger('TUNE',
     Waveform('TUNE:CUMSUMQ', TUNE_LENGTH, 'LONG', DESC = 'Cumsum Q'),
 
     # Waveforms for reading tune peak detection results
-    Waveform('TUNE:PEAK:WFHEIGHT', MAX_PEAKS, 'DOUBLE', DESC = 'Peak height'),
-    Waveform('TUNE:PEAK:WFPHASE', MAX_PEAKS, 'DOUBLE', DESC = 'Peak height'),
-    Waveform('TUNE:PEAK:WFWIDTH', MAX_PEAKS, 'DOUBLE', DESC = 'Peak height'),
-    Waveform('TUNE:PEAK:WFCENTRE', MAX_PEAKS, 'DOUBLE', DESC = 'Peak height'),
-    longIn('TUNE:PEAK:COUNT', DESC = 'Final peak count'),
-
     Waveform('TUNE:PEAK:FIRSTFIT',
         PEAK_FIT_SIZE, 'CHAR', DESC = 'Raw first fit data'),
     Waveform('TUNE:PEAK:SECONDFIT',
         PEAK_FIT_SIZE, 'CHAR', DESC = 'Raw second fit data'),
+    longIn('TUNE:PEAK:COUNT', DESC = 'Final fitted peak count'),
 
+*
     # Tune measurement.  We include an alias for :TUNE for backwards
     # compatibility.
-    *
     tune_results(':BASIC') +
     tune_results(':PEAK') +
 
     # Peak detection support
-    peak_readbacks(16) + peak_readbacks(64))
+    peak_readbacks(16) + peak_readbacks(64) +
+    peak_results('LEFT') + peak_results('CENTRE') + peak_results('RIGHT')
+)
 
 Trigger('TUNE:RESULT', *tune_results('', '$(DEVICE):TUNE'))
 
@@ -116,10 +125,9 @@ longOut('TUNE:BLK:SEP', DESC = 'Minimum block separation')
 longOut('TUNE:BLK:LEN', DESC = 'Minimum block length')
 
 # Controls for new peak finding algorithm
-aOut('TUNE:PEAK:MIND2', 0, 1, PREC = 3, DESC = 'Minimum peak D2 threshold')
 aOut('TUNE:PEAK:THRESHOLD', 0, 1, PREC = 2,
     DESC = 'Fit data selection threshold')
-aOut('TUNE:PEAK:MINWIDTH', 0, 1, PREC = 4, DESC = 'Minimum valid peak width')
+aOut('TUNE:PEAK:MINWIDTH', 0, 1, PREC = 5, DESC = 'Minimum valid peak width')
 aOut('TUNE:PEAK:FITERROR', 0, 10, PREC = 3, DESC = 'Maximum fit error')
 
 mbbOut('TUNE:PEAK:SEL', '/16', '/64', DESC = 'Select smoothing')
