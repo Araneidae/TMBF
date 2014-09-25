@@ -5,7 +5,42 @@ struct one_pole { double complex a; double complex b; };
 
 
 /* Returns |z|^2, really ought to be in standard C library. */
-double cabs2(double complex z);
+static inline double cabs2(double complex z)
+{
+    return creal(z)*creal(z) + cimag(z)*cimag(z);
+}
+
+
+/* Evaluation functions for one_pole model for extracting the centre frequency,
+ * phase at that frequency, peak width (half-width at half power maximum), and
+ * integrated peak power (missing a factor of pi, as vertical units are rather
+ * arbitrary). */
+static inline double peak_centre(const struct one_pole *fit)
+{
+    return creal(fit->b);
+}
+
+static inline double peak_phase(const struct one_pole *fit)
+{
+    return carg(-I * fit->a);
+}
+
+static inline double peak_width(const struct one_pole *fit)
+{
+    return -cimag(fit->b);
+}
+
+static inline double peak_area(const struct one_pole *fit)
+{
+    return cabs2(fit->a) / -cimag(fit->b);
+}
+
+static inline double complex peak_eval(const struct one_pole *fit, double f)
+{
+    return fit->a / (f - fit->b);
+}
+
+
 
 /* Returns value of maximum element of array. */
 int find_max_val(unsigned int length, const int array[]);
@@ -13,12 +48,6 @@ int find_max_val(unsigned int length, const int array[]);
 /* Returns centre from fitting quadratic to the given data, fails if the centre
  * is outside the waveform. */
 bool fit_quadratic(unsigned int length, const int wf[], double *result);
-
-/* Decodes iq model in (a,b) format into corresponding peak height, width,
- * centre frequency and phase. */
-void decode_one_pole(
-    const struct one_pole *fit,
-    double *height, double *width, double *centre, double *phase);
 
 /* Given a list of discovered peaks (ordered by size) performs sequential fits
  * of one pole filters to each peak.  The following parameters are passed:

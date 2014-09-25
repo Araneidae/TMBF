@@ -139,13 +139,6 @@ void index_to_tune(
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Fitting one-pole model to IQ. */
 
-/* More efficient calculation of |z|^2 than squaring cabs(z).  Do wonder why
- * this isn't in the standard library. */
-double cabs2(double complex z)
-{
-    return creal(z)*creal(z) + cimag(z)*cimag(z);
-}
-
 
 /* Fitting one pole filter to IQ data.  Given waveforms scale[] and wf[],
  * which we write here as s[] and iq[], this function computes complex
@@ -248,7 +241,7 @@ static double compute_fit_error(
 {
     double error = 0;
     for (unsigned int i = 0; i < length; i ++)
-        error += cabs2(iq[i] * (scale[i] - fit->b) / fit->a - 1);
+        error += cabs2(iq[i] / peak_eval(fit, scale[i]) - 1);
     return error / length;
 }
 
@@ -282,7 +275,7 @@ complex double eval_one_pole_model(
 {
     complex double result = 0;
     for (unsigned int i = 0; i < peak_count; i ++)
-        result += fits[i].a / (s - fits[i].b);
+        result += peak_eval(&fits[i], s);
     return result;
 }
 
@@ -309,7 +302,7 @@ static void adjust_iq_with_model(
             /* Subtract the model from the data. */
             const struct one_pole *fit = &fits[j];
             for (unsigned int i = 0; i < count; i ++)
-                iq[i] -= fit->a / (scale[i] - fit->b);
+                iq[i] -= peak_eval(fit, scale[i]);
         }
     }
 }
@@ -378,26 +371,6 @@ unsigned int fit_multiple_peaks(
         errors[peak_ix] = compute_fit_error(count, scale, iq, fit);
     }
     return peak_ix;
-}
-
-
-/* Having computed a and b the corresponding peak control parameters are:
- *
- *      centre = real(b)
- *      phase = angle(a)
- *      height = abs(a) / -imag(b) = max|z|
- *      width = -imag(b)
- *
- * The computed height here is the power half-width half maximum value.  The
- * peak power area can be computed as pi * height^2 * width. */
-void decode_one_pole(
-    const struct one_pole *fit,
-    double *height, double *width, double *centre, double *phase)
-{
-    *centre = creal(fit->b);
-    *phase = carg(-I * fit->a);
-    *width = -cimag(fit->b);
-    *height = cabs(fit->a) / *width;
 }
 
 

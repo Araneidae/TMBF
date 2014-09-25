@@ -276,9 +276,9 @@ static void compute_peak_bounds(
      *      s_0 +- w * sqrt(-----)
      *                     (  k  )
      */
-    double delta = -cimag(fit->b) * sqrt((1 - threshold) / threshold);
-    double left  = creal(fit->b) + delta;
-    double right = creal(fit->b) - delta;
+    double delta = peak_width(fit) * sqrt((1 - threshold) / threshold);
+    double left  = peak_centre(fit) + delta;
+    double right = peak_centre(fit) - delta;
     range->left  = tune_to_index(length, tune_scale, left);
     range->right = tune_to_index(length, tune_scale, right);
     ENSURE_ORDERED(range->left, range->right);
@@ -345,28 +345,17 @@ static void extract_good_peaks(
 }
 
 
-/* Peak validity assessment.  Checks that the peak lies within the fit range
- * (really only rejects the most unlikely of fits), that the fit error is within
- * the selected threshold, and that the peak is wider that a selected threshold.
- * Note that the width is in tune frequency units. */
-static bool assess_peak(
-    const struct peak_range *range, const double tune_scale[],
-    const struct one_pole *fit, double error)
+/* Peak validity assessment.  Checks that the fit error is within the selected
+ * threshold, and that the peak is wider that a selected threshold.  Note that
+ * the width is in tune frequency units. */
+static bool assess_peak(const struct one_pole *fit, double error)
 {
-    double centre = creal(fit->b);
-    double left  = tune_scale[range->left];
-    double right = tune_scale[range->right];
-    ENSURE_ORDERED(left, right);
-
     return
         /* Discard if fit error too large. */
         error < max_fit_error  &&
-        /* Discard if peak not within fit area.  Actually, this check doesn't
-         * fire very often, maybe it's pointless. */
-        left <= centre  &&  centre <= right  &&
         /* Discard if peak too narrow.  This will automatically reject peaks of
          * negative width, this should not arise! */
-        -cimag(fit->b) > min_peak_width;
+        peak_width(fit) > min_peak_width;
 }
 
 
@@ -384,9 +373,7 @@ static void fit_peaks(
     for (unsigned int i = fit_count; i < peak_fit->peak_count; i ++)
         peak_fit->status[i] = PEAK_NO_FIT;
     for (unsigned int i = 0; i < fit_count; i ++)
-        if (assess_peak(
-                &peak_fit->ranges[i], tune_scale,
-                &peak_fit->fits[i], peak_fit->errors[i]))
+        if (assess_peak(&peak_fit->fits[i], peak_fit->errors[i]))
             peak_fit->status[i] = PEAK_GOOD;
         else
             peak_fit->status[i] = PEAK_REJECTED;
@@ -397,7 +384,7 @@ static void fit_peaks(
 
 /* Extract final good peak fit from fitted results in ascending order of centre
  * frequency.  For the tiny number of peaks insertion sort is good. */
-static unsigned int extract_final_fits(
+static unsigned int extract_sorted_fits(
     const struct peak_fit_result *peak_fit, struct one_pole fits[])
 {
     unsigned int peak_count = 0;
@@ -408,8 +395,11 @@ static unsigned int extract_final_fits(
 
             /* Push this new value down as far as it will go. */
             unsigned int n = peak_count;
-            for (; n > 0  &&  creal(fits[n-1].b) > creal(fit->b); n -= 1)
+            while (n > 0  &&  peak_centre(fit) < peak_centre(&fits[n-1]))
+            {
                 fits[n] = fits[n-1];
+                n -= 1;
+            }
             fits[n] = *fit;
 
             peak_count += 1;
@@ -453,10 +443,10 @@ static void update_peak_result(
     if (fit)
     {
         double harmonic;
-        result->tune = modf(creal(fit->b), &harmonic);
-        result->phase = 180 / M_PI * carg(-I * fit->a);
-        result->width = -cimag(fit->b);
-        result->area = cabs(fit->a) / result->width / area;
+        result->tune = modf(peak_centre(fit), &harmonic);
+        result->phase = 180 / M_PI * peak_phase(fit);
+        result->width = peak_width(fit);
+        result->area = peak_area(fit) / area;
     }
     else
     {
@@ -465,17 +455,6 @@ static void update_peak_result(
         result->area  = NAN;
         result->width = NAN;
     }
-}
-
-
-/* When we have only found two peaks we take the "largest" peak as the tune
- * frequency.  Here we compare peaks by area. */
-static bool compare_peaks(
-    const struct one_pole *fit1, const struct one_pole *fit2)
-{
-    double area1 = cabs2(fit1->a) / -cimag(fit1->b);
-    double area2 = cabs2(fit2->a) / -cimag(fit2->b);
-    return area1 >= area2;
 }
 
 
@@ -501,7 +480,8 @@ static unsigned int extract_peak_tune(
             centre = &fits[0];
             break;
         case 2:
-            if (compare_peaks(&fits[0], &fits[1]))  // Is fit[0] > fit[1] ?
+            /* Take the "largest" peak as the tune. */
+            if (peak_area(&fits[0]) >= peak_area(&fits[1]))
             {
                 centre = &fits[0];
                 right  = &fits[1];
@@ -519,7 +499,7 @@ static unsigned int extract_peak_tune(
             break;
     }
 
-    double centre_area = centre ? cabs(centre->a) / -cimag(centre->b) : 0;
+    double centre_area = centre ? peak_area(centre) : 0;
     update_peak_result(&left_peak,   left,   centre_area);
     update_peak_result(&centre_peak, centre, centre_area);
     update_peak_result(&right_peak,  right,  centre_area);
@@ -561,7 +541,7 @@ static void process_peak_tune(
 
     /* Extract the final peaks in ascending order of frequency. */
     struct one_pole final_fits[MAX_PEAKS];
-    fitted_peak_count = extract_final_fits(&second_fit, final_fits);
+    fitted_peak_count = extract_sorted_fits(&second_fit, final_fits);
 
     /* Finally compute the three peaks and the associated tune. */
     *status = extract_peak_tune(fitted_peak_count, final_fits, tune, phase);
