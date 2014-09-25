@@ -4,6 +4,8 @@ from common import *
 
 MAX_PEAKS = 3
 
+PEAK_FIT_SIZE = 168
+
 
 # Common controls for simple tune control
 setting_changed = Action('TUNE:CHANGED', DESC = 'Record tune settings changed')
@@ -87,6 +89,11 @@ Trigger('TUNE',
     Waveform('TUNE:PEAK:WFWIDTH', MAX_PEAKS, 'DOUBLE', DESC = 'Peak height'),
     Waveform('TUNE:PEAK:WFCENTRE', MAX_PEAKS, 'DOUBLE', DESC = 'Peak height'),
     longIn('TUNE:PEAK:COUNT', DESC = 'Final peak count'),
+
+    Waveform('TUNE:PEAK:FIRSTFIT',
+        PEAK_FIT_SIZE, 'CHAR', DESC = 'Raw first fit data'),
+    Waveform('TUNE:PEAK:SECONDFIT',
+        PEAK_FIT_SIZE, 'CHAR', DESC = 'Raw second fit data'),
 
     # Tune measurement.  We include an alias for :TUNE for backwards
     # compatibility.

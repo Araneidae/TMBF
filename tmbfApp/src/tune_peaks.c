@@ -235,36 +235,73 @@ static void publish_peak_info(struct peak_info *info, unsigned int ratio)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Peak fitting and final evaluation. */
 
+enum peak_status { PEAK_GOOD, PEAK_NO_RANGE, PEAK_NO_FIT, PEAK_REJECTED };
 
-/* Published results from final fitting and evaluation stage. */
+/* This structure contains information about a round of peak fitting. */
+struct peak_fit_result {
+    /* Number of valid peaks. */
+    unsigned int peak_count;
+    /* The ranges over which the peaks were fitted. */
+    struct peak_range ranges[MAX_PEAKS];
+    /* The actual peak fits. */
+    struct one_pole fits[MAX_PEAKS];
+    /* Relative fit errors. */
+    double errors[MAX_PEAKS];
+    /* Assessment for each peak. */
+    enum peak_status status[MAX_PEAKS];
+};
 
-static double peak_height[MAX_PEAKS];
-static double peak_phase[MAX_PEAKS];
-static double peak_width[MAX_PEAKS];
-static double peak_centre[MAX_PEAKS];
 
-static unsigned fitted_peak_count;
-
+static void reset_fit_result(
+    struct peak_fit_result *peak_fit, unsigned int peak_count)
+{
+    for (unsigned int i = peak_count; i < MAX_PEAKS; i ++)
+    {
+        peak_fit->ranges[i] = (struct peak_range) { };
+        peak_fit->status[i] = PEAK_NO_RANGE;
+        peak_fit->errors[i] = 0;
+    }
+    peak_fit->peak_count = peak_count;
+}
 
 
 /* Converts peak bounds on the filtered data into enclosing bounds on the raw
- * data for peak fitting. */
+ * data for peak fitting and initialises the peak_fit_result structure. */
 static void extract_peak_ranges(
-    struct peak_info *info, struct peak_range ranges[])
+    struct peak_info *info, struct peak_fit_result *peak_fit)
 {
     unsigned int *left  = (unsigned int *) info->peak_left_wf;
     unsigned int *right = (unsigned int *) info->peak_right_wf;
     for (unsigned int i = 0; i < info->peak_count; i ++)
-        ranges[i] = (struct peak_range) {
+        peak_fit->ranges[i] = (struct peak_range) {
             .left  = info->scaling * left[i],
             .right = info->scaling * (right[i] + 1) - 1 };
+    reset_fit_result(peak_fit, info->peak_count);
 }
 
 
-/* Preliminary sanity checking on a fit candidate.  The fit should fit
- * comfortably within the selected interval and should not be narrower than our
- * minimum fit threshold. */
-static bool sanity_check_peak(
+/* Extracts peaks assessed as of good quality into a fresh peak fit struct. */
+static void extract_good_peaks(
+    const struct peak_fit_result *peak_fit_in,
+    struct peak_fit_result *peak_fit_out)
+{
+    unsigned int peak_count = 0;
+    for (unsigned int i = 0; i < MAX_PEAKS; i ++)
+        if (peak_fit_in->status[i] == PEAK_GOOD)
+        {
+            peak_fit_out->ranges[peak_count] = peak_fit_in->ranges[i];
+            peak_fit_out->fits[peak_count] = peak_fit_in->fits[i];
+            peak_count += 1;
+        }
+    reset_fit_result(peak_fit_out, peak_count);
+}
+
+
+/* Peak validity assessment.  Checks that the peak lies within the fit range
+ * (really only rejects the most unlikely of fits), that the fit error is within
+ * the selected threshold, and that the peak is wider that a selected threshold.
+ * Note that the width is in tune frequency units. */
+static bool assess_peak(
     const struct peak_range *range, const double tune_scale[],
     const struct one_pole *fit, double error)
 {
@@ -280,25 +317,76 @@ static bool sanity_check_peak(
     return
         /* Discard if fit error too large. */
         error < max_fit_error  &&
-        /* Discard if peak not comfortably within fit area. */
+        /* Discard if peak not within fit area. */
         left <= centre  &&  centre <= right  &&
         /* Discard if peak too narrow. */
         -cimag(fit->b) > min_peak_width;
 }
 
 
-static unsigned int sanity_check_peaks(
-    unsigned int peak_count, const struct peak_range ranges[],
-    const double tune_scale[], const struct one_pole fits[],
-    const double errors[])
+/* Performs peak fitting or refinement and assesses the results. */
+static void fit_peaks(
+    const struct channel_sweep *sweep, const double tune_scale[],
+    struct peak_fit_result *peak_fit, bool refine_fit)
 {
-    unsigned int peak_ix = 0;
-    for (; peak_ix < peak_count; peak_ix ++)
-        if (!sanity_check_peak(
-                &ranges[peak_ix], tune_scale, &fits[peak_ix], errors[peak_ix]))
-            break;
-    return peak_ix;
+    unsigned int fit_count = fit_multiple_peaks(
+        peak_fit->peak_count, peak_fit_threshold, refine_fit,
+        tune_scale, sweep->wf_i, sweep->wf_q, sweep->power,
+        peak_fit->ranges, peak_fit->fits, peak_fit->errors);
+
+    for (unsigned int i = fit_count; i < peak_fit->peak_count; i ++)
+        peak_fit->status[i] = PEAK_NO_FIT;
+    for (unsigned int i = 0; i < fit_count; i ++)
+        if (assess_peak(
+                &peak_fit->ranges[i], tune_scale,
+                &peak_fit->fits[i], peak_fit->errors[i]))
+            peak_fit->status[i] = PEAK_GOOD;
+        else
+            peak_fit->status[i] = PEAK_REJECTED;
+
+    peak_fit->peak_count = fit_count;
 }
+
+
+/* Extract final good peak fit from fitted results in ascending order of centre
+ * frequency.  For the tiny number of peaks insertion sort is good. */
+static unsigned int extract_final_fits(
+    const struct peak_fit_result *peak_fit, struct one_pole fits[])
+{
+    unsigned int peak_count = 0;
+    for (unsigned int i = 0; i < MAX_PEAKS; i ++)
+        if (peak_fit->status[i] == PEAK_GOOD)
+        {
+            const struct one_pole *fit = &peak_fit->fits[i];
+
+            /* Push this new value down as far as it will go. */
+            unsigned int n = peak_count;
+            for (; n > 0  &&  creal(fits[n-1].b) > creal(fit->b); n -= 1)
+                fits[n] = fits[n-1];
+            fits[n] = *fit;
+
+            peak_count += 1;
+        }
+
+    /* Fill remaining fields with zeros. */
+    for (unsigned int i = peak_count; i < MAX_PEAKS; i ++)
+        fits[i] = (struct one_pole) { };
+    return peak_count;
+}
+
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/* Published results from final fitting and evaluation stage. */
+
+static double peak_height[MAX_PEAKS];
+static double peak_phase[MAX_PEAKS];
+static double peak_width[MAX_PEAKS];
+static double peak_centre[MAX_PEAKS];
+
+static unsigned fitted_peak_count;
+
 
 
 /* Convert fit coefficients into physically significant numbers. */
@@ -318,54 +406,6 @@ static void update_peak_fit_detail(
     }
 }
 
-
-static bool threshold_peak(const struct one_pole *fit, double error)
-{
-    return
-        /* Discard if fit error too large. */
-        error < max_fit_error  &&
-        /* Discard if peak too narrow. */
-        -cimag(fit->b) > min_peak_width;
-}
-
-
-/* Only accept peaks which pass the selection critera. */
-static unsigned int threshold_peaks(
-    unsigned int peak_count,
-    const struct one_pole fits_in[], const double errors[],
-    struct one_pole fits_out[])
-{
-    unsigned int count = 0;
-    for (unsigned int i = 0; i < peak_count; i ++)
-        if (threshold_peak(&fits_in[i], errors[i]))
-        {
-            fits_out[count] = fits_in[i];
-            count += 1;
-        }
-    return count;
-}
-
-
-/* Once we've filtered out the peaks we don't want we sort the remainer into
- * ascending order of peak centre frequency. */
-static void sort_peak_fits(
-    unsigned int peak_count, struct one_pole fits[])
-{
-    /* Sort peak fits in ascending order of real(.b), this being the true tune
-     * centre for each peak.  The list is tiny (up to four points), so a simple
-     * insertion sort is just fine. */
-    for (unsigned int n = 1; n < peak_count; n ++)
-    {
-        struct one_pole fit = fits[n];
-        unsigned int i = n;
-        while (i > 0  &&  creal(fits[i - 1].b) > creal(fit.b))
-        {
-            fits[i] = fits[i - 1];
-            i -= 1;
-        }
-        fits[i] = fit;
-    }
-}
 
 
 static const struct one_pole *choose_larger(
@@ -399,48 +439,27 @@ static unsigned int extract_peak_tune(
 }
 
 
+static struct peak_fit_result first_fit;
+static struct peak_fit_result second_fit;
+
+
 static void process_peak_tune(
     const struct channel_sweep *sweep, const double tune_scale[],
     struct peak_info *info,
     unsigned int *status, double *tune, double *phase)
 {
-    unsigned int peak_count = info->peak_count;
-    struct peak_range ranges[peak_count];
-    extract_peak_ranges(info, ranges);
+    extract_peak_ranges(info, &first_fit);
+    fit_peaks(sweep, tune_scale, &first_fit, false);
 
-    /* First compute the fit without any preconceptions.  This means an
-     * unweighted fit which doesn't take any preexisting fit into account. */
-    struct one_pole fits[peak_count];
-    double errors[peak_count];
-    peak_count = fit_multiple_peaks(
-        peak_count, peak_fit_threshold, false,
-        tune_scale, sweep->wf_i, sweep->wf_q, sweep->power, ranges,
-        fits, errors);
+    extract_good_peaks(&first_fit, &second_fit);
+    fit_peaks(sweep, tune_scale, &second_fit, true);
 
-    /* Perform sanity filtering on the first fits.  This allows us to discard
-     * some clearly wrong fits.  Again, we discard all candidates after the
-     * first failure. */
-    peak_count = sanity_check_peaks(
-        peak_count, ranges, tune_scale, fits, errors);
-
-    /* Next repeat the fit to refine it taking the existing fits into account
-     * with weights and data correction. */
-    peak_count = fit_multiple_peaks(
-        peak_count, peak_fit_threshold, true,
-        tune_scale, sweep->wf_i, sweep->wf_q, sweep->power, ranges,
-        fits, errors);
-
-    update_peak_fit_detail(peak_count, fits);
-
-    /* Finally check all the remaining peaks for sanity.  Anything that's passed
-     * all the checks is for real, so we can sort the result into ascending
-     * order of frequency and finally compute the tune. */
-    struct one_pole final_fits[peak_count];
-    peak_count = threshold_peaks(peak_count, fits, errors, final_fits);
-    fitted_peak_count = peak_count;
-    sort_peak_fits(peak_count, final_fits);
-    *status = extract_peak_tune(peak_count, final_fits, tune, phase);
+    struct one_pole final_fits[MAX_PEAKS];
+    fitted_peak_count = extract_final_fits(&second_fit, final_fits);
+    update_peak_fit_detail(fitted_peak_count, final_fits);
+    *status = extract_peak_tune(fitted_peak_count, final_fits, tune, phase);
 }
+
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -482,6 +501,10 @@ void measure_tune_peaks(
 }
 
 
+#define PUBLISH_PEAK_FIT(name, value) \
+    PUBLISH_WF_READ_VAR(char, name, sizeof(struct peak_fit_result), \
+        (char *) *(struct peak_fit_result *[]) { &value })
+
 bool initialise_tune_peaks(void)
 {
     publish_peak_info(&peak_info_16, 16);
@@ -499,6 +522,9 @@ bool initialise_tune_peaks(void)
     PUBLISH_WF_READ_VAR(double, "TUNE:PEAK:WFWIDTH",  MAX_PEAKS, peak_width);
     PUBLISH_WF_READ_VAR(double, "TUNE:PEAK:WFCENTRE", MAX_PEAKS, peak_centre);
     PUBLISH_READ_VAR(ulongin, "TUNE:PEAK:COUNT", fitted_peak_count);
+
+    PUBLISH_PEAK_FIT("TUNE:PEAK:FIRSTFIT", first_fit);
+    PUBLISH_PEAK_FIT("TUNE:PEAK:SECONDFIT", second_fit);
 
     return true;
 }

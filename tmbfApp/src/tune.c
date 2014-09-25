@@ -415,14 +415,6 @@ static void set_selected_result(unsigned int selection)
 }
 
 
-void update_tune_sweep(struct sweep_info *sweep_info, bool overflow)
-{
-    struct tune_sweep_info tune_sweep;
-    extract_sweep_info(&tune_sweep, sweep_info);
-    do_tune_sweep(&tune_sweep, overflow);
-}
-
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Test data injection support. */
 
@@ -432,6 +424,19 @@ static struct tune_sweep_info injection_info = {
     .tune_scale = (double [TUNE_LENGTH]) {},
     .sweep = &(struct channel_sweep) {}
 };
+
+
+void update_tune_sweep(struct sweep_info *sweep_info, bool overflow)
+{
+    struct tune_sweep_info tune_sweep;
+    extract_sweep_info(&tune_sweep, sweep_info);
+    do_tune_sweep(&tune_sweep, overflow);
+
+    /* After performing a normal tune sweep update the injected sweep tune scale
+     * so that things match by default. */
+    memcpy(injection_info.tune_scale, tune_sweep.tune_scale,
+        sizeof(double) * TUNE_LENGTH);
+}
 
 
 /* Inject given test data as power sweep by forcing call to update_tune_sweep
