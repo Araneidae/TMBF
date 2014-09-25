@@ -251,13 +251,13 @@ static EPICS_STRING read_feedback_mode(void)
 
     EPICS_STRING result;
     if (all_off)
-        snprintf(result.s, 40, "Off");
+        snprintf(result.s, 40, "Feedback off");
     else if (!all_fir)
-        snprintf(result.s, 40, "Mixed mode");
+        snprintf(result.s, 40, "Feedback mixed mode");
     else if (same_fir)
-        snprintf(result.s, 40, "On, FIR: #%d", bank->fir_wf[0]);
+        snprintf(result.s, 40, "Feedback on, FIR: #%d", bank->fir_wf[0]);
     else
-        snprintf(result.s, 40, "On, FIR: mixed");
+        snprintf(result.s, 40, "Feedback on, FIR: mixed");
     return result;
 }
 

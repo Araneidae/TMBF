@@ -7,6 +7,8 @@ include $(TOP)/configure/CONFIG
 
 #USR_CFLAGS += -S
 #USR_CFLAGS += -E
+#USR_CFLAGS += -g
+
 USR_CFLAGS += -std=gnu99
 USR_CFLAGS += -Werror -Wall -Wextra -Wno-unused-parameter
 USR_CFLAGS += -Wundef
