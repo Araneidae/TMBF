@@ -201,7 +201,7 @@ static void publish_peak_info(struct peak_info *info, unsigned int ratio)
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Peak fitting, processing, and evaluation. */
+/* Peak fitting results. */
 
 enum peak_status { PEAK_GOOD, PEAK_NO_RANGE, PEAK_NO_FIT, PEAK_REJECTED };
 
@@ -220,6 +220,75 @@ struct peak_fit_result {
 };
 
 
+/* Ensures that a<b by swapping them if necessary. */
+#define ENSURE_ORDERED(a, b) \
+    do if (a > b) \
+    { \
+        typeof(a) t__ = (a); \
+        (a) = (b); \
+        (b) = (t__); \
+    } while (0)
+
+
+
+/* Peak width computation.  Used to refine region of second fit. */
+
+/* Find index corresponding to the given tune by a binary search of tune_scale.
+ * Alas the frequency list in tune_scale can go in either order, so this makes
+ * our search more tricky. */
+static unsigned int tune_to_index(
+    unsigned int length, const double tune_scale[], double tune)
+{
+    unsigned int left = 0;
+    unsigned int right = length - 1;
+    bool forwards = tune_scale[left] < tune_scale[right];
+
+    while (right > left)
+    {
+        unsigned int centre = (left + right) / 2;
+        double value = tune_scale[centre];
+        bool in_left = forwards ? tune <= value : tune >= value;
+        if (in_left)
+            right = centre;
+        else
+            left = centre + 1;
+    }
+    return left;
+}
+
+
+/* Computes a peak range [left<right] corresponding to the given fit and
+ * threshold.  Involves searching the tune_scale to convert frequencies into
+ * index. */
+static void compute_peak_bounds(
+    const struct one_pole *fit, double threshold,
+    unsigned int length, const double tune_scale[], struct peak_range *range)
+{
+    /* Given z = a/(s-b) with b = s_0 + i w we have
+     *                    2                          2
+     *         2       |a|                    2   |a|
+     *      |z|  = -------------  and  max |z|  = ----
+     *                    2    2                    2
+     *             (s-s_0)  + w                    b
+     *
+     * Thus given a threshold k we solve for |z|^2 = k max |z|^2 as equal to
+     *                     (1 - k)
+     *      s_0 +- w * sqrt(-----)
+     *                     (  k  )
+     */
+    double delta = -cimag(fit->b) * sqrt((1 - threshold) / threshold);
+    double left  = creal(fit->b) + delta;
+    double right = creal(fit->b) - delta;
+    range->left  = tune_to_index(length, tune_scale, left);
+    range->right = tune_to_index(length, tune_scale, right);
+    ENSURE_ORDERED(range->left, range->right);
+}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* Peak fitting, processing, and evaluation. */
+
+
 static void reset_fit_result(
     struct peak_fit_result *peak_fit, unsigned int peak_count)
 {
@@ -236,20 +305,29 @@ static void reset_fit_result(
 /* Converts peak bounds on the filtered data into enclosing bounds on the raw
  * data for peak fitting and initialises the peak_fit_result structure. */
 static void extract_peak_ranges(
+    unsigned int length,
     const struct peak_info *info, struct peak_fit_result *peak_fit)
 {
     const unsigned int *left  = (const unsigned int *) info->peak_left_wf;
     const unsigned int *right = (const unsigned int *) info->peak_right_wf;
     for (unsigned int i = 0; i < info->peak_count; i ++)
-        peak_fit->ranges[i] = (struct peak_range) {
+    {
+        struct peak_range range = {
             .left  = info->scaling * left[i],
             .right = info->scaling * (right[i] + 1) - 1 };
+        /* Clip range to actual length. */
+        if (range.left  >= length)  range.left  = length - 1;
+        if (range.right >= length)  range.right = length - 1;
+        peak_fit->ranges[i] = range;
+    }
     reset_fit_result(peak_fit, info->peak_count);
 }
 
 
-/* Extracts peaks assessed as of good quality into a fresh peak fit struct. */
+/* Extracts peaks assessed as of good quality into a fresh peak fit struct.  In
+ * this case we compute the ranges from the previous fit. */
 static void extract_good_peaks(
+    unsigned int length, const double tune_scale[],
     const struct peak_fit_result *peak_fit_in,
     struct peak_fit_result *peak_fit_out)
 {
@@ -257,8 +335,10 @@ static void extract_good_peaks(
     for (unsigned int i = 0; i < MAX_PEAKS; i ++)
         if (peak_fit_in->status[i] == PEAK_GOOD)
         {
-            peak_fit_out->ranges[peak_count] = peak_fit_in->ranges[i];
             peak_fit_out->fits[peak_count] = peak_fit_in->fits[i];
+            compute_peak_bounds(
+                &peak_fit_in->fits[i], peak_fit_threshold,
+                length, tune_scale, &peak_fit_out->ranges[peak_count]);
             peak_count += 1;
         }
     reset_fit_result(peak_fit_out, peak_count);
@@ -273,14 +353,10 @@ static bool assess_peak(
     const struct peak_range *range, const double tune_scale[],
     const struct one_pole *fit, double error)
 {
+    double centre = creal(fit->b);
     double left  = tune_scale[range->left];
     double right = tune_scale[range->right];
-    if (left > right)
-    {
-        right = tune_scale[range->left];
-        left  = tune_scale[range->right];
-    }
-    double centre = creal(fit->b);
+    ENSURE_ORDERED(left, right);
 
     return
         /* Discard if fit error too large. */
@@ -299,8 +375,9 @@ static void fit_peaks(
     const struct channel_sweep *sweep, const double tune_scale[],
     struct peak_fit_result *peak_fit, bool refine_fit)
 {
+    double threshold = refine_fit ? 0 : peak_fit_threshold;
     unsigned int fit_count = fit_multiple_peaks(
-        peak_fit->peak_count, peak_fit_threshold, refine_fit,
+        peak_fit->peak_count, threshold, refine_fit,
         tune_scale, sweep->wf_i, sweep->wf_q, sweep->power,
         peak_fit->ranges, peak_fit->fits, peak_fit->errors);
 
@@ -468,16 +545,17 @@ static struct peak_fit_result second_fit;
  * of candidate peaks, and the quality of the rest of the result depends on the
  * quality of this initial list. */
 static void process_peak_tune(
+    unsigned int length,
     const struct channel_sweep *sweep, const double tune_scale[],
     const struct peak_info *info,
     unsigned int *status, double *tune, double *phase)
 {
     /* Perform initial fit on raw peak ranges. */
-    extract_peak_ranges(info, &first_fit);
+    extract_peak_ranges(length, info, &first_fit);
     fit_peaks(sweep, tune_scale, &first_fit, false);
 
     /* Refine the fit. */
-    extract_good_peaks(&first_fit, &second_fit);
+    extract_good_peaks(length, tune_scale, &first_fit, &second_fit);
     fit_peaks(sweep, tune_scale, &second_fit, true);
 
     /* Extract the final peaks in ascending order of frequency. */
@@ -540,7 +618,8 @@ void measure_tune_peaks(
     process_peak_info(&peak_info_64);
 
     struct peak_info *peak_info = select_peak_info();
-    process_peak_tune(sweep, tune_scale, peak_info, status, tune, phase);
+    process_peak_tune(
+        length, sweep, tune_scale, peak_info, status, tune, phase);
 }
 
 
