@@ -629,6 +629,14 @@ static void read_overflows(void)
 }
 
 
+static bool read_clock_dropout(void)
+{
+    bool dropout = hw_read_clock_dropout();
+    if (dropout)
+        print_error("ADC clock dropout detected");
+    return dropout;
+}
+
 
 bool initialise_sensors(void)
 {
@@ -644,7 +652,7 @@ bool initialise_sensors(void)
     PUBLISH_READ_VAR(ai, "SE:EPICSUP", EpicsUpHours);
     PUBLISH_READ_VAR(ai, "SE:CPU",     CpuUsage);
 
-    PUBLISH_READER(bi, "SE:ADCCLK", hw_read_clock_dropout);
+    PUBLISH_READER(bi, "SE:ADCCLK", read_clock_dropout);
 
     PublishNetworkStats();
 
