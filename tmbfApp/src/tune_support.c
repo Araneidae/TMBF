@@ -234,6 +234,25 @@ static bool fit_one_pole(
 }
 
 
+/* Computes the relative fit error between the given data and fit, computes the
+ * error as the average:
+ *                                   2                   2
+ *                   | data - model |        | data     |
+ *      error = mean |--------------| = mean |------ - 1|
+ *                   |     model    |        | model    |
+ *
+ * It's looking like this might well be a reasonable estimate of fit qualty. */
+static double compute_fit_error(
+    unsigned int length, const double scale[], const double complex iq[],
+    const struct one_pole *fit)
+{
+    double error = 0;
+    for (unsigned int i = 0; i < length; i ++)
+        error += cabs2(iq[i] * (scale[i] - fit->b) / fit->a - 1);
+    return error / length;
+}
+
+
 /* Given data to process (scale_in, wf_i, wf_q) together with the associated
  * power already computed, and a data range with a threshold, scan the selected
  * data set and extract all points with relative power greater than the given
@@ -324,7 +343,8 @@ static const double *maybe_compute_weights(
 unsigned int fit_multiple_peaks(
     unsigned int peak_count, double threshold, bool refine_fit,
     const double scale_in[], const short wf_i[], const short wf_q[],
-    const int power[], const struct peak_range ranges[], struct one_pole fits[])
+    const int power[], const struct peak_range ranges[],
+    struct one_pole fits[], double errors[])
 {
     unsigned int peak_ix = 0;
     for (; peak_ix < peak_count; peak_ix ++)
@@ -353,6 +373,9 @@ unsigned int fit_multiple_peaks(
          * candidates. */
         if (!fit_one_pole(count, scale, iq, fit_weights, fit))
             break;
+
+        /* Finally compute the fit error. */
+        errors[peak_ix] = compute_fit_error(count, scale, iq, fit);
     }
     return peak_ix;
 }
@@ -362,11 +385,11 @@ unsigned int fit_multiple_peaks(
  *
  *      centre = real(b)
  *      phase = angle(a)
- *      height = abs(a) / -imag(b)
+ *      height = abs(a) / -imag(b) = max|z|
  *      width = -imag(b)
  *
  * The computed height here is the power half-width half maximum value.  The
- * peak power area can be computed as proportional to height*width. */
+ * peak power area can be computed as pi * height^2 * width. */
 void decode_one_pole(
     const struct one_pole *fit,
     double *height, double *width, double *centre, double *phase)

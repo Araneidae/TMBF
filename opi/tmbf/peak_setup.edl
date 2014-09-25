@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 605
-y 815
+x 2635
+y 27
 w 537
 h 378
 font "helvetica-medium-r-18.0"
@@ -270,26 +270,6 @@ value {
 autoSize
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 16
-y 160
-w 63
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Fit margin:"
-}
-autoSize
-endObjectProperties
-
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
@@ -297,10 +277,10 @@ major 4
 minor 6
 release 0
 x 88
-y 160
+y 280
 w 56
 h 20
-controlPv "$(device):TUNE:PEAK:MINMARGIN_S"
+controlPv "$(device):TUNE:PEAK:FITERROR_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -325,139 +305,15 @@ major 4
 minor 1
 release 1
 x 16
-y 192
-w 50
+y 280
+w 52
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Fit ratio:"
-}
-autoSize
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 88
-y 192
-w 56
-h 20
-controlPv "$(device):TUNE:PEAK:MINRATIO_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-clipToDspLimits
-noExecuteClipMask
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 88
-y 216
-w 56
-h 20
-controlPv "$(device):TUNE:PEAK:MINAREA_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-clipToDspLimits
-noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 16
-y 216
-w 49
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Fit area:"
-}
-autoSize
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 88
-y 248
-w 56
-h 20
-controlPv "$(device):TUNE:PEAK:MINWIDTHR_S"
-font "helvetica-medium-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-autoHeight
-motifWidget
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-clipToDspLimits
-noExecuteClipMask
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 16
-y 248
-w 67
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Width ratio:"
+  "Fit error:"
 }
 autoSize
 endObjectProperties

@@ -2,7 +2,7 @@
 
 from common import *
 
-MAX_PEAKS = 4
+MAX_PEAKS = 3
 
 
 # Common controls for simple tune control
@@ -112,10 +112,7 @@ aOut('TUNE:PEAK:MIND2', 0, 1, PREC = 3, DESC = 'Minimum peak D2 threshold')
 aOut('TUNE:PEAK:THRESHOLD', 0, 1, PREC = 2,
     DESC = 'Fit data selection threshold')
 aOut('TUNE:PEAK:MINWIDTH', 0, 1, PREC = 4, DESC = 'Minimum valid peak width')
-aOut('TUNE:PEAK:MINMARGIN', 0, 10, PREC = 2, DESC = 'Minimum fit centre margin')
-aOut('TUNE:PEAK:MINRATIO', 0, 1, PREC = 3, DESC = 'Minimum fit width ratio')
-aOut('TUNE:PEAK:MINAREA', 0, 1, PREC = 3, DESC = 'Minimum area ratio')
-aOut('TUNE:PEAK:MINWIDTHR', 0, 1, PREC = 3, DESC = 'Minimum width ratio')
+aOut('TUNE:PEAK:FITERROR', 0, 10, PREC = 3, DESC = 'Maximum fit error')
 
 mbbOut('TUNE:PEAK:SEL', '/4', '/16', '/64', DESC = 'Select smoothing')
 

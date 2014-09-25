@@ -24,11 +24,7 @@
 static double min_peak_d2_ratio;
 static double peak_fit_threshold;
 static double min_peak_width;
-
-static double min_fit_ratio;
-static double min_fit_margin;
-static double min_area_ratio;
-static double min_width_ratio;
+static double max_fit_error;
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -122,7 +118,7 @@ static unsigned int extract_peaks(
  * publish information about each peak and perform some preliminary processing
  * and qualification. */
 
-#define MAX_PEAKS   4
+#define MAX_PEAKS   3
 
 
 struct peak_info {
@@ -265,15 +261,12 @@ static void extract_peak_ranges(
 }
 
 
-#define CHECK_  TEST_OK_
-//#define CHECK_(test, message...) (test)
-
 /* Preliminary sanity checking on a fit candidate.  The fit should fit
  * comfortably within the selected interval and should not be narrower than our
  * minimum fit threshold. */
 static bool sanity_check_peak(
     const struct peak_range *range, const double tune_scale[],
-    const struct one_pole *fit, const struct one_pole *first)
+    const struct one_pole *fit, double error)
 {
     double left  = tune_scale[range->left];
     double right = tune_scale[range->right];
@@ -282,39 +275,27 @@ static bool sanity_check_peak(
         right = tune_scale[range->left];
         left  = tune_scale[range->right];
     }
-    double range_width = right - left;
-
     double centre = creal(fit->b);
-    double width = -cimag(fit->b);
-    double area = cabs2(fit->a) / width;
-
-    double first_area = cabs2(first->a) / -cimag(first->b);
-    double first_width = -cimag(first->b);
 
     return
-        /* Discard if peak too narrow. */
-        CHECK_(width > min_peak_width, "Too narrow")  &&
+        /* Discard if fit error too large. */
+        error < max_fit_error  &&
         /* Discard if peak not comfortably within fit area. */
-        CHECK_(left + width * min_fit_margin <= centre  &&
-            centre <= right - width * min_fit_margin, "Outside fit")  &&
-        /* Discard if peak not wide enough relative to fit area. */
-        CHECK_(width > min_fit_ratio * range_width, "Narrow fit")  &&
-
-        /* Discard if peak area too small. */
-        CHECK_(area > min_area_ratio * first_area, "Too small")  &&
-        /* Discard if much narrower than first peak. */
-        CHECK_(width > min_width_ratio * first_width, "Too narrow");
+        left <= centre  &&  centre <= right  &&
+        /* Discard if peak too narrow. */
+        -cimag(fit->b) > min_peak_width;
 }
 
 
 static unsigned int sanity_check_peaks(
     unsigned int peak_count, const struct peak_range ranges[],
-    const double tune_scale[], const struct one_pole fits[])
+    const double tune_scale[], const struct one_pole fits[],
+    const double errors[])
 {
     unsigned int peak_ix = 0;
     for (; peak_ix < peak_count; peak_ix ++)
         if (!sanity_check_peak(
-                &ranges[peak_ix], tune_scale, &fits[peak_ix], &fits[0]))
+                &ranges[peak_ix], tune_scale, &fits[peak_ix], errors[peak_ix]))
             break;
     return peak_ix;
 }
@@ -335,34 +316,30 @@ static void update_peak_fit_detail(
         peak_centre[i] = 0;
         peak_phase[i] = 0;
     }
-
-    for (unsigned int i = 0; i < peak_count; i ++)
-        printf("p%d = [%g+%gi %g+%gi];\n", i,
-            creal(fits[i].a), cimag(fits[i].a),
-            creal(fits[i].b), cimag(fits[i].b));
 }
 
 
-static bool threshold_peak(const struct one_pole *fit)
+static bool threshold_peak(const struct one_pole *fit, double error)
 {
-    /* For the moment just a simple width threshold. */
-    return -cimag(fit->b) > min_peak_width;
+    return
+        /* Discard if fit error too large. */
+        error < max_fit_error  &&
+        /* Discard if peak too narrow. */
+        -cimag(fit->b) > min_peak_width;
 }
 
 
-/* Discard all peaks which fail the selection critera. */
+/* Only accept peaks which pass the selection critera. */
 static unsigned int threshold_peaks(
-    unsigned int peak_count, struct one_pole fits[])
+    unsigned int peak_count,
+    const struct one_pole fits_in[], const double errors[],
+    struct one_pole fits_out[])
 {
-    bool valid_peak[peak_count];
-    for (unsigned int i = 0; i < peak_count; i ++)
-        valid_peak[i] = threshold_peak(&fits[i]);
-
     unsigned int count = 0;
     for (unsigned int i = 0; i < peak_count; i ++)
-        if (valid_peak[i])
+        if (threshold_peak(&fits_in[i], errors[i]))
         {
-            if (i != count) fits[count] = fits[i];
+            fits_out[count] = fits_in[i];
             count += 1;
         }
     return count;
@@ -394,10 +371,9 @@ static void sort_peak_fits(
 static const struct one_pole *choose_larger(
     const struct one_pole *fit1, const struct one_pole *fit2)
 {
-    if (cabs2(fit1->a) > cabs2(fit2->a))
-        return fit1;
-    else
-        return fit2;
+    double area1 = cabs2(fit1->a) / -cimag(fit1->b);
+    double area2 = cabs2(fit2->a) / -cimag(fit2->b);
+    return area1 >= area2 ? fit1 : fit2;
 }
 
 
@@ -408,12 +384,11 @@ static unsigned int extract_peak_tune(
     const struct one_pole *fit = NULL;
     switch (peak_count)
     {
+        default:
         case 0: return TUNE_NO_PEAK;
         case 1: fit = &fits[0];                             break;
         case 2: fit = choose_larger(&fits[0], &fits[1]);    break;
         case 3: fit = &fits[1];                             break;
-        default:
-        case 4: return TUNE_EXTRA_PEAKS;
     }
 
     double harmonic;
@@ -433,31 +408,38 @@ static void process_peak_tune(
     struct peak_range ranges[peak_count];
     extract_peak_ranges(info, ranges);
 
-    struct one_pole fits[peak_count];
     /* First compute the fit without any preconceptions.  This means an
      * unweighted fit which doesn't take any preexisting fit into account. */
+    struct one_pole fits[peak_count];
+    double errors[peak_count];
     peak_count = fit_multiple_peaks(
         peak_count, peak_fit_threshold, false,
-        tune_scale, sweep->wf_i, sweep->wf_q, sweep->power, ranges, fits);
+        tune_scale, sweep->wf_i, sweep->wf_q, sweep->power, ranges,
+        fits, errors);
 
     /* Perform sanity filtering on the first fits.  This allows us to discard
      * some clearly wrong fits.  Again, we discard all candidates after the
      * first failure. */
-    peak_count = sanity_check_peaks(peak_count, ranges, tune_scale, fits);
+    peak_count = sanity_check_peaks(
+        peak_count, ranges, tune_scale, fits, errors);
 
     /* Next repeat the fit to refine it taking the existing fits into account
      * with weights and data correction. */
     peak_count = fit_multiple_peaks(
         peak_count, peak_fit_threshold, true,
-        tune_scale, sweep->wf_i, sweep->wf_q, sweep->power, ranges, fits);
+        tune_scale, sweep->wf_i, sweep->wf_q, sweep->power, ranges,
+        fits, errors);
 
     update_peak_fit_detail(peak_count, fits);
 
-    peak_count = threshold_peaks(peak_count, fits);
-    sort_peak_fits(peak_count, fits);
-
+    /* Finally check all the remaining peaks for sanity.  Anything that's passed
+     * all the checks is for real, so we can sort the result into ascending
+     * order of frequency and finally compute the tune. */
+    struct one_pole final_fits[peak_count];
+    peak_count = threshold_peaks(peak_count, fits, errors, final_fits);
     fitted_peak_count = peak_count;
-    *status = extract_peak_tune(peak_count, fits, tune, phase);
+    sort_peak_fits(peak_count, final_fits);
+    *status = extract_peak_tune(peak_count, final_fits, tune, phase);
 }
 
 
@@ -512,10 +494,7 @@ bool initialise_tune_peaks(void)
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MIND2", min_peak_d2_ratio);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:THRESHOLD", peak_fit_threshold);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINWIDTH", min_peak_width);
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINMARGIN", min_fit_margin);
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINRATIO", min_fit_ratio);
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINAREA", min_area_ratio);
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINWIDTHR", min_width_ratio);
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:FITERROR", max_fit_error);
 
     PUBLISH_WRITE_VAR_P(mbbo, "TUNE:PEAK:SEL", peak_select);
 

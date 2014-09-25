@@ -28,12 +28,13 @@ void decode_one_pole(
  * wf_i, wf_q   Raw IQ detector data
  * power        |iq|^2, already calculated for convenience
  * ranges       List of ranges for each peak
- * fits         List of fitting results */
+ * fits         List of fitting results
+ * errors       List of fit errors */
 unsigned int fit_multiple_peaks(
     unsigned int peak_count, double threshold, bool refine_fit,
     const double tune_scale[], const short wf_i[], const short wf_q[],
-    const int power[],
-    const struct peak_range ranges[], struct one_pole fits[]);
+    const int power[], const struct peak_range ranges[],
+    struct one_pole fits[], double errors[]);
 
 /* Given index into sweep and the corresponding tune scale computes the tune and
  * phase for the given index. */
