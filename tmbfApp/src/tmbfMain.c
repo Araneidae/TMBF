@@ -388,7 +388,7 @@ int main(int argc,char *argv[])
     }
 
     if (PidFileName != NULL)
-        unlink(PidFileName);
+        TEST_IO(unlink(PidFileName));
 
     return Ok ? 0 : 1;
 }

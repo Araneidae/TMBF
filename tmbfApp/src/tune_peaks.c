@@ -221,7 +221,7 @@ struct peak_fit_result {
 };
 
 
-/* Ensures that a<b by swapping them if necessary. */
+/* Ensures that a <= b by swapping them if necessary. */
 #define ENSURE_ORDERED(a, b) \
     do if (a > b) \
     { \
@@ -353,16 +353,17 @@ static bool assess_peak(
     const struct peak_range *range, const double tune_scale[],
     const struct one_pole *fit, double error)
 {
+    double left = tune_scale[range->left];
+    double right = tune_scale[range->right];
+    ENSURE_ORDERED(left, right);
     return
         /* Discard if peak not within fit area. */
-        tune_scale[range->left] < peak_centre(fit)  &&
-        peak_centre(fit) < tune_scale[range->right]  &&
+        left < peak_centre(fit)  &&  peak_centre(fit) < right  &&
         /* Discard if fit error too large. */
         error < max_fit_error  &&
         /* Discard if peak too narrow.  This will automatically reject peaks of
          * negative width, this should not arise! */
-        min_peak_width < peak_width(fit)  &&
-        peak_width(fit) < max_peak_width;
+        min_peak_width < peak_width(fit)  &&  peak_width(fit) < max_peak_width;
 }
 
 
@@ -445,6 +446,10 @@ struct peak_result_relative {
 
 static unsigned fitted_peak_count;
 
+static struct peak_fit_result first_fit;
+static struct peak_fit_result second_fit;
+
+
 /* Results are published for the central tune resonance and the two immediate
  * synchrotron sidebands, if they are detected. */
 static struct peak_result left_peak;
@@ -464,10 +469,10 @@ static void update_peak_result(
     if (fit)
     {
         double harmonic;
-        result->tune = modf(peak_centre(fit), &harmonic);
+        result->tune  = modf(peak_centre(fit), &harmonic);
         result->phase = 180 / M_PI * peak_phase(fit);
+        result->area  = peak_area(fit);
         result->width = peak_width(fit);
-        result->area = peak_area(fit);
         result->height = result->area / result->width;
     }
     else
@@ -501,17 +506,18 @@ static void update_peak_result_relative(
 }
 
 
-/* From the final selection of peaks, in ascending order of frequency, we select
- * the central tune peak and its two synchrotron sidebands ... if possible.  The
- * heart of this is a switch statement on the number of peaks actually detected,
- * and when there are only two we have to make a choice. */
-static unsigned int extract_peak_tune(
+/* Identify the tune peak and its sidebands, if possible.  The heart of this is
+ * a switch statement on the number of peaks actually detected, and when there
+ * are only two we have to make a choice, we assume the peak with the largest
+ * area is the tune proper. */
+static void identify_three_peaks(
     unsigned int peak_count, const struct one_pole fits[],
-    double *tune, double *phase)
+    const struct one_pole **left, const struct one_pole **centre,
+    const struct one_pole **right)
 {
-    const struct one_pole *left   = NULL;
-    const struct one_pole *centre = NULL;
-    const struct one_pole *right  = NULL;
+    *left   = NULL;
+    *centre = NULL;
+    *right  = NULL;
 
     switch (peak_count)
     {
@@ -520,35 +526,67 @@ static unsigned int extract_peak_tune(
             break;
 
         case 1:
-            centre = &fits[0];
+            *centre = &fits[0];
             break;
+
         case 2:
             /* Take the "largest" peak as the tune. */
             if (peak_area(&fits[0]) >= peak_area(&fits[1]))
             {
-                centre = &fits[0];
-                right  = &fits[1];
+                *centre = &fits[0];
+                *right  = &fits[1];
             }
             else
             {
-                left   = &fits[0];
-                centre = &fits[1];
+                *left   = &fits[0];
+                *centre = &fits[1];
             }
             break;
+
         case 3:
-            left   = &fits[0];
-            centre = &fits[1];
-            right  = &fits[2];
+            *left   = &fits[0];
+            *centre = &fits[1];
+            *right  = &fits[2];
             break;
     }
+}
+
+
+/* We estimate the synchrotron from the offset of the tune sidebands.  If both
+ * are present then we take the mean offset, otherwise we use whichever is
+ * valid. */
+static double compute_synchrotron_tune(void)
+{
+    int count = 0;
+    double tune = 0;
+    if (left_peak.valid)
+    {
+        tune += left_peak_relative.delta_tune;
+        count += 1;
+    }
+    if (right_peak.valid)
+    {
+        tune += right_peak_relative.delta_tune;
+        count += 1;
+    }
+    return tune / count;    // Conveniently returns NAN if count == 0.
+}
+
+
+/* Extract the tune and its sidebands as sensible published results. */
+static unsigned int extract_peak_tune(
+    unsigned int peak_count, const struct one_pole fits[],
+    double *tune, double *phase)
+{
+    const struct one_pole *left, *centre, *right;
+    identify_three_peaks(peak_count, fits, &left, &centre, &right);
 
     update_peak_result(&left_peak,   left);
     update_peak_result(&centre_peak, centre);
     update_peak_result(&right_peak,  right);
-    update_peak_result_relative(&left_peak, &left_peak_relative);
+    update_peak_result_relative(&left_peak,  &left_peak_relative);
     update_peak_result_relative(&right_peak, &right_peak_relative);
-    synchrotron_tune = 0.5 * (
-        left_peak_relative.delta_tune + right_peak_relative.delta_tune);
+    synchrotron_tune = compute_synchrotron_tune();
 
     if (centre == NULL)
         return TUNE_NO_PEAK;
@@ -562,10 +600,6 @@ static unsigned int extract_peak_tune(
         return TUNE_OK;
     }
 }
-
-
-static struct peak_fit_result first_fit;
-static struct peak_fit_result second_fit;
 
 
 /* Top level control of peak fitting and tune extraction.  Takes as given a list

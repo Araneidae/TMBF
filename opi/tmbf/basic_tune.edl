@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 428
-y 377
+x 429
+y 378
 w 304
 h 257
 font "helvetica-medium-r-18.0"
@@ -41,7 +41,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 73
 value {
-  "$(device) Basic Tune Measurement"
+  "$(device) Basic Tune"
 }
 endObjectProperties
 
