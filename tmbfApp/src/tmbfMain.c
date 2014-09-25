@@ -44,6 +44,9 @@ extern void caRepeaterThread(void *);
 extern int tmbf_registerRecordDeviceDriver(struct dbBase *pdbbase);
 
 
+/* Name of PID file so that we can remove it on successful termination. */
+static const char *PidFileName = NULL;
+
 /* If the IOC shell is not running then this semaphore is used to request IOC
  * shutdown. */
 static sem_t ShutdownSemaphore;
@@ -188,8 +191,8 @@ static bool WritePid(const char * FileName)
          * any errors in any of the following. */
         fprintf(output, "%d", getpid());
         fclose(output);
-//         /* Remember PID filename so we can remove it on exit. */
-//         PidFileName = FileName;
+        /* Remember PID filename so we can remove it on exit. */
+        PidFileName = FileName;
         return true;
     }
 }
@@ -383,5 +386,9 @@ int main(int argc,char *argv[])
 
         terminate_persistent_state();
     }
+
+    if (PidFileName != NULL)
+        unlink(PidFileName);
+
     return Ok ? 0 : 1;
 }

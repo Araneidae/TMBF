@@ -3,6 +3,8 @@
 . /etc/init.d/functions
 . /etc/tmbf_ioc
 
+PIDFILE=/var/run/tmbf.pid
+
 : "${IOC_LOG:=/dev/console}"
 
 : "${TMBF_IOC:?}"
@@ -11,14 +13,11 @@
 
 do_start()
 {
-    if [ -e /var/run/ioc.pid ]; then
+    if [ -e "$PIDFILE" ]; then
         echo -n " - already running?"
     else
         # Load and initialise FPGA
         /opt/bin/load-fpga "$DESIGN"
-
-        # Ensure MSP driver is running
-#         modprobe msp
 
         # Run as a daemon with all output sent to log file.
         "$TMBF_IOC" -n >>"$IOC_LOG" 2>&1 </dev/null &
@@ -27,10 +26,8 @@ do_start()
 
 do_stop()
 {
-    [ -e /var/run/ioc.pid ]  &&  kill "$(cat /var/run/ioc.pid)"
-    rm -f /var/run/ioc.pid
-
-#     modprobe -r msp
+    [ -e "$PIDFILE" ]  &&  kill "$(cat "$PIDFILE")"
+    rm -f "$PIDFILE"
 }
 
 do_restart()

@@ -31,7 +31,7 @@ LOG_WF_LIMIT=20
 
 export HOSTNAME=$(hostname)
 
-PIDFILE=/var/run/ioc.pid
+PIDFILE=/var/run/tmbf.pid
 STATE_FILE=/opt/state/$HOSTNAME.state
 
 
@@ -48,6 +48,14 @@ EOF
 done
 shift $((OPTIND - 1))
 [ $# -ne 0 ]  &&  Error 'Invalid arguments: try -h for help'
+
+
+# Don't run if the ioc.pid file is present: this is a simple technique to
+# prevent us interfering with an already running instance.
+if [ -e "$PIDFILE" ]; then
+    echo >&2 'PID file found: check TMBF driver is not already running'
+    exit 1
+fi
 
 
 export EPICS_CA_MAX_ARRAY_BYTES=1000000
@@ -71,3 +79,11 @@ trap 'rm -f "$PIDFILE"' EXIT
 bin/linux-arm_el/tmbf -d "$HOSTNAME" $IOC_PARAMETERS
 echo 'IOC stopped at' $(date)
 echo
+
+# Make sure the PID file isn't left behind.  This is a backup to the IOC itself
+# which should also have removed it.  Not perfect, but hopefully an adequate
+# workaround.
+if [ -e "$PIDFILE" ]; then
+    echo "IOC left PID file $PIDFILE, removing"
+    rm -f "$PIDFILE"
+fi

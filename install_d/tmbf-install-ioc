@@ -67,7 +67,7 @@ trap 'mount -o ro,remount /' EXIT
 
 
 # Ensure epics driver isn't running at the moment.
-[ -e /var/run/ioc.pid ]  &&  /etc/init.d/epics stop
+[ -e /var/run/tmbf.pid ]  &&  /etc/init.d/epics stop
 
 
 # If final installation selected then copy over all the run-time files and
