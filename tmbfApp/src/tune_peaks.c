@@ -21,9 +21,9 @@
 
 
 /* Some externally configured control parameters. */
-static double peak_fit_threshold;
-static double min_peak_width;
-static double max_fit_error;
+static double peak_fit_threshold = 0.3;
+static double min_peak_width = 0;
+static double max_fit_error = 1;
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -447,7 +447,7 @@ static struct peak_result right_peak;
 /* Computes tune properties (centre frequency, phase, area, width) from an
  * optional fit argument, sets entire result to invalid if no peak found. */
 static void update_peak_result(
-    struct peak_result *result, const struct one_pole *fit)
+    struct peak_result *result, const struct one_pole *fit, double area)
 {
     result->valid = fit != NULL;
     if (fit)
@@ -456,7 +456,7 @@ static void update_peak_result(
         result->tune = modf(creal(fit->b), &harmonic);
         result->phase = 180 / M_PI * carg(-I * fit->a);
         result->width = -cimag(fit->b);
-        result->area = cabs(fit->a) / result->width;
+        result->area = cabs(fit->a) / result->width / area;
     }
     else
     {
@@ -519,9 +519,10 @@ static unsigned int extract_peak_tune(
             break;
     }
 
-    update_peak_result(&left_peak, left);
-    update_peak_result(&centre_peak, centre);
-    update_peak_result(&right_peak, right);
+    double centre_area = centre ? cabs(centre->a) / -cimag(centre->b) : 0;
+    update_peak_result(&left_peak,   left,   centre_area);
+    update_peak_result(&centre_peak, centre, centre_area);
+    update_peak_result(&right_peak,  right,  centre_area);
 
     if (centre == NULL)
         return TUNE_NO_PEAK;

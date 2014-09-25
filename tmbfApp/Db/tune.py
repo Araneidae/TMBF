@@ -72,7 +72,7 @@ def peak_results(prefix):
         aIn('TUNE:PEAK:%s:PHASE' % prefix, -180, 180, 'dec',
             PREC = 1, DESC = '%s peak phase' % name),
         aIn('TUNE:PEAK:%s:AREA' % prefix,
-            PREC = 3, DESC = '%s peak area' % name),
+            PREC = 3, DESC = '%s peak relative area' % name),
         aIn('TUNE:PEAK:%s:WIDTH' % prefix, 0, 1,
             PREC = 5, DESC = '%s peak width' % name),
         boolIn('TUNE:PEAK:%s:VALID' % prefix, 'Invalid', 'Ok',

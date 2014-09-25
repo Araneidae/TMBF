@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 395
-y 104
+x 586
+y 126
 w 513
 h 695
 font "helvetica-medium-r-18.0"
@@ -739,7 +739,6 @@ y 536
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:LEFT:AREA"
-format "exponential"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -763,14 +762,14 @@ minor 1
 release 1
 x 160
 y 536
-w 31
+w 58
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Area:"
+  "Rel. Area:"
 }
 autoSize
 endObjectProperties
@@ -931,7 +930,6 @@ y 536
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:CENTRE:AREA"
-format "exponential"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1083,7 +1081,6 @@ y 536
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:RIGHT:AREA"
-format "exponential"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1418,7 +1415,7 @@ fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Smoothing;"
+  "Smoothing:"
 }
 autoSize
 endObjectProperties
