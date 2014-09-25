@@ -90,14 +90,16 @@ Trigger('TUNE',
 
     # Tune measurement.  We include an alias for :TUNE for backwards
     # compatibility.
-    *tune_results('', '$(DEVICE):TUNE') +
-     tune_results(':BASIC') +
+    *tune_results(':BASIC') +
      tune_results(':PEAK') +
 
     # Peak detection support
      peak_readbacks(4) + peak_readbacks(16) + peak_readbacks(64))
 
-mbbOut('TUNE:SELECT', 'Basic', 'Peak Fit',
+Trigger('TUNE:RESULT', *tune_results('', '$(DEVICE):TUNE'))
+
+
+mbbOut('TUNE:SELECT', 'Basic', 'Peak Fit', 'Tune PLL',
     DESC = 'Select tune measurement algorithm')
 
 # Controls for tune peak finding

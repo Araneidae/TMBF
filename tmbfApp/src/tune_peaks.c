@@ -418,7 +418,8 @@ static unsigned int extract_peak_tune(
 
     double harmonic;
     *tune = modf(creal(fit->b), &harmonic);
-    *phase = carg(eval_one_pole_model(peak_count, fits, creal(fit->b)));
+    *phase = 180 / M_PI *
+        carg(eval_one_pole_model(peak_count, fits, creal(fit->b)));
     return TUNE_OK;
 }
 

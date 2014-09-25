@@ -16,6 +16,7 @@
 #include "hardware.h"
 #include "numeric.h"
 #include "detector.h"
+#include "tune.h"
 
 #include "tune_follow.h"
 
@@ -73,6 +74,7 @@ static int freq_scaling_shift;
 
 /* Status readback data. */
 static bool status_array[FTUN_BIT_COUNT];
+enum { FTUN_ACTIVE_STOPPED, FTUN_ACTIVE_ARMED, FTUN_ACTIVE_RUNNING };
 static unsigned int ftun_status;
 static int current_i;
 static int current_q;
@@ -201,7 +203,7 @@ static void write_ftun_stop(void)
 static void write_nco_freq(double tune)
 {
     nco_freq = tune_to_freq(tune);
-    nco_freq_fraction = tune_to_freq(tune - round(tune));
+    nco_freq_fraction = tune_to_freq(tune - floor(tune));
     hw_write_nco_freq(nco_freq);
 }
 
@@ -264,6 +266,9 @@ static void read_ftun_status(void)
 
     update_iq_angle_mag();
     update_minmax();
+
+    if (ftun_status != FTUN_ACTIVE_RUNNING)
+        update_tune_pll_tune(false, 0, 0);
 }
 
 
@@ -287,10 +292,13 @@ static void update_ftun_buffer(void)
         freq_wf[i] = freq_wf[buffer_wf_length - 1];
     data_dropout = dropout_seen;
     interlock_signal(ftun_interlock, NULL);
+
     mean_nco_frequency = compute_mean_frequency();
     buffer_wf_length = 0;
 
     dropout_seen = false;
+
+    update_tune_pll_tune(true, mean_nco_frequency, current_angle);
 }
 
 

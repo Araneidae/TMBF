@@ -130,7 +130,8 @@ void index_to_tune(
 
     double harmonic;
     *tune = modf(INTERPOLATE(ix0, frac, tune_scale), &harmonic);
-    *phase = atan2(INTERPOLATE(ix0, frac, wf_q), INTERPOLATE(ix0, frac, wf_i));
+    *phase = 180 / M_PI *
+        atan2(INTERPOLATE(ix0, frac, wf_q), INTERPOLATE(ix0, frac, wf_i));
 }
 
 

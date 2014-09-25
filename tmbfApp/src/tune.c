@@ -158,45 +158,42 @@ static void measure_tune_basic(
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Generic tune results. */
 
-struct tune_result {
+/* As these two values are used to compute the status of each tune update we
+ * place them here. */
+static double centre_tune;      // Centre of tune sweep
+static double half_range;       // Min/max tune setting
+static double alarm_range;      // Alarm range to test
+
+
+struct tune_result_value {
     unsigned int status;
     double tune;
     double phase;
     epicsAlarmSeverity severity;
+};
+
+struct tune_result {
+    struct tune_result_value value;
     struct epics_record *tune_pv;
     struct epics_record *phase_pv;
 };
 
 
-/* Updates tune results with result of calling given tune measurement function
- * on the given tune sweep data.  Nothing is called if detector measurement
- * overflowed. */
-static void compute_tune_result(
-    bool overflow, double centre_tune, double alarm_range,
-    unsigned int length, const struct channel_sweep *sweep,
-    const double tune_scale[], struct tune_result *result,
-    void (*measure_tune)(
-        unsigned int length, const struct channel_sweep *sweep,
-        const double tune_scale[],
-        unsigned int *tune_status, double *tune, double *phase))
+static void set_tune_result(
+    struct tune_result_value *result,
+    unsigned int status, double tune, double phase)
 {
-    if (overflow)
-    {
-        result->status = TUNE_OVERFLOW;
+    result->status = status;
+    if (status == TUNE_OVERFLOW)
         result->severity = epicsSevMajor;
-    }
     else
     {
-        double phase;
-        measure_tune(
-            length, sweep, tune_scale,
-            &result->status, &result->tune, &phase);
-        result->phase = 180.0 / M_PI * phase;
-
-        if (result->status == TUNE_OK)
+        result->tune = tune;
+        result->phase = phase;
+        if (status == TUNE_OK)
         {
             /* Check for tune within alarm range. */
-            if (fabs(result->tune - centre_tune) >= alarm_range)
+            if (fabs(tune - centre_tune) >= alarm_range)
             {
                 result->status = TUNE_RANGE;
                 result->severity = epicsSevMinor;
@@ -207,21 +204,44 @@ static void compute_tune_result(
         else
             result->severity = epicsSevInvalid;
     }
-    trigger_record(result->tune_pv,  result->severity, NULL);
-    trigger_record(result->phase_pv, result->severity, NULL);
+}
+
+
+/* Updates tune results with result of calling given tune measurement function
+ * on the given tune sweep data.  Nothing is called if detector measurement
+ * overflowed. */
+static void compute_tune_result(
+    bool overflow,
+    unsigned int length, const struct channel_sweep *sweep,
+    const double tune_scale[], struct tune_result *result,
+    void (*measure_tune)(
+        unsigned int length, const struct channel_sweep *sweep,
+        const double tune_scale[],
+        unsigned int *tune_status, double *tune, double *phase))
+{
+    if (overflow)
+        set_tune_result(&result->value, TUNE_OVERFLOW, 0, 0);
+    else
+    {
+        unsigned int status;
+        double phase, tune;
+        measure_tune(length, sweep, tune_scale, &status, &tune, &phase);
+        set_tune_result(&result->value, status, tune, phase);
+    }
+
+    trigger_record(result->tune_pv,  result->value.severity, NULL);
+    trigger_record(result->phase_pv, result->value.severity, NULL);
 }
 
 
 /* Copy core tune results from selected source to destination including
  * associated record severity. */
-static void copy_tune_result(struct tune_result *src, struct tune_result *dest)
+static void copy_tune_result(
+    struct tune_result_value *src, struct tune_result *dest)
 {
-    dest->status = src->status;
-    dest->tune = src->tune;
-    dest->phase = src->phase;
-    dest->severity = src->severity;
-    trigger_record(dest->tune_pv,  dest->severity, NULL);
-    trigger_record(dest->phase_pv, dest->severity, NULL);
+    dest->value = *src;
+    trigger_record(dest->tune_pv,  dest->value.severity, NULL);
+    trigger_record(dest->phase_pv, dest->value.severity, NULL);
 }
 
 
@@ -229,9 +249,11 @@ static void publish_tune_result(struct tune_result *result, const char *prefix)
 {
     char buffer[40];
 #define FORMAT(field) (sprintf(buffer, "TUNE%s:%s", prefix, field), buffer)
-    PUBLISH_READ_VAR(mbbi, FORMAT("STATUS"), result->status);
-    result->tune_pv  = PUBLISH_READ_VAR(ai, FORMAT("TUNE"), result->tune);
-    result->phase_pv = PUBLISH_READ_VAR(ai, FORMAT("PHASE"), result->phase);
+    PUBLISH_READ_VAR(mbbi, FORMAT("STATUS"), result->value.status);
+    result->tune_pv  =
+        PUBLISH_READ_VAR(ai, FORMAT("TUNE"), result->value.tune);
+    result->phase_pv =
+        PUBLISH_READ_VAR(ai, FORMAT("PHASE"), result->value.phase);
 #undef FORMAT
 }
 
@@ -245,9 +267,6 @@ static struct epics_interlock *tune_trigger;
 
 /* Tune settings. */
 static int harmonic;            // Base frequency for tune sweep
-static double centre_tune;      // Centre of tune sweep
-static double half_range;       // Min/max tune setting
-static double alarm_range;      // Alarm range to test
 static bool reverse_tune;       // Set to sweep tune backwards
 static unsigned int selected_bunch; // Selected single bunch
 
@@ -263,8 +282,10 @@ static int max_power;
 static struct tune_result tune_result_selected;
 static struct tune_result tune_result_basic;
 static struct tune_result tune_result_peaks;
-enum { SELECT_TUNE_BASIC, SELECT_TUNE_PEAKS };
+static struct tune_result_value tune_result_pll;
+enum { SELECT_TUNE_BASIC, SELECT_TUNE_PEAKS, SELECT_TUNE_PLL };
 static unsigned int selected_tune_result;
+static struct epics_interlock *tune_result;
 
 
 /* Extracts tune sweep info from detector sweep info taking our channel selectio
@@ -328,15 +349,24 @@ static void update_cumsum(const struct tune_sweep_info *tune_sweep)
 }
 
 
-static struct tune_result *select_tune_result(void)
+static struct tune_result_value *select_tune_result(void)
 {
     switch (selected_tune_result)
     {
         default:
-        case SELECT_TUNE_BASIC: return &tune_result_basic;
-        case SELECT_TUNE_PEAKS: return &tune_result_peaks;
+        case SELECT_TUNE_BASIC: return &tune_result_basic.value;
+        case SELECT_TUNE_PEAKS: return &tune_result_peaks.value;
+        case SELECT_TUNE_PLL:   return &tune_result_pll;
     }
 }
+
+static void update_tune_result(void)
+{
+    interlock_wait(tune_result);
+    copy_tune_result(select_tune_result(), &tune_result_selected);
+    interlock_signal(tune_result, NULL);
+}
+
 
 static void do_tune_sweep(
     const struct tune_sweep_info *tune_sweep, bool overflow)
@@ -348,16 +378,40 @@ static void do_tune_sweep(
     update_cumsum(tune_sweep);
 
     compute_tune_result(
-        overflow, centre_tune, alarm_range,
+        overflow,
         tune_sweep->sweep_length, &sweep, tune_sweep->tune_scale,
         &tune_result_basic, measure_tune_basic);
     compute_tune_result(
-        overflow, centre_tune, alarm_range,
+        overflow,
         tune_sweep->sweep_length, &sweep, tune_sweep->tune_scale,
         &tune_result_peaks, measure_tune_peaks);
-    copy_tune_result(select_tune_result(), &tune_result_selected);
 
     interlock_signal(tune_trigger, NULL);
+
+    if (selected_tune_result != SELECT_TUNE_PLL)
+        update_tune_result();
+}
+
+
+/* Called every time the tune PLL code has a new tune.  If the tune result is
+ * configured to use tune PLL then we use this result. */
+void update_tune_pll_tune(bool tune_ok, double tune, double phase)
+{
+    set_tune_result(
+        &tune_result_pll, tune_ok ? TUNE_OK : TUNE_INVALID, tune, phase);
+
+    /* Ignore repeated announcements that we have no results. */
+    bool repeat = !tune_ok  &&  tune_result_pll.status != TUNE_OK;
+    if (selected_tune_result == SELECT_TUNE_PLL  &&  !repeat)
+        update_tune_result();
+}
+
+
+static void set_selected_result(unsigned int selection)
+{
+    selected_tune_result = selection;
+    if (check_epics_ready())
+        update_tune_result();
 }
 
 
@@ -521,7 +575,8 @@ bool initialise_tune(void)
     publish_tune_result(&tune_result_selected, "");
     publish_tune_result(&tune_result_basic, ":BASIC");
     publish_tune_result(&tune_result_peaks, ":PEAK");
-    PUBLISH_WRITE_VAR_P(mbbo, "TUNE:SELECT", selected_tune_result);
+    PUBLISH_WRITER_P(mbbo, "TUNE:SELECT", set_selected_result);
+    tune_result = create_interlock("TUNE:RESULT", false);
 
     PUBLISH_ACTION("TUNE:CHANGED", tune_setting_changed);
     tune_setting = PUBLISH_IN_VALUE_I(bi, "TUNE:SETTING");

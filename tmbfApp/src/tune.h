@@ -18,4 +18,7 @@ enum tune_status {
  * by the detector are passed through for detailed tune detection processing. */
 void update_tune_sweep(struct sweep_info *sweep_info, bool overflow);
 
+/* Called by tune PLL on tune updates. */
+void update_tune_pll_tune(bool tune_ok, double tune, double phase);
+
 bool initialise_tune(void);
