@@ -46,7 +46,7 @@ ftun_control = ForwardLink(
             DESC = 'Time constant for IQ IIR'),
         aIn('FTUN:FREQ:IIR:TC', EGU = 'ms', PREC = 1,
             DESC = 'Time constant for frequency IIR'),
-        aIn('FTUN:PHASE:OFFSET', PREC= 2, EGU = 'deg',
+        aIn('FTUN:PHASE:OFFSET', -180, 180, PREC= 2, EGU = 'deg',
             DESC = 'Phase offset'))
 )
 

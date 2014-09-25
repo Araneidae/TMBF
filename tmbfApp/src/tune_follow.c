@@ -142,10 +142,12 @@ static void update_delay_offset(void)
     int delay =
         ftun_control.input_select == FTUN_IN_ADC ? adc_delay : fir_delay;
     delay += lround(closed_loop_delay * BUNCHES_PER_TURN);
-    delay_offset_degrees = 360.0 / pow(2, 32) * (double) nco_freq * delay;
+    delay_offset_degrees =
+        360.0 / pow(2, 32) * (double) (int) (nco_freq * (uint32_t) delay);
 }
 
 
+/* Fold arbitrary angle (in degrees) into the range +- 180 degrees. */
 static double wrap_angle(double angle)
 {
     if (angle > 180)
