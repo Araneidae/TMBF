@@ -25,10 +25,7 @@ function data = tmbf_read(tmbf, turns, start)
     turn_length = 936;
     window_length = lcaGet([longwf '.NELM']) / turn_length;
 
-    wh = waitbar(0, 'Fetching data', ...
-        'CreateCancelBtn', 'setappdata(gcbf,''cancelling'',1)');
-    onCleanup(@() delete(wh));
-    setappdata(wh, 'cancelling', 0);
+    bar = progress_bar('Fetching data');
 
     data = zeros(turns * turn_length, 1);
     turns_read = 0;
@@ -47,10 +44,37 @@ function data = tmbf_read(tmbf, turns, start)
         data(bunches_start + 1 : bunches_end) = wf(1 : bunches_size);
 
         turns_read = turns_read + window_length;
-        waitbar(turns_read/turns, wh);
-        if getappdata(wh, 'cancelling')
+        if ~bar.advance(turns_read / turns)
             data = data(1:bunches_end);
             break
         end
+    end
+end
+
+
+function bar = progress_bar(title)
+    function ok = advance_waitbar(bar, fraction)
+        waitbar(fraction, bar.wb);
+        ok = ~getappdata(bar.wb, 'cancelling');
+    end
+
+    function ok = show_advance(fraction)
+        fprintf(2, '%5.2f%%\r', 100 * fraction)
+        ok = true;
+    end
+
+    bar = {};
+    if usejava('desktop')
+        bar.wb = waitbar(0, title, ...
+            'CreateCancelBtn', 'setappdata(gcbf,''cancelling'',1)');
+        bar.cleanup = onCleanup(@() delete(bar.wb));
+        setappdata(bar.wb, 'cancelling', 0);
+
+        bar.advance = @(fraction) advance_waitbar(bar, fraction);
+        bar.cancelled = @() bar.cancelling;
+    else
+        bar.cleanup = onCleanup(@() fprintf(2, 'Done   \n'));
+        bar.advance = @show_advance;
+        bar.cancelled = @() false;
     end
 end
