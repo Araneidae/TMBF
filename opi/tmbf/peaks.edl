@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 391
-y 100
+x 392
+y 101
 w 656
 h 770
 font "helvetica-medium-r-18.0"
@@ -76,118 +76,7 @@ minor 8
 release 0
 # Geometry
 x 8
-y 40
-w 480
-h 96
-# Appearance
-autoScaleBothDirections
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "fromUser"
-xMin 0
-xMax 1024
-# Y axis properties
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 4
-xPv {
-  1 "$(device):TUNE:PEAKIX:4"
-  2 "$(device):TUNE:PEAKL:4"
-  3 "$(device):TUNE:PEAKR:4"
-}
-yPv {
-  0 "$(device):TUNE:POWER:4"
-  1 "$(device):TUNE:PEAKV:4"
-  2 "$(device):TUNE:PEAKV:4"
-  3 "$(device):TUNE:PEAKV:4"
-}
-plotStyle {
-  1 "single point"
-  2 "single point"
-  3 "single point"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-plotSymbolType {
-  1 "diamond"
-  2 "square"
-  3 "square"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 26
-  1 index 21
-  2 index 33
-  3 index 33
-}
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 8
 y 136
-w 480
-h 80
-# Appearance
-autoScaleBothDirections
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "fromUser"
-xMin 0
-xMax 1024
-# Y axis properties
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-yPv {
-  0 "$(device):TUNE:PDD:4"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 26
-}
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 8
-y 312
 w 480
 h 80
 # Appearance
@@ -232,7 +121,7 @@ minor 8
 release 0
 # Geometry
 x 8
-y 488
+y 312
 w 480
 h 80
 # Appearance
@@ -277,7 +166,7 @@ minor 8
 release 0
 # Geometry
 x 8
-y 216
+y 40
 w 480
 h 96
 # Appearance
@@ -343,7 +232,7 @@ minor 8
 release 0
 # Geometry
 x 8
-y 392
+y 216
 w 480
 h 96
 # Appearance
@@ -437,61 +326,6 @@ y2Max 1
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):TUNE:PEAKQ:4"
-}
-plotStyle {
-  0 "point"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-plotSymbolType {
-  0 "circle"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 26
-}
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 488
-y 216
-w 160
-h 152
-# Appearance
-autoScaleBothDirections
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "fromUser"
-xMin -1
-xMax 4
-# Y axis properties
-showYAxis
-yAxisSrc "fromUser"
-yMin 0
-yMax 1
-yLabelIntervals 1
-yUserSpecScaleDiv 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-yPv {
   0 "$(device):TUNE:PEAKQ:16"
 }
 plotStyle {
@@ -519,7 +353,7 @@ minor 8
 release 0
 # Geometry
 x 488
-y 392
+y 216
 w 160
 h 152
 # Appearance
@@ -761,31 +595,6 @@ x 544
 y 200
 w 24
 h 16
-controlPv "$(device):TUNE:PEAKC:4"
-font "helvetica-medium-r-14.0"
-fgColor index 14
-fgAlarm
-bgColor index 0
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "monitors"
-noExecuteClipMask
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 544
-y 376
-w 24
-h 16
 controlPv "$(device):TUNE:PEAKC:16"
 font "helvetica-medium-r-14.0"
 fgColor index 14
@@ -808,7 +617,7 @@ major 4
 minor 6
 release 0
 x 544
-y 552
+y 376
 w 24
 h 16
 controlPv "$(device):TUNE:PEAKC:64"
@@ -854,26 +663,6 @@ minor 1
 release 1
 x 496
 y 376
-w 38
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Count:"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 496
-y 552
 w 38
 h 14
 font "helvetica-bold-r-12.0"

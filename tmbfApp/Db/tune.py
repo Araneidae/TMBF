@@ -90,11 +90,12 @@ Trigger('TUNE',
 
     # Tune measurement.  We include an alias for :TUNE for backwards
     # compatibility.
-    *tune_results(':BASIC') +
-     tune_results(':PEAK') +
+    *
+    tune_results(':BASIC') +
+    tune_results(':PEAK') +
 
     # Peak detection support
-     peak_readbacks(4) + peak_readbacks(16) + peak_readbacks(64))
+    peak_readbacks(16) + peak_readbacks(64))
 
 Trigger('TUNE:RESULT', *tune_results('', '$(DEVICE):TUNE'))
 
@@ -114,7 +115,7 @@ aOut('TUNE:PEAK:THRESHOLD', 0, 1, PREC = 2,
 aOut('TUNE:PEAK:MINWIDTH', 0, 1, PREC = 4, DESC = 'Minimum valid peak width')
 aOut('TUNE:PEAK:FITERROR', 0, 10, PREC = 3, DESC = 'Maximum fit error')
 
-mbbOut('TUNE:PEAK:SEL', '/4', '/16', '/64', DESC = 'Select smoothing')
+mbbOut('TUNE:PEAK:SEL', '/16', '/64', DESC = 'Select smoothing')
 
 # Waveforms for injecting test data into tune measurement.
 WaveformOut('TUNE:INJECT:I', TUNE_LENGTH, 'SHORT',

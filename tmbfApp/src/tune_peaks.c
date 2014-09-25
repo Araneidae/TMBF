@@ -445,25 +445,23 @@ static void process_peak_tune(
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-static struct peak_info peak_info_4;
+static int peak_power_4[TUNE_LENGTH / 4];
 static struct peak_info peak_info_16;
 static struct peak_info peak_info_64;
 
-enum { PEAK_4, PEAK_16, PEAK_64 };
+enum { PEAK_16, PEAK_64 };
 static unsigned int peak_select;
-
-
 
 static struct peak_info *select_peak_info(void)
 {
     switch (peak_select)
     {
-        case PEAK_4:    return &peak_info_4;
         default:        // (arbitrary choice for default)
         case PEAK_16:   return &peak_info_16;
         case PEAK_64:   return &peak_info_64;
     }
 }
+
 
 /* Process each waveform in turn by smoothing it and then searching for peaks.
  * Once done, process the selected smoothing level to calculate the tune. */
@@ -472,11 +470,10 @@ void measure_tune_peaks(
     const double *tune_scale,
     unsigned int *status, double *tune, double *phase)
 {
-    smooth_waveform_4(TUNE_LENGTH,    sweep->power,       peak_info_4.power);
-    smooth_waveform_4(TUNE_LENGTH/4,  peak_info_4.power,  peak_info_16.power);
+    smooth_waveform_4(TUNE_LENGTH,    sweep->power, peak_power_4);
+    smooth_waveform_4(TUNE_LENGTH/4,  peak_power_4, peak_info_16.power);
     smooth_waveform_4(TUNE_LENGTH/16, peak_info_16.power, peak_info_64.power);
 
-    process_peak_info(&peak_info_4);
     process_peak_info(&peak_info_16);
     process_peak_info(&peak_info_64);
 
@@ -487,7 +484,6 @@ void measure_tune_peaks(
 
 bool initialise_tune_peaks(void)
 {
-    publish_peak_info(&peak_info_4, 4);
     publish_peak_info(&peak_info_16, 16);
     publish_peak_info(&peak_info_64, 64);
 
