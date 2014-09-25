@@ -1,4 +1,4 @@
-% [p_out, m_out, pp] = fit_peaks(s, iq, varargin)
+% [p_out, detail] = fit_peaks(s, iq, varargin)
 %
 % The following arguments can be passed as varargin (with defaults shown for
 % arguments taking parameters):
@@ -152,7 +152,12 @@ function detail = repeat_fit(s, iq, count, ranges, detail)
                 iqr = iqr - fit(1,m)./(sr - fit(2,m));
             end
         end
-        fit(:,n) = fit_peak(sr, iqr, 1./abs(sr - fit(2,n)).^2);
+        weights = 1./abs(sr - fit(2,n)).^2;
+        fit(:,n) = fit_peak(sr, iqr, weights);
+
+        % Recompute confidence error
+        model = fit(1,n) ./ (sr - fit(2,n));
+        detail.e(n) = mean((abs(iqr ./ model) - 1).^2);
     end
     detail.p = reshape(fit, [], 1);
 end
@@ -223,19 +228,20 @@ function [fit, model, e] = fit_one_peak(s, iq, range, refit)
 
     model = fit(1) ./ (s - fit(2));
 
-    % Raw fit error.
-    e = sum(abs(model(range) - iq(range)).^2);
+    % Fit error: take mean squared error |(iqr-mr)/mr|^2.
+    mr = model(range);
+    e = mean((abs(iqr./mr) - 1).^2);
 end
 
 
 % Computes parameters (a, b) for best fit of model z = a/(f-b) weighted by w.
 function p = fit_peak(f, z, w)
-    z2 = z.*conj(z);
-    s = sum(w);
-    sz = sum(w.*z);
-    sz2 = sum(w.*z2);
-    sfz = sum(w.*f.*z);
-    sfz2 = sum(w.*f.*z2);
+    z2 = abs(z).^2;
+    s = mean(w);
+    sz = mean(w.*z);
+    sz2 = mean(w.*z2);
+    sfz = mean(w.*f.*z);
+    sfz2 = mean(w.*f.*z2);
 
     M = [s sz; conj(sz) sz2];
     V = [sfz; sfz2];

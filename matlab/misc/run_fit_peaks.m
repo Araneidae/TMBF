@@ -52,8 +52,10 @@ function [pp, nn, ee, dd] = run_fit_peaks(s, iq, peak_count, varargin)
     title('Peak alpha')
 
     subplot 235
-    plot_semilogy(width./(nn * s_bin_width), '.')
-    title('Fitted width ratio')
+    plot_semilogy(1./ee, '.')
+    hold all
+    semilogy([1 try_count], [1 1], 'r--')
+    title('Fit quality')
 
     subplot 236
     plot_semilogy(dd, '.')
