@@ -443,6 +443,7 @@ void update_tune_sweep(struct sweep_info *sweep_info, bool overflow)
  * with synthetic sweep info structure. */
 static void inject_test_data(void)
 {
+    inject_tune_scale(injection_info.tune_scale);
     compute_power(injection_info.sweep);
     do_tune_sweep(&injection_info, false);
 }

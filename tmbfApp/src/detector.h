@@ -43,3 +43,7 @@ void prepare_detector(
 /* Called on completion of buffer processing in IQ mode.  The packed I and Q
  * components are passed through for processing by the detector. */
 void update_iq(const short buffer_low[], const short buffer_high[]);
+
+/* This is called as part of injection tune processing to forcibly update the
+ * tune scale from outside. */
+void inject_tune_scale(const double tune_scale[TUNE_LENGTH]);

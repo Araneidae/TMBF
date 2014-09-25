@@ -368,6 +368,17 @@ void prepare_detector(
 }
 
 
+/* Called during I,Q,S injection so that our frequency sweep scale matches that
+ * seen by the tune sweep detection.  Note that we only update the frequency
+ * waveform, all other detector sweep parameters are left alone. */
+void inject_tune_scale(const double tune_scale[TUNE_LENGTH])
+{
+    interlock_wait(tune_scale_trigger);
+    memcpy(sweep_info.tune_scale, tune_scale, sizeof(sweep_info.tune_scale));
+    interlock_signal(tune_scale_trigger, NULL);
+}
+
+
 static void publish_channel(const char *name, struct channel_sweep *sweep)
 {
     char buffer[20];
