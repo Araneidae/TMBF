@@ -11,15 +11,15 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
 
     subplot 221
     semilogy(s, abs(iq), s, abs(m1), s, abs(m2));
-    xlim([s(1) s(end)]);
+    xlim([min(s) max(s)])
     legend('IQ', 'First fit', 'Second fit')
     title('Power spectrum')
 
     subplot 222
     hold all
-    plot(iq, ':')
-    plot(m1)
-    plot(m2)
+    plot(make_complex(iq), ':')
+    plot(make_complex(m1))
+    plot(make_complex(m2))
     axis equal
     legend('IQ', 'First fit', 'Second fit')
     title('Full model fit')
@@ -50,9 +50,10 @@ function plot_result(s, iq, result, first_fit)
         plot(model(s(r), result.fits(:,n)))
 
         strings{2*n-1} = sprintf('P%d data', n);
-        strings{2*n} = sprintf('P%d fit', n);
+        strings{2*n} = sprintf('P%d fit, e: %.3f', n, result.errors(n));
     end
-    legend(strings)
+    plot(complex(0), 'x')
+    if ~isempty(strings); legend(strings); end
     axis equal
 end
 
@@ -60,5 +61,11 @@ function z = model(s, fit)
     z = zeros(size(s));
     for p = fit
         z = z + p(1) ./ (s - p(2));
+    end
+end
+
+function z = make_complex(z)
+    if isreal(z)
+        z = complex(z);
     end
 end
