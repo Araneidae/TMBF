@@ -201,7 +201,7 @@ static void publish_peak_info(struct peak_info *info, unsigned int ratio)
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Peak fitting and final evaluation. */
+/* Peak fitting, processing, and evaluation. */
 
 enum peak_status { PEAK_GOOD, PEAK_NO_RANGE, PEAK_NO_FIT, PEAK_REJECTED };
 
@@ -236,10 +236,10 @@ static void reset_fit_result(
 /* Converts peak bounds on the filtered data into enclosing bounds on the raw
  * data for peak fitting and initialises the peak_fit_result structure. */
 static void extract_peak_ranges(
-    struct peak_info *info, struct peak_fit_result *peak_fit)
+    const struct peak_info *info, struct peak_fit_result *peak_fit)
 {
-    unsigned int *left  = (unsigned int *) info->peak_left_wf;
-    unsigned int *right = (unsigned int *) info->peak_right_wf;
+    const unsigned int *left  = (const unsigned int *) info->peak_left_wf;
+    const unsigned int *right = (const unsigned int *) info->peak_right_wf;
     for (unsigned int i = 0; i < info->peak_count; i ++)
         peak_fit->ranges[i] = (struct peak_range) {
             .left  = info->scaling * left[i],
@@ -285,9 +285,11 @@ static bool assess_peak(
     return
         /* Discard if fit error too large. */
         error < max_fit_error  &&
-        /* Discard if peak not within fit area. */
+        /* Discard if peak not within fit area.  Actually, this check doesn't
+         * fire very often, maybe it's pointless. */
         left <= centre  &&  centre <= right  &&
-        /* Discard if peak too narrow. */
+        /* Discard if peak too narrow.  This will automatically reject peaks of
+         * negative width, this should not arise! */
         -cimag(fit->b) > min_peak_width;
 }
 
@@ -345,9 +347,9 @@ static unsigned int extract_final_fits(
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
 /* Published results from final fitting and evaluation stage. */
 
+/* Published results for a single identified peak. */
 struct peak_result {
     double tune;
     double phase;
@@ -358,13 +360,17 @@ struct peak_result {
 
 static unsigned fitted_peak_count;
 
+/* Results are published for the central tune resonance and the two immediate
+ * synchrotron sidebands, if they are detected. */
 static struct peak_result left_peak;
 static struct peak_result centre_peak;
 static struct peak_result right_peak;
 
 
+/* Computes tune properties (centre frequency, phase, area, width) from an
+ * optional fit argument, sets entire result to invalid if no peak found. */
 static void update_peak_result(
-    struct peak_result *restrict result, const struct one_pole *restrict fit)
+    struct peak_result *result, const struct one_pole *fit)
 {
     result->valid = fit != NULL;
     if (fit)
@@ -377,14 +383,16 @@ static void update_peak_result(
     }
     else
     {
-        result->tune = 0;
-        result->phase = 0;
-        result->area = 0;
-        result->width = 0;
+        result->tune  = NAN;
+        result->phase = NAN;
+        result->area  = NAN;
+        result->width = NAN;
     }
 }
 
 
+/* When we have only found two peaks we take the "largest" peak as the tune
+ * frequency.  Here we compare peaks by area. */
 static bool compare_peaks(
     const struct one_pole *fit1, const struct one_pole *fit2)
 {
@@ -394,50 +402,61 @@ static bool compare_peaks(
 }
 
 
+/* From the final selection of peaks, in ascending order of frequency, we select
+ * the central tune peak and its two synchrotron sidebands ... if possible.  The
+ * heart of this is a switch statement on the number of peaks actually detected,
+ * and when there are only two we have to make a choice. */
 static unsigned int extract_peak_tune(
     unsigned int peak_count, const struct one_pole fits[],
     double *tune, double *phase)
 {
-    /* Default all the peak results to invalid, we'll set the valid ones in a
-     * moment. */
-    update_peak_result(&left_peak, NULL);
-    update_peak_result(&centre_peak, NULL);
-    update_peak_result(&right_peak, NULL);
+    const struct one_pole *left   = NULL;
+    const struct one_pole *centre = NULL;
+    const struct one_pole *right  = NULL;
 
-    const struct one_pole *fit = NULL;
     switch (peak_count)
     {
         default:
         case 0:
-            return TUNE_NO_PEAK;
+            break;
+
         case 1:
-            fit = &fits[0];
+            centre = &fits[0];
             break;
         case 2:
             if (compare_peaks(&fits[0], &fits[1]))  // Is fit[0] > fit[1] ?
             {
-                fit = &fits[0];
-                update_peak_result(&right_peak, &fits[1]);
+                centre = &fits[0];
+                right  = &fits[1];
             }
             else
             {
-                update_peak_result(&right_peak, &fits[0]);
-                fit = &fits[1];
+                left   = &fits[0];
+                centre = &fits[1];
             }
             break;
         case 3:
-            update_peak_result(&left_peak, &fits[0]);
-            fit = &fits[1];
-            update_peak_result(&right_peak, &fits[2]);
+            left   = &fits[0];
+            centre = &fits[1];
+            right  = &fits[2];
             break;
     }
 
-    update_peak_result(&centre_peak, fit);
-    *tune = centre_peak.tune;
-    /* For the reported phase use the entire model to compute this. */
-    *phase = 180 / M_PI *
-        carg(eval_one_pole_model(peak_count, fits, creal(fit->b)));
-    return TUNE_OK;
+    update_peak_result(&left_peak, left);
+    update_peak_result(&centre_peak, centre);
+    update_peak_result(&right_peak, right);
+
+    if (centre == NULL)
+        return TUNE_NO_PEAK;
+    else
+    {
+        *tune = centre_peak.tune;
+        /* For the reported phase use the entire model to compute this to give
+         * us a slightly more realistic measurement. */
+        *phase = 180 / M_PI *
+            carg(eval_one_pole_model(peak_count, fits, creal(centre->b)));
+        return TUNE_OK;
+    }
 }
 
 
@@ -445,19 +464,27 @@ static struct peak_fit_result first_fit;
 static struct peak_fit_result second_fit;
 
 
+/* Top level control of peak fitting and tune extraction.  Takes as given a list
+ * of candidate peaks, and the quality of the rest of the result depends on the
+ * quality of this initial list. */
 static void process_peak_tune(
     const struct channel_sweep *sweep, const double tune_scale[],
-    struct peak_info *info,
+    const struct peak_info *info,
     unsigned int *status, double *tune, double *phase)
 {
+    /* Perform initial fit on raw peak ranges. */
     extract_peak_ranges(info, &first_fit);
     fit_peaks(sweep, tune_scale, &first_fit, false);
 
+    /* Refine the fit. */
     extract_good_peaks(&first_fit, &second_fit);
     fit_peaks(sweep, tune_scale, &second_fit, true);
 
+    /* Extract the final peaks in ascending order of frequency. */
     struct one_pole final_fits[MAX_PEAKS];
     fitted_peak_count = extract_final_fits(&second_fit, final_fits);
+
+    /* Finally compute the three peaks and the associated tune. */
     *status = extract_peak_tune(fitted_peak_count, final_fits, tune, phase);
 }
 
