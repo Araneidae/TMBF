@@ -23,6 +23,7 @@
 /* Some externally configured control parameters. */
 static double peak_fit_threshold = 0.3;
 static double min_peak_width = 0;
+static double max_peak_width = 1;
 static double max_fit_error = 1;
 
 
@@ -348,14 +349,20 @@ static void extract_good_peaks(
 /* Peak validity assessment.  Checks that the fit error is within the selected
  * threshold, and that the peak is wider that a selected threshold.  Note that
  * the width is in tune frequency units. */
-static bool assess_peak(const struct one_pole *fit, double error)
+static bool assess_peak(
+    const struct peak_range *range, const double tune_scale[],
+    const struct one_pole *fit, double error)
 {
     return
+        /* Discard if peak not within fit area. */
+        tune_scale[range->left] < peak_centre(fit)  &&
+        peak_centre(fit) < tune_scale[range->right]  &&
         /* Discard if fit error too large. */
         error < max_fit_error  &&
         /* Discard if peak too narrow.  This will automatically reject peaks of
          * negative width, this should not arise! */
-        peak_width(fit) > min_peak_width;
+        min_peak_width < peak_width(fit)  &&
+        peak_width(fit) < max_peak_width;
 }
 
 
@@ -373,7 +380,9 @@ static void fit_peaks(
     for (unsigned int i = fit_count; i < peak_fit->peak_count; i ++)
         peak_fit->status[i] = PEAK_NO_FIT;
     for (unsigned int i = 0; i < fit_count; i ++)
-        if (assess_peak(&peak_fit->fits[i], peak_fit->errors[i]))
+        if (assess_peak(
+               &peak_fit->ranges[i], tune_scale,
+               &peak_fit->fits[i], peak_fit->errors[i]))
             peak_fit->status[i] = PEAK_GOOD;
         else
             peak_fit->status[i] = PEAK_REJECTED;
@@ -422,7 +431,15 @@ struct peak_result {
     double phase;
     double area;
     double width;
+    double height;
     bool valid;
+};
+
+struct peak_result_relative {
+    double delta_tune;
+    double delta_phase;
+    double rel_area;
+    double rel_height;
 };
 
 static unsigned fitted_peak_count;
@@ -432,12 +449,15 @@ static unsigned fitted_peak_count;
 static struct peak_result left_peak;
 static struct peak_result centre_peak;
 static struct peak_result right_peak;
+static struct peak_result_relative left_peak_relative;
+static struct peak_result_relative right_peak_relative;
+static double synchrotron_tune;
 
 
 /* Computes tune properties (centre frequency, phase, area, width) from an
  * optional fit argument, sets entire result to invalid if no peak found. */
 static void update_peak_result(
-    struct peak_result *result, const struct one_pole *fit, double area)
+    struct peak_result *result, const struct one_pole *fit)
 {
     result->valid = fit != NULL;
     if (fit)
@@ -446,7 +466,8 @@ static void update_peak_result(
         result->tune = modf(peak_centre(fit), &harmonic);
         result->phase = 180 / M_PI * peak_phase(fit);
         result->width = peak_width(fit);
-        result->area = peak_area(fit) / area;
+        result->area = peak_area(fit);
+        result->height = result->area / result->width;
     }
     else
     {
@@ -454,7 +475,27 @@ static void update_peak_result(
         result->phase = NAN;
         result->area  = NAN;
         result->width = NAN;
+        result->height = NAN;
     }
+}
+
+static double wrap_angle(double angle)
+{
+    if (angle > 180)
+        return angle - 360;
+    else if (angle < -180)
+        return angle + 360;
+    else
+        return angle;
+}
+
+static void update_peak_result_relative(
+    const struct peak_result *absolute, struct peak_result_relative *result)
+{
+    result->delta_tune  = fabs(absolute->tune - centre_peak.tune);
+    result->delta_phase = wrap_angle(absolute->phase - centre_peak.phase);
+    result->rel_area    = absolute->area / centre_peak.area;
+    result->rel_height  = absolute->height / centre_peak.height;
 }
 
 
@@ -499,10 +540,13 @@ static unsigned int extract_peak_tune(
             break;
     }
 
-    double centre_area = centre ? peak_area(centre) : 0;
-    update_peak_result(&left_peak,   left,   centre_area);
-    update_peak_result(&centre_peak, centre, centre_area);
-    update_peak_result(&right_peak,  right,  centre_area);
+    update_peak_result(&left_peak,   left);
+    update_peak_result(&centre_peak, centre);
+    update_peak_result(&right_peak,  right);
+    update_peak_result_relative(&left_peak, &left_peak_relative);
+    update_peak_result_relative(&right_peak, &right_peak_relative);
+    synchrotron_tune = 0.5 * (
+        left_peak_relative.delta_tune + right_peak_relative.delta_tune);
 
     if (centre == NULL)
         return TUNE_NO_PEAK;
@@ -554,11 +598,26 @@ static void publish_peak_result(const char *prefix, struct peak_result *result)
 #define FORMAT(name) \
     (sprintf(buffer, "TUNE:PEAK:%s%s", prefix, name), buffer)
 
-    PUBLISH_READ_VAR(ai, FORMAT(""),      result->tune);
+    PUBLISH_READ_VAR(ai, FORMAT(""),       result->tune);
     PUBLISH_READ_VAR(ai, FORMAT(":PHASE"), result->phase);
     PUBLISH_READ_VAR(ai, FORMAT(":AREA"),  result->area);
     PUBLISH_READ_VAR(ai, FORMAT(":WIDTH"), result->width);
+    PUBLISH_READ_VAR(ai, FORMAT(":HEIGHT"), result->height);
     PUBLISH_READ_VAR(bi, FORMAT(":VALID"), result->valid);
+#undef FORMAT
+}
+
+static void publish_peak_result_relative(
+    const char *prefix, struct peak_result_relative *result)
+{
+    char buffer[40];
+#define FORMAT(name) \
+    (sprintf(buffer, "TUNE:PEAK:%s%s", prefix, name), buffer)
+
+    PUBLISH_READ_VAR(ai, FORMAT(":DTUNE"),   result->delta_tune);
+    PUBLISH_READ_VAR(ai, FORMAT(":DPHASE"),  result->delta_phase);
+    PUBLISH_READ_VAR(ai, FORMAT(":RAREA"),   result->rel_area);
+    PUBLISH_READ_VAR(ai, FORMAT(":RHEIGHT"), result->rel_height);
 #undef FORMAT
 }
 
@@ -615,6 +674,7 @@ bool initialise_tune_peaks(void)
 
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:THRESHOLD", peak_fit_threshold);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINWIDTH", min_peak_width);
+    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MAXWIDTH", max_peak_width);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:FITERROR", max_fit_error);
 
     PUBLISH_WRITE_VAR_P(mbbo, "TUNE:PEAK:SEL", peak_select);
@@ -627,6 +687,9 @@ bool initialise_tune_peaks(void)
     publish_peak_result("LEFT",   &left_peak);
     publish_peak_result("CENTRE", &centre_peak);
     publish_peak_result("RIGHT",  &right_peak);
+    publish_peak_result_relative("LEFT",  &left_peak_relative);
+    publish_peak_result_relative("RIGHT", &right_peak_relative);
+    PUBLISH_READ_VAR(ai, "TUNE:PEAK:SYNCTUNE", synchrotron_tune);
 
     return true;
 }

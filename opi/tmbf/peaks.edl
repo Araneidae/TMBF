@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 365
-y 74
-w 513
-h 695
+x 677
+y 3
+w 370
+h 535
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -33,24 +33,9 @@ major 4
 minor 0
 release 0
 x 8
-y 48
-w 496
-h 384
-lineColor index 14
-fill
-fillColor index 4
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 152
-y 448
+y 136
 w 352
-h 128
+h 248
 lineColor index 14
 fill
 fillColor index 4
@@ -64,7 +49,7 @@ minor 1
 release 1
 x 0
 y 0
-w 512
+w 368
 h 32
 font "helvetica-medium-r-18.0"
 fontAlign "center"
@@ -98,228 +83,6 @@ command {
 includeHelpIcon
 endObjectProperties
 
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 16
-y 160
-w 480
-h 80
-# Appearance
-autoScaleBothDirections
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "fromUser"
-xMin 0
-xMax 256
-# Y axis properties
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-yPv {
-  0 "$(device):TUNE:PDD:16"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 26
-}
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 16
-y 344
-w 480
-h 80
-# Appearance
-autoScaleBothDirections
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "fromUser"
-xMin 0
-xMax 64
-# Y axis properties
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 1
-yPv {
-  0 "$(device):TUNE:PDD:64"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 26
-}
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 16
-y 64
-w 480
-h 96
-# Appearance
-autoScaleBothDirections
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "fromUser"
-xMin 0
-xMax 256
-# Y axis properties
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 4
-xPv {
-  1 "$(device):TUNE:PEAKIX:16"
-  2 "$(device):TUNE:PEAKL:16"
-  3 "$(device):TUNE:PEAKR:16"
-}
-yPv {
-  0 "$(device):TUNE:POWER:16"
-  1 "$(device):TUNE:PEAKV:16"
-  2 "$(device):TUNE:PEAKV:16"
-  3 "$(device):TUNE:PEAKV:16"
-}
-plotStyle {
-  1 "single point"
-  2 "single point"
-  3 "single point"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-plotSymbolType {
-  1 "diamond"
-  2 "square"
-  3 "square"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 26
-  1 index 21
-  2 index 33
-  3 index 33
-}
-endObjectProperties
-
-# (X-Y Graph)
-object xyGraphClass
-beginObjectProperties
-major 4
-minor 8
-release 0
-# Geometry
-x 16
-y 248
-w 480
-h 96
-# Appearance
-autoScaleBothDirections
-fgColor index 14
-bgColor index 3
-gridColor index 14
-font "helvetica-medium-r-12.0"
-# Operating Modes
-nPts 2
-# X axis properties
-xAxisSrc "fromUser"
-xMin 0
-xMax 64
-# Y axis properties
-yAxisSrc "AutoScale"
-yMax 1
-# Y2 axis properties
-y2AxisSrc "AutoScale"
-y2Max 1
-# Trace Properties
-numTraces 4
-xPv {
-  1 "$(device):TUNE:PEAKIX:64"
-  2 "$(device):TUNE:PEAKL:64"
-  3 "$(device):TUNE:PEAKR:64"
-}
-yPv {
-  0 "$(device):TUNE:POWER:64"
-  1 "$(device):TUNE:PEAKV:64"
-  2 "$(device):TUNE:PEAKV:64"
-  3 "$(device):TUNE:PEAKV:64"
-}
-plotStyle {
-  1 "single point"
-  2 "single point"
-  3 "single point"
-}
-plotUpdateMode {
-  0 "xOrY"
-}
-plotSymbolType {
-  1 "diamond"
-  2 "square"
-  3 "square"
-}
-ySigned {
-  0 1
-}
-plotColor {
-  0 index 26
-  1 index 21
-  2 index 33
-  3 index 33
-}
-endObjectProperties
-
 # (Rectangle)
 object activeRectangleClass
 beginObjectProperties
@@ -327,9 +90,9 @@ major 4
 minor 0
 release 0
 x 8
-y 448
-w 136
-h 128
+y 48
+w 352
+h 72
 lineColor index 14
 fill
 fillColor index 4
@@ -342,7 +105,7 @@ major 4
 minor 1
 release 1
 x 8
-y 440
+y 40
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -361,7 +124,7 @@ major 4
 minor 0
 release 0
 x 8
-y 440
+y 40
 w 120
 h 16
 lineColor index 14
@@ -374,13 +137,12 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 32
-y 552
+x 80
+y 96
 w 104
 h 16
 controlPv "$(device):TUNE:PEAK:STATUS"
 font "helvetica-medium-r-14.0"
-fontAlign "right"
 fgColor index 14
 fgAlarm
 bgColor index 0
@@ -401,9 +163,9 @@ major 4
 minor 6
 release 0
 x 80
-y 480
-w 56
-h 21
+y 64
+w 64
+h 24
 controlPv "$(device):TUNE:PEAK:TUNE"
 font "helvetica-medium-r-18.0"
 fontAlign "right"
@@ -426,8 +188,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 16
-y 504
+x 160
+y 64
 w 55
 h 21
 font "helvetica-medium-r-18.0"
@@ -447,7 +209,7 @@ major 4
 minor 1
 release 1
 x 16
-y 464
+y 64
 w 47
 h 21
 font "helvetica-medium-r-18.0"
@@ -466,10 +228,10 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 80
-y 520
-w 56
-h 21
+x 232
+y 64
+w 64
+h 24
 controlPv "$(device):TUNE:PEAK:PHASE"
 font "helvetica-medium-r-18.0"
 fontAlign "right"
@@ -493,7 +255,7 @@ major 4
 minor 1
 release 1
 x 16
-y 536
+y 96
 w 44
 h 14
 font "helvetica-bold-r-12.0"
@@ -512,8 +274,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 440
-y 664
+x 296
+y 504
 w 64
 h 24
 fgColor index 46
@@ -531,8 +293,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 224
-y 464
+x 80
+y 152
 w 24
 h 16
 controlPv "$(device):TUNE:PEAK:COUNT"
@@ -556,8 +318,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 160
-y 464
+x 16
+y 152
 w 56
 h 14
 font "helvetica-bold-r-12.0"
@@ -576,8 +338,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 216
-y 504
+x 72
+y 192
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:LEFT"
@@ -602,8 +364,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 160
-y 504
+x 16
+y 192
 w 33
 h 14
 font "helvetica-bold-r-12.0"
@@ -622,8 +384,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 160
-y 488
+x 16
+y 176
 w 32
 h 14
 font "helvetica-bold-r-12.0"
@@ -642,8 +404,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 216
-y 488
+x 72
+y 176
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:LEFT:VALID"
@@ -668,8 +430,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 272
-y 472
+x 128
+y 160
 w 24
 h 14
 font "helvetica-bold-r-12.0"
@@ -688,8 +450,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 216
-y 520
+x 72
+y 208
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:LEFT:PHASE"
@@ -714,8 +476,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 160
-y 520
+x 16
+y 208
 w 40
 h 14
 font "helvetica-bold-r-12.0"
@@ -734,8 +496,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 216
-y 536
+x 72
+y 224
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:LEFT:AREA"
@@ -760,16 +522,16 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 160
-y 536
-w 58
+x 16
+y 224
+w 31
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Rel. Area:"
+  "Area:"
 }
 autoSize
 endObjectProperties
@@ -780,8 +542,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 216
-y 552
+x 72
+y 240
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:LEFT:WIDTH"
@@ -807,8 +569,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 160
-y 552
+x 16
+y 240
 w 36
 h 14
 font "helvetica-bold-r-12.0"
@@ -827,8 +589,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 312
-y 504
+x 168
+y 192
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:CENTRE"
@@ -853,8 +615,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 312
-y 488
+x 168
+y 176
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:CENTRE:VALID"
@@ -879,8 +641,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 352
-y 472
+x 208
+y 160
 w 39
 h 14
 font "helvetica-bold-r-12.0"
@@ -899,8 +661,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 312
-y 520
+x 168
+y 208
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:CENTRE:PHASE"
@@ -925,8 +687,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 312
-y 536
+x 168
+y 224
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:CENTRE:AREA"
@@ -951,8 +713,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 312
-y 552
+x 168
+y 240
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:CENTRE:WIDTH"
@@ -978,8 +740,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 408
-y 504
+x 264
+y 192
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:RIGHT"
@@ -1004,8 +766,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 408
-y 488
+x 264
+y 176
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:RIGHT:VALID"
@@ -1030,8 +792,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 456
-y 472
+x 312
+y 160
 w 31
 h 14
 font "helvetica-bold-r-12.0"
@@ -1050,8 +812,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 408
-y 520
+x 264
+y 208
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:RIGHT:PHASE"
@@ -1076,8 +838,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 408
-y 536
+x 264
+y 224
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:RIGHT:AREA"
@@ -1102,8 +864,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 408
-y 552
+x 264
+y 240
 w 80
 h 16
 controlPv "$(device):TUNE:PEAK:RIGHT:WIDTH"
@@ -1130,40 +892,7 @@ major 4
 minor 1
 release 1
 x 8
-y 40
-w 120
-h 16
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 10
-value {
-  "Smoothing & D2"
-}
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 40
-w 120
-h 16
-lineColor index 14
-fillColor index 0
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 152
-y 440
+y 128
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -1181,8 +910,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 152
-y 440
+x 8
+y 128
 w 120
 h 16
 lineColor index 14
@@ -1196,7 +925,7 @@ major 4
 minor 0
 release 0
 x 8
-y 592
+y 400
 w 352
 h 96
 lineColor index 14
@@ -1211,7 +940,7 @@ major 4
 minor 1
 release 1
 x 8
-y 584
+y 392
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -1230,7 +959,7 @@ major 4
 minor 0
 release 0
 x 8
-y 584
+y 392
 w 120
 h 16
 lineColor index 14
@@ -1244,7 +973,7 @@ major 4
 minor 6
 release 0
 x 104
-y 608
+y 416
 w 64
 h 24
 controlPv "$(device):TUNE:PEAK:THRESHOLD_S"
@@ -1272,7 +1001,7 @@ major 4
 minor 1
 release 1
 x 16
-y 608
+y 416
 w 78
 h 14
 font "helvetica-bold-r-12.0"
@@ -1292,15 +1021,15 @@ major 4
 minor 1
 release 1
 x 16
-y 632
-w 62
+y 464
+w 72
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Min width:"
+  "Width limits:"
 }
 autoSize
 endObjectProperties
@@ -1312,10 +1041,11 @@ major 4
 minor 6
 release 0
 x 104
-y 632
-w 64
+y 464
+w 104
 h 24
 controlPv "$(device):TUNE:PEAK:MINWIDTH_S"
+format "exponential"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1340,7 +1070,7 @@ major 4
 minor 6
 release 0
 x 104
-y 656
+y 440
 w 64
 h 24
 controlPv "$(device):TUNE:PEAK:FITERROR_S"
@@ -1368,15 +1098,15 @@ major 4
 minor 1
 release 1
 x 16
-y 656
-w 52
+y 440
+w 79
 h 14
 font "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 value {
-  "Fit error:"
+  "Max fit error:"
 }
 autoSize
 endObjectProperties
@@ -1388,7 +1118,7 @@ major 4
 minor 0
 release 0
 x 264
-y 608
+y 416
 w 80
 h 24
 fgColor index 14
@@ -1407,7 +1137,7 @@ major 4
 minor 1
 release 1
 x 192
-y 608
+y 416
 w 67
 h 14
 font "helvetica-bold-r-12.0"
@@ -1416,6 +1146,490 @@ bgColor index 0
 useDisplayBg
 value {
   "Smoothing:"
+}
+autoSize
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 208
+y 504
+w 80
+h 24
+fgColor index 43
+bgColor index 4
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-bold-r-12.0"
+buttonLabel "Graphs"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tmbf/peak_graphs.edl"
+}
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 72
+y 256
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:LEFT:HEIGHT"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 256
+w 42
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Height:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 168
+y 256
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:CENTRE:HEIGHT"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 264
+y 256
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:RIGHT:HEIGHT"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 104
+y 288
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:LEFT:DTUNE"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 288
+w 68
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Delta Tune:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 104
+y 304
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:LEFT:DPHASE"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 304
+w 75
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Delta Phase:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 104
+y 320
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:LEFT:RAREA"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 320
+w 58
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Rel. Area:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 104
+y 336
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:LEFT:RHEIGHT"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 336
+w 69
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Rel. Height:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 224
+y 288
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:RIGHT:DTUNE"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 224
+y 304
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:RIGHT:DPHASE"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 224
+y 320
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:RIGHT:RAREA"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 224
+y 336
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:RIGHT:RHEIGHT"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 240
+y 464
+w 104
+h 24
+controlPv "$(device):TUNE:PEAK:MAXWIDTH_S"
+format "exponential"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+clipToDspLimits
+noExecuteClipMask
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 160
+y 360
+w 80
+h 16
+controlPv "$(device):TUNE:PEAK:SYNCTUNE"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+fgAlarm
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 360
+w 108
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Synchrotron tune:"
 }
 autoSize
 endObjectProperties

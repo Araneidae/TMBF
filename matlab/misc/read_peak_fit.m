@@ -6,8 +6,6 @@ end
 
 function fit = decode_fit(data)
     data = int8(data);
-    fit = {};
-    fit.raw = data;
 
     % Decoding structure fields, this code must match the structure definition
     % for peak_fit_result in tune_peaks.c
@@ -22,8 +20,9 @@ function fit = decode_fit(data)
     %   152     status[MAX_PEAKS]       3 * 4 = 12
     %   164     (padding)               4
     %
-    % 1 needs to be added to all these fields to create matlab offsets
+    % One needs to be added to all these fields to create matlab offsets.
 
+    fit = {};
     fit.count = typecast(data(1:4), 'int32');
     fit.ranges = reshape(typecast(data(5:28), 'int32'), 2, 3);
     fits = typecast(data(33:128), 'double');

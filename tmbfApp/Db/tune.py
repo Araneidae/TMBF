@@ -69,14 +69,28 @@ def peak_results(prefix):
     return [
         aIn('TUNE:PEAK:%s' % prefix, 0, 1,
             PREC = 5, DESC = '%s peak frequency' % name),
-        aIn('TUNE:PEAK:%s:PHASE' % prefix, -180, 180, 'dec',
+        aIn('TUNE:PEAK:%s:PHASE' % prefix, -180, 180, 'deg',
             PREC = 1, DESC = '%s peak phase' % name),
         aIn('TUNE:PEAK:%s:AREA' % prefix,
-            PREC = 3, DESC = '%s peak relative area' % name),
+            PREC = 3, DESC = '%s peak area' % name),
         aIn('TUNE:PEAK:%s:WIDTH' % prefix, 0, 1,
             PREC = 5, DESC = '%s peak width' % name),
+        aIn('TUNE:PEAK:%s:HEIGHT' % prefix, DESC = '%s peak height' % name),
         boolIn('TUNE:PEAK:%s:VALID' % prefix, 'Invalid', 'Ok',
             ZSV = 'MINOR', DESC = '%s peak valid' % name),
+    ]
+
+def peak_rel_results(prefix):
+    name = prefix.capitalize()
+    return [
+        aIn('TUNE:PEAK:%s:DTUNE' % prefix, 0, 1,
+            PREC = 5, DESC = '%s delta tune' % name),
+        aIn('TUNE:PEAK:%s:DPHASE' % prefix, -180, 180, 'deg',
+            PREC = 1, DESC = '%s delta phase' % name),
+        aIn('TUNE:PEAK:%s:RAREA' % prefix,
+            PREC = 3, DESC = '%s relative area' % name),
+        aIn('TUNE:PEAK:%s:RHEIGHT' % prefix,
+            PREC = 3, DESC = '%s relative height' % name),
     ]
 
 
@@ -102,6 +116,9 @@ Trigger('TUNE',
         PEAK_FIT_SIZE, 'CHAR', DESC = 'Raw second fit data'),
     longIn('TUNE:PEAK:COUNT', DESC = 'Final fitted peak count'),
 
+    # Synchrotron tune estimated from sidebands
+    aIn('TUNE:PEAK:SYNCTUNE', 0, 1, PREC = 5, DESC = 'Synchrotron tune'),
+
 *
     # Tune measurement.  We include an alias for :TUNE for backwards
     # compatibility.
@@ -110,7 +127,8 @@ Trigger('TUNE',
 
     # Peak detection support
     peak_readbacks(16) + peak_readbacks(64) +
-    peak_results('LEFT') + peak_results('CENTRE') + peak_results('RIGHT')
+    peak_results('LEFT') + peak_results('CENTRE') + peak_results('RIGHT') +
+    peak_rel_results('LEFT') + peak_rel_results('RIGHT')
 )
 
 Trigger('TUNE:RESULT', *tune_results('', '$(DEVICE):TUNE'))
@@ -128,6 +146,7 @@ longOut('TUNE:BLK:LEN', DESC = 'Minimum block length')
 aOut('TUNE:PEAK:THRESHOLD', 0, 1, PREC = 2,
     DESC = 'Fit data selection threshold')
 aOut('TUNE:PEAK:MINWIDTH', 0, 1, PREC = 5, DESC = 'Minimum valid peak width')
+aOut('TUNE:PEAK:MAXWIDTH', 0, 1, PREC = 5, DESC = 'Maximum valid peak width')
 aOut('TUNE:PEAK:FITERROR', 0, 10, PREC = 3, DESC = 'Maximum fit error')
 
 mbbOut('TUNE:PEAK:SEL', '/16', '/64', DESC = 'Select smoothing')
