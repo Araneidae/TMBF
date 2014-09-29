@@ -1,7 +1,7 @@
 % Reads and decodes peak fit data
 function [first, second] = read_peak_fit(tmbf)
-    first  = decode_fit(lcaGet([tmbf ':TUNE:PEAK:FIRSTFIT']));
-    second = decode_fit(lcaGet([tmbf ':TUNE:PEAK:SECONDFIT']));
+    first  = decode_fit(lcaGet([tmbf ':PEAK:FIRSTFIT']));
+    second = decode_fit(lcaGet([tmbf ':PEAK:SECONDFIT']));
 end
 
 function fit = decode_fit(data)

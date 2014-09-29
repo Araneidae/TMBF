@@ -248,7 +248,7 @@ static void copy_tune_result(
 static void publish_tune_result(struct tune_result *result, const char *prefix)
 {
     char buffer[40];
-#define FORMAT(field) (sprintf(buffer, "TUNE%s:%s", prefix, field), buffer)
+#define FORMAT(field) (sprintf(buffer, "%s:%s", prefix, field), buffer)
     PUBLISH_READ_VAR(mbbi, FORMAT("STATUS"), result->value.status);
     result->tune_pv  =
         PUBLISH_READ_VAR(ai, FORMAT("TUNE"), result->value.tune);
@@ -381,6 +381,13 @@ static void do_tune_sweep(
         overflow,
         tune_sweep->sweep_length, &sweep, tune_sweep->tune_scale,
         &tune_result_basic, measure_tune_basic);
+
+//     interlock_signal(tune_trigger, NULL);
+
+    /* Warning: At present we have nested EPICS interlock updates.  This is
+     * necessary because the PEAK tune result is updated on the tune_trigger
+     * interlock, but we need to complete the processing of measure_tune_peaks
+     * first.  A bit of gentle refactoring is in order to avoid this. */
     compute_tune_result(
         overflow,
         tune_sweep->sweep_length, &sweep, tune_sweep->tune_scale,
@@ -578,9 +585,9 @@ bool initialise_tune(void)
     PUBLISH_WF_READ_VAR(int, "TUNE:CUMSUMI", TUNE_LENGTH, cumsum_i);
     PUBLISH_WF_READ_VAR(int, "TUNE:CUMSUMQ", TUNE_LENGTH, cumsum_q);
 
-    publish_tune_result(&tune_result_selected, "");
-    publish_tune_result(&tune_result_basic, ":BASIC");
-    publish_tune_result(&tune_result_peaks, ":PEAK");
+    publish_tune_result(&tune_result_selected, "TUNE");
+    publish_tune_result(&tune_result_basic, "TUNE:BASIC");
+    publish_tune_result(&tune_result_peaks, "PEAK");
     PUBLISH_WRITER_P(mbbo, "TUNE:SELECT", set_selected_result);
     tune_result = create_interlock("TUNE:RESULT", false);
 

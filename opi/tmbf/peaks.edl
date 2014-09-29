@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 678
-y 4
+x 825
+y 29
 w 370
 h 554
 font "helvetica-medium-r-18.0"
@@ -141,7 +141,7 @@ x 80
 y 96
 w 104
 h 16
-controlPv "$(device):TUNE:PEAK:STATUS"
+controlPv "$(device):PEAK:STATUS"
 font "helvetica-medium-r-14.0"
 fgColor index 14
 fgAlarm
@@ -166,7 +166,7 @@ x 80
 y 64
 w 64
 h 24
-controlPv "$(device):TUNE:PEAK:TUNE"
+controlPv "$(device):PEAK:TUNE"
 font "helvetica-medium-r-18.0"
 fontAlign "right"
 fgColor index 14
@@ -232,7 +232,7 @@ x 232
 y 64
 w 64
 h 24
-controlPv "$(device):TUNE:PEAK:PHASE"
+controlPv "$(device):PEAK:PHASE"
 font "helvetica-medium-r-18.0"
 fontAlign "right"
 fgColor index 14
@@ -297,7 +297,7 @@ x 80
 y 152
 w 24
 h 16
-controlPv "$(device):TUNE:PEAK:COUNT"
+controlPv "$(device):PEAK:COUNT"
 font "helvetica-medium-r-14.0"
 fgColor index 14
 fgAlarm
@@ -342,7 +342,7 @@ x 72
 y 192
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:LEFT"
+controlPv "$(device):PEAK:LEFT"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -408,7 +408,7 @@ x 72
 y 176
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:LEFT:VALID"
+controlPv "$(device):PEAK:LEFT:VALID"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -454,7 +454,7 @@ x 72
 y 208
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:LEFT:PHASE"
+controlPv "$(device):PEAK:LEFT:PHASE"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -500,7 +500,7 @@ x 72
 y 224
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:LEFT:AREA"
+controlPv "$(device):PEAK:LEFT:AREA"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -546,7 +546,7 @@ x 72
 y 240
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:LEFT:WIDTH"
+controlPv "$(device):PEAK:LEFT:WIDTH"
 format "exponential"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -593,7 +593,7 @@ x 168
 y 192
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:CENTRE"
+controlPv "$(device):PEAK:CENTRE"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -619,7 +619,7 @@ x 168
 y 176
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:CENTRE:VALID"
+controlPv "$(device):PEAK:CENTRE:VALID"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -665,7 +665,7 @@ x 168
 y 208
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:CENTRE:PHASE"
+controlPv "$(device):PEAK:CENTRE:PHASE"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -691,7 +691,7 @@ x 168
 y 224
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:CENTRE:AREA"
+controlPv "$(device):PEAK:CENTRE:AREA"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -717,7 +717,7 @@ x 168
 y 240
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:CENTRE:WIDTH"
+controlPv "$(device):PEAK:CENTRE:WIDTH"
 format "exponential"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -744,7 +744,7 @@ x 264
 y 192
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:RIGHT"
+controlPv "$(device):PEAK:RIGHT"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -770,7 +770,7 @@ x 264
 y 176
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:RIGHT:VALID"
+controlPv "$(device):PEAK:RIGHT:VALID"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -816,7 +816,7 @@ x 264
 y 208
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:RIGHT:PHASE"
+controlPv "$(device):PEAK:RIGHT:PHASE"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -842,7 +842,7 @@ x 264
 y 224
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:RIGHT:AREA"
+controlPv "$(device):PEAK:RIGHT:AREA"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -868,7 +868,7 @@ x 264
 y 240
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:RIGHT:WIDTH"
+controlPv "$(device):PEAK:RIGHT:WIDTH"
 format "exponential"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -976,7 +976,7 @@ x 104
 y 432
 w 64
 h 24
-controlPv "$(device):TUNE:PEAK:THRESHOLD_S"
+controlPv "$(device):PEAK:THRESHOLD_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1042,9 +1042,9 @@ minor 6
 release 0
 x 104
 y 480
-w 104
+w 80
 h 24
-controlPv "$(device):TUNE:PEAK:MINWIDTH_S"
+controlPv "$(device):PEAK:MINWIDTH_S"
 format "exponential"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -1073,7 +1073,7 @@ x 104
 y 456
 w 64
 h 24
-controlPv "$(device):TUNE:PEAK:FITERROR_S"
+controlPv "$(device):PEAK:FITERROR_S"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1126,7 +1126,7 @@ bgColor index 3
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):TUNE:PEAK:SEL_S"
+controlPv "$(device):PEAK:SEL_S"
 font "helvetica-medium-r-12.0"
 endObjectProperties
 
@@ -1183,7 +1183,7 @@ x 72
 y 256
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:LEFT:HEIGHT"
+controlPv "$(device):PEAK:LEFT:HEIGHT"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1229,7 +1229,7 @@ x 168
 y 256
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:CENTRE:HEIGHT"
+controlPv "$(device):PEAK:CENTRE:HEIGHT"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1255,7 +1255,7 @@ x 264
 y 256
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:RIGHT:HEIGHT"
+controlPv "$(device):PEAK:RIGHT:HEIGHT"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1281,7 +1281,7 @@ x 104
 y 288
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:LEFT:DTUNE"
+controlPv "$(device):PEAK:LEFT:DTUNE"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1327,7 +1327,7 @@ x 104
 y 304
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:LEFT:DPHASE"
+controlPv "$(device):PEAK:LEFT:DPHASE"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1373,7 +1373,7 @@ x 104
 y 320
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:LEFT:RAREA"
+controlPv "$(device):PEAK:LEFT:RAREA"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1419,7 +1419,7 @@ x 104
 y 352
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:LEFT:RHEIGHT"
+controlPv "$(device):PEAK:LEFT:RHEIGHT"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1465,7 +1465,7 @@ x 224
 y 288
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:RIGHT:DTUNE"
+controlPv "$(device):PEAK:RIGHT:DTUNE"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1491,7 +1491,7 @@ x 224
 y 304
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:RIGHT:DPHASE"
+controlPv "$(device):PEAK:RIGHT:DPHASE"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1517,7 +1517,7 @@ x 224
 y 320
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:RIGHT:RAREA"
+controlPv "$(device):PEAK:RIGHT:RAREA"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1543,7 +1543,7 @@ x 224
 y 352
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:RIGHT:RHEIGHT"
+controlPv "$(device):PEAK:RIGHT:RHEIGHT"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1565,11 +1565,11 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 240
+x 200
 y 480
-w 104
+w 80
 h 24
-controlPv "$(device):TUNE:PEAK:MAXWIDTH_S"
+controlPv "$(device):PEAK:MAXWIDTH_S"
 format "exponential"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
@@ -1598,7 +1598,7 @@ x 160
 y 376
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:SYNCTUNE"
+controlPv "$(device):PEAK:SYNCTUNE"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1644,7 +1644,7 @@ x 104
 y 336
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:LEFT:RWIDTH"
+controlPv "$(device):PEAK:LEFT:RWIDTH"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -1690,7 +1690,7 @@ x 224
 y 336
 w 80
 h 16
-controlPv "$(device):TUNE:PEAK:RIGHT:RWIDTH"
+controlPv "$(device):PEAK:RIGHT:RWIDTH"
 font "helvetica-medium-r-14.0"
 fontAlign "right"
 fgColor index 14

@@ -189,13 +189,13 @@ static void publish_peak_info(struct peak_info *info, unsigned int ratio)
 
     char buffer[20];
 #define FORMAT(name) \
-    (sprintf(buffer, "TUNE:%s:%d", name, ratio), buffer)
+    (sprintf(buffer, "PEAK:%s:%d", name, ratio), buffer)
     PUBLISH_WF_READ_VAR(int, FORMAT("POWER"), length, info->power);
     PUBLISH_WF_READ_VAR(int, FORMAT("PDD"), length, info->power_dd);
-    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKIX"), MAX_PEAKS, info->peak_ix_wf);
-    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKV"), MAX_PEAKS, info->peak_val_wf);
-    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKL"), MAX_PEAKS, info->peak_left_wf);
-    PUBLISH_WF_READ_VAR(int, FORMAT("PEAKR"), MAX_PEAKS, info->peak_right_wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("IX"), MAX_PEAKS, info->peak_ix_wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("V"), MAX_PEAKS, info->peak_val_wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("L"), MAX_PEAKS, info->peak_left_wf);
+    PUBLISH_WF_READ_VAR(int, FORMAT("R"), MAX_PEAKS, info->peak_right_wf);
 #undef FORMAT
 }
 
@@ -632,7 +632,7 @@ static void publish_peak_result(const char *prefix, struct peak_result *result)
 {
     char buffer[40];
 #define FORMAT(name) \
-    (sprintf(buffer, "TUNE:PEAK:%s%s", prefix, name), buffer)
+    (sprintf(buffer, "PEAK:%s%s", prefix, name), buffer)
 
     PUBLISH_READ_VAR(ai, FORMAT(""),       result->tune);
     PUBLISH_READ_VAR(ai, FORMAT(":PHASE"), result->phase);
@@ -648,7 +648,7 @@ static void publish_peak_result_relative(
 {
     char buffer[40];
 #define FORMAT(name) \
-    (sprintf(buffer, "TUNE:PEAK:%s%s", prefix, name), buffer)
+    (sprintf(buffer, "PEAK:%s%s", prefix, name), buffer)
 
     PUBLISH_READ_VAR(ai, FORMAT(":DTUNE"),   result->delta_tune);
     PUBLISH_READ_VAR(ai, FORMAT(":DPHASE"),  result->delta_phase);
@@ -661,6 +661,8 @@ static void publish_peak_result_relative(
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+static struct epics_interlock *peak_trigger;
 
 static int peak_power_4[TUNE_LENGTH / 4];
 static struct peak_info peak_info_16;
@@ -687,6 +689,8 @@ void measure_tune_peaks(
     const double *tune_scale,
     unsigned int *status, double *tune, double *phase)
 {
+    interlock_wait(peak_trigger);
+
     smooth_waveform_4(TUNE_LENGTH,    sweep->power, peak_power_4);
     smooth_waveform_4(TUNE_LENGTH/4,  peak_power_4, peak_info_16.power);
     smooth_waveform_4(TUNE_LENGTH/16, peak_info_16.power, peak_info_64.power);
@@ -697,6 +701,8 @@ void measure_tune_peaks(
     struct peak_info *peak_info = select_peak_info();
     process_peak_tune(
         length, sweep, tune_scale, peak_info, status, tune, phase);
+
+    interlock_signal(peak_trigger, NULL);
 }
 
 
@@ -706,27 +712,29 @@ void measure_tune_peaks(
 
 bool initialise_tune_peaks(void)
 {
+    peak_trigger = create_interlock("PEAK", false);
+
     publish_peak_info(&peak_info_16, 16);
     publish_peak_info(&peak_info_64, 64);
 
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:THRESHOLD", peak_fit_threshold);
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MINWIDTH", min_peak_width);
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:MAXWIDTH", max_peak_width);
-    PUBLISH_WRITE_VAR_P(ao, "TUNE:PEAK:FITERROR", max_fit_error);
+    PUBLISH_WRITE_VAR_P(ao, "PEAK:THRESHOLD", peak_fit_threshold);
+    PUBLISH_WRITE_VAR_P(ao, "PEAK:MINWIDTH", min_peak_width);
+    PUBLISH_WRITE_VAR_P(ao, "PEAK:MAXWIDTH", max_peak_width);
+    PUBLISH_WRITE_VAR_P(ao, "PEAK:FITERROR", max_fit_error);
 
-    PUBLISH_WRITE_VAR_P(mbbo, "TUNE:PEAK:SEL", peak_select);
+    PUBLISH_WRITE_VAR_P(mbbo, "PEAK:SEL", peak_select);
 
-    PUBLISH_READ_VAR(ulongin, "TUNE:PEAK:COUNT", fitted_peak_count);
+    PUBLISH_READ_VAR(ulongin, "PEAK:COUNT", fitted_peak_count);
 
-    PUBLISH_PEAK_FIT("TUNE:PEAK:FIRSTFIT", first_fit);
-    PUBLISH_PEAK_FIT("TUNE:PEAK:SECONDFIT", second_fit);
+    PUBLISH_PEAK_FIT("PEAK:FIRSTFIT", first_fit);
+    PUBLISH_PEAK_FIT("PEAK:SECONDFIT", second_fit);
 
     publish_peak_result("LEFT",   &left_peak);
     publish_peak_result("CENTRE", &centre_peak);
     publish_peak_result("RIGHT",  &right_peak);
     publish_peak_result_relative("LEFT",  &left_peak_relative);
     publish_peak_result_relative("RIGHT", &right_peak_relative);
-    PUBLISH_READ_VAR(ai, "TUNE:PEAK:SYNCTUNE", synchrotron_tune);
+    PUBLISH_READ_VAR(ai, "PEAK:SYNCTUNE", synchrotron_tune);
 
     return true;
 }

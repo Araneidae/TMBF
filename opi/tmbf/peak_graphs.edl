@@ -115,7 +115,7 @@ y2Max 1
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):TUNE:PDD:16"
+  0 "$(device):PEAK:PDD:16"
 }
 plotUpdateMode {
   0 "xOrY"
@@ -160,7 +160,7 @@ y2Max 1
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):TUNE:PDD:64"
+  0 "$(device):PEAK:PDD:64"
 }
 plotUpdateMode {
   0 "xOrY"
@@ -205,15 +205,15 @@ y2Max 1
 # Trace Properties
 numTraces 4
 xPv {
-  1 "$(device):TUNE:PEAKIX:16"
-  2 "$(device):TUNE:PEAKL:16"
-  3 "$(device):TUNE:PEAKR:16"
+  1 "$(device):PEAK:IX:16"
+  2 "$(device):PEAK:L:16"
+  3 "$(device):PEAK:R:16"
 }
 yPv {
-  0 "$(device):TUNE:POWER:16"
-  1 "$(device):TUNE:PEAKV:16"
-  2 "$(device):TUNE:PEAKV:16"
-  3 "$(device):TUNE:PEAKV:16"
+  0 "$(device):PEAK:POWER:16"
+  1 "$(device):PEAK:V:16"
+  2 "$(device):PEAK:V:16"
+  3 "$(device):PEAK:V:16"
 }
 plotStyle {
   1 "single point"
@@ -271,15 +271,15 @@ y2Max 1
 # Trace Properties
 numTraces 4
 xPv {
-  1 "$(device):TUNE:PEAKIX:64"
-  2 "$(device):TUNE:PEAKL:64"
-  3 "$(device):TUNE:PEAKR:64"
+  1 "$(device):PEAK:IX:64"
+  2 "$(device):PEAK:L:64"
+  3 "$(device):PEAK:R:64"
 }
 yPv {
-  0 "$(device):TUNE:POWER:64"
-  1 "$(device):TUNE:PEAKV:64"
-  2 "$(device):TUNE:PEAKV:64"
-  3 "$(device):TUNE:PEAKV:64"
+  0 "$(device):PEAK:POWER:64"
+  1 "$(device):PEAK:V:64"
+  2 "$(device):PEAK:V:64"
+  3 "$(device):PEAK:V:64"
 }
 plotStyle {
   1 "single point"

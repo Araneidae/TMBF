@@ -11,6 +11,7 @@ import sensors      # SE
 import sequencer    # SEQ
 import triggers     # TRG
 import tune         # TUNE
+import tune_peaks   # PEAK
 import tune_follow  # FTUN
 
 

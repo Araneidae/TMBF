@@ -254,11 +254,11 @@ put('TUNE:BLK:SEP_S', min_block_sep)
 put('TUNE:THRESHOLD_S', tune_threshold)
 
 # Peak tune measurement settings
-put('TUNE:PEAK:SEL_S', peak_smoothing)
-put('TUNE:PEAK:THRESHOLD_S', peak_fit_threshold)
-put('TUNE:PEAK:FITERROR_S', peak_max_error)
-put('TUNE:PEAK:MINWIDTH_S', peak_min_width)
-put('TUNE:PEAK:MAXWIDTH_S', peak_max_width)
+put('PEAK:SEL_S', peak_smoothing)
+put('PEAK:THRESHOLD_S', peak_fit_threshold)
+put('PEAK:FITERROR_S', peak_max_error)
+put('PEAK:MINWIDTH_S', peak_min_width)
+put('PEAK:MAXWIDTH_S', peak_max_width)
 
 put('TUNE:SELECT_S', tune_select)
 
