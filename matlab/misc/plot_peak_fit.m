@@ -3,6 +3,7 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
     [first, second] = read_peak_fit(tmbf);
     iq = [1 1j] * lcaGet({[tmbf ':TUNE:I']; [tmbf ':TUNE:Q']});
     s = lcaGet([tmbf ':DET:SCALE']);
+    threshold = lcaGet([tmbf ':PEAK:THRESHOLD_S']);
 
     m1 = model(s, first.fits(:, first.status == 0));
     m2 = model(s, second.fits(:, second.status == 0));
@@ -25,31 +26,38 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
     title('Full model fit')
 
     subplot 223
-    plot_result(s, iq, first, true)
+    plot_result(s, iq, first, [], threshold)
     title('First fits')
 
     subplot 224
-    plot_result(s, iq, second, false)
+    plot_result(s, iq, second, first.fits(:, 1:first.count), 0)
     title('Second fits')
 end
 
-function plot_result(s, iq, result, first_fit)
+function range = threshold_range(power, range, threshold)
+    power = power(range);
+    min_iq = max(power) * threshold;
+    range = range(find(power >= threshold * max(power)));
+end
+
+function plot_result(s, iq, result, first_fit, threshold)
     hold all
     strings = {};
+    power = abs(iq).^2;
     for n = 1:result.count
-        % Compute correction to IQ data so that we show the data we really
-        % fitted against.
-        if first_fit
-            k = result.fits(:, 1:n-1);
-        else
-            k = result.fits(:, [1:n-1 n+1:result.count]);
-        end
-
+        % r is the range of points over which we've done the fit, th_r is the
+        % set of points passing the threshold test.
         r = 1 + (result.ranges(1,n):result.ranges(2,n));
-        plot(iq(r) - model(s(r), k), '.')
-        plot(model(s(r), result.fits(:,n)))
+        th_r = threshold_range(power, r, threshold);
 
+        % Plot the thresholded corrected data.  The correction is computed from
+        % a combination of the fits successfully completed so far.
+        k = [result.fits(:, 1:n-1) first_fit(:, n+1:end)];
+        plot(iq(th_r) - model(s(th_r), k), '.')
         strings{2*n-1} = sprintf('P%d data', n);
+
+        % Plot the resulting model over the fitting range
+        plot(model(s(r), result.fits(:,n)))
         strings{2*n} = sprintf('P%d fit, e: %.3f', n, result.errors(n));
     end
     plot(complex(0), 'x')
@@ -64,6 +72,8 @@ function z = model(s, fit)
     end
 end
 
+% This one is a bit annoying: in some versions of matlab it's not valid to call
+% complex(z) on a complex argument z.  This is fixed now apparently...
 function z = make_complex(z)
     if isreal(z)
         z = complex(z);
