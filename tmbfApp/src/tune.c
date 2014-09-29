@@ -525,8 +525,8 @@ static void set_tune_settings(void)
     /* Force buffer to IQ and configure triggering into standard mode. */
     WRITE_NAMED_RECORD(mbbo, "BUF:SELECT", BUF_SELECT_IQ);
     WRITE_NAMED_RECORD(mbbo, "TRG:SEQ:SEL", SEQ_TRIG_BUF);
-    WRITE_NAMED_RECORD(bo, "TRG:BUF:SEL", true);
-    WRITE_NAMED_RECORD(bo, "TRG:BUF:MODE", true);
+    WRITE_NAMED_RECORD(bo, "TRG:BUF:SEL", true);    // Hardware trigger
+    WRITE_NAMED_RECORD(bo, "TRG:BUF:MODE", true);   // Automatic retrigger
 
     /* Configure triggering on external trigger only. */
     WRITE_NAMED_RECORD(bo, "TRG:BUF:EXT:EN", true);

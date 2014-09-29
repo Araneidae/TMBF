@@ -39,7 +39,7 @@ def get_config(config, key):
         return config['%s_%s_%s' % (AXIS, key, RING_MODE)]
     except:
         print >>sys.stderr, 'Configuration for %s:%s in mode %s not found' % (
-            DEVICE, key, RING_MODE)
+            AXIS, key, RING_MODE)
         raise
 
 def compute_filter_size(tune):
@@ -142,12 +142,25 @@ cycles, length = compute_filter_size(tune)
 harmonic = 80
 bunch = 450
 
+# Settings for basic tune measurement.
 tune_threshold = 0.3
 min_block_sep = 20
 min_block_len = 20
+
+# Settings for peak tune measurement
+peak_smoothing = '/16'
+peak_fit_threshold = 0.3
+peak_max_error = 1
+peak_min_width = 0
+peak_max_width = 1
+
+# Default tune selection
+tune_select = 'Basic'
+
 sweep_dwell_time = 100
 
 blanking_interval = 10000
+blanking_source = 'SCLK Input'
 
 sweep_range = 0.05
 alarm_range = 0.01
@@ -215,7 +228,7 @@ put('SEQ:1:GAIN_S', sweep_gain)
 put('SEQ:1:ENWIN_S', 'Windowed')
 put('SEQ:1:BLANK_S', 'Blanking')
 
-# Ensure super sequencer isn't messing us about
+# Ensure super sequencer isn't in a strange state
 put('SEQ:SUPER:COUNT_S', 1)
 put('SEQ:SUPER:RESET_S', 0)
 
@@ -231,23 +244,30 @@ put('TUNE:CENTRE_S', tune)
 put('TUNE:RANGE_S', sweep_range)
 put('TUNE:ALARM_S', alarm_range)
 put('TUNE:BUNCH_S', bunch)
+# This configures the entire tune sweep with the parameters above and sets up
+# triggering correctly.
 put('TUNE:SET_S.PROC', 0)
 
+# Basic tune measurement settings
 put('TUNE:BLK:LEN_S', min_block_len)
 put('TUNE:BLK:SEP_S', min_block_sep)
 put('TUNE:THRESHOLD_S', tune_threshold)
 
-# Trigger on external trigger.
-put('TRG:BUF:SEL_S', 'Hardware')        # Already set by TUNE:SET_S
-put('TRG:BUF:EXT:EN_S', 'Enable')       # Already set by TUNE:SET_S
-put('TRG:BUF:EXT:BL_S', 'All')
-put('TRG:BUF:ADC:EN_S', 'Ignore')       # Already set by TUNE:SET_S
-put('TRG:BUF:SCLK:EN_S', 'Ignore')      # Already set by TUNE:SET_S
-put('TRG:BUF:MODE_S', 'Retrigger')      # Already set by TUNE:SET_S
+# Peak tune measurement settings
+put('TUNE:PEAK:SEL_S', peak_smoothing)
+put('TUNE:PEAK:THRESHOLD_S', peak_fit_threshold)
+put('TUNE:PEAK:FITERROR_S', peak_max_error)
+put('TUNE:PEAK:MINWIDTH_S', peak_min_width)
+put('TUNE:PEAK:MAXWIDTH_S', peak_max_width)
 
-put('TRG:SEQ:SEL_S', 'BUF trigger')     # Already set by TUNE:SET_S
-put('TRG:SYNC_S', 'Separate')
+put('TUNE:SELECT_S', tune_select)
+
+# Configure blanking
+put('TRG:BUF:EXT:BL_S', 'All')
+put('TRG:BLANKING:SOURCE_S', blanking_source)
 put('TRG:BLANKING_S', blanking_interval)
+
+put('TRG:SYNC_S', 'Separate')
 
 # Now we can go!
 put('DAC:ENABLE_S', 'On')
