@@ -269,6 +269,7 @@ static struct epics_interlock *tune_trigger;
 static int harmonic;            // Base frequency for tune sweep
 static bool reverse_tune;       // Set to sweep tune backwards
 static unsigned int selected_bunch; // Selected single bunch
+static bool keep_feedback;      // Action when updating DAC out control
 
 /* Waveforms from last detector sweep. */
 static struct channel_sweep sweep;
@@ -496,13 +497,16 @@ static void set_bunch_control(void)
     bool single_bunch_mode = READ_NAMED_RECORD(bo, "DET:MODE");
 
     char out_wf[BUNCHES_PER_TURN];
-    if (single_bunch_mode)
-    {
-        READ_NAMED_RECORD_WF(char, "BUN:0:OUTWF_S", out_wf, BUNCHES_PER_TURN);
-        out_wf[selected_bunch] = 4;
-    }
-    else
-        memset(out_wf, 4, BUNCHES_PER_TURN);
+    READ_NAMED_RECORD_WF(char, "BUN:0:OUTWF_S", out_wf, BUNCHES_PER_TURN);
+    for (unsigned int i = 0; i < BUNCHES_PER_TURN; i ++)
+        if (!single_bunch_mode  ||  i == selected_bunch)
+        {
+            if (keep_feedback)
+                out_wf[i] |= 4;
+            else
+                out_wf[i] = 4;
+        }
+
     WRITE_NAMED_RECORD_WF(char, "BUN:1:OUTWF_S", out_wf, BUNCHES_PER_TURN);
 }
 
@@ -575,6 +579,7 @@ bool initialise_tune(void)
     PUBLISH_WRITE_VAR_P(bo, "TUNE:DIRECTION", reverse_tune);
     PUBLISH_WRITE_VAR_P(ao, "TUNE:ALARM", alarm_range);
     PUBLISH_WRITE_VAR_P(ulongout, "TUNE:BUNCH", selected_bunch);
+    PUBLISH_WRITE_VAR_P(bo, "TUNE:FEEDBACK", keep_feedback);
 
     PUBLISH_WF_READ_VAR(short, "TUNE:I", TUNE_LENGTH, sweep.wf_i);
     PUBLISH_WF_READ_VAR(short, "TUNE:Q", TUNE_LENGTH, sweep.wf_q);

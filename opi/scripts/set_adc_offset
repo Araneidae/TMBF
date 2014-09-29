@@ -27,6 +27,7 @@ put('TRG:DDR:ARM_S.PROC', 0)
 print 'Waiting for capture'
 cothread.Sleep(1)
 
+put('DDR:TURNSEL_S', 0)
 offsets = get('ADC:OFFSET_S')
 adc = get('DDR:LONGWF')
 delta = 2 * adc.reshape((-1, 4)).mean(0)

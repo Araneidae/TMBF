@@ -4,17 +4,22 @@ from common import *
 
 
 # Common controls for simple tune control
-setting_changed = Action('TUNE:CHANGED', DESC = 'Record tune settings changed')
-longOut('TUNE:HARMONIC', 0, BUNCHES_PER_TURN - 1,
-    FLNK = setting_changed, DESC = 'Select tune harmonic')
-aOut('TUNE:CENTRE', 0, 1, PREC = 4,
-    FLNK = setting_changed, DESC = 'Centre tune frequency')
-aOut('TUNE:RANGE', 0, 0.5, PREC = 4,
-    FLNK = setting_changed, DESC = 'Tune sweep range')
-boolOut('TUNE:DIRECTION', 'Forwards', 'Backwards',
-    FLNK = setting_changed, DESC = 'Sweep direction')
-longOut('TUNE:BUNCH', 0, BUNCHES_PER_TURN-1,
-    FLNK = setting_changed, DESC = 'Single bunch selection')
+setting_changed = ForwardLink(
+    'TUNE:CHANGED', 'Record tune settings changed',
+
+    longOut('TUNE:HARMONIC', 0, BUNCHES_PER_TURN - 1,
+        DESC = 'Select tune harmonic'),
+    aOut('TUNE:CENTRE', 0, 1, PREC = 4,
+        DESC = 'Centre tune frequency'),
+    aOut('TUNE:RANGE', 0, 0.5, PREC = 4,
+        DESC = 'Tune sweep range'),
+    boolOut('TUNE:DIRECTION', 'Forwards', 'Backwards',
+        DESC = 'Sweep direction'),
+    longOut('TUNE:BUNCH', 0, BUNCHES_PER_TURN-1,
+        DESC = 'Single bunch selection'),
+    boolOut('TUNE:FEEDBACK', 'No feedback', 'Keep feedback',
+        DESC = 'Whether to keep existing DAC out control'))
+
 aOut('TUNE:ALARM', 0, 0.5, PREC = 4, DESC = 'Set tune alarm range')
 
 

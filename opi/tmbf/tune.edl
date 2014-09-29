@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1921
-y 1
+x 1922
+y 2
 w 641
-h 593
+h 618
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-18.0"
 btnFont "helvetica-medium-r-18.0"
@@ -48,7 +48,7 @@ major 4
 minor 0
 release 0
 x 8
-y 400
+y 424
 w 384
 h 72
 lineColor index 14
@@ -65,7 +65,7 @@ release 0
 x 8
 y 240
 w 224
-h 144
+h 168
 lineColor index 14
 fill
 fillColor index 4
@@ -93,7 +93,7 @@ major 4
 minor 0
 release 0
 x 304
-y 488
+y 512
 w 224
 h 96
 lineColor index 14
@@ -127,7 +127,7 @@ major 4
 minor 1
 release 0
 x 568
-y 560
+y 584
 w 64
 h 24
 fgColor index 46
@@ -266,7 +266,7 @@ major 4
 minor 0
 release 0
 x 312
-y 528
+y 552
 w 16
 h 16
 lineColor index 14
@@ -283,7 +283,7 @@ major 4
 minor 6
 release 0
 x 336
-y 528
+y 552
 w 184
 h 14
 controlPv "$(device):DET:OVF:ACC.DESC"
@@ -307,7 +307,7 @@ major 4
 minor 6
 release 0
 x 336
-y 552
+y 576
 w 184
 h 14
 controlPv "$(device):DET:OVF:IQ.DESC"
@@ -331,7 +331,7 @@ major 4
 minor 0
 release 0
 x 312
-y 552
+y 576
 w 16
 h 16
 lineColor index 14
@@ -348,7 +348,7 @@ major 4
 minor 1
 release 1
 x 304
-y 480
+y 504
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -367,7 +367,7 @@ major 4
 minor 0
 release 0
 x 304
-y 480
+y 504
 w 120
 h 16
 lineColor index 14
@@ -400,7 +400,7 @@ major 4
 minor 4
 release 0
 x 544
-y 528
+y 552
 w 88
 h 24
 fgColor index 43
@@ -615,7 +615,7 @@ major 4
 minor 0
 release 0
 x 8
-y 488
+y 512
 w 288
 h 96
 lineColor index 14
@@ -630,7 +630,7 @@ major 4
 minor 1
 release 1
 x 8
-y 480
+y 504
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -649,7 +649,7 @@ major 4
 minor 0
 release 0
 x 8
-y 480
+y 504
 w 120
 h 16
 lineColor index 14
@@ -813,7 +813,7 @@ major 4
 minor 1
 release 1
 x 8
-y 392
+y 416
 w 120
 h 16
 font "helvetica-medium-r-12.0"
@@ -832,7 +832,7 @@ major 4
 minor 0
 release 0
 x 8
-y 392
+y 416
 w 120
 h 16
 lineColor index 14
@@ -846,7 +846,7 @@ major 4
 minor 1
 release 1
 x 16
-y 416
+y 440
 w 67
 h 14
 font "helvetica-bold-r-12.0"
@@ -866,7 +866,7 @@ major 4
 minor 6
 release 0
 x 104
-y 416
+y 440
 w 72
 h 24
 controlPv "$(device):SEQ:1:DWELL_S"
@@ -894,7 +894,7 @@ major 4
 minor 0
 release 0
 x 280
-y 416
+y 440
 w 80
 h 24
 fgColor index 14
@@ -913,7 +913,7 @@ major 4
 minor 1
 release 1
 x 192
-y 416
+y 440
 w 73
 h 14
 font "helvetica-bold-r-12.0"
@@ -933,7 +933,7 @@ major 4
 minor 6
 release 0
 x 80
-y 448
+y 472
 w 104
 h 16
 controlPv "$(device):SEQ:DURATION"
@@ -959,7 +959,7 @@ major 4
 minor 1
 release 1
 x 16
-y 448
+y 472
 w 54
 h 14
 font "helvetica-bold-r-12.0"
@@ -979,7 +979,7 @@ major 4
 minor 6
 release 0
 x 208
-y 448
+y 472
 w 80
 h 16
 controlPv "$(device):SEQ:DURATION:S"
@@ -1005,7 +1005,7 @@ major 4
 minor 1
 release 1
 x 192
-y 448
+y 472
 w 7
 h 14
 font "helvetica-bold-r-12.0"
@@ -1065,7 +1065,7 @@ major 4
 minor 6
 release 0
 x 120
-y 528
+y 552
 w 104
 h 16
 controlPv "$(device):TUNE:STATUS"
@@ -1090,7 +1090,7 @@ major 4
 minor 4
 release 0
 x 544
-y 496
+y 520
 w 88
 h 24
 fgColor index 43
@@ -1113,7 +1113,7 @@ major 4
 minor 4
 release 0
 x 216
-y 552
+y 576
 w 72
 h 24
 fgColor index 43
@@ -1136,7 +1136,7 @@ major 4
 minor 6
 release 0
 x 72
-y 504
+y 528
 w 72
 h 24
 controlPv "$(device):TUNE:TUNE"
@@ -1162,7 +1162,7 @@ major 4
 minor 1
 release 1
 x 168
-y 504
+y 528
 w 55
 h 21
 font "helvetica-medium-r-18.0"
@@ -1182,7 +1182,7 @@ major 4
 minor 1
 release 1
 x 16
-y 504
+y 528
 w 47
 h 21
 font "helvetica-medium-r-18.0"
@@ -1202,7 +1202,7 @@ major 4
 minor 6
 release 0
 x 224
-y 504
+y 528
 w 64
 h 24
 controlPv "$(device):TUNE:PHASE"
@@ -1228,7 +1228,7 @@ major 4
 minor 1
 release 1
 x 16
-y 528
+y 552
 w 85
 h 14
 font "helvetica-bold-r-12.0"
@@ -1317,8 +1317,8 @@ minor 0
 release 0
 x 112
 y 352
-w 96
-h 24
+w 112
+h 22
 fgColor index 14
 bgColor index 3
 inconsistentColor index 0
@@ -1495,7 +1495,7 @@ major 4
 minor 6
 release 0
 x 336
-y 504
+y 528
 w 176
 h 14
 controlPv "$(device):DET:OVF:INP.DESC"
@@ -1519,7 +1519,7 @@ major 4
 minor 0
 release 0
 x 312
-y 504
+y 528
 w 16
 h 16
 lineColor index 14
@@ -1630,7 +1630,7 @@ major 4
 minor 0
 release 0
 x 88
-y 552
+y 576
 w 96
 h 24
 fgColor index 14
@@ -1649,7 +1649,7 @@ major 4
 minor 1
 release 1
 x 16
-y 552
+y 576
 w 60
 h 14
 font "helvetica-bold-r-12.0"
@@ -1658,6 +1658,45 @@ bgColor index 0
 useDisplayBg
 value {
   "Algorithm:"
+}
+autoSize
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 112
+y 376
+w 112
+h 22
+fgColor index 14
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):TUNE:FEEDBACK_S"
+font "helvetica-medium-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 16
+y 376
+w 60
+h 14
+font "helvetica-bold-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Feedback:"
 }
 autoSize
 endObjectProperties
