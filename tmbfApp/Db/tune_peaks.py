@@ -63,8 +63,8 @@ Trigger('PEAK',
         PEAK_FIT_SIZE, 'CHAR', DESC = 'Raw second fit data'),
     longIn('PEAK:COUNT', DESC = 'Final fitted peak count'),
 
-    # Synchrotron tune estimated from sidebands
     aIn('PEAK:SYNCTUNE', 0, 1, PREC = 5, DESC = 'Synchrotron tune'),
+    aIn('PEAK:DURATION', PREC = 1, EGU = 'ms', DESC = 'Processing time'),
 
 *
     # Peak detection support

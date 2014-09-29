@@ -16,6 +16,7 @@
 #include "detector.h"
 #include "tune_support.h"
 #include "tune.h"
+#include "timing.h"
 
 #include "tune_peaks.h"
 
@@ -663,6 +664,7 @@ static void publish_peak_result_relative(
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 static struct epics_interlock *peak_trigger;
+static double process_duration;
 
 static int peak_power_4[TUNE_LENGTH / 4];
 static struct peak_info peak_info_16;
@@ -670,6 +672,7 @@ static struct peak_info peak_info_64;
 
 enum { PEAK_16, PEAK_64 };
 static unsigned int peak_select;
+
 
 static struct peak_info *select_peak_info(void)
 {
@@ -690,6 +693,7 @@ void measure_tune_peaks(
     unsigned int *status, double *tune, double *phase)
 {
     interlock_wait(peak_trigger);
+    TIC();
 
     smooth_waveform_4(TUNE_LENGTH,    sweep->power, peak_power_4);
     smooth_waveform_4(TUNE_LENGTH/4,  peak_power_4, peak_info_16.power);
@@ -702,6 +706,7 @@ void measure_tune_peaks(
     process_peak_tune(
         length, sweep, tune_scale, peak_info, status, tune, phase);
 
+    process_duration = 1e3 * TOC();
     interlock_signal(peak_trigger, NULL);
 }
 
@@ -734,7 +739,9 @@ bool initialise_tune_peaks(void)
     publish_peak_result("RIGHT",  &right_peak);
     publish_peak_result_relative("LEFT",  &left_peak_relative);
     publish_peak_result_relative("RIGHT", &right_peak_relative);
+
     PUBLISH_READ_VAR(ai, "PEAK:SYNCTUNE", synchrotron_tune);
+    PUBLISH_READ_VAR(ai, "PEAK:DURATION", process_duration);
 
     return true;
 }
