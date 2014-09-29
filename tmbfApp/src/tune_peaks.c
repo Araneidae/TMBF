@@ -298,7 +298,8 @@ static void reset_fit_result(
     {
         peak_fit->ranges[i] = (struct peak_range) { };
         peak_fit->status[i] = PEAK_NO_RANGE;
-        peak_fit->errors[i] = 0;
+        peak_fit->fits[i] = (struct one_pole) { NAN, NAN };
+        peak_fit->errors[i] = NAN;
     }
     peak_fit->peak_count = peak_count;
 }
@@ -380,7 +381,11 @@ static void fit_peaks(
         peak_fit->ranges, peak_fit->fits, peak_fit->errors);
 
     for (unsigned int i = fit_count; i < peak_fit->peak_count; i ++)
+    {
         peak_fit->status[i] = PEAK_NO_FIT;
+        peak_fit->fits[i] = (struct one_pole) { NAN, NAN };
+        peak_fit->errors[i] = NAN;
+    }
     for (unsigned int i = 0; i < fit_count; i ++)
         if (assess_peak(
                &peak_fit->ranges[i], tune_scale,
@@ -553,27 +558,6 @@ static void identify_three_peaks(
 }
 
 
-/* We estimate the synchrotron from the offset of the tune sidebands.  If both
- * are present then we take the mean offset, otherwise we use whichever is
- * valid. */
-static double compute_synchrotron_tune(void)
-{
-    int count = 0;
-    double tune = 0;
-    if (left_peak.valid)
-    {
-        tune += left_peak_relative.delta_tune;
-        count += 1;
-    }
-    if (right_peak.valid)
-    {
-        tune += right_peak_relative.delta_tune;
-        count += 1;
-    }
-    return tune / count;    // Conveniently returns NAN if count == 0.
-}
-
-
 /* Extract the tune and its sidebands as sensible published results. */
 static unsigned int extract_peak_tune(
     unsigned int peak_count, const struct one_pole fits[],
@@ -587,10 +571,17 @@ static unsigned int extract_peak_tune(
     update_peak_result(&right_peak,  right);
     update_peak_result_relative(&left_peak,  &left_peak_relative);
     update_peak_result_relative(&right_peak, &right_peak_relative);
-    synchrotron_tune = compute_synchrotron_tune();
+    /* Estimate synchrotron tune from the average of the two tune sidebands, but
+     * only if both sidebands are present. */
+    synchrotron_tune = 0.5 * (
+        left_peak_relative.delta_tune + right_peak_relative.delta_tune);
 
     if (centre == NULL)
+    {
+        *tune = NAN;
+        *phase = NAN;
         return TUNE_NO_PEAK;
+    }
     else
     {
         *tune = centre_peak.tune;
