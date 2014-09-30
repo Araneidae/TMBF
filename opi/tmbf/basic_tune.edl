@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 429
-y 378
+x 430
+y 379
 w 304
 h 257
 font "helvetica-medium-r-18.0"
@@ -82,7 +82,7 @@ font "helvetica-bold-r-14.0"
 buttonLabel "?"
 numCmds 1
 command {
-  0 "diagnostics-help TMBF_tune"
+  0 "diagnostics-help TMBF_tune_simple"
 }
 includeHelpIcon
 endObjectProperties
