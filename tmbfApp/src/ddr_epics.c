@@ -165,7 +165,9 @@ static void update_overflows(void)
 static void reset_overflows(void)
 {
     interlock_wait(overflows_interlock);
-    read_overflows(overflows);
+    bool new_overflows[PULSED_BIT_COUNT];
+    read_overflows(new_overflows);
+    memset(overflows, 0, sizeof(overflows));
     interlock_signal(overflows_interlock, NULL);
 }
 
@@ -183,8 +185,8 @@ void prepare_ddr_buffer(void)
     {
         input_selection = new_input_selection;
         hw_write_ddr_select(input_selection);
-        hw_write_ddr_enable();  // Initiate capture of selected DDR data
         reset_overflows();
+        hw_write_ddr_enable();  // Initiate capture of selected DDR data
         capture_active = true;
     }
     UNLOCK();
