@@ -5,34 +5,34 @@
 # range 0..233 as they record clock count offsets within a machine revolution.
 
 # DDR readout delays
-DDR_ADC_DELAY = -6
-DDR_FIR_DELAY = -1
-DDR_RAW_DAC_DELAY = 3
-DDR_DAC_DELAY = 9
+DDR_ADC_DELAY = -7
+DDR_FIR_DELAY = 2
+DDR_RAW_DAC_DELAY = 7
+DDR_DAC_DELAY = 13
 
 # Buffer trigger delays
-BUF_ADC_DELAY = -5
-BUF_FIR_DELAY = 0
-BUF_DAC_DELAY = 10
+BUF_ADC_DELAY = -7
+BUF_FIR_DELAY = 2
+BUF_DAC_DELAY = 13
 
 # MinMax buffer delays
-MINMAX_ADC_DELAY = 228
-MINMAX_DAC_DELAY = 9
+MINMAX_ADC_DELAY = 225
+MINMAX_DAC_DELAY = 11
 
 # Bunch selection offsets
-BUNCH_FIR_OFFSET = 228
+BUNCH_FIR_OFFSET = 224
 BUNCH_GAIN_OFFSET = 0
 
 # Detector single bunch offsets and phase skews
-DET_ADC_OFFSET = 1
-DET_FIR_OFFSET = 232
+DET_ADC_OFFSET = 11
+DET_FIR_OFFSET = 5
 # These two values represent actual phase delays in bunches relative to an
 # aligned single turn.
-DET_ADC_DELAY = 0
-DET_FIR_DELAY = 12
+DET_ADC_DELAY = -16
+DET_FIR_DELAY = 8
 
 # Tune following delays
-FTUN_ADC_OFFSET = 3
+FTUN_ADC_OFFSET = 6
 FTUN_FIR_OFFSET = 0
-FTUN_ADC_DELAY = 928
-FTUN_FIR_DELAY = 940
+FTUN_ADC_DELAY = 908
+FTUN_FIR_DELAY = 932

@@ -324,17 +324,18 @@ def measure_minmax(tmbf, results):
     # and measuring delays to DAC max.  This allows us to measure the closed
     # loop delay and close the loop for all remaining measurements.
     dac_minmax_delay = find_one_peak(maxdac.get_new(0.25))
-    loop_delay = dac_to_dac_closed_loop(tmbf, maxdac)
     results.MINMAX_DAC_DELAY = dac_minmax_delay
 
     # Check that the gain control already acts on bunch zero: this is programmed
     # to be thus in the FPGA at present.
     results.BUNCH_GAIN_OFFSET = dac_minmax_delay - gain_delay(tmbf, maxdac)
 
-    # Close the loop
+    # Measure loop delay and close the loop
+    loop_delay = dac_to_dac_closed_loop(tmbf, maxdac)
     tmbf.set('DAC:DELAY_S', BUNCH_COUNT - loop_delay + dac_minmax_delay)
 
     # Now we can capture the max ADC offset
+    configure_dac_single_pulse(tmbf)
     results.MINMAX_ADC_DELAY = find_one_peak(maxadc.get_new(0.25))
 
     maxdac.close()
