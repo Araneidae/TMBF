@@ -326,12 +326,16 @@ static void pulse_control_bit(unsigned int bit)
 
 
 /* Used to compensate a value by subtracting a bunch count offset. */
-static int subtract_offset(int value, int offset, int max_count)
+static unsigned int subtract_offset(
+    unsigned int value, int offset, int max_count)
 {
-    value -= offset;
-    if (value < 0)
-        value += max_count;
-    return value;
+    int result = (int) value;
+    result -= offset;
+    if (result < 0)
+        result += max_count;
+    else if (result >= max_count)
+        result -= max_count;
+    return (unsigned int) result;
 }
 
 
@@ -343,7 +347,7 @@ static void read_minmax(
 {
     LOCK();
     pulse_control_bit(pulse_bit);
-    int out_ix = subtract_offset(0, 4*delay, BUNCHES_PER_TURN);
+    unsigned int out_ix = subtract_offset(0, 4*delay, BUNCHES_PER_TURN);
     for (int i = 0; i < BUNCHES_PER_TURN; i++)
     {
         uint32_t data = *read_register;
@@ -593,12 +597,14 @@ void hw_write_bun_entry(
 {
     LOCK();
     config_space->write_select = bank;
-    for (int i = 0; i < BUNCHES_PER_TURN; i ++)
+    for (unsigned int i = 0; i < BUNCHES_PER_TURN; i ++)
     {
         /* Take bunch offsets into account when writing the bunch entry. */
-        int gain_ix = subtract_offset(i, 4*BUNCH_GAIN_OFFSET, BUNCHES_PER_TURN);
-        int output_ix = i;  // Reference bunch, no offset required
-        int fir_ix  = subtract_offset(i, 4*BUNCH_FIR_OFFSET, BUNCHES_PER_TURN);
+        unsigned int gain_ix =
+            subtract_offset(i, 4*BUNCH_GAIN_OFFSET, BUNCHES_PER_TURN);
+        unsigned int output_ix = i;  // Reference bunch, no offset required
+        unsigned int fir_ix =
+            subtract_offset(i, 4*BUNCH_FIR_OFFSET, BUNCHES_PER_TURN);
         uint32_t bunch_gain    = (uint32_t) entries[gain_ix].bunch_gain;
         uint32_t output_select = (uint32_t) entries[output_ix].output_select;
         uint32_t fir_select    = (uint32_t) entries[fir_ix].fir_select;
@@ -747,8 +753,7 @@ static void update_det_bunch_select(void)
     }
     unsigned int bunch[4];
     for (int i = 0; i < 4; i ++)
-        bunch[i] = (unsigned int) subtract_offset(
-            (int) det_bunches[i], offset, BUNCHES_PER_TURN/4);
+        bunch[i] = subtract_offset(det_bunches[i], offset, BUNCHES_PER_TURN/4);
 
     config_space->write_select = 0;
     for (int i = 0; i < 4; i ++)
@@ -801,9 +806,9 @@ void hw_read_det_delays(int *adc_delay, int *fir_delay)
 void hw_write_ftun_control(const struct ftun_control *control)
 {
     int offset = control->input_select ? FTUN_FIR_OFFSET : FTUN_ADC_OFFSET;
-    int channel = control->bunch & 3;
-    int bunch = subtract_offset(
-        control->bunch >> 2, offset, BUNCHES_PER_TURN/4);
+    unsigned int channel = (unsigned int) control->bunch & 3;
+    unsigned int bunch = subtract_offset(
+        (unsigned int) control->bunch >> 2, offset, BUNCHES_PER_TURN/4);
 
     LOCK();
     config_space->ftune_control =
@@ -811,12 +816,12 @@ void hw_write_ftun_control(const struct ftun_control *control)
         control->blanking << 16 |               //      16
         control->multibunch << 17 |             //      17
         (channel & 3) << 18 |                   //      19:18
-        (bunch & 0xFF) << 20 |                  //      27:20
-        (control->input_select & 0x1) << 28 |   //      28
-        (control->det_gain & 0x7) << 29;        //      31:29
+        (bunch & 0x1FF) << 20;                  //      27:20
     config_space->ftune_target =
         (control->target_phase & 0x3FFFF) |     // bits 17:0
-        (control->iir_rate & 0x7) << 18;        //      20:18
+        (control->iir_rate & 0x7) << 18 |       //      20:18
+        (control->input_select & 0x1) << 28 |   //      28
+        (control->det_gain & 0x7) << 29;        //      31:29
     config_space->ftune_i_scale = (uint32_t) -control->i_scale;
     config_space->ftune_min_mag =
         (control->min_magnitude & 0xFFFF) |
