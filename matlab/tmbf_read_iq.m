@@ -1,8 +1,8 @@
-% iq = tmbf_read_iq(tmbf [, count])
+% iq = tmbf_read_iq(tmbf [, count [, mode]])
 %
 % Reads IQ data from DDR buffer which must be in IQ capture mode.
 
-function iq = tmbf_read_iq(tmbf, mode, count)
+function iq = tmbf_read_iq(tmbf, count, mode)
     % Check DDR is in the expected capture mode
     input = lcaGet([tmbf ':DDR:INPUT_S']);
     assert(strcmp(input, 'IQ'), ...

@@ -1,9 +1,27 @@
 #!/bin/sh
 
-cd "$(dirname "$0")"
-
 DI_PATH="$(dirname "$(configure-ioc s -p DI-gui)")"/scripts
 
+
+if (($#)); then
+    device=
+    case $1 in
+        TS)     device=TS-DI-TMBF-01 ;;
+        1|01)   device=SR23C-DI-TMBF-01 ;;
+        2|02)   device=SR23C-DI-TMBF-02 ;;
+        *)      echo >&2 "Invalid argument"; exit ;;
+    esac
+
+    ARGS=(-m device=$device)
+    FILE=tmbf/tmbf_overview.edl
+else
+    ARGS=()
+    FILE=tmbf_launcher.edl
+fi
+
 export EPICS_CA_MAX_ARRAY_BYTES=1000000
+
+cd "$(dirname "$0")"
+
 PATH="$(pwd)"/scripts:"$PATH":"$DI_PATH"
-edm -x -eolc tmbf_launcher.edl &
+edm -x -eolc "${ARGS[@]}" "$FILE" &
