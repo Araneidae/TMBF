@@ -12,3 +12,6 @@ TMBF_VERSION=2.8
 # Expected FPGA API version.  Bottom four bits are ignored so that API
 # preserving point releases can be allowed.
 FPGA_VERSION=0x2070
+
+# Fundamental machine parameter: number of RF cycles in machine revolution.
+BUNCHES_PER_TURN=936

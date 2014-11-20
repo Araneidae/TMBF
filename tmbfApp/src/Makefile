@@ -36,6 +36,7 @@ include $(TOP)/install_d/CONFIG
 
 USR_CFLAGS += -DTMBF_VERSION='"$(TMBF_VERSION)"'
 USR_CFLAGS += -DFPGA_VERSION=$(FPGA_VERSION)
+USR_CFLAGS += -DBUNCHES_PER_TURN=$(BUNCHES_PER_TURN)
 
 # Compute a sensible format of build date
 USR_CFLAGS += -DBUILD_DATE_TIME='"$(shell date '+%Y-%m-%d %H:%M')"'

@@ -78,7 +78,7 @@ static int rotate_I[TUNE_LENGTH];   // 2**30 * cos(phase)
 static int rotate_Q[TUNE_LENGTH];   // 2**30 * sin(phase)
 
 /* Helper constants for fast tune scale and rotation waveform calculations
- * corresponding to multiplication by 936*2^-32. */
+ * corresponding to multiplication by BUNCHES_PER_TURN*2^-32. */
 static uint32_t wf_scaling;
 static int wf_shift;
 
@@ -554,7 +554,7 @@ bool initialise_detector(void)
     tune_scale_trigger = create_interlock("DET:SCALE", false);
 
     /* Initialise the scaling constants so that
-     *  wf_scaling * 2^wf_shift = 936 * 2^-32. */
+     *  wf_scaling * 2^wf_shift = BUNCHES_PER_TURN * 2^-32. */
     compute_scaling(BUNCHES_PER_TURN, &wf_scaling, &wf_shift);
     wf_shift -= 32;     // Divide by 2^32.
 

@@ -21,7 +21,10 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
+include $(TOP)/install_d/CONFIG
+
 export IOCBUILDER
+export BUNCHES_PER_TURN
 
 # We use the python library to construct the .db file
 $(COMMON_DIR)/%.db: ../%.py $(wildcard ../*.py)

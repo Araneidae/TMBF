@@ -4,7 +4,7 @@ from common import *
 
 FTUN_FREQ_LENGTH = 4096
 
-MAX_DELTA_FREQ = (2**17 - 1) * 2**-32 * 936
+MAX_DELTA_FREQ = (2**17 - 1) * 2**-32 * BUNCHES_PER_TURN
 
 def IIR(count, step = 1):
     return ['2^%d' % (n * step) for n in range(count)]

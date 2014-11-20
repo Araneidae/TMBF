@@ -137,8 +137,8 @@ static void write_seq_state(void)
         entry->write_enable = bank->write_enable;
         entry->enable_blanking = bank->enable_blanking;
         entry->holdoff = bank->holdoff;
-        entry->window_rate =
-            (unsigned int) lround((pow(2, 32) / 234) / bank->dwell_time);
+        entry->window_rate = (unsigned int) lround(
+            (pow(2, 32) / ATOMS_PER_TURN) / bank->dwell_time);
     }
     hw_write_seq_entries(bank0, current_sequencer);
 }

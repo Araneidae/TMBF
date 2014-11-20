@@ -6,13 +6,18 @@
 
 
 /* Some standard array size definitions. */
-#define BUNCHES_PER_TURN    936     // Bunches in a single turn
 #define BUF_DATA_LENGTH     16384   // Points in internal fast buffer
 #define MAX_SEQUENCER_COUNT 7       // Steps in sequencer, not counting state 0
 #define FIR_BANKS           4
 #define BUNCH_BANKS         4
 
 #define SUPER_SEQ_STATES    1024    // Max super sequencer states
+
+/* The key parameter BUNCHES_PER_TURN is defined as part of the build process.
+ * Bunches are processed in blocks of four, and the term "atom" is occasionally
+ * used for this group. */
+#define SAMPLES_PER_ATOM    4
+#define ATOMS_PER_TURN      (BUNCHES_PER_TURN / SAMPLES_PER_ATOM)   // 234
 
 
 /* To be called once at startup.  The given config_file contains hardware
