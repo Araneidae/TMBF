@@ -228,21 +228,27 @@ static bool fit_one_pole(
 
 
 /* Computes the relative fit error between the given data and fit, computes the
- * error as the average:
- *                                   2                   2
- *                   | data - model |        | data     |
- *      error = mean |--------------| = mean |------ - 1|
- *                   |     model    |        | model    |
+ * error as:
+ *                                  2
+ *              SUM | data - model |
+ *      error = ---------------------
+ *                              2
+ *                 SUM | model |
  *
- * It's looking like this might well be a reasonable estimate of fit qualty. */
+ * It's looking like this might well be a reasonable estimate of fit quality. */
 static double compute_fit_error(
     unsigned int length, const double scale[], const double complex iq[],
     const struct one_pole *fit)
 {
     double error = 0;
+    double sum = 0;
     for (unsigned int i = 0; i < length; i ++)
-        error += cabs2(iq[i] / peak_eval(fit, scale[i]) - 1);
-    return error / length;
+    {
+        double complex model = peak_eval(fit, scale[i]);
+        error += cabs2(iq[i] - model);
+        sum   += cabs2(model);
+    }
+    return error / sum;
 }
 
 
