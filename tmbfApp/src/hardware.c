@@ -458,6 +458,8 @@ void hw_read_adc_minmax(
     short min[BUNCHES_PER_TURN], short max[BUNCHES_PER_TURN])
 {
     read_minmax(9, &config_space->adc_minmax_read, MINMAX_ADC_DELAY, min, max);
+    /* After ADC minmax readout re-enable ADC threshold detection. */
+    pulse_control_bit(17);
 }
 
 void hw_write_adc_skew(unsigned int skew)
@@ -527,7 +529,7 @@ void hw_write_dac_delay(unsigned int dac_delay)
 
 void hw_write_dac_filter_delay(unsigned int preemph_delay)
 {
-    WRITE_CONTROL_BITS_2(10, 2, preemph_delay);
+    WRITE_CONTROL_BITS_2(30, 2, preemph_delay);
 }
 
 
@@ -615,7 +617,7 @@ void hw_write_bun_sync(void)
 
 void hw_write_bun_zero_bunch(unsigned int bunch)
 {
-    config_space->bunch_zero_offset = bunch;
+    config_space->bunch_zero_offset = bunch | ((ATOMS_PER_TURN-1) << 16);
 }
 
 unsigned int hw_read_bun_trigger_phase(void)
@@ -747,11 +749,10 @@ static void update_det_bunch_select(void)
     for (int i = 0; i < 4; i ++)
         bunch[i] = (unsigned int) subtract_offset(
             (int) det_bunches[i], offset, BUNCHES_PER_TURN/4);
-    config_space->bunch_select =
-        (bunch[0] & 0xFF) |
-        ((bunch[1] & 0xFF) << 8) |
-        ((bunch[2] & 0xFF) << 16) |
-        ((bunch[3] & 0xFF) << 24);
+
+    config_space->write_select = 0;
+    for (int i = 0; i < 4; i ++)
+        config_space->bunch_select = bunch[i];
 }
 
 void hw_write_det_input_select(unsigned int input)
@@ -1149,19 +1150,26 @@ bool initialise_hardware(const char *config_file, unsigned int expected_version)
 {
     hardware_config_file = config_file;
     int mem;
-    return
+    bool ok =
         config_parse_file(
             config_file, hardware_config_defs,
             ARRAY_SIZE(hardware_config_defs))  &&
         TEST_IO(mem = open("/dev/mem", O_RDWR | O_SYNC))  &&
         TEST_IO(config_space = mmap(
             0, CONTROL_AREA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-            mem, TMBF_CONFIG_ADDRESS))  &&
-        DO_(
-            fpga_version = read_bit_field(config_space->fpga_version, 0, 16);
-            fir_filter_length =
-                read_bit_field(config_space->fpga_version, 16, 4))  &&
-        TEST_OK_((fpga_version & 0xFFF0) == expected_version,
-            "FPGA version %04x seen, expected version %04x",
-            fpga_version, expected_version);
+            mem, TMBF_CONFIG_ADDRESS));
+    if (ok)
+    {
+        hw_write_bun_zero_bunch(0);
+
+        uint32_t version = config_space->fpga_version;
+        fpga_version            = read_bit_field(version, 0, 16);
+        fir_filter_length       = read_bit_field(version, 16, 4);
+        printf("FPGA version %04x, %u taps\n", fpga_version, fir_filter_length);
+        ok =
+            TEST_OK_((fpga_version & 0xFFF0) == expected_version,
+                "FPGA version %04x seen, expected version %04x",
+                fpga_version, expected_version);
+    }
+    return ok;
 }
