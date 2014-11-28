@@ -7,9 +7,6 @@ import cothread
 from cothread.catools import *
 
 
-BUNCH_COUNT = 936   # Repeated elsewhere
-
-
 class PV:
     def __init__(self, name):
         self.monitor = camonitor(name, self.__on_update, format = FORMAT_TIME)
@@ -44,6 +41,7 @@ class TMBF:
         self.tmbf = name
 
         self.n_taps = self.get('FIR:N_TAPS')
+        self.bunches = self.get('BUNCHES')
 
     def pv(self, name):
         return '%s:%s' % (self.tmbf, name)
@@ -52,6 +50,7 @@ class TMBF:
         return PV(self.pv(name))
 
     def set(self, name, value):
+#         raw_input('set %s <= %s ' % (name, value))
         caput(self.pv(name), value, wait=True)
 
     def get(self, name):
@@ -93,8 +92,8 @@ def bank_wf(tmbf, bank, gain, fir, output):
     def bunches(value):
         value = numpy.array(value)
         if value.size == 1:
-            value = numpy.repeat(value, BUNCH_COUNT)
-        assert value.size == BUNCH_COUNT, 'Invalid array length'
+            value = numpy.repeat(value, tmbf.bunches)
+        assert value.size == tmbf.bunches, 'Invalid array length'
         return value
 
     tmbf.set('BUN:%d:GAINWF_S' % bank, bunches(gain))

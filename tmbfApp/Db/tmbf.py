@@ -21,4 +21,7 @@ longIn('FPGAVER', PINI = 'YES', DESC = 'FPGA version')
 Action('RESTART', DESC = 'Restart EPICS driver')
 Action('REBOOT', DESC = 'Reboot IOC')
 
+records.longin('BUNCHES', VAL = BUNCHES_PER_TURN, PINI = 'YES',
+    DESC = 'Bunches per machine revolution')
+
 WriteRecords(sys.argv[1])

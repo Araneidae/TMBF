@@ -1153,6 +1153,9 @@ void hw_read_trg_buf_source(bool source[BUF_SOURCE_COUNT])
 
 bool initialise_hardware(const char *config_file, unsigned int expected_version)
 {
+    // Ensure BUNCHES_PER_TURN is a multiple of 4.
+    COMPILE_ASSERT(BUNCHES_PER_TURN == ATOMS_PER_TURN * SAMPLES_PER_ATOM);
+
     hardware_config_file = config_file;
     int mem;
     bool ok =
@@ -1170,11 +1173,17 @@ bool initialise_hardware(const char *config_file, unsigned int expected_version)
         uint32_t version = config_space->fpga_version;
         fpga_version            = read_bit_field(version, 0, 16);
         fir_filter_length       = read_bit_field(version, 16, 4);
-        printf("FPGA version %04x, %u taps\n", fpga_version, fir_filter_length);
+        unsigned int max_bunches =
+            SAMPLES_PER_ATOM * (1U << read_bit_field(version, 20, 4));
+        printf(
+            "FPGA version %04x, %u taps, %u max bunches, %u bunches per turn\n",
+            fpga_version, fir_filter_length, max_bunches, BUNCHES_PER_TURN);
         ok =
             TEST_OK_((fpga_version & 0xFFF0) == expected_version,
                 "FPGA version %04x seen, expected version %04x",
-                fpga_version, expected_version);
+                fpga_version, expected_version)  &&
+            TEST_OK_(BUNCHES_PER_TURN <= max_bunches,
+                "Too many bunches per turn for FPGA");
     }
     return ok;
 }
