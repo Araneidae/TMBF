@@ -181,7 +181,7 @@ bool initialise_adc_dac(void)
     publish_minmax("DAC", &dac_min_max, 1 << 13);
 
     /* Offset control for ADC. */
-    PUBLISH_WF_ACTION_P(short, "ADC:OFFSET", 4, hw_write_adc_offsets);
+    PUBLISH_WF_ACTION_P(int, "ADC:OFFSET", 4, hw_write_adc_offsets);
     PUBLISH_WAVEFORM(float, "ADC:FILTER", 12, write_filter_coeffs,
         .context = &adc_min_max, .persist = true);
     PUBLISH_WRITER_P(mbbo, "ADC:FILTER:DELAY", hw_write_adc_filter_delay);

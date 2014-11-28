@@ -434,7 +434,7 @@ bool hw_read_clock_dropout(void)
 /* * * * * * * * * * * * */
 /* ADC: Data Input Stage */
 
-void hw_write_adc_offsets(short offsets[4])
+void hw_write_adc_offsets(int offsets[4])
 {
     LOCK();
     config_space->write_select = 0;

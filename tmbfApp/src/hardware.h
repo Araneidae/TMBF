@@ -77,7 +77,7 @@ bool hw_read_clock_dropout(void);
 /* ADC: Data Input Stage */
 
 /* Writes ADC offset corrections, one for each ADC channel. */
-void hw_write_adc_offsets(short offsets[4]);
+void hw_write_adc_offsets(int offsets[4]);
 
 /* Writes ADC compensation FIR. */
 void hw_write_adc_filter(int taps[12]);
