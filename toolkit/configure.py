@@ -37,8 +37,9 @@ class PV:
 
 
 class TMBF:
-    def __init__(self, name):
+    def __init__(self, name, debug = False):
         self.tmbf = name
+        self.debug = debug
 
         self.n_taps = self.get('FIR:N_TAPS')
         self.bunches = self.get('BUNCHES')
@@ -50,7 +51,8 @@ class TMBF:
         return PV(self.pv(name))
 
     def set(self, name, value):
-#         raw_input('set %s <= %s ' % (name, value))
+        if self.debug:
+            raw_input('set %s <= %s ' % (name, value))
         caput(self.pv(name), value, wait=True)
 
     def get(self, name):

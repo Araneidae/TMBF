@@ -327,15 +327,16 @@ static void pulse_control_bit(unsigned int bit)
 
 /* Used to compensate a value by subtracting a bunch count offset. */
 static unsigned int subtract_offset(
-    unsigned int value, int offset, int max_count)
+    unsigned int value, int offset, unsigned int max_count)
 {
-    int result = (int) value;
-    result -= offset;
-    if (result < 0)
-        result += max_count;
-    else if (result >= max_count)
+    unsigned int result;
+    if (offset > 0)
+        result = value + max_count - (unsigned int) offset;
+    else
+        result = value + (unsigned int) - offset;
+    if (result >= max_count)
         result -= max_count;
-    return (unsigned int) result;
+    return result;
 }
 
 
@@ -343,7 +344,7 @@ static unsigned int subtract_offset(
  * and DAC readouts. */
 static void read_minmax(
     unsigned int pulse_bit, volatile const uint32_t *read_register,
-    int delay, short *min_out, short *max_out)
+    int delay, short min_out[], short max_out[])
 {
     LOCK();
     pulse_control_bit(pulse_bit);
@@ -751,13 +752,11 @@ static void update_det_bunch_select(void)
         case DET_IN_ADC: offset = DET_ADC_OFFSET; break;
         case DET_IN_FIR: offset = DET_FIR_OFFSET; break;
     }
-    unsigned int bunch[4];
-    for (int i = 0; i < 4; i ++)
-        bunch[i] = subtract_offset(det_bunches[i], offset, BUNCHES_PER_TURN/4);
 
     config_space->write_select = 0;
     for (int i = 0; i < 4; i ++)
-        config_space->bunch_select = bunch[i];
+        config_space->bunch_select =
+            subtract_offset(det_bunches[i], offset, BUNCHES_PER_TURN/4);
 }
 
 void hw_write_det_input_select(unsigned int input)

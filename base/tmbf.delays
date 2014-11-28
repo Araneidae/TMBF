@@ -16,16 +16,16 @@ BUF_FIR_DELAY = 2
 BUF_DAC_DELAY = 13
 
 # MinMax buffer delays
-MINMAX_ADC_DELAY = 225
+MINMAX_ADC_DELAY = -9
 MINMAX_DAC_DELAY = 11
 
 # Bunch selection offsets
-BUNCH_FIR_OFFSET = 224
+BUNCH_FIR_OFFSET = -10
 BUNCH_GAIN_OFFSET = 0
 
 # Detector single bunch offsets and phase skews
-DET_ADC_OFFSET = 11
-DET_FIR_OFFSET = 5
+DET_ADC_OFFSET = 4
+DET_FIR_OFFSET = -2
 # These two values represent actual phase delays in bunches relative to an
 # aligned single turn.
 DET_ADC_DELAY = -16
@@ -34,5 +34,5 @@ DET_FIR_DELAY = 8
 # Tune following delays
 FTUN_ADC_OFFSET = 6
 FTUN_FIR_OFFSET = 0
-FTUN_ADC_DELAY = 908
-FTUN_FIR_DELAY = 932
+FTUN_ADC_DELAY = -28
+FTUN_FIR_DELAY = -4

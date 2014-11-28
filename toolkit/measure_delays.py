@@ -134,11 +134,20 @@ def one_bunch(tmbf, value, other, bunch = 0):
     result[bunch] = value
     return result
 
+# Most of the delays we're correcting are small, however we can only measure
+# delays in the range 0..tmbf.bunches-1.  On this assumption, convert large
+# delays into negative values.
+def fixup_delay(tmbf, value):
+    if value >= tmbf.bunches/2:
+        return value - tmbf.bunches
+    else:
+        return value
+
 # Searches for one non-zero value in waveform
-def find_one_peak(value):
+def find_one_peak(tmbf, value):
     hits = numpy.nonzero(value)[0]
     assert len(hits) == 1, 'Unexpected data: %s' % value
-    return hits[0]
+    return fixup_delay(tmbf, hits[0])
 
 # Searches for second highest value in waveform
 def find_second_peak(value):
@@ -166,19 +175,19 @@ def dac_to_buf(tmbf, bufa, bufb, sources, length = -1):
     tmbf.set('TRG:BUF:ARM_S', 0)
     a = bufa.get()[tmbf.bunches:][:length]
     b = bufb.get()[tmbf.bunches:][:length]
-    return find_one_peak(a), find_one_peak(b)
+    return find_one_peak(tmbf, a), find_one_peak(tmbf, b)
 
 # Measures delay from reference bunch to selected DDR waveform
 def dac_to_ddr(tmbf, ddr_buf, source, length = -1):
     tmbf.set('DDR:INPUT_S', source)
     tmbf.set('TRG:DDR:ARM_S', 0)
-    return find_one_peak(ddr_buf.get()[:length])
+    return find_one_peak(tmbf, ddr_buf.get()[:length])
 
 
 # Measures which bunch has its gain controlled by bunch select 0
 def gain_delay(tmbf, maxdac):
     configure.bank_wf(tmbf, 0, one_bunch(tmbf, 1, 0), 0, DAC_OUT.NCO)
-    return find_one_peak(maxdac.get_new(0.25))
+    return find_one_peak(tmbf, maxdac.get_new(0.25))
 
 
 # Measures which bunch has its FIR controlled by bunch select 0
@@ -188,7 +197,7 @@ def fir_to_ddr(tmbf, ddr_buf):
 
     tmbf.set('DDR:INPUT_S', 'FIR')
     tmbf.set('TRG:DDR:ARM_S.PROC', 0)
-    return find_one_peak(ddr_buf.get()[:tmbf.bunches])
+    return find_one_peak(tmbf, ddr_buf.get()[:tmbf.bunches])
 
 
 # Classical binary search.  test(a,b) should return true iff the target is in
@@ -209,10 +218,8 @@ def search_det_bunch(tmbf, det_power, source):
     # Configure source
     tmbf.set('DET:INPUT_S', source)
 
-    # Binary search.
-    outwf = numpy.zeros(tmbf.bunches)
-
     def test(start, end):
+        outwf = numpy.empty(tmbf.bunches, dtype = int)
         outwf[:start] = DAC_OUT.OFF
         outwf[start:end] = DAC_OUT.SWEEP
         outwf[end:] = DAC_OUT.OFF
@@ -221,7 +228,7 @@ def search_det_bunch(tmbf, det_power, source):
         tmbf.set('TRG:BUF:ARM_S.PROC', 0)
         return det_power.get().mean() > 0
 
-    return binary_search(0, tmbf.bunches, test)
+    return fixup_delay(tmbf, binary_search(0, tmbf.bunches, test))
 
 def search_ftun_bunch(tmbf, mag, source):
     tmbf.set('FTUN:INPUT_S', source)
@@ -236,7 +243,7 @@ def search_ftun_bunch(tmbf, mag, source):
 
         return mag.get_new(0.3) > 0
 
-    return binary_search(0, tmbf.bunches, test)
+    return fixup_delay(tmbf, binary_search(0, tmbf.bunches, test))
 
 
 # Computes group delay from scaled IQ.
@@ -261,7 +268,9 @@ def search_det_delay(tmbf, det_i, det_q, source):
     tmbf.set('TRG:BUF:ARM_S', 0)
     iq = numpy.dot([1, 1j], [det_i.get(), det_q.get()])
     scale = tmbf.get('DET:SCALE')
-    return compute_group_delay(tmbf, scale, iq)
+    #   Fixup returned result by subtracting one unit of delay: this is always
+    # present and needs to be allowed for elsewhere.
+    return compute_group_delay(tmbf, scale, iq) - tmbf.bunches
 
 
 def search_ftun_delay(tmbf, angle, source):
@@ -273,6 +282,7 @@ def search_ftun_delay(tmbf, angle, source):
         tmbf.set('NCO:FREQ_S', f)
         angles[n] = angle.get_new(0.3)
     iq = numpy.exp(1j * numpy.pi * angles / 180.)
+    # Subtract one turn from the computed delay
     return compute_group_delay(tmbf, scale, iq)
 
 
@@ -289,17 +299,8 @@ class Results:
         self.items.append(name)
         self.__dict__[name] = value
 
-    def set4(self, name, value):
-        assert value % 4 == 0, \
-            'Value %s = %d out of phase' % (name, value)
-        self.set(name, value / 4)
-
     def __setattr__(self, name, value):
-        # Ensure value is positive
-        if value < 0:
-            print 'adjusting', name, value
-            value += self.bunches
-        assert 0 <= value < self.bunches, \
+        assert -self.bunches < value < self.bunches, \
             'Value %s = %d out of range' % (name, value)
         assert value % 4 == 0, \
             'Value %s = %d out of phase' % (name, value)
@@ -325,7 +326,7 @@ def measure_minmax(tmbf, results):
     # Start by taking DAC output mux select bunch zero as the reference bunch
     # and measuring delays to DAC max.  This allows us to measure the closed
     # loop delay and close the loop for all remaining measurements.
-    dac_minmax_delay = find_one_peak(maxdac.get_new(0.25))
+    dac_minmax_delay = find_one_peak(tmbf, maxdac.get_new(0.25))
     results.MINMAX_DAC_DELAY = dac_minmax_delay
 
     # Check that the gain control already acts on bunch zero: this is programmed
@@ -336,9 +337,9 @@ def measure_minmax(tmbf, results):
     loop_delay = dac_to_dac_closed_loop(tmbf, maxdac)
     tmbf.set('DAC:DELAY_S', tmbf.bunches - loop_delay + dac_minmax_delay)
 
-    # Now we can capture the max ADC offset
+    # Now we can capture the max ADC offset.  Need to subtract the extra delay.
     configure_dac_single_pulse(tmbf)
-    results.MINMAX_ADC_DELAY = find_one_peak(maxadc.get_new(0.25))
+    results.MINMAX_ADC_DELAY = find_one_peak(tmbf, maxadc.get_new(0.25))
 
     maxdac.close()
     maxadc.close()
@@ -357,7 +358,7 @@ def measure_buf(tmbf, results):
     configure_dac_single_pulse(tmbf)
 
     _, base_dac_delay = dac_to_buf(tmbf, buf_a, buf_b, 'ADC+DAC', tmbf.bunches)
-    results.set4('BUF_DAC_DELAY', base_dac_delay)
+    results.BUF_DAC_DELAY = base_dac_delay
 
     # Now grab all the delays including processing time.
     configure_one_shot_pulse(tmbf, 'BUF')
@@ -370,8 +371,8 @@ def measure_buf(tmbf, results):
     loop_delay = dac_delay - base_dac_delay + tmbf.bunches
     assert loop_delay % tmbf.bunches == 0, \
         'Unexpected loop_delay: %d' % loop_delay
-    results.set4('BUF_ADC_DELAY', adc_delay - loop_delay)
-    results.set4('BUF_FIR_DELAY', fir_delay - loop_delay)
+    results.BUF_ADC_DELAY = adc_delay - loop_delay
+    results.BUF_FIR_DELAY = fir_delay - loop_delay
 
     buf_a.close()
     buf_b.close()
@@ -389,7 +390,7 @@ def measure_ddr(tmbf, results):
     configure_dac_single_pulse(tmbf)
     configure.sequencer_disable(tmbf)
     base_dac_delay = dac_to_ddr(tmbf, ddr_buf, 'DAC', tmbf.bunches)
-    results.set4('DDR_DAC_DELAY', base_dac_delay)
+    results.DDR_DAC_DELAY = base_dac_delay
 
     dac_to_ddr_fir_delay = dac_to_ddr(tmbf, ddr_buf, 'FIR', tmbf.bunches)
     fir_bunch_zero = fir_to_ddr(tmbf, ddr_buf)
@@ -404,9 +405,9 @@ def measure_ddr(tmbf, results):
     fir_delay = dac_to_ddr(tmbf, ddr_buf, 'FIR')
     loop_delay = dac_delay - base_dac_delay + tmbf.bunches
 
-    results.set4('DDR_ADC_DELAY', adc_delay - loop_delay)
-    results.set4('DDR_FIR_DELAY', fir_delay - loop_delay)
-    results.set4('DDR_RAW_DAC_DELAY', raw_dac_delay - loop_delay + tmbf.bunches)
+    results.DDR_ADC_DELAY = adc_delay - loop_delay
+    results.DDR_FIR_DELAY = fir_delay - loop_delay
+    results.DDR_RAW_DAC_DELAY = raw_dac_delay - loop_delay + tmbf.bunches
 
     ddr_buf.close()
 
@@ -434,22 +435,20 @@ def measure_detector_bunch(tmbf, results):
 def measure_detector_delay(tmbf, results):
     print >>sys.stderr, 'Measuring Detector Group Delays'
 
-    setup_tune_sweep(tmbf, 1, 0.1, 20, '0dB')
+    setup_tune_sweep(tmbf, 1, 0.01, 20, '0dB')
     configure.detector_bunches(tmbf)
     configure.detector_gain(tmbf, '-72dB')
 
     configure.bank(tmbf, 1, 1, 0, DAC_OUT.SWEEP)
 
-    tmbf.set('DET:LOOP:ADC_S', 1)
+    tmbf.set('DET:LOOP:ADC_S', 0)
 
     det_i = tmbf.PV('DET:I:M')
     det_q = tmbf.PV('DET:Q:M')
     det_i.get(); det_q.get()
 
-    results.set('DET_ADC_DELAY',
-        search_det_delay(tmbf, det_i, det_q, 'ADC'))
-    results.set('DET_FIR_DELAY',
-        search_det_delay(tmbf, det_i, det_q, 'FIR') - tmbf.bunches)
+    results.set('DET_ADC_DELAY', search_det_delay(tmbf, det_i, det_q, 'ADC'))
+    results.set('DET_FIR_DELAY', search_det_delay(tmbf, det_i, det_q, 'FIR'))
 
     det_i.close()
     det_q.close()
@@ -513,10 +512,12 @@ parser.add_argument('tmbf', nargs = '?', default = 'TS-DI-TMBF-01',
     help = 'TMBF machine name to test')
 parser.add_argument('-m', '--measure', action = 'append',
     help = 'Specify measurements to perform, any of: ' + ', '.join(actions))
+parser.add_argument('-d', '--debug', action = 'store_true',
+    help = 'Debug mode')
 args = parser.parse_args()
 
 
-tmbf = configure.TMBF(args.tmbf)
+tmbf = configure.TMBF(args.tmbf, args.debug)
 results = Results(tmbf)
 
 configure_timing_test(tmbf, args.test)

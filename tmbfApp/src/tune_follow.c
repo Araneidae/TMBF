@@ -143,6 +143,7 @@ static void update_delay_offset(void)
     hw_read_ftun_delays(&adc_delay, &fir_delay);
     int delay =
         ftun_control.input_select == FTUN_IN_ADC ? adc_delay : fir_delay;
+    delay += BUNCHES_PER_TURN;
     delay += lround(closed_loop_delay * BUNCHES_PER_TURN);
     delay_offset_degrees =
         360.0 / pow(2, 32) * (double) (int) (nco_freq * (uint32_t) delay);
