@@ -14,7 +14,7 @@ TMBF_VERSION=3.0
 FPGA_VERSION=0x3000
 
 # Fundamental machine parameter: number of RF cycles in machine revolution.
-BUNCHES_PER_TURN=936
+# BUNCHES_PER_TURN=936
 
 # For ALBA:
-# BUNCHES_PER_TURN=448
+BUNCHES_PER_TURN=448
