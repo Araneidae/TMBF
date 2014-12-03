@@ -21,6 +21,7 @@
 /* Used to store information about individual persistent variables. */
 struct persistent_variable {
     const struct persistent_action *action;
+    const char *name;
     size_t max_length;
     size_t length;
     char variable[0];
@@ -217,11 +218,12 @@ void create_persistent_waveform(
     struct persistent_variable *persistence =
         malloc(sizeof(struct persistent_variable) + max_length * action->size);
     persistence->action = action;
+    persistence->name = strdup(name);
     persistence->max_length = max_length;
     persistence->length = 0;
 
     LOCK();
-    hash_table_insert(variable_table, name, persistence);
+    hash_table_insert(variable_table, persistence->name, persistence);
     UNLOCK();
 }
 
@@ -349,6 +351,40 @@ static bool fill_line_buffer(struct line_buffer *line, const char **cursor)
 }
 
 
+/* Flushes any trailing continuation lines. */
+static void flush_continuation(struct line_buffer *line)
+{
+    size_t line_len;
+    bool ok = true;
+    bool discard = false;
+    int first_line = 0, last_line = 0;
+    while (
+        line_len = strlen(line->line),
+        ok  &&  line_len > 0  &&  line->line[line_len - 1] == '\\')
+    {
+        bool eof;
+        ok = read_line(line, &eof)  &&
+            TEST_OK_(!eof, "End of file after line continuation");
+
+        /* Record discard parameters so we can make one report when done. */
+        if (!discard)
+        {
+            discard = true;
+            first_line = line->line_number;
+        }
+        last_line = line->line_number;
+    }
+
+    if (discard)
+    {
+        if (first_line == last_line)
+            printf("Discarding line %d\n", first_line);
+        else
+            printf("Discarding lines %d-%d\n", first_line, last_line);
+    }
+}
+
+
 /* Parses the right hand side of a <key>=<value> assignment, taking into account
  * the possibility that the value can extend over multiple lines.  A final \ is
  * used to flag line continuation. */
@@ -384,10 +420,15 @@ static bool parse_assignment(struct line_buffer *line)
         TEST_NULL_(persistence = hash_table_lookup(variable_table, line->line),
             "Persistence key \"%s\" not found", line->line)  &&
         parse_value(line, equal, persistence);
-    /* Report location of error. */
+
+    /* Report location of error and flush any continuation lines. */
     if (!ok)
-        print_error("Parse error on line %d of state file %s",
+    {
+        print_error("Error parsing %s on line %d of state file %s",
+            persistence ? persistence->name : "(unknown)",
             line->line_number, state_filename);
+        flush_continuation(line);
+    }
     return ok;
 }
 
@@ -549,7 +590,7 @@ bool initialise_persistent_state(const char *file_name, int save_interval)
 {
     state_filename = file_name;
     persistence_interval = save_interval;
-    variable_table = hash_table_create(true);   // Let table look after names
+    variable_table = hash_table_create(false);  // We look after name lifetime
     return TEST_0(pthread_create(
         &persistence_thread_id, NULL, persistence_thread, NULL));
 }
