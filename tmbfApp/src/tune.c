@@ -363,9 +363,18 @@ static struct tune_result_value *select_tune_result(void)
 
 static void update_tune_result(void)
 {
-    interlock_wait(tune_result);
-    copy_tune_result(select_tune_result(), &tune_result_selected);
-    interlock_signal(tune_result, NULL);
+    /* Suppress repeated invalid results: all invalid results are equivalent. */
+    struct tune_result_value *new_result = select_tune_result();
+    if (new_result->status == TUNE_INVALID  &&
+        tune_result_selected.value.status == TUNE_INVALID)
+        /* Ignore this update, it's just a repeat of what we already know. */
+        ;
+    else
+    {
+        interlock_wait(tune_result);
+        copy_tune_result(new_result, &tune_result_selected);
+        interlock_signal(tune_result, NULL);
+    }
 }
 
 
@@ -407,11 +416,7 @@ void update_tune_pll_tune(bool tune_ok, double tune, double phase)
 {
     set_tune_result(
         &tune_result_pll, tune_ok ? TUNE_OK : TUNE_INVALID, tune, phase);
-
-    /* Ignore repeated announcements that we have no results. */
-    bool repeat = !tune_ok  &&  tune_result_pll.status != TUNE_OK;
-    if (selected_tune_result == SELECT_TUNE_PLL  &&  !repeat)
-        update_tune_result();
+    update_tune_result();
 }
 
 
