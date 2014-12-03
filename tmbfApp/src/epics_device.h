@@ -499,23 +499,19 @@ _DECLARE_WAVEFORM_ARGS(double);
 #define PUBLISH_WRITE_VAR_P(record, name, variable) \
     PUBLISH_WRITE_VAR_(record, name, variable, .persist = true)
 
-#define PUBLISH_WRITER_(record, name, writer, args...) \
+#define PUBLISH_WRITER(record, name, writer, args...) \
     PUBLISH(record, name, \
         .write = _publish_writer_##record, \
         .context = *(void (*[])(TYPEOF(record))) { writer }, ##args)
-#define PUBLISH_WRITER(record, name, writer) \
-    PUBLISH_WRITER_(record, name, writer)
-#define PUBLISH_WRITER_P(record, name, writer) \
-    PUBLISH_WRITER_(record, name, writer, .persist = true)
+#define PUBLISH_WRITER_P(record, name, writer, args...) \
+    PUBLISH_WRITER(record, name, writer, .persist = true, ##args)
 
-#define PUBLISH_WRITER_B_(record, name, writer, args...) \
+#define PUBLISH_WRITER_B(record, name, writer, args...) \
     PUBLISH(record, name, \
         .write = _publish_writer_b_##record, \
         .context = *(bool (*[])(TYPEOF(record))) { writer }, ##args)
-#define PUBLISH_WRITER_B(record, name, writer) \
-    PUBLISH_WRITER_B_(record, name, writer)
-#define PUBLISH_WRITER_B_P(record, name, writer) \
-    PUBLISH_WRITER_B_(record, name, writer, .persist = true)
+#define PUBLISH_WRITER_B_P(record, name, writer, args...) \
+    PUBLISH_WRITER_B_(record, name, writer, .persist = true, ##args)
 
 #define PUBLISH_ACTION(name, action) \
     PUBLISH(bo, name, .write = _publish_action_bo, \
@@ -547,17 +543,15 @@ _DECLARE_WAVEFORM_ARGS(double);
 #define PUBLISH_WF_WRITE_VAR_P(type, name, length, waveform) \
     PUBLISH_WF_WRITE_VAR_(type, name, length, waveform, .persist = true)
 
-#define PUBLISH_WF_ACTION_(type, name, length, action, args...) \
+#define PUBLISH_WF_ACTION(type, name, length, action, args...) \
     PUBLISH_WAVEFORM(type, name, length, \
         .process = (PROC_WAVEFORM_T(type)) _publish_waveform_action, \
         .context = _make_waveform_context( \
             sizeof(type), length, *(void (*[])(type *)) { action }), ##args)
-#define PUBLISH_WF_ACTION(type, name, length, action) \
-    PUBLISH_WF_ACTION_(type, name, length, action)
 #define PUBLISH_WF_ACTION_I(type, name, length, action) \
-    PUBLISH_WF_ACTION_(type, name, length, action, .io_intr = true)
+    PUBLISH_WF_ACTION(type, name, length, action, .io_intr = true)
 #define PUBLISH_WF_ACTION_P(type, name, length, action) \
-    PUBLISH_WF_ACTION_(type, name, length, action, .persist = true)
+    PUBLISH_WF_ACTION(type, name, length, action, .persist = true)
 
 
 /* Declarations for the support methods referenced above. */

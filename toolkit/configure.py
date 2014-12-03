@@ -116,7 +116,7 @@ def state0(tmbf, bank = 0):
 # Programs a single sequencer state
 def state(tmbf, state = 1,
         start = 0, step = 0, dwell = 20, gain = '0dB',
-        count = 4096, bank = 1, window = True, holdoff = 0):
+        count = 4096, bank = 1, window = True, holdoff = 0, capture = True):
     tmbf.set('SEQ:%d:START_FREQ_S' % state, start)
     tmbf.set('SEQ:%d:STEP_FREQ_S' % state, step)
     tmbf.set('SEQ:%d:DWELL_S' % state, dwell)
@@ -125,6 +125,7 @@ def state(tmbf, state = 1,
     tmbf.set('SEQ:%d:GAIN_S' % state, gain)
     tmbf.set('SEQ:%d:ENWIN_S' % state, window)
     tmbf.set('SEQ:%d:HOLDOFF_S' % state, holdoff)
+    tmbf.set('SEQ:%d:CAPTURE_S' % state, capture)
     tmbf.set('SEQ:%d:BLANK_S' % state, 'Off')
 
 

@@ -243,7 +243,7 @@ y2Max 16600
 # Trace Properties
 numTraces 1
 yPv {
-  0 "$(device):DAC:PREEMPH_S"
+  0 "$(device):DAC:FILTER_S"
 }
 plotStyle {
   0 "needle"
@@ -277,7 +277,7 @@ bgColor index 3
 inconsistentColor index 0
 topShadowColor index 1
 botShadowColor index 11
-controlPv "$(device):DAC:PREEMPH:DELAY_S"
+controlPv "$(device):DAC:FILTER:DELAY_S"
 font "helvetica-medium-r-12.0"
 endObjectProperties
 

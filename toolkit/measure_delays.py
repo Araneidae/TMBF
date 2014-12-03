@@ -52,8 +52,8 @@ def configure_timing_test(tmbf, compensate = False):
     tmbf.set('ADC:OFFSET_S', 4 * [0])
     tmbf.set('ADC:FILTER_S', 4 * [0, 1, 0])
     tmbf.set('ADC:FILTER:DELAY_S', '0 ns')
-    tmbf.set('DAC:PREEMPH_S', [0, 1, 0])
-    tmbf.set('DAC:PREEMPH:DELAY_S', '0 ns')
+    tmbf.set('DAC:FILTER_S', [0, 1, 0])
+    tmbf.set('DAC:FILTER:DELAY_S', '0 ns')
 
     # For a sensible starting state, disable the sequencer and select bank 0.
     # Each test will need to configure the bank setup it needs.

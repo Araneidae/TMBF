@@ -7,7 +7,7 @@ from common import *
 
 def dB(db): return 10.**(db/20.)
 
-def minmax_pvs(source):
+def minmax_pvs(source, filter_length):
     # The following records are polled together at 200ms intervals
     pvs = [
         Waveform('%s:MINBUF' % source, BUNCHES_PER_TURN, 'FLOAT',
@@ -31,21 +31,21 @@ def minmax_pvs(source):
         DESC = 'Trigger %s scanning' % source, SCAN = '.2 second',
         FLNK = create_fanout('%s:FAN' % source, *pvs))
 
+    # Also create PVs for controlling the compensation filter
+    WaveformOut('%s:FILTER' % source, filter_length, 'FLOAT',
+        DESC = '%s compensation filter' % source)
+    mbbOut('%s:FILTER:DELAY' % source, '-2 ns', '0 ns', '+2 ns',
+        DESC = '%s filter group delay' % source)
 
-minmax_pvs('ADC')
+
+
+minmax_pvs('ADC', 12)
 WaveformOut('ADC:OFFSET', CHANNEL_COUNT, 'LONG', DESC = 'ADC offsets')
-WaveformOut('ADC:FILTER', 12, 'FLOAT', DESC = 'ADC compensation filter')
-mbbOut('ADC:FILTER:DELAY', '-2 ns', '0 ns', '+2 ns',
-    DESC = 'Compensation filter group delay')
 mbbIn('ADC:SKEW', '0 ns', '2 ns', '4 ns', '6 ns',
     SCAN = 'I/O Intr', DESC = 'Input skew')
 aOut('ADC:LIMIT', 0, 2 - 2**-15, PREC = 4, DESC = 'ADC error threshold')
 
 
-minmax_pvs('DAC')
+minmax_pvs('DAC', 3)
 longOut('DAC:DELAY', 0, BUNCHES_PER_TURN-1, DESC = 'DAC output delay')
 boolOut('DAC:ENABLE', 'Off', 'On', ZSV = 'MAJOR', DESC = 'DAC output enable')
-
-WaveformOut('DAC:PREEMPH', 3, 'FLOAT', DESC = 'DAC output pre-emphasis')
-mbbOut('DAC:PREEMPH:DELAY', '-2 ns', '0 ns', '+2 ns',
-    DESC = 'Pre-emphasis group delay')
