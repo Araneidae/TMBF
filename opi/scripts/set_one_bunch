@@ -57,7 +57,7 @@ def action_one(args):
 
 def action_all(args):
     fir, output, gain = zmap([int, int, float], args)
-    z = numpy.zeros(936, dtype = int)
+    z = numpy.zeros(BUNCH_COUNT, dtype = int)
     fir_wf    = z + fir
     output_wf = z + output
     gain_wf   = z + gain
@@ -76,7 +76,7 @@ def make_action_one(wf_pv, check, datatype=int):
 def make_action_all(wf_pv, check, datatype=int):
     def action(args):
         value, = map(datatype, args)
-        wf = value * numpy.ones(936, dtype = int)
+        wf = value * numpy.ones(BUNCH_COUNT, dtype = int)
         check(wf)
         caput(wf_pv, wf)
     return action
@@ -89,6 +89,8 @@ action_fir_all  = make_action_all(fir_wf_pv,    check_fir)
 action_out_all  = make_action_all(output_wf_pv, check_output)
 action_gain_all = make_action_all(gain_wf_pv,   check_gain, float)
 
+
+BUNCH_COUNT = caget('%s:BUNCHES' % tmbf)
 
 try:
     action_method = globals()['action_%s' % action]

@@ -20,13 +20,14 @@ function iq = tmbf_read_iq(tmbf, count, mode)
         count = lcaGet([tmbf ':DDR:COUNT']);
     end
 
+    bunches = lcaGet([tmbf ':BUNCHES']);
     if strcmp(mode, 'All')
-        data = tmbf_read(tmbf, ceil(8 * count / 936));
+        data = tmbf_read(tmbf, ceil(8 * count / bunches));
         data = reshape(data, 4, 2, []);
         data = data(:, :, 1:count);
         iq = squeeze(data(:, 1, :) + 1j * data(:, 2, :)).';
     else
-        data = tmbf_read(tmbf, ceil(2 * count / 936));
+        data = tmbf_read(tmbf, ceil(2 * count / bunches));
         data = reshape(data, 2, []);
         data = data(:, 1:count);
         iq = [1 1j] * data;

@@ -3,7 +3,7 @@
 % Reads raw number of samples from DDR buffer, returns as 4 x 2 x count
 % waveform.  The expect argument should match the input source of the buffer.
 
-function data = tmbf_read_raw(expect, tmbf, count)
+function [data, bunches] = tmbf_read_raw(expect, tmbf, count)
     % Check DDR is in the expected capture mode
     input = lcaGet([tmbf ':DDR:INPUT_S']);
     assert(strcmp(input, expect), ...
@@ -13,7 +13,9 @@ function data = tmbf_read_raw(expect, tmbf, count)
     if ~exist('count', 'var')
         count = lcaGet([tmbf ':DDR:COUNT']);
     end
-    data = tmbf_read(tmbf, ceil(8 * count / 936));
+
+    bunches = lcaGet([tmbf ':BUNCHES']);
+    data = tmbf_read(tmbf, ceil(8 * count / bunches));
     data = reshape(data, 4, 2, []);
     data = data(:, :, 1:count);
 end

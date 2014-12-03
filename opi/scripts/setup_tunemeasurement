@@ -29,7 +29,7 @@ def put(pv, value):
     catools.caput('%s:%s' % (DEVICE, pv), value)
 
 def putwf(pv, value):
-    put(pv, numpy.repeat(value, 936))
+    put(pv, numpy.repeat(value, BUNCH_COUNT))
 
 def get(pv, **kargs):
     return catools.caget('%s:%s' % (DEVICE, pv), **kargs)
@@ -43,8 +43,6 @@ def get_config(config, key):
         raise
 
 def compute_filter_size(tune):
-    N_TAPS = get('FIR:N_TAPS', datatype = int)
-
     # Search for best filter size.  In this search we prefer shorter filters
     # over longer filters.
     best_error = 1
@@ -113,12 +111,16 @@ if args.debug:
     def put(pv, value):
         print '%s <= %s' % (pv, value)
     def putwf(pv, value):
-        print '%s <= 936*[%s]' % (pv, value)
+        print '%s <= %d*[%s]' % (pv, BUNCH_COUNT, value)
 
 if args.ring_mode is None:
     RING_MODE = catools.caget('SR-CS-RING-01:MODE', datatype = str)
 else:
     RING_MODE = args.ring_mode
+
+# Read fundamental parameters from device
+N_TAPS = get('FIR:N_TAPS')
+BUNCH_COUNT = get('BUNCHES')
 
 
 # Load the specified configuration file.  This contains overrides for the

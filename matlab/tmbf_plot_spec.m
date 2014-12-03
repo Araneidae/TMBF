@@ -5,24 +5,24 @@ function [ss, x] = tmbf_plot_spec(tmbf, n, lines)
     lcaPut([tmbf ':TRG:DDR:MODE_S'], 'One Shot');
     lcaPut([tmbf ':TRG:DDR:ARM_S.PROC'], 1);
     pause(2)
-    x=tmbf_read(tmbf, n);
+    [x, bunches] = tmbf_read(tmbf, n);
 
     l=length(x);
     % an alternative to the revolution line removal below. the effect is the
     % same
 
-    xx=reshape(x, 936, []); %turn into matrix bunches x turns
+    xx=reshape(x, bunches, []); %turn into matrix bunches x turns
     xx = xx-repmat(mean(xx, 2), 1, n); %subtract the average position per bunch
     x=reshape(xx, 1, []); %strech out again
 
     s=2*abs(fft(x))/l;%calculate spectrum over all bunches
-    ss=reshape(s, n, 936);%fold into tune x modes
+    ss=reshape(s, n, bunches);%fold into tune x modes
     figure(1)
     clf
     if ~exist('lines', 'var')
         subplot('position', [.05 .35 .7 .6])
     end
-    imagesc([1 936], [0 .5], log10(ss(1:end/2, :)), [-2 log10(max(s))]);
+    imagesc([1 bunches], [0 .5], log10(ss(1:end/2, :)), [-2 log10(max(s))]);
     set(gca, 'YDir', 'normal')
     if exist('lines', 'var')
         xlabel('modes')
@@ -51,7 +51,7 @@ function [ss, x] = tmbf_plot_spec(tmbf, n, lines)
     if ~exist('lines', 'var')
         subplot('position', [.05 .35 .7 .6])
     end
-    imagesc([1 936], [0 .5], log10(xf), [-1 log10(max(max(xf)))]);
+    imagesc([1 bunches], [0 .5], log10(xf), [-1 log10(max(max(xf)))]);
     set(gca, 'YDir', 'normal')
 
     if exist('lines', 'var')

@@ -7,22 +7,24 @@
 % turns defaults to all available turns if not specified, start defaults to the
 % trigger point.  A starting offset of up to +-35846 turns can be specified
 % and the length can be up to 2*35846 depending on the starting offset.
-function data = tmbf_read(tmbf, turns, start)
-    max_turns = 35846;
-    if nargin < 2; turns = 8962; end
-    if nargin < 3; start = 0; end
-    assert(-max_turns <= start  &&  start < max_turns, 'Invalid start');
-    assert(start + turns <= max_turns, 'Too many turns requested');
-    assert(turns > 0, 'Bad number of turns requested');
-
+function [data, turn_length] = tmbf_read(tmbf, turns, start)
     status   = [tmbf ':DDR:STATUS'];
     set_turn = [tmbf ':DDR:TURNSEL_S'];
     longwf   = [tmbf ':DDR:LONGWF'];
 
+    % Pick up fundamental parameters from target
+    turn_length = lcaGet([tmbf ':BUNCHES']);
+    max_turns = lcaGet([set_turn '.DRVH']);
+
+    if ~exist('turns', 'var'); turns = 8962; end
+    if ~exist('start', 'var'); start = 0; end
+    assert(-max_turns <= start  &&  start < max_turns, 'Invalid start');
+    assert(start + turns <= max_turns, 'Too many turns requested');
+    assert(turns > 0, 'Bad number of turns requested');
+
     % Ensure DDR capture isn't running before trying to read
     assert(strcmp(lcaGet(status), 'Ready'), [tmbf ' is not ready']);
 
-    turn_length = 936;
     window_length = lcaGet([longwf '.NELM']) / turn_length;
 
     bar = progress_bar('Fetching data');
