@@ -64,7 +64,7 @@ nPts 2
 showXAxis
 xAxisSrc "fromUser"
 xMin -10
-xMax 1000
+xMax 450
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
@@ -176,7 +176,7 @@ nPts 2
 showXAxis
 xAxisSrc "fromUser"
 xMin -10
-xMax 1000
+xMax 450
 # Y axis properties
 showYAxis
 yAxisSrc "AutoScale"
