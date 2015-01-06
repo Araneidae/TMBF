@@ -47,8 +47,8 @@ def get_config(config, key):
     else:
         key = '%s_%s_%s' % (AXIS, key, RING_MODE)
     try:
-        return config[key]
-    except:
+        return getattr(config, key)
+    except AttributeError:
         print >>sys.stderr, 'Configuration for %s:%s in mode %s not found' % (
             AXIS, key, RING_MODE)
         raise
@@ -66,26 +66,27 @@ def compute_filter_size(tune):
                 filter = (cycles, length)
     return filter
 
-def apply_overrides(config_key):
+def apply_overrides(setup, config_key):
     match = config_key + '_'
     l = len(match)
-    for key in globals().keys():
+    for key in dir(setup):
         if key[:l] == match:
-            print 'override:', key, globals().get(key[l:]), '<=', globals()[key]
-            globals()[key[l:]] = globals()[key]
+            print 'override:', key, getattr(setup, key[l:], None), '<=', \
+                getattr(setup, key)
+            setattr(setup, key[l:], getattr(setup, key))
 
-def update_globals(config, setup):
+def update_setup(setup, config, SETUP):
     # Use settings in config file to override defaults set here.
-    globals().update(config)
+    setup.__dict__.update(config)
 
     # Apply setup specific overrides.
-    apply_overrides(setup)
+    apply_overrides(setup, SETUP)
 
     # Apply any ring mode/axis specific overrides.
     if AXIS == 'T':
-        apply_overrides(AXIS)
+        apply_overrides(setup, AXIS)
     else:
-        apply_overrides('%s_%s' % (AXIS, RING_MODE))
+        apply_overrides(setup, '%s_%s' % (AXIS, RING_MODE))
 
 
 # ------------------------------------------------------------------------------
@@ -142,7 +143,7 @@ BUNCH_COUNT = get('BUNCHES')
 CONFIG_FILE = args.config
 
 # Load setup defaults
-from setup_defaults import *
+import setup_defaults as setup
 
 # Load the specified configuration file.  This contains overrides for the
 # globals below together with settings for the mode specific default tune in a
@@ -152,13 +153,13 @@ execfile(CONFIG_FILE, {}, CONFIG)
 
 # Load tune from config file in its strange compatibility format
 if args.tune is None:
-    tune = 1e-4 * float(get_config(globals(), 'tune'))
+    setup.tune = 1e-4 * float(get_config(setup, 'tune'))
 else:
-    tune = args.tune
-cycles, length = compute_filter_size(tune)
+    setup.tune = args.tune
+setup.cycles, setup.length = compute_filter_size(setup.tune)
 
 # Apply configuration and mode specific settings
-update_globals(CONFIG, SETUP)
+update_setup(setup, CONFIG, SETUP)
 
 
 # ------------------------------------------------------------------------------
@@ -180,20 +181,20 @@ put('TRG:BUF:RESET_S.PROC', 0)
 put('SEQ:RESET_S.PROC', 0)
 
 # Configure FIR as selected
-put('FIR:0:LENGTH_S', length)
-put('FIR:0:CYCLES_S', cycles)
+put('FIR:0:LENGTH_S', setup.length)
+put('FIR:0:CYCLES_S', setup.cycles)
 put('FIR:0:USEWF_S', 'Settings')
 put('FIR:GAIN_S', '-42dB')
 
 # Configure bunch bank #0 for FIR and selected operation
 putwf('BUN:0:FIRWF_S', 0)
-putwf('BUN:0:OUTWF_S', dac_output)
+putwf('BUN:0:OUTWF_S', setup.dac_output)
 putwf('BUN:0:GAINWF_S', 1)
 
 # Configure sequencer
 put('SEQ:1:HOLDOFF_S', 2)
-put('SEQ:1:DWELL_S', sweep_dwell_time)
-put('SEQ:1:GAIN_S', sweep_gain)
+put('SEQ:1:DWELL_S', setup.sweep_dwell_time)
+put('SEQ:1:GAIN_S', setup.sweep_gain)
 put('SEQ:1:ENWIN_S', 'Windowed')
 put('SEQ:1:BLANK_S', 'Blanking')
 
@@ -202,41 +203,41 @@ put('SEQ:SUPER:COUNT_S', 1)
 put('SEQ:SUPER:RESET_S', 0)
 
 # Configure detector
-put('DET:MODE_S', bunch_mode)
+put('DET:MODE_S', setup.bunch_mode)
 put('DET:AUTOGAIN_S', 'Autogain')
-put('DET:INPUT_S', detector_input)
+put('DET:INPUT_S', setup.detector_input)
 put('DET:LOOP:ADC_S', 1)
 
 # Configure tune measurement
-put('TUNE:HARMONIC_S', harmonic)
-put('TUNE:CENTRE_S', tune)
-put('TUNE:RANGE_S', sweep_range)
-put('TUNE:ALARM_S', alarm_range)
-put('TUNE:BUNCH_S', bunch)
-put('TUNE:DIRECTION_S', tune_direction)
-put('TUNE:FEEDBACK_S', keep_feedback)
+put('TUNE:HARMONIC_S', setup.harmonic)
+put('TUNE:CENTRE_S', setup.tune)
+put('TUNE:RANGE_S', setup.sweep_range)
+put('TUNE:ALARM_S', setup.alarm_range)
+put('TUNE:BUNCH_S', setup.bunch)
+put('TUNE:DIRECTION_S', setup.tune_direction)
+put('TUNE:FEEDBACK_S', setup.keep_feedback)
 # This configures the entire tune sweep with the parameters above and sets up
 # triggering correctly.
 put('TUNE:SET_S.PROC', 0)
 
 # Basic tune measurement settings
-put('TUNE:BLK:LEN_S', min_block_len)
-put('TUNE:BLK:SEP_S', min_block_sep)
-put('TUNE:THRESHOLD_S', tune_threshold)
+put('TUNE:BLK:LEN_S', setup.min_block_len)
+put('TUNE:BLK:SEP_S', setup.min_block_sep)
+put('TUNE:THRESHOLD_S', setup.tune_threshold)
 
 # Peak tune measurement settings
-put('PEAK:SEL_S', peak_smoothing)
-put('PEAK:THRESHOLD_S', peak_fit_threshold)
-put('PEAK:FITERROR_S', peak_max_error)
-put('PEAK:MINWIDTH_S', peak_min_width)
-put('PEAK:MAXWIDTH_S', peak_max_width)
+put('PEAK:SEL_S', setup.peak_smoothing)
+put('PEAK:THRESHOLD_S', setup.peak_fit_threshold)
+put('PEAK:FITERROR_S', setup.peak_max_error)
+put('PEAK:MINWIDTH_S', setup.peak_min_width)
+put('PEAK:MAXWIDTH_S', setup.peak_max_width)
 
-put('TUNE:SELECT_S', tune_select)
+put('TUNE:SELECT_S', setup.tune_select)
 
 # Configure blanking
 put('TRG:BUF:EXT:BL_S', 'All')
-put('TRG:BLANKING:SOURCE_S', blanking_source)
-put('TRG:BLANKING_S', blanking_interval)
+put('TRG:BLANKING:SOURCE_S', setup.blanking_source)
+put('TRG:BLANKING_S', setup.blanking_interval)
 
 put('TRG:SYNC_S', 'Separate')
 
