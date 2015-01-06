@@ -13,6 +13,7 @@
 #include "error.h"
 #include "hardware.h"
 #include "epics_device.h"
+#include "epics_extra.h"
 #include "numeric.h"
 #include "tmbf.h"
 
@@ -121,20 +122,12 @@ static bool init_group_delay(void *context, unsigned int *value)
     return true;
 }
 
-static bool init_dac_enable(void *context, bool *value)
-{
-    *value = true;
-    return true;
-}
-
-
 /* Publishes all common PVs associated with ADC and DAC interfaces.  This
  * includes both the min/max interface and the compensation filter. */
-static void publish_adc_dac(
-    const char *name, struct adc_dac *adc_dac, int max_value)
+static void publish_adc_dac(const char *name, struct adc_dac *adc_dac)
 {
-    adc_dac->max_value = max_value;
-    compute_scaling(1 / (float) max_value, &adc_dac->scaling, &adc_dac->shift);
+    compute_scaling(
+        1 / (float) adc_dac->max_value, &adc_dac->scaling, &adc_dac->shift);
 
     char buffer[20];
 #define FORMAT(record_name) \
@@ -165,13 +158,16 @@ static void publish_adc_dac(
 
 
 static struct adc_dac adc_context = {
+    .max_value = 1 << 15,
     .read = hw_read_adc_minmax,
     .write_filter = hw_write_adc_filter,
     .write_delay = hw_write_adc_filter_delay,
     .tap_count = 12,
     .default_taps = (float []) { 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0 }
 };
+
 static struct adc_dac dac_context = {
+    .max_value = 1 << 13,
     .read = hw_read_dac_minmax,
     .write_filter = hw_write_dac_preemph,
     .write_delay = hw_write_dac_filter_delay,
@@ -186,7 +182,7 @@ static struct adc_dac dac_context = {
 
 static unsigned int adc_skew;       // 0 to 3
 static unsigned int dac_delay;      // 0 to 935
-static struct epics_record *adc_skew_pv;
+static struct in_epics_record_mbbi *adc_skew_pv;
 
 static void write_dac_delays(void)
 {
@@ -204,7 +200,7 @@ void set_adc_skew(unsigned int skew)
     adc_skew = skew;
     hw_write_adc_skew(skew);
     write_dac_delays();
-    trigger_record(adc_skew_pv, 0, NULL);
+    WRITE_IN_RECORD(mbbi, adc_skew_pv, skew);
 }
 
 
@@ -217,17 +213,14 @@ static void write_adc_limit(double limit)
 bool initialise_adc_dac(void)
 {
     /* Common min/max PVs. */
-    publish_adc_dac("ADC", &adc_context, 1 << 15);
-    publish_adc_dac("DAC", &dac_context, 1 << 13);
+    publish_adc_dac("ADC", &adc_context);
+    publish_adc_dac("DAC", &dac_context);
 
-    /* Offset control for ADC. */
     PUBLISH_WF_ACTION_P(int, "ADC:OFFSET", 4, hw_write_adc_offsets);
-    adc_skew_pv = PUBLISH_READ_VAR_I(mbbi, "ADC:SKEW", adc_skew);
+    adc_skew_pv = PUBLISH_IN_VALUE_I(mbbi, "ADC:SKEW");
     PUBLISH_WRITER_P(ao, "ADC:LIMIT", write_adc_limit);
 
-    /* Direct register control for DAC. */
-    PUBLISH_WRITER_P(bo, "DAC:ENABLE",
-        hw_write_dac_enable, .init = init_dac_enable);
+    PUBLISH_WRITER_P(bo, "DAC:ENABLE", hw_write_dac_enable);
     PUBLISH_WRITER_P(ulongout, "DAC:DELAY", write_dac_delay);
 
     return true;
