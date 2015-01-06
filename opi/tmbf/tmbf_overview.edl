@@ -188,7 +188,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Feedback On & Tune"
 numCmds 1
 command {
-  0 "run-command 'Setup Close Loop + SB Tune Meas.' setup_tunemeasurement $(device) SBFB"
+  0 "run-command 'Setup Close Loop + SB Tune Meas.' setup_tunemeasurement $(device) FB"
 }
 endObjectProperties
 

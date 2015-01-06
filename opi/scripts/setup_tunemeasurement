@@ -2,6 +2,13 @@
 
 # Simple script for setting the TMBF into the appropriate tune measurement
 # mode.
+#
+# This script is called from the front panel screen with the device name and one
+# of the following three actions:
+#
+#   TUNE    Tune Only           Tune measurement, no feedback
+#   AP      Tune Special        Multibunch tune only measurement
+#   FB      Feedback On & Tune  Feedback and tune measurement, normal operation
 
 from pkg_resources import require
 require('cothread')
@@ -19,10 +26,10 @@ DEFAULT_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
 DEVICE_TO_AXIS = {
     'SR23C-DI-TMBF-01': 'X',
     'SR23C-DI-TMBF-02': 'Y',
-    'TS-DI-TMBF-01': 'X',
+    'TS-DI-TMBF-01': 'T',
 }
 
-VALID_SETUPS = ['TUNE', 'AP', 'SBFB']
+VALID_SETUPS = ['TUNE', 'AP', 'FB']
 
 
 def put(pv, value):
@@ -35,8 +42,12 @@ def get(pv, **kargs):
     return catools.caget('%s:%s' % (DEVICE, pv), **kargs)
 
 def get_config(config, key):
+    if AXIS == 'T':
+        key = '%s_%s' % (AXIS, key)
+    else:
+        key = '%s_%s_%s' % (AXIS, key, RING_MODE)
     try:
-        return config['%s_%s_%s' % (AXIS, key, RING_MODE)]
+        return config[key]
     except:
         print >>sys.stderr, 'Configuration for %s:%s in mode %s not found' % (
             AXIS, key, RING_MODE)
@@ -67,12 +78,14 @@ def update_globals(config, setup):
     # Use settings in config file to override defaults set here.
     globals().update(config)
 
-    # Apply any ring mode/axis specific overrides (should only pick up cycles
-    # and length overrides).
-    apply_overrides('%s_%s' % (AXIS, RING_MODE))
-
     # Apply setup specific overrides.
     apply_overrides(setup)
+
+    # Apply any ring mode/axis specific overrides.
+    if AXIS == 'T':
+        apply_overrides(AXIS)
+    else:
+        apply_overrides('%s_%s' % (AXIS, RING_MODE))
 
 
 # ------------------------------------------------------------------------------
@@ -94,7 +107,7 @@ parser.add_argument(
     help = 'Specify tune, otherwise config file will be consulted')
 parser.add_argument('device', help = 'TMBF device name to configure')
 parser.add_argument('setup',
-    help = 'Configuration setup, must be one of TUNE, AP, SBFB')
+    help = 'Configuration setup, must be one of TUNE, AP, FB')
 args = parser.parse_args()
 
 SETUP = args.setup
@@ -123,74 +136,26 @@ N_TAPS = get('FIR:N_TAPS')
 BUNCH_COUNT = get('BUNCHES')
 
 
+# ------------------------------------------------------------------------------
+# Assemble final configuration to apply
+
+CONFIG_FILE = args.config
+
+# Load setup defaults
+from setup_defaults import *
+
 # Load the specified configuration file.  This contains overrides for the
 # globals below together with settings for the mode specific default tune in a
 # backwards compatible format.
-CONFIG_FILE = args.config
 CONFIG = {}
 execfile(CONFIG_FILE, {}, CONFIG)
 
 # Load tune from config file in its strange compatibility format
 if args.tune is None:
-    tune = float('0.%04d' % get_config(CONFIG, 'tune'))
+    tune = 1e-4 * float(get_config(globals(), 'tune'))
 else:
     tune = args.tune
 cycles, length = compute_filter_size(tune)
-
-
-# ------------------------------------------------------------------------------
-# Defaults and configuration
-
-harmonic = 80
-bunch = 450
-
-# Settings for basic tune measurement.
-tune_threshold = 0.3
-min_block_sep = 20
-min_block_len = 20
-
-# Settings for peak tune measurement
-peak_smoothing = '/16'
-peak_fit_threshold = 0.3
-peak_max_error = 1
-peak_min_width = 0
-peak_max_width = 1
-
-# Default tune selection
-tune_select = 'Basic'
-
-sweep_dwell_time = 100
-
-blanking_interval = 10000
-blanking_source = 'SCLK Input'
-
-sweep_range = 0.05
-alarm_range = 0.01
-tune_direction = 'Forwards'
-keep_feedback = 'No feedback'
-
-dac_output = 0                # By default DAC output is off
-bunch_mode = 'All Bunches'    # By default detect on all bunches
-detector_input = 'FIR'
-
-
-# Multibunch tune measurement
-TUNE_sweep_gain = '-42dB'
-
-# Feedback on, single bunch tune measurement
-SBFB_sweep_gain = '-24dB'
-SBFB_dac_output = 1    # Enable FIR output in this mode
-SBFB_bunch_mode = 'Single Bunch'
-SBFB_harmonic = 0
-
-# Accelerator physics mode
-AP_sweep_gain = '0dB'
-AP_tune = 0.25
-AP_sweep_range = 0.245
-AP_alarm_range = 0.245
-AP_detector_input = 'ADC'
-AP_min_block_len = 5
-
 
 # Apply configuration and mode specific settings
 update_globals(CONFIG, SETUP)
@@ -278,5 +243,6 @@ put('TRG:SYNC_S', 'Separate')
 # Now we can go!
 put('DAC:ENABLE_S', 'On')
 put('TRG:BUF:ARM_S.PROC', 0)
+
 
 # vim: set filetype=python:
