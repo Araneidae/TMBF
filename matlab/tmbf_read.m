@@ -7,7 +7,7 @@
 % turns defaults to all available turns if not specified, start defaults to the
 % trigger point.  A starting offset of up to +-35846 turns can be specified
 % and the length can be up to 2*35846 depending on the starting offset.
-function [data, turn_length] = tmbf_read(tmbf, turns, start)
+function [data, turn_length] = tmbf_read(tmbf, turns, start, varargin)
     status   = [tmbf ':DDR:STATUS'];
     set_turn = [tmbf ':DDR:TURNSEL_S'];
     longwf   = [tmbf ':DDR:LONGWF'];
@@ -27,7 +27,7 @@ function [data, turn_length] = tmbf_read(tmbf, turns, start)
 
     window_length = lcaGet([longwf '.NELM']) / turn_length;
 
-    bar = progress_bar('Fetching data');
+    bar = progress_bar('Fetching data', varargin{:});
 
     data = zeros(turns * turn_length, 1);
     turns_read = 0;
