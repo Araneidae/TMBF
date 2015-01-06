@@ -29,7 +29,7 @@ DEVICE_TO_AXIS = {
     'TS-DI-TMBF-01': 'T',
 }
 
-VALID_SETUPS = ['TUNE', 'AP', 'FB']
+VALID_MODES = ['TUNE', 'AP', 'FB']
 
 
 def put(pv, value):
@@ -71,22 +71,11 @@ def apply_overrides(setup, config_key):
     l = len(match)
     for key in dir(setup):
         if key[:l] == match:
-            print 'override:', key, getattr(setup, key[l:], None), '<=', \
-                getattr(setup, key)
+            print 'override: [%s] %s %s <= %s' % (
+                key[:l], key[l:],
+                getattr(setup, key[l:], None), getattr(setup, key))
             setattr(setup, key[l:], getattr(setup, key))
-
-def update_setup(setup, config, SETUP):
-    # Use settings in config file to override defaults set here.
-    setup.__dict__.update(config)
-
-    # Apply setup specific overrides.
-    apply_overrides(setup, SETUP)
-
-    # Apply any ring mode/axis specific overrides.
-    if AXIS == 'T':
-        apply_overrides(setup, AXIS)
-    else:
-        apply_overrides(setup, '%s_%s' % (AXIS, RING_MODE))
+            delattr(setup, key)
 
 
 # ------------------------------------------------------------------------------
@@ -107,19 +96,20 @@ parser.add_argument(
     '-t', dest = 'tune', default = None, type = float,
     help = 'Specify tune, otherwise config file will be consulted')
 parser.add_argument('device', help = 'TMBF device name to configure')
-parser.add_argument('setup',
-    help = 'Configuration setup, must be one of TUNE, AP, FB')
+parser.add_argument('mode',
+    help = 'Configuration mode, must be one of %s' % ', '.join(VALID_MODES))
 args = parser.parse_args()
 
-SETUP = args.setup
-
+MODE = args.mode
+CONFIG_FILE = args.config
 DEVICE = args.device
+
 try:
     AXIS = DEVICE_TO_AXIS[DEVICE]
 except:
     parser.error('Device \'%s\' not known' % DEVICE)
-if SETUP not in VALID_SETUPS:
-    parser.error('Setup mode \'%s\' is invalid' % SETUP)
+if MODE not in VALID_MODES:
+    parser.error('Setup mode \'%s\' is invalid' % MODE)
 
 if args.debug:
     def put(pv, value):
@@ -140,16 +130,15 @@ BUNCH_COUNT = get('BUNCHES')
 # ------------------------------------------------------------------------------
 # Assemble final configuration to apply
 
-CONFIG_FILE = args.config
-
 # Load setup defaults
 import setup_defaults as setup
 
-# Load the specified configuration file.  This contains overrides for the
-# globals below together with settings for the mode specific default tune in a
-# backwards compatible format.
-CONFIG = {}
-execfile(CONFIG_FILE, {}, CONFIG)
+# Load the specified configuration file and use definitions to override the
+# default setup.  This contains overrides for the globals below together with
+# settings for the mode specific default tune in a backwards compatible format.
+config = {}
+execfile(CONFIG_FILE, {}, config)
+setup.__dict__.update(config)
 
 # Load tune from config file in its strange compatibility format
 if args.tune is None:
@@ -158,8 +147,13 @@ else:
     setup.tune = args.tune
 setup.cycles, setup.length = compute_filter_size(setup.tune)
 
-# Apply configuration and mode specific settings
-update_setup(setup, CONFIG, SETUP)
+
+# Apply mode specific overrides.
+apply_overrides(setup, MODE)
+
+# Apply any ring mode/axis specific overrides.
+apply_overrides(setup, '%s_%s' % (AXIS, RING_MODE))
+apply_overrides(setup, AXIS)
 
 
 # ------------------------------------------------------------------------------

@@ -50,7 +50,6 @@ AP_min_block_len = 5
 # Feedback on, single bunch tune measurement
 FB_dac_output = 1               # Enable FIR output in this mode
 FB_keep_feedback = 'Keep feedback'
-FB_bunch_mode = 'All Bunches'
 FB_harmonic = 933
 FB_sweep_gain = '-48dB'
 
