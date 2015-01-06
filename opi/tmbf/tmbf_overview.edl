@@ -166,7 +166,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Tune Only"
 numCmds 1
 command {
-  0 "xterm -T 'Setup Tune Measurement only' -e 'setup_tunemeasurement $(device) TUNE || read -p \"press return\"'"
+  0 "run-command 'Setup Tune Measurement only' setup_tunemeasurement $(device) TUNE"
 }
 endObjectProperties
 
@@ -188,7 +188,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Feedback On & Tune"
 numCmds 1
 command {
-  0 "xterm -T 'Setup Close Loop + SB Tune Meas.' -e 'setup_tunemeasurement $(device) SBFB || read -p \"press return\"'"
+  0 "run-command 'Setup Close Loop + SB Tune Meas.' setup_tunemeasurement $(device) SBFB"
 }
 endObjectProperties
 
@@ -242,7 +242,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Tune Special"
 numCmds 1
 command {
-  0 "xterm -T 'Setup Tune Measurement Special' -e 'setup_tunemeasurement $(device) AP || read -p \"press return\"'"
+  0 "run-command 'Setup Tune Measurement Special' setup_tunemeasurement $(device) AP"
 }
 endObjectProperties
 

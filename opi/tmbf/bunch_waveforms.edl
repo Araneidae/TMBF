@@ -381,7 +381,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Set One"
 numCmds 1
 command {
-  0 "xterm -T 'Set bunch' -e 'set_one_bunch $(device) $(bank) one $(bunch) $(fir) $(out) $(gain) || read -p \"press return\"'"
+  0 "run-command 'Set bunch' set_one_bunch $(device) $(bank) one $(bunch) $(fir) $(out) $(gain)"
 }
 endObjectProperties
 
@@ -496,7 +496,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Set All"
 numCmds 1
 command {
-  0 "xterm -T 'Set bunch' -e 'set_one_bunch $(device) $(bank) all $(fir) $(out) $(gain) || read -p \"press return\"'"
+  0 "run-command 'Set bunch' set_one_bunch $(device) $(bank) all $(fir) $(out) $(gain)"
 }
 endObjectProperties
 
@@ -808,7 +808,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Set One"
 numCmds 1
 command {
-  0 "xterm -T 'Set bunch' -e 'set_one_bunch $(device) $(bank) fir_one $(bunch) $(fir) || read -p \"press return\"'"
+  0 "run-command 'Set bunch' set_one_bunch $(device) $(bank) fir_one $(bunch) $(fir)"
 }
 endObjectProperties
 
@@ -863,7 +863,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Set All"
 numCmds 1
 command {
-  0 "xterm -T 'Set bunch' -e 'set_one_bunch $(device) $(bank) fir_all $(fir) || read -p \"press return\"'"
+  0 "run-command 'Set bunch' set_one_bunch $(device) $(bank) fir_all $(fir)"
 }
 endObjectProperties
 
@@ -1111,7 +1111,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Set One"
 numCmds 1
 command {
-  0 "xterm -T 'Set bunch' -e 'set_one_bunch $(device) $(bank) out_one $(bunch) $(out) || read -p \"press return\"'"
+  0 "run-command 'Set bunch' set_one_bunch $(device) $(bank) out_one $(bunch) $(out)"
 }
 endObjectProperties
 
@@ -1133,7 +1133,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Set All"
 numCmds 1
 command {
-  0 "xterm -T 'Set bunch' -e 'set_one_bunch $(device) $(bank) out_all $(out) || read -p \"press return\"'"
+  0 "run-command 'Set bunch' set_one_bunch $(device) $(bank) out_all $(out)"
 }
 endObjectProperties
 
@@ -1182,7 +1182,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Set One"
 numCmds 1
 command {
-  0 "xterm -T 'Set bunch' -e 'set_one_bunch $(device) $(bank) gain_one $(bunch) $(gain) || read -p \"press return\"'"
+  0 "run-command 'Set bunch' set_one_bunch $(device) $(bank) gain_one $(bunch) $(gain)"
 }
 endObjectProperties
 
@@ -1204,7 +1204,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Set All"
 numCmds 1
 command {
-  0 "xterm -T 'Set bunch' -e 'set_one_bunch $(device) $(bank) gain_all $(gain) || read -p \"press return\"'"
+  0 "run-command 'Set bunch' set_one_bunch $(device) $(bank) gain_all $(gain)"
 }
 endObjectProperties
 

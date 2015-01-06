@@ -155,7 +155,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "Set ADC Offsets"
 numCmds 1
 command {
-  0 "xterm -T 'Set ADC offsets' -e 'set_adc_offset $(device); read -p \"press return\"'"
+  0 "run-command -w 'Set ADC offsets' set_adc_offset $(device)"
 }
 endObjectProperties
 
