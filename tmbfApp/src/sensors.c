@@ -567,10 +567,6 @@ static void initialise_fan_control(void)
     PUBLISH_READ_VAR(longin, "SE:FAN_SET", fan_set_speed);
     PUBLISH_WRITE_VAR_P(longout, "SE:TEMP", target_temperature);
 
-    /* For debugging. */
-    PUBLISH_WRITE_VAR_P(longout, "SE:TEMP:KP", controller_KP);
-    PUBLISH_WRITE_VAR_P(longout, "SE:TEMP:KI", controller_KI);
-
     /* Initialise fan speed control. */
     write_device(proc_fan0_pwm, 2);
     write_device(proc_fan1_pwm, 2);
