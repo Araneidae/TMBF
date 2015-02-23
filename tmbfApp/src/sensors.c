@@ -416,7 +416,7 @@ static bool UdpExchange(
             DO_(rx = recv(sock, rx_buffer, *rx_length, 0))  &&
             rx != -1;
 
-        TEST_IO(close(sock));
+        IGNORE(TEST_IO(close(sock)));
     }
 
     *rx_length = Ok ? (size_t) rx : 0;
@@ -529,7 +529,7 @@ static void write_device(const char *device, int value)
     FILE *output = fopen(device, "w");
     if (TEST_NULL(output))
     {
-        TEST_OK(fprintf(output, "%d", value) > 0);
+        fprintf(output, "%d", value);
         fclose(output);
     }
 }
