@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <time.h>
 #include <string.h>
 #include <complex.h>
@@ -119,7 +120,10 @@ static unsigned int extract_peaks(
  * publish information about each peak and perform some preliminary processing
  * and qualification. */
 
-#define MAX_PEAKS   3
+#define MAX_PEAKS   4
+
+/* We can only work with up to 3 peaks. */
+#define MAX_VALID_PEAKS     3
 
 
 struct peak_info {
@@ -205,10 +209,29 @@ static void publish_peak_info(struct peak_info *info, unsigned int ratio)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Peak fitting results. */
 
-enum peak_status { PEAK_GOOD, PEAK_NO_RANGE, PEAK_NO_FIT, PEAK_REJECTED };
+enum peak_status {
+    PEAK_GOOD,          // Peak accepted
+    PEAK_SMALL,         // Good fit, but smallest peaks rejected
+    PEAK_NO_RANGE,      // No peak found
+    PEAK_NO_FIT,        // Can't fit model to peak
+    PEAK_REJECTED       // Peak rejected after modelling
+};
 
-/* This structure contains information about a round of peak fitting. */
+/* This structure contains information about a round of peak fitting.  It is
+ * designed to be read as a binary blob and interpreted externally. */
 struct peak_fit_result {
+    /* Structure describing this structure to help with interpreting the fields
+     * of this structure.  These fields are initialised by
+     * INITIALSE_PEAK_FIT_RESULT below and are interpreted by the matlab script
+     * plot_peak_fit.m */
+    struct {
+        size_t max_peaks;
+        size_t count_offset;
+        size_t ranges_offset;
+        size_t fits_offset;
+        size_t errors_offset;
+        size_t status_offset;
+    } shape;
     /* Number of valid peaks. */
     unsigned int peak_count;
     /* The ranges over which the peaks were fitted. */
@@ -220,6 +243,16 @@ struct peak_fit_result {
     /* Assessment for each peak. */
     enum peak_status status[MAX_PEAKS];
 };
+
+#define INITIALISE_PEAK_FIT_RESULT \
+    { .shape = { \
+        .max_peaks = MAX_PEAKS, \
+        .count_offset  = offsetof(struct peak_fit_result, peak_count), \
+        .ranges_offset = offsetof(struct peak_fit_result, ranges), \
+        .fits_offset   = offsetof(struct peak_fit_result, fits), \
+        .errors_offset = offsetof(struct peak_fit_result, errors), \
+        .status_offset = offsetof(struct peak_fit_result, status), \
+    } }
 
 
 /* Ensures that a <= b by swapping them if necessary. */
@@ -324,6 +357,38 @@ static void extract_peak_ranges(
         peak_fit->ranges[i] = range;
     }
     reset_fit_result(peak_fit, info->peak_count);
+}
+
+
+/* Updates the status of peaks too small to let through. */
+static void mark_smallest_peaks(struct peak_fit_result *peak_fit)
+{
+    double areas[MAX_PEAKS];
+    unsigned int ix[MAX_PEAKS];
+
+    /* Start by extracting the peaks in sorted order.  This is just insertion
+     * sort, just like extract_sorted_fits below. */
+    unsigned int peak_count = 0;
+    for (unsigned int i = 0; i < MAX_PEAKS; i ++)
+        if (peak_fit->status[i] == PEAK_GOOD)
+        {
+            double area = peak_area(&peak_fit->fits[i]);
+            unsigned int n = peak_count;
+            while (n > 0  &&  area > areas[n-1])
+            {
+                areas[n] = areas[n-1];
+                ix[n]    = ix[n-1];
+                n -= 1;
+            }
+            areas[n] = area;
+            ix[n]    = i;
+
+            peak_count += 1;
+        }
+
+    /* Now update the status of the smallest peaks. */
+    for (unsigned int i = MAX_VALID_PEAKS; i < peak_count; i ++)
+        peak_fit->status[ix[i]] = PEAK_SMALL;
 }
 
 
@@ -452,8 +517,8 @@ struct peak_result_relative {
 
 static unsigned fitted_peak_count;
 
-static struct peak_fit_result first_fit;
-static struct peak_fit_result second_fit;
+static struct peak_fit_result first_fit  = INITIALISE_PEAK_FIT_RESULT;
+static struct peak_fit_result second_fit = INITIALISE_PEAK_FIT_RESULT;
 
 
 /* Results are published for the central tune resonance and the two immediate
@@ -608,6 +673,7 @@ static void process_peak_tune(
     fit_peaks(sweep, tune_scale, &first_fit, false);
 
     /* Refine the fit. */
+    mark_smallest_peaks(&first_fit);
     extract_good_peaks(length, tune_scale, &first_fit, &second_fit);
     fit_peaks(sweep, tune_scale, &second_fit, true);
 

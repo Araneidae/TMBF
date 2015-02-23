@@ -2,9 +2,10 @@
 
 from common import *
 
-MAX_PEAKS = 3
+MAX_PEAKS = 4
 
-PEAK_FIT_SIZE = 168
+# This needs to match sizeof(struct peak_fit_result) in tune_peaks.c.
+PEAK_FIT_SIZE = 240
 
 
 def peak_readbacks(suffix):

@@ -5,8 +5,8 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
     s = lcaGet([tmbf ':DET:SCALE']);
     threshold = lcaGet([tmbf ':PEAK:THRESHOLD_S']);
 
-    first_fits = first.fits(:, first.status == 0);
-    second_fits = second.fits(:, second.status == 0);
+    first_fits  = valid_fits(first);
+    second_fits = valid_fits(second);
     m1 = model(s, first_fits);
     m2 = model(s, second_fits);
 
@@ -34,6 +34,11 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
     subplot 224
     plot_result(s, iq, second, first_fits, 0)
     title('Second fits')
+end
+
+function ok_fits = valid_fits(fitting)
+    status_ok = fitting.status == 0  |  fitting.status == 1;
+    ok_fits = fitting.fits(:, status_ok);
 end
 
 function range = threshold_range(power, range, threshold)
