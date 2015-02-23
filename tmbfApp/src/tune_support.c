@@ -217,13 +217,15 @@ static bool fit_one_pole(
     }
 
     double det = S_w * S_w_iq2 - cabs2(S_w_iq);
-    return
-        TEST_OK_(length >= 2, "Singular data to fit")  &&
-        TEST_OK_(fabs(det) > S_w, "One pole fit failed")  &&
-        DO_(
-            fit->a = (S_w_iq2 * S_w_s_iq - S_w_iq * S_w_s_iq2) / det;
-            fit->b = (S_w * S_w_s_iq2 - conj(S_w_iq) * S_w_s_iq) / det
-        );
+    /* Check for a sensible fit, otherwise fail. */
+    if (length >= 2  &&  fabs(det) > S_w)
+    {
+        fit->a = (S_w_iq2 * S_w_s_iq - S_w_iq * S_w_s_iq2) / det;
+        fit->b = (S_w * S_w_s_iq2 - conj(S_w_iq) * S_w_s_iq) / det;
+        return true;
+    }
+    else
+        return false;
 }
 
 
