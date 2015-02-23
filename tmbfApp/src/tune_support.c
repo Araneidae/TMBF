@@ -297,9 +297,9 @@ static void adjust_iq_with_model(
     {
         if (j == peak_ix)
         {
-            /* If we're not refining then subsequent fits are unknown, so we sto
-             * processing at this point, otherwise we'll go on and subtract all
-             * the old first pass fits as well. */
+            /* If we're not refining then subsequent fits are unknown, so we
+             * stop processing at this point, otherwise we'll go on and subtract
+             * all the old first pass fits as well. */
             if (!refine_fit)
                 break;
         }

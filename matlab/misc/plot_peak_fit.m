@@ -5,8 +5,8 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
     s = lcaGet([tmbf ':DET:SCALE']);
     threshold = lcaGet([tmbf ':PEAK:THRESHOLD_S']);
 
-    first_fits  = valid_fits(first);
-    second_fits = valid_fits(second);
+    first_fits = first.fits(:, first.status == 0);
+    second_fits = second.fits(:, second.status == 0);
     m1 = model(s, first_fits);
     m2 = model(s, second_fits);
 
@@ -32,13 +32,13 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
     title('First fits')
 
     subplot 224
+    % Need to recompute the fits going into the second fit: sort the fits in
+    % descending order of area and extract the largest peaks.
+    areas = abs(first_fits(1,:)).^2 ./ -imag(first_fits(2,:));
+    [areas, ix] = sort(areas, 2, 'descend');
+    first_fits = first_fits(:, ix(1:size(second_fits, 2)));
     plot_result(s, iq, second, first_fits, 0)
     title('Second fits')
-end
-
-function ok_fits = valid_fits(fitting)
-    status_ok = fitting.status == 0  |  fitting.status == 1;
-    ok_fits = fitting.fits(:, status_ok);
 end
 
 function range = threshold_range(power, range, threshold)

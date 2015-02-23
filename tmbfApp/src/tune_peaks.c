@@ -120,9 +120,12 @@ static unsigned int extract_peaks(
  * publish information about each peak and perform some preliminary processing
  * and qualification. */
 
-#define MAX_PEAKS   4
+/* We search for up to two more peaks than we can actually work with: the
+ * smaller peaks will be discarded after fitting.  This is done to allow for
+ * different notions of "largest peak" at the different stages of discovery. */
+#define MAX_PEAKS   5
 
-/* We can only work with up to 3 peaks. */
+/* We can only compute the tune using up to 3 peaks. */
 #define MAX_VALID_PEAKS     3
 
 
@@ -211,7 +214,6 @@ static void publish_peak_info(struct peak_info *info, unsigned int ratio)
 
 enum peak_status {
     PEAK_GOOD,          // Peak accepted
-    PEAK_SMALL,         // Good fit, but smallest peaks rejected
     PEAK_NO_RANGE,      // No peak found
     PEAK_NO_FIT,        // Can't fit model to peak
     PEAK_REJECTED       // Peak rejected after modelling
@@ -360,55 +362,54 @@ static void extract_peak_ranges(
 }
 
 
-/* Updates the status of peaks too small to let through. */
-static void mark_smallest_peaks(struct peak_fit_result *peak_fit)
+/* Extracts all good peak fits into the given output array and sorts the
+ * resulting array in ascending or descending order using the given key. */
+static unsigned int sort_fits_by_key(
+    const struct peak_fit_result *peaks, struct one_pole fits[],
+    double (*compute_key)(const struct one_pole *fit), bool ascending)
 {
-    double areas[MAX_PEAKS];
-    unsigned int ix[MAX_PEAKS];
-
-    /* Start by extracting the peaks in sorted order.  This is just insertion
-     * sort, just like extract_sorted_fits below. */
-    unsigned int peak_count = 0;
+    unsigned int count = 0;
     for (unsigned int i = 0; i < MAX_PEAKS; i ++)
-        if (peak_fit->status[i] == PEAK_GOOD)
+        if (peaks->status[i] == PEAK_GOOD)
         {
-            double area = peak_area(&peak_fit->fits[i]);
-            unsigned int n = peak_count;
-            while (n > 0  &&  area > areas[n-1])
+            const struct one_pole *fit = &peaks->fits[i];
+            double key = compute_key(fit);
+            unsigned int n = count;
+            while (n > 0  &&  (key > compute_key(&fits[n-1])) ^ ascending)
             {
-                areas[n] = areas[n-1];
-                ix[n]    = ix[n-1];
+                fits[n] = fits[n-1];
                 n -= 1;
             }
-            areas[n] = area;
-            ix[n]    = i;
-
-            peak_count += 1;
+            fits[n] = *fit;
+            count += 1;
         }
-
-    /* Now update the status of the smallest peaks. */
-    for (unsigned int i = MAX_VALID_PEAKS; i < peak_count; i ++)
-        peak_fit->status[ix[i]] = PEAK_SMALL;
+    return count;
 }
 
 
 /* Extracts peaks assessed as of good quality into a fresh peak fit struct.  In
- * this case we compute the ranges from the previous fit. */
+ * this case we compute the ranges from the previous fit.  Also sort the peaks
+ * into descending size by peak area, which should help the fit process, and
+ * discard all but the largest three. */
 static void extract_good_peaks(
     unsigned int length, const double tune_scale[],
     const struct peak_fit_result *peak_fit_in,
     struct peak_fit_result *peak_fit_out)
 {
-    unsigned int peak_count = 0;
-    for (unsigned int i = 0; i < MAX_PEAKS; i ++)
-        if (peak_fit_in->status[i] == PEAK_GOOD)
-        {
-            peak_fit_out->fits[peak_count] = peak_fit_in->fits[i];
-            compute_peak_bounds(
-                &peak_fit_in->fits[i], peak_fit_threshold,
-                length, tune_scale, &peak_fit_out->ranges[peak_count]);
-            peak_count += 1;
-        }
+    /* First extract the good peaks into descending order of peak area. */
+    unsigned int peak_count = sort_fits_by_key(
+        peak_fit_in, peak_fit_out->fits, peak_area, false);
+
+    /* Discard all but the largest peaks. */
+    if (peak_count > MAX_VALID_PEAKS)
+        peak_count = MAX_VALID_PEAKS;
+
+    /* Finally compute new peak bounds for the peaks we're going to use. */
+    for (unsigned int i = 0; i < peak_count; i ++)
+        compute_peak_bounds(
+            &peak_fit_out->fits[i], peak_fit_threshold,
+            length, tune_scale, &peak_fit_out->ranges[i]);
+
     reset_fit_result(peak_fit_out, peak_count);
 }
 
@@ -445,12 +446,6 @@ static void fit_peaks(
         tune_scale, sweep->wf_i, sweep->wf_q, sweep->power,
         peak_fit->ranges, peak_fit->fits, peak_fit->errors);
 
-    for (unsigned int i = fit_count; i < peak_fit->peak_count; i ++)
-    {
-        peak_fit->status[i] = PEAK_NO_FIT;
-        peak_fit->fits[i] = (struct one_pole) { NAN, NAN };
-        peak_fit->errors[i] = NAN;
-    }
     for (unsigned int i = 0; i < fit_count; i ++)
         if (assess_peak(
                &peak_fit->ranges[i], tune_scale,
@@ -458,6 +453,12 @@ static void fit_peaks(
             peak_fit->status[i] = PEAK_GOOD;
         else
             peak_fit->status[i] = PEAK_REJECTED;
+    for (unsigned int i = fit_count; i < peak_fit->peak_count; i ++)
+    {
+        peak_fit->status[i] = PEAK_NO_FIT;
+        peak_fit->fits[i] = (struct one_pole) { NAN, NAN };
+        peak_fit->errors[i] = NAN;
+    }
 
     peak_fit->peak_count = fit_count;
 }
@@ -466,25 +467,10 @@ static void fit_peaks(
 /* Extract final good peak fit from fitted results in ascending order of centre
  * frequency.  For the tiny number of peaks insertion sort is good. */
 static unsigned int extract_sorted_fits(
-    const struct peak_fit_result *peak_fit, struct one_pole fits[])
+    const struct peak_fit_result *peak_fit, struct one_pole *restrict fits)
 {
-    unsigned int peak_count = 0;
-    for (unsigned int i = 0; i < MAX_PEAKS; i ++)
-        if (peak_fit->status[i] == PEAK_GOOD)
-        {
-            const struct one_pole *fit = &peak_fit->fits[i];
-
-            /* Push this new value down as far as it will go. */
-            unsigned int n = peak_count;
-            while (n > 0  &&  peak_centre(fit) < peak_centre(&fits[n-1]))
-            {
-                fits[n] = fits[n-1];
-                n -= 1;
-            }
-            fits[n] = *fit;
-
-            peak_count += 1;
-        }
+    unsigned int peak_count =
+        sort_fits_by_key(peak_fit, fits, peak_centre, true);
 
     /* Fill remaining fields with zeros. */
     for (unsigned int i = peak_count; i < MAX_PEAKS; i ++)
@@ -673,7 +659,6 @@ static void process_peak_tune(
     fit_peaks(sweep, tune_scale, &first_fit, false);
 
     /* Refine the fit. */
-    mark_smallest_peaks(&first_fit);
     extract_good_peaks(length, tune_scale, &first_fit, &second_fit);
     fit_peaks(sweep, tune_scale, &second_fit, true);
 
