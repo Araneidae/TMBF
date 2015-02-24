@@ -7,7 +7,7 @@
 INSTALL_HOST=/home/libera/nfs/testing
 
 # Version string as presented to users.
-TMBF_VERSION=3.0
+TMBF_VERSION=3.1
 
 # Expected FPGA API version.  Bottom four bits are ignored so that API
 # preserving point releases can be allowed.
