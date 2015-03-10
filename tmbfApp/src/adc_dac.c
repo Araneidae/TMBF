@@ -200,7 +200,7 @@ void set_adc_skew(unsigned int skew)
     adc_skew = skew;
     hw_write_adc_skew(skew);
     write_dac_delays();
-    WRITE_IN_RECORD(mbbi, adc_skew_pv, skew);
+    WRITE_IN_RECORD(mbbi, adc_skew_pv, skew, .force_update = true);
 }
 
 
