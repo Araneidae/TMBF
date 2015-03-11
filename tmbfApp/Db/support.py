@@ -24,4 +24,4 @@ ModuleVersion('epics_device',
     home = os.environ['EPICS_DEVICE'], use_name = False)
 
 from iocbuilder import *
-from iocbuilder.modules.epics_device.common import *
+from iocbuilder.modules.epics_device import *
