@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2034
-y 13
+x 2035
+y 14
 w 632
 h 552
 font "helvetica-medium-r-18.0"
@@ -2588,51 +2588,5 @@ value {
   "SEQ trigger state:"
 }
 autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 208
-y 384
-w 56
-h 14
-font "helvetica-bold-r-12.0"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-value {
-  "Fill mode:"
-}
-autoSize
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 272
-y 384
-w 80
-h 16
-controlPv "LI-TI-MTGEN-01:MODE"
-font "helvetica-medium-r-14.0"
-fgColor index 14
-fgAlarm
-bgColor index 5
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-fastUpdate
-useHexPrefix
-newPos
-objType "monitors"
-noExecuteClipMask
 endObjectProperties
 
