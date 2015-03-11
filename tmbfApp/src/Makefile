@@ -60,22 +60,12 @@ PROD_IOC = tmbf
 DBD += tmbf.dbd
 # tmbf.dbd will be made up from these files:
 tmbf_DBD += base.dbd
-tmbf_DBD += generic.dbd
-
-DBD += generic.dbd
+tmbf_DBD += epics_device.dbd
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 tmbf_SRCS += tmbf_registerRecordDeviceDriver.c
 tmbf_SRCS += tmbfMain.c         # Entry point and initialisation
-
-# Core generic EPICS and miscellaneous support
-tmbf_SRCS += epics_device.c     # EPICS device support framework
-tmbf_SRCS += epics_extra.c      # Miscellanous extra EPICS support
-tmbf_SRCS += hashtable.c        # Simple generic hash table
-tmbf_SRCS += persistence.c      # Persistent value support for EPICS
-tmbf_SRCS += pvlogging.c        # Logging for all caputs
 tmbf_SRCS += numeric.c          # Some fast numerical algorithsm
-tmbf_SRCS += config_file.c      # Read configuration (for hardware offsets &c)
 
 # Hardware interfacing
 tmbf_SRCS += hardware.c         # Interface to FPGA
@@ -95,6 +85,7 @@ tmbf_SRCS += tune_peaks.c       # High level tune peak detection
 tmbf_SRCS += sensors.c          # Miscellaneous system health sensors
 tmbf_SRCS += tune_follow.c      # Support for tune following
 
+tmbf_LIBS += epics_device
 tmbf_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 

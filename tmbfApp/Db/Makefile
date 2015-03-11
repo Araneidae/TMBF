@@ -25,6 +25,7 @@ include $(TOP)/install_d/CONFIG
 
 export IOCBUILDER
 export BUNCHES_PER_TURN
+export EPICS_DEVICE
 
 # We use the python library to construct the .db file
 $(COMMON_DIR)/%.db: ../%.py $(wildcard ../*.py)
