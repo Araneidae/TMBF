@@ -1,9 +1,10 @@
+%   ftun = tmbf_capture_ftun(tmbf, count, [progress_bar])
 % Captures given number of points of Tune PLL data.  Will hang if not running.
-function ftun = tmbf_capture_ftun(tmbf, count)
+function ftun = tmbf_capture_ftun(tmbf, count, varargin)
     pv = [tmbf ':FTUN:FREQ'];
     lcaSetMonitor(pv);
 
-    bar = progress_bar('Fetching data');
+    bar = progress_bar('Fetching data', varargin{:});
 
     ftun = [];
     while length(ftun) < count

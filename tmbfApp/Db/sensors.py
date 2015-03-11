@@ -105,8 +105,6 @@ trigger_pvs.append(
 Trigger('SE', *trigger_pvs)
 
 longOut('SE:TEMP', 30, 60, 'deg', DESC = 'Target temperature')
-longOut('SE:TEMP:KP', DESC = 'Fan controller KP')
-longOut('SE:TEMP:KI', DESC = 'Fan controller KI')
 
 
 

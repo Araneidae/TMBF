@@ -2,6 +2,13 @@
 
 # Simple script for setting the TMBF into the appropriate tune measurement
 # mode.
+#
+# This script is called from the front panel screen with the device name and one
+# of the following three actions:
+#
+#   TUNE    Tune Only           Tune measurement, no feedback
+#   AP      Tune Special        Multibunch tune only measurement
+#   FB      Feedback On & Tune  Feedback and tune measurement, normal operation
 
 from pkg_resources import require
 require('cothread')
@@ -19,10 +26,10 @@ DEFAULT_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
 DEVICE_TO_AXIS = {
     'SR23C-DI-TMBF-01': 'X',
     'SR23C-DI-TMBF-02': 'Y',
-    'TS-DI-TMBF-01': 'X',
+    'TS-DI-TMBF-01': 'T',
 }
 
-VALID_SETUPS = ['TUNE', 'AP', 'SBFB']
+VALID_MODES = ['TUNE', 'AP', 'FB']
 
 
 def put(pv, value):
@@ -35,9 +42,13 @@ def get(pv, **kargs):
     return catools.caget('%s:%s' % (DEVICE, pv), **kargs)
 
 def get_config(config, key):
+    if AXIS == 'T':
+        key = '%s_%s' % (AXIS, key)
+    else:
+        key = '%s_%s_%s' % (AXIS, key, RING_MODE)
     try:
-        return config['%s_%s_%s' % (AXIS, key, RING_MODE)]
-    except:
+        return getattr(config, key)
+    except AttributeError:
         print >>sys.stderr, 'Configuration for %s:%s in mode %s not found' % (
             AXIS, key, RING_MODE)
         raise
@@ -55,24 +66,16 @@ def compute_filter_size(tune):
                 filter = (cycles, length)
     return filter
 
-def apply_overrides(config_key):
+def apply_overrides(setup, config_key):
     match = config_key + '_'
     l = len(match)
-    for key in globals().keys():
+    for key in dir(setup):
         if key[:l] == match:
-            print 'override:', key, globals().get(key[l:]), '<=', globals()[key]
-            globals()[key[l:]] = globals()[key]
-
-def update_globals(config, setup):
-    # Use settings in config file to override defaults set here.
-    globals().update(config)
-
-    # Apply any ring mode/axis specific overrides (should only pick up cycles
-    # and length overrides).
-    apply_overrides('%s_%s' % (AXIS, RING_MODE))
-
-    # Apply setup specific overrides.
-    apply_overrides(setup)
+            print 'override: [%s] %s %s <= %s' % (
+                key[:l], key[l:],
+                getattr(setup, key[l:], None), getattr(setup, key))
+            setattr(setup, key[l:], getattr(setup, key))
+            delattr(setup, key)
 
 
 # ------------------------------------------------------------------------------
@@ -93,19 +96,20 @@ parser.add_argument(
     '-t', dest = 'tune', default = None, type = float,
     help = 'Specify tune, otherwise config file will be consulted')
 parser.add_argument('device', help = 'TMBF device name to configure')
-parser.add_argument('setup',
-    help = 'Configuration setup, must be one of TUNE, AP, SBFB')
+parser.add_argument('mode',
+    help = 'Configuration mode, must be one of %s' % ', '.join(VALID_MODES))
 args = parser.parse_args()
 
-SETUP = args.setup
-
+MODE = args.mode
+CONFIG_FILE = args.config
 DEVICE = args.device
+
 try:
     AXIS = DEVICE_TO_AXIS[DEVICE]
 except:
     parser.error('Device \'%s\' not known' % DEVICE)
-if SETUP not in VALID_SETUPS:
-    parser.error('Setup mode \'%s\' is invalid' % SETUP)
+if MODE not in VALID_MODES:
+    parser.error('Setup mode \'%s\' is invalid' % MODE)
 
 if args.debug:
     def put(pv, value):
@@ -123,77 +127,33 @@ N_TAPS = get('FIR:N_TAPS')
 BUNCH_COUNT = get('BUNCHES')
 
 
-# Load the specified configuration file.  This contains overrides for the
-# globals below together with settings for the mode specific default tune in a
-# backwards compatible format.
-CONFIG_FILE = args.config
-CONFIG = {}
-execfile(CONFIG_FILE, {}, CONFIG)
+# ------------------------------------------------------------------------------
+# Assemble final configuration to apply
+
+# Load setup defaults
+import setup_defaults as setup
+
+# Load the specified configuration file and use definitions to override the
+# default setup.  This contains overrides for the globals below together with
+# settings for the mode specific default tune in a backwards compatible format.
+config = {}
+execfile(CONFIG_FILE, {}, config)
+setup.__dict__.update(config)
 
 # Load tune from config file in its strange compatibility format
 if args.tune is None:
-    tune = float('0.%04d' % get_config(CONFIG, 'tune'))
+    setup.tune = 1e-4 * float(get_config(setup, 'tune'))
 else:
-    tune = args.tune
-cycles, length = compute_filter_size(tune)
+    setup.tune = args.tune
+setup.cycles, setup.length = compute_filter_size(setup.tune)
 
 
-# ------------------------------------------------------------------------------
-# Defaults and configuration
+# Apply mode specific overrides.
+apply_overrides(setup, MODE)
 
-harmonic = 80
-bunch = 450
-
-# Settings for basic tune measurement.
-tune_threshold = 0.3
-min_block_sep = 20
-min_block_len = 20
-
-# Settings for peak tune measurement
-peak_smoothing = '/16'
-peak_fit_threshold = 0.3
-peak_max_error = 1
-peak_min_width = 0
-peak_max_width = 1
-
-# Default tune selection
-tune_select = 'Basic'
-
-sweep_dwell_time = 100
-
-blanking_interval = 10000
-blanking_source = 'SCLK Input'
-
-sweep_range = 0.05
-alarm_range = 0.01
-tune_direction = 'Forwards'
-keep_feedback = 'No feedback'
-
-dac_output = 0                # By default DAC output is off
-bunch_mode = 'All Bunches'    # By default detect on all bunches
-detector_input = 'FIR'
-
-
-# Multibunch tune measurement
-TUNE_sweep_gain = '-42dB'
-
-# Feedback on, single bunch tune measurement
-SBFB_sweep_gain = '-24dB'
-SBFB_dac_output = 1    # Enable FIR output in this mode
-SBFB_bunch_mode = 'Single Bunch'
-SBFB_harmonic = 0
-
-# Accelerator physics mode
-AP_sweep_gain = '0dB'
-AP_tune = 0.25
-AP_sweep_range = 0.245
-AP_alarm_range = 0.245
-AP_detector_input = 'ADC'
-AP_min_block_len = 5
-
-
-# Apply configuration and mode specific settings
-update_globals(CONFIG, SETUP)
+# Apply any ring mode/axis specific overrides.
+apply_overrides(setup, '%s_%s' % (AXIS, RING_MODE))
+apply_overrides(setup, AXIS)
 
 
 # ------------------------------------------------------------------------------
@@ -215,20 +175,20 @@ put('TRG:BUF:RESET_S.PROC', 0)
 put('SEQ:RESET_S.PROC', 0)
 
 # Configure FIR as selected
-put('FIR:0:LENGTH_S', length)
-put('FIR:0:CYCLES_S', cycles)
+put('FIR:0:LENGTH_S', setup.length)
+put('FIR:0:CYCLES_S', setup.cycles)
 put('FIR:0:USEWF_S', 'Settings')
 put('FIR:GAIN_S', '-42dB')
 
 # Configure bunch bank #0 for FIR and selected operation
 putwf('BUN:0:FIRWF_S', 0)
-putwf('BUN:0:OUTWF_S', dac_output)
+putwf('BUN:0:OUTWF_S', setup.dac_output)
 putwf('BUN:0:GAINWF_S', 1)
 
 # Configure sequencer
 put('SEQ:1:HOLDOFF_S', 2)
-put('SEQ:1:DWELL_S', sweep_dwell_time)
-put('SEQ:1:GAIN_S', sweep_gain)
+put('SEQ:1:DWELL_S', setup.sweep_dwell_time)
+put('SEQ:1:GAIN_S', setup.sweep_gain)
 put('SEQ:1:ENWIN_S', 'Windowed')
 put('SEQ:1:BLANK_S', 'Blanking')
 
@@ -237,46 +197,47 @@ put('SEQ:SUPER:COUNT_S', 1)
 put('SEQ:SUPER:RESET_S', 0)
 
 # Configure detector
-put('DET:MODE_S', bunch_mode)
+put('DET:MODE_S', setup.bunch_mode)
 put('DET:AUTOGAIN_S', 'Autogain')
-put('DET:INPUT_S', detector_input)
+put('DET:INPUT_S', setup.detector_input)
 put('DET:LOOP:ADC_S', 1)
 
 # Configure tune measurement
-put('TUNE:HARMONIC_S', harmonic)
-put('TUNE:CENTRE_S', tune)
-put('TUNE:RANGE_S', sweep_range)
-put('TUNE:ALARM_S', alarm_range)
-put('TUNE:BUNCH_S', bunch)
-put('TUNE:DIRECTION_S', tune_direction)
-put('TUNE:FEEDBACK_S', keep_feedback)
+put('TUNE:HARMONIC_S', setup.harmonic)
+put('TUNE:CENTRE_S', setup.tune)
+put('TUNE:RANGE_S', setup.sweep_range)
+put('TUNE:ALARM_S', setup.alarm_range)
+put('TUNE:BUNCH_S', setup.bunch)
+put('TUNE:DIRECTION_S', setup.tune_direction)
+put('TUNE:FEEDBACK_S', setup.keep_feedback)
 # This configures the entire tune sweep with the parameters above and sets up
 # triggering correctly.
 put('TUNE:SET_S.PROC', 0)
 
 # Basic tune measurement settings
-put('TUNE:BLK:LEN_S', min_block_len)
-put('TUNE:BLK:SEP_S', min_block_sep)
-put('TUNE:THRESHOLD_S', tune_threshold)
+put('TUNE:BLK:LEN_S', setup.min_block_len)
+put('TUNE:BLK:SEP_S', setup.min_block_sep)
+put('TUNE:THRESHOLD_S', setup.tune_threshold)
 
 # Peak tune measurement settings
-put('PEAK:SEL_S', peak_smoothing)
-put('PEAK:THRESHOLD_S', peak_fit_threshold)
-put('PEAK:FITERROR_S', peak_max_error)
-put('PEAK:MINWIDTH_S', peak_min_width)
-put('PEAK:MAXWIDTH_S', peak_max_width)
+put('PEAK:SEL_S', setup.peak_smoothing)
+put('PEAK:THRESHOLD_S', setup.peak_fit_threshold)
+put('PEAK:FITERROR_S', setup.peak_max_error)
+put('PEAK:MINWIDTH_S', setup.peak_min_width)
+put('PEAK:MAXWIDTH_S', setup.peak_max_width)
 
-put('TUNE:SELECT_S', tune_select)
+put('TUNE:SELECT_S', setup.tune_select)
 
 # Configure blanking
 put('TRG:BUF:EXT:BL_S', 'All')
-put('TRG:BLANKING:SOURCE_S', blanking_source)
-put('TRG:BLANKING_S', blanking_interval)
+put('TRG:BLANKING:SOURCE_S', setup.blanking_source)
+put('TRG:BLANKING_S', setup.blanking_interval)
 
 put('TRG:SYNC_S', 'Separate')
 
 # Now we can go!
 put('DAC:ENABLE_S', 'On')
 put('TRG:BUF:ARM_S.PROC', 0)
+
 
 # vim: set filetype=python:

@@ -13,7 +13,7 @@
 %
 %   ok = bar.cancelled()
 %       Returns false if the cancel bar has been pressed, does not update bar.
-function bar = progress_bar(title)
+function bar = progress_bar(title, use_desktop)
     function ok = advance_waitbar(bar, fraction)
         waitbar(fraction, bar.wb);
         ok = ~getappdata(bar.wb, 'cancelling');
@@ -24,8 +24,12 @@ function bar = progress_bar(title)
         ok = true;
     end
 
+    if ~exist('use_desktop', 'var')
+        use_desktop = usejava('desktop');
+    end
+
     bar = {};
-    if usejava('desktop')
+    if use_desktop
         bar.wb = waitbar(0, title, ...
             'CreateCancelBtn', 'setappdata(gcbf,''cancelling'',1)');
         bar.cleanup = onCleanup(@() delete(bar.wb));
