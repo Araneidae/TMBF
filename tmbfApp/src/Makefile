@@ -66,6 +66,7 @@ tmbf_DBD += epics_device.dbd
 tmbf_SRCS += tmbf_registerRecordDeviceDriver.c
 tmbf_SRCS += tmbfMain.c         # Entry point and initialisation
 tmbf_SRCS += numeric.c          # Some fast numerical algorithsm
+tmbf_SRCS += config_file.c      # Parse configuration file
 
 # Hardware interfacing
 tmbf_SRCS += hardware.c         # Interface to FPGA
