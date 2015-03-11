@@ -8,7 +8,7 @@ def BunchWaveforms(bank, name, FTVL, desc):
     name = 'BUN:%d:%s' % (bank, name)
     status = stringIn('%s:STA' % name,
         DESC = 'Bank %d %s status' % (bank, name))
-    WaveformOut(name + '_S', BUNCHES_PER_TURN, FTVL,
+    WaveformOut(name, BUNCHES_PER_TURN, FTVL, address = name + '_S',
         FLNK = status, DESC = 'Set %d %s' % (bank, desc))
 
 

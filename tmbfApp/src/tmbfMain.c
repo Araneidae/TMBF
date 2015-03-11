@@ -89,7 +89,7 @@ static void at_exit(int sig)
 
 /* Set up basic signal handling environment.  We configure four shutdown
  * signals (HUP, INT, QUIT and TERM) to call AtExit(). */
-static bool InitialiseSignals(void)
+static bool initialise_signals(void)
 {
     struct sigaction action = {
         .sa_handler = at_exit, .sa_flags = 0 };
@@ -282,17 +282,14 @@ int main(int argc,char *argv[])
         ProcessOptions(&argc, &argv) &&
         TEST_OK_(argc == 0, "Unexpected extra arguments")  &&
 
-        initialise_persistent_state(
-            persistence_state_file, persistence_interval)  &&
         initialise_hardware(hardware_config_file, FPGA_VERSION)  &&
-        InitialiseSignals()  &&
+        initialise_signals()  &&
 
         initialise_epics_device()  &&
-        initialise_epics_extra()  &&
-
         initialise_subsystems()  &&
 
-        DO(load_persistent_state())  &&
+        load_persistent_state(
+            persistence_state_file, persistence_interval, false)  &&
         initialise_epics();
 
     if (Ok)
