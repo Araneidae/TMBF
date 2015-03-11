@@ -23,7 +23,6 @@ include $(TOP)/configure/RULES
 
 include $(TOP)/install_d/CONFIG
 
-export IOCBUILDER
 export BUNCHES_PER_TURN
 export EPICS_DEVICE
 

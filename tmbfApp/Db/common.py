@@ -1,11 +1,13 @@
 # Common definitions for all TMBF records
 
-import os
+import sys, os
 
-# It is important to import support before importing iocbuilder, as the support
-# module initialises iocbuilder (and determines which symbols it exports!)
-from support import *
-from iocbuilder import *
+sys.path.append(os.environ['EPICS_DEVICE'])
+
+from epics_device import *
+
+SetTemplateRecordNames()
+
 
 KB = 1024
 MB = KB * KB
