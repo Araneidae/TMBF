@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
@@ -36,7 +35,7 @@ static bool skip_whitespace(const char **string)
 
 static bool read_char(const char **string, char ch)
 {
-    return **string == ch  &&  DO_(*string += 1);
+    return **string == ch  &&  DO(*string += 1);
 }
 
 static bool parse_char(const char **string, char ch)
@@ -49,7 +48,7 @@ static bool parse_int(const char **string, int *variable)
     errno = 0;
     const char *start = *string;
     char *end;
-    *variable = strtol(start, &end, 10);
+    *variable = (int) strtol(start, &end, 10);
     *string = end;
     return TEST_OK_(end > start  &&  errno == 0, "Error converting number");
 }
@@ -57,8 +56,8 @@ static bool parse_int(const char **string, int *variable)
 
 static bool parse_name(const char **string, char *name, size_t length)
 {
-    bool ok = TEST_OK_(isalpha(**string), "Not a valid name");
-    while (ok  &&  (isalnum(**string)  ||  **string == '_'))
+    bool ok = TEST_OK_(isalpha((unsigned int) **string), "Not a valid name");
+    while (ok  &&  (isalnum((unsigned int) **string)  ||  **string == '_'))
     {
         *name++ = *(*string)++;
         length -= 1;
@@ -104,12 +103,12 @@ static bool do_parse_line(
     size_t ix = 0;
     bool ok =
         parse_name(&string, name, NAME_LENGTH)  &&
-        DO_(skip_whitespace(&string))  &&
+        DO(skip_whitespace(&string))  &&
         parse_char(&string, '=')  &&
-        DO_(skip_whitespace(&string))  &&
+        DO(skip_whitespace(&string))  &&
         lookup_name(name, config_table, config_size, &ix)  &&
         parse_int(&string, config_table[ix].result)  &&
-        DO_(skip_whitespace(&string))  &&
+        DO(skip_whitespace(&string))  &&
         parse_eos(&string);
 
     /* Report parse error. */
@@ -121,7 +120,7 @@ static bool do_parse_line(
         /* Perform post parse validation. */
         TEST_OK_(!seen[ix],
             "Parameter %s repeated on line %d", name, line_number)  &&
-        DO_(seen[ix] = true);
+        DO(seen[ix] = true);
 }
 
 

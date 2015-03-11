@@ -429,5 +429,6 @@ bool initialise_tune_follow(void)
     PUBLISH_READER(ai,     "NCO:FREQ", read_nco_freq);
 
     pthread_t thread_id;
-    return TEST_0(pthread_create(&thread_id, NULL, poll_tune_follow, NULL));
+    return TEST_PTHREAD(
+        pthread_create(&thread_id, NULL, poll_tune_follow, NULL));
 }

@@ -37,9 +37,6 @@
 #include "persistence.h"
 
 
-/* External declaration of caRepeater thread.  This should really be published
- * by a standard EPICS header file. */
-extern void caRepeaterThread(void *);
 /* External declaration of DBD binding. */
 extern int tmbf_registerRecordDeviceDriver(struct dbBase *pdbbase);
 
@@ -81,75 +78,6 @@ static bool Interactive = true;
 
 
 
-/* Routine for printing an error message complete with associated file name
- * and line number. */
-void print_error(const char * Message, ...)
-{
-    /* Large enough not to really worry about overflow.  If we do generate a
-     * silly message that's too big, then that's just too bad. */
-    const int MESSAGE_LENGTH = 512;
-    int Error = errno;
-    char ErrorMessage[MESSAGE_LENGTH];
-
-    va_list args;
-    va_start(args, Message);
-    int Count = vsnprintf(ErrorMessage, MESSAGE_LENGTH, Message, args);
-
-    if (Error != 0)
-    {
-        /* This is very annoying: strerror() is not not necessarily thread
-         * safe ... but not for any compelling reason, see:
-         *  http://sources.redhat.com/ml/glibc-bugs/2005-11/msg00101.html
-         * and the rather unhelpful reply:
-         *  http://sources.redhat.com/ml/glibc-bugs/2005-11/msg00108.html
-         *
-         * On the other hand, the recommended routine strerror_r() is
-         * inconsistently defined -- depending on the precise library and its
-         * configuration, it returns either an int or a char*.  Oh dear.
-         *
-         * Ah well.  We go with the GNU definition, so here is a buffer to
-         * maybe use for the message. */
-        char StrError[256];
-        snprintf(ErrorMessage + Count, MESSAGE_LENGTH - (size_t) Count,
-            ": (%d) %s", Error, strerror_r(Error, StrError, sizeof(StrError)));
-    }
-    fprintf(stderr, "%s\n", ErrorMessage);
-}
-
-
-void panic_error(const char *filename, int line)
-{
-    print_error("Unrecoverable error at %s, line %d", filename, line);
-    fflush(stderr);
-    fflush(stdout);
-
-    /* Now try and create useable backtrace. */
-    void *backtrace_buffer[128];
-    int count = backtrace(backtrace_buffer, ARRAY_SIZE(backtrace_buffer));
-    backtrace_symbols_fd(backtrace_buffer, count, STDERR_FILENO);
-    char last_line[128];
-    int char_count = snprintf(last_line, sizeof(last_line),
-        "End of backtrace: %d lines written\n", count);
-    write(STDERR_FILENO, last_line, (size_t) char_count);
-
-    _exit(255);
-}
-
-
-
-/* This routine spawns a caRepeater thread, as recommended by Andrew Johnson
- * (private communication, 2006/12/04).  This means that this IOC has no
- * external EPICS dependencies (otherwise the caRepeater application needs to be
- * run). */
-static bool StartCaRepeater(void)
-{
-    return TEST_NULL(epicsThreadCreate(
-        "CAC-repeater", epicsThreadPriorityLow,
-        epicsThreadGetStackSize(epicsThreadStackMedium),
-        caRepeaterThread, 0));
-}
-
-
 static void at_exit(int sig)
 {
     sem_post(&ShutdownSemaphore);
@@ -161,7 +89,7 @@ static void at_exit(int sig)
 
 /* Set up basic signal handling environment.  We configure four shutdown
  * signals (HUP, INT, QUIT and TERM) to call AtExit(). */
-static bool InitialiseSignals(void)
+static bool initialise_signals(void)
 {
     struct sigaction action = {
         .sa_handler = at_exit, .sa_flags = 0 };
@@ -241,19 +169,17 @@ static void set_prompt(void)
 
 static bool load_database(const char *database)
 {
-    char macros[1024];
-    snprintf(macros, sizeof(macros),
-        "DEVICE=%s,FIR_LENGTH=%d",
-        device_name, hw_read_fir_length());
-    return TEST_EPICS(dbLoadRecords(database, macros));
+    database_add_macro("DEVICE", "%s", device_name);
+    database_add_macro("FIR_LENGTH", "%d", hw_read_fir_length());
+    return database_load_file(database);
 }
 
 static bool initialise_epics(void)
 {
     set_prompt();
     return
-        StartCaRepeater()  &&
-        HookLogging(max_log_array_length)  &&
+        start_caRepeater()  &&
+        hook_pv_logging("db/access.acf", max_log_array_length)  &&
         TEST_EPICS(dbLoadDatabase("dbd/tmbf.dbd", NULL, NULL))  &&
         TEST_EPICS(tmbf_registerRecordDeviceDriver(pdbbase))  &&
         load_database("db/tmbf.db")  &&
@@ -356,17 +282,14 @@ int main(int argc,char *argv[])
         ProcessOptions(&argc, &argv) &&
         TEST_OK_(argc == 0, "Unexpected extra arguments")  &&
 
-        initialise_persistent_state(
-            persistence_state_file, persistence_interval)  &&
         initialise_hardware(hardware_config_file, FPGA_VERSION)  &&
-        InitialiseSignals()  &&
+        initialise_signals()  &&
 
         initialise_epics_device()  &&
-        initialise_epics_extra()  &&
-
         initialise_subsystems()  &&
 
-        DO_(load_persistent_state())  &&
+        load_persistent_state(
+            persistence_state_file, persistence_interval, false)  &&
         initialise_epics();
 
     if (Ok)
@@ -388,7 +311,7 @@ int main(int argc,char *argv[])
     }
 
     if (PidFileName != NULL)
-        TEST_IO(unlink(PidFileName));
+        IGNORE(TEST_IO(unlink(PidFileName)));
 
     return Ok ? 0 : 1;
 }

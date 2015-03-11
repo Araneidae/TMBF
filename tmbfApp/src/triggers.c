@@ -596,5 +596,5 @@ bool initialise_triggers(void)
     PUBLISH_WRITER_P(mbbo, "TRG:BLANKING:SOURCE", hw_write_trg_blanking_source);
 
     pthread_t thread_id;
-    return TEST_0(pthread_create(&thread_id, NULL, monitor_events, NULL));
+    return TEST_PTHREAD(pthread_create(&thread_id, NULL, monitor_events, NULL));
 }

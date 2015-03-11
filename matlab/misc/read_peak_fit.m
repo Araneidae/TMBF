@@ -10,24 +10,37 @@ function fit = decode_fit(data)
     % Decoding structure fields, this code must match the structure definition
     % for peak_fit_result in tune_peaks.c
     %
-    %   start   field                   size
-    %   -----   -----                   ----
-    %   0       peak_count              4
-    %   4       ranges[MAX_PEAKS]       3 * (4 + 4) = 24
-    %   28      (padding)               4
-    %   32      fits[MAX_PEAKS]         3 * (16 + 16) = 96
-    %   128     errors[MAX_PEAKS]       3 * 8 = 24
-    %   152     status[MAX_PEAKS]       3 * 4 = 12
-    %   164     (padding)               4
-    %
-    % One needs to be added to all these fields to create matlab offsets.
+    % The header of this structure contains offsets of the remaining fields.
+    max_peaks     = read_int32(data, 0);
+    count_offset  = read_int32(data, 4);
+    ranges_offset = read_int32(data, 8);
+    fits_offset   = read_int32(data, 12);
+    errors_offset = read_int32(data, 16);
+    status_offset = read_int32(data, 20);
 
     fit = {};
-    fit.count = typecast(data(1:4), 'int32');
-    fit.ranges = reshape(typecast(data(5:28), 'int32'), 2, 3);
-    fits = typecast(data(33:128), 'double');
-    fits = [1 1j] * reshape(fits, 2, 6);
-    fit.fits = reshape(fits, 2, 3);
-    fit.errors = typecast(data(129:152), 'double');
-    fit.status = typecast(data(153:164), 'int32');
+    fit.count = read_int32(data, count_offset);
+    fit.ranges = reshape( ...
+        read_int32_array(data, ranges_offset, 2*max_peaks), 2, []);
+    fit.fits = reshape( ...
+        read_complex_array(data, fits_offset, 2*max_peaks), 2, []);
+    fit.errors = read_double_array(data, errors_offset, max_peaks);
+    fit.status = read_int32_array(data, status_offset, max_peaks);
+end
+
+function result = read_int32(data, offset)
+    result = typecast(data(offset+1:offset+4), 'int32');
+end
+
+function result = read_int32_array(data, offset, length)
+    result = typecast(data(offset+1:offset+4*length), 'int32');
+end
+
+function result = read_double_array(data, offset, length)
+    result = typecast(data(offset+1:offset+8*length), 'double');
+end
+
+function result = read_complex_array(data, offset, length)
+    result = [1 1i] * reshape( ...
+        read_double_array(data, offset, 2*length), 2, []);
 end

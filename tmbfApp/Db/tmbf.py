@@ -24,4 +24,4 @@ Action('REBOOT', DESC = 'Reboot IOC')
 records.longin('BUNCHES', VAL = BUNCHES_PER_TURN, PINI = 'YES',
     DESC = 'Bunches per machine revolution')
 
-WriteRecords(sys.argv[1])
+WriteRecords(sys.argv[1], Disclaimer(__file__))

@@ -115,7 +115,7 @@ unsigned int Reciprocal(unsigned int D, int *shift)
         /* Get our first 8 significant bits by table lookup.  We use a nice
          * small table to ensure a small cache footprint (256 bytes). */
         unsigned int A = (D >> 23) & 0xff;
-        unsigned int X = 0x80000000 | (DivideLookup[A] << 23);
+        unsigned int X = 0x80000000 | ((unsigned int) DivideLookup[A] << 23);
 
         /* We repeat the calculation x' = x * (2 - D * x), working in fixed
          * point with X = 2^63 x; this means we really want to calculate
@@ -176,7 +176,7 @@ unsigned int Denormalise(unsigned int X, int shift)
             if (X == 0)
                 return 0;
             else
-                return ULONG_MAX;
+                return UINT_MAX;
     else if (shift < 32)
         /* The normal case. */
         return X >> shift;
@@ -528,7 +528,7 @@ void unsigned_fixed_to_single(
                 /* Restore the missing fraction bit and return a denormalised
                  * result. */
                 fraction >>= 1;
-                fraction |= 1 << 31;
+                fraction |= 1U << 31;
                 *iresult = (fraction >> (9 - exponent));
             }
         }
@@ -537,7 +537,7 @@ void unsigned_fixed_to_single(
             *iresult = 0x7F800000;
         else
             /* 0 < exponent < 255 -- normal case */
-            *iresult = (exponent << 23) | (fraction >> 9);
+            *iresult = ((uint32_t) exponent << 23) | (fraction >> 9);
     }
 }
 

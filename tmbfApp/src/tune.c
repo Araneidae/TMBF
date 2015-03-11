@@ -169,7 +169,7 @@ struct tune_result_value {
     unsigned int status;
     double tune;
     double phase;
-    epicsAlarmSeverity severity;
+    enum epics_alarm_severity severity;
 };
 
 struct tune_result {
@@ -185,7 +185,7 @@ static void set_tune_result(
 {
     result->status = status;
     if (status == TUNE_OVERFLOW)
-        result->severity = epicsSevMajor;
+        result->severity = epics_sev_major;
     else
     {
         result->tune = tune;
@@ -196,13 +196,13 @@ static void set_tune_result(
             if (fabs(tune - centre_tune) >= alarm_range)
             {
                 result->status = TUNE_RANGE;
-                result->severity = epicsSevMinor;
+                result->severity = epics_sev_minor;
             }
             else
-                result->severity = epicsSevNone;
+                result->severity = epics_sev_none;
         }
         else
-            result->severity = epicsSevInvalid;
+            result->severity = epics_sev_invalid;
     }
 }
 
@@ -229,8 +229,8 @@ static void compute_tune_result(
         set_tune_result(&result->value, status, tune, phase);
     }
 
-    trigger_record(result->tune_pv,  result->value.severity, NULL);
-    trigger_record(result->phase_pv, result->value.severity, NULL);
+    set_record_severity(result->tune_pv,  result->value.severity);
+    set_record_severity(result->phase_pv, result->value.severity);
 }
 
 
@@ -240,8 +240,8 @@ static void copy_tune_result(
     struct tune_result_value *src, struct tune_result *dest)
 {
     dest->value = *src;
-    trigger_record(dest->tune_pv,  dest->value.severity, NULL);
-    trigger_record(dest->phase_pv, dest->value.severity, NULL);
+    set_record_severity(dest->tune_pv,  dest->value.severity);
+    set_record_severity(dest->phase_pv, dest->value.severity);
 }
 
 

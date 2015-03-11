@@ -413,10 +413,10 @@ static bool UdpExchange(
             /* Fail if select timed out. */
             sel > 0  &&
             /* Read can fail, and we don't actually want to log this. */
-            DO_(rx = recv(sock, rx_buffer, *rx_length, 0))  &&
+            DO(rx = recv(sock, rx_buffer, *rx_length, 0))  &&
             rx != -1;
 
-        TEST_IO(close(sock));
+        IGNORE(TEST_IO(close(sock)));
     }
 
     *rx_length = Ok ? (size_t) rx : 0;
@@ -529,7 +529,7 @@ static void write_device(const char *device, int value)
     FILE *output = fopen(device, "w");
     if (TEST_NULL(output))
     {
-        TEST_OK(fprintf(output, "%d", value) > 0);
+        fprintf(output, "%d", value);
         fclose(output);
     }
 }
@@ -669,5 +669,5 @@ bool initialise_sensors(void)
     pthread_t thread_id;
     return
         InitialiseRamfsUsage()  &&
-        TEST_0(pthread_create(&thread_id, NULL, sensors_thread, NULL));
+        TEST_PTHREAD(pthread_create(&thread_id, NULL, sensors_thread, NULL));
 }

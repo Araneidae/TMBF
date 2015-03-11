@@ -32,6 +32,11 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
     title('First fits')
 
     subplot 224
+    % Need to recompute the fits going into the second fit: sort the fits in
+    % descending order of area and extract the largest peaks.
+    areas = abs(first_fits(1,:)).^2 ./ -imag(first_fits(2,:));
+    [areas, ix] = sort(areas, 2, 'descend');
+    first_fits = first_fits(:, ix(1:size(second_fits, 2)));
     plot_result(s, iq, second, first_fits, 0)
     title('Second fits')
 end
