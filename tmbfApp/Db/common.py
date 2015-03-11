@@ -6,6 +6,7 @@ sys.path.append(os.environ['EPICS_DEVICE'])
 
 from epics_device import *
 
+set_MDEL_default(-1)
 SetTemplateRecordNames()
 
 
