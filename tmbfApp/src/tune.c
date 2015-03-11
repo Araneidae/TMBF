@@ -169,7 +169,7 @@ struct tune_result_value {
     unsigned int status;
     double tune;
     double phase;
-    epicsAlarmSeverity severity;
+    enum epics_alarm_severity severity;
 };
 
 struct tune_result {
@@ -185,7 +185,7 @@ static void set_tune_result(
 {
     result->status = status;
     if (status == TUNE_OVERFLOW)
-        result->severity = epicsSevMajor;
+        result->severity = epics_sev_major;
     else
     {
         result->tune = tune;
@@ -196,13 +196,13 @@ static void set_tune_result(
             if (fabs(tune - centre_tune) >= alarm_range)
             {
                 result->status = TUNE_RANGE;
-                result->severity = epicsSevMinor;
+                result->severity = epics_sev_minor;
             }
             else
-                result->severity = epicsSevNone;
+                result->severity = epics_sev_none;
         }
         else
-            result->severity = epicsSevInvalid;
+            result->severity = epics_sev_invalid;
     }
 }
 
