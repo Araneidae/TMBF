@@ -57,7 +57,7 @@ static void update_taps(struct fir_bank *bank)
     int taps[fir_filter_length];
     float_array_to_int(fir_filter_length, bank->current_taps, taps, 16, 0);
     hw_write_fir_taps(bank->index, taps);
-    trigger_record(bank->taps_waveform, 0, NULL);
+    trigger_record(bank->taps_waveform);
 }
 
 

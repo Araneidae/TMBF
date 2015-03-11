@@ -229,8 +229,8 @@ static void compute_tune_result(
         set_tune_result(&result->value, status, tune, phase);
     }
 
-    trigger_record(result->tune_pv,  result->value.severity, NULL);
-    trigger_record(result->phase_pv, result->value.severity, NULL);
+    set_record_severity(result->tune_pv,  result->value.severity);
+    set_record_severity(result->phase_pv, result->value.severity);
 }
 
 
@@ -240,8 +240,8 @@ static void copy_tune_result(
     struct tune_result_value *src, struct tune_result *dest)
 {
     dest->value = *src;
-    trigger_record(dest->tune_pv,  dest->value.severity, NULL);
-    trigger_record(dest->phase_pv, dest->value.severity, NULL);
+    set_record_severity(dest->tune_pv,  dest->value.severity);
+    set_record_severity(dest->phase_pv, dest->value.severity);
 }
 
 
