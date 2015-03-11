@@ -292,20 +292,20 @@ enum sync_action { SYNC_ACTION_RESET, SYNC_ACTION_SYNC } sync_action;
 /* Called from bunch synchronisation thread to block until action requested. */
 static enum sync_action wait_for_sync_action(void)
 {
-    ASSERT_0(pthread_mutex_lock(&bunch_sync_mutex));
-    ASSERT_0(pthread_cond_wait(&bunch_sync_signal, &bunch_sync_mutex));
+    ASSERT_PTHREAD(pthread_mutex_lock(&bunch_sync_mutex));
+    ASSERT_PTHREAD(pthread_cond_wait(&bunch_sync_signal, &bunch_sync_mutex));
     enum sync_action action = sync_action;
-    ASSERT_0(pthread_mutex_unlock(&bunch_sync_mutex));
+    ASSERT_PTHREAD(pthread_mutex_unlock(&bunch_sync_mutex));
     return action;
 }
 
 /* Requests specified action from bunch synchronisation thread. */
 static void request_sync_action(enum sync_action action)
 {
-    ASSERT_0(pthread_mutex_lock(&bunch_sync_mutex));
+    ASSERT_PTHREAD(pthread_mutex_lock(&bunch_sync_mutex));
     sync_action = action;
-    ASSERT_0(pthread_cond_signal(&bunch_sync_signal));
-    ASSERT_0(pthread_mutex_unlock(&bunch_sync_mutex));
+    ASSERT_PTHREAD(pthread_cond_signal(&bunch_sync_signal));
+    ASSERT_PTHREAD(pthread_mutex_unlock(&bunch_sync_mutex));
 }
 
 
@@ -471,7 +471,8 @@ static bool publish_bunch_sync(void)
     PUBLISH_READER(stringin, "BUN:MODE", read_feedback_mode);
 
     pthread_t thread_id;
-    return TEST_0(pthread_create(&thread_id, NULL, bunch_sync_thread, NULL));
+    return TEST_PTHREAD(
+        pthread_create(&thread_id, NULL, bunch_sync_thread, NULL));
 }
 
 

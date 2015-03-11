@@ -175,7 +175,7 @@ bool read_ddr_turns(ssize_t start, size_t turns, int16_t *result)
     bool ok =
         start_buffer_transfer(start * ATOMS_PER_TURN, 1, count)  &&
 
-        DO_(FOR_FIFO_ATOMS(atoms_read, count, result)
+        DO(FOR_FIFO_ATOMS(atoms_read, count, result)
             result += atoms_read * SAMPLES_PER_ATOM)  &&
         TEST_OK_(count == 0, "Incomplete DDR buffer read: %zu", count);
     UNLOCK();
@@ -195,7 +195,7 @@ bool read_ddr_bunch(ssize_t start, size_t bunch, size_t turns, int16_t *result)
             start * ATOMS_PER_TURN + (ssize_t) bunch / SAMPLES_PER_ATOM,
             ATOMS_PER_TURN, turns)  &&
 
-        DO_(FOR_FIFO_ATOMS(atoms_read, turns, buffer)
+        DO(FOR_FIFO_ATOMS(atoms_read, turns, buffer)
             for (size_t i = 0; i < atoms_read; i ++)
                 *result++ = buffer[i * SAMPLES_PER_ATOM + offset])  &&
         TEST_OK_(turns == 0, "Incomplete DDR buffer read: %zu", turns);
@@ -218,5 +218,5 @@ bool initialise_ddr(void)
         TEST_IO(fifo = mmap(
             0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
             mem, HISTORY_FIFO_IOBASE))  &&
-        DO_(purge_read_buffer());
+        DO(purge_read_buffer());
 }

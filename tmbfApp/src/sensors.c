@@ -413,7 +413,7 @@ static bool UdpExchange(
             /* Fail if select timed out. */
             sel > 0  &&
             /* Read can fail, and we don't actually want to log this. */
-            DO_(rx = recv(sock, rx_buffer, *rx_length, 0))  &&
+            DO(rx = recv(sock, rx_buffer, *rx_length, 0))  &&
             rx != -1;
 
         IGNORE(TEST_IO(close(sock)));
@@ -669,5 +669,5 @@ bool initialise_sensors(void)
     pthread_t thread_id;
     return
         InitialiseRamfsUsage()  &&
-        TEST_0(pthread_create(&thread_id, NULL, sensors_thread, NULL));
+        TEST_PTHREAD(pthread_create(&thread_id, NULL, sensors_thread, NULL));
 }

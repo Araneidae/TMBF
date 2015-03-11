@@ -292,7 +292,7 @@ int main(int argc,char *argv[])
 
         initialise_subsystems()  &&
 
-        DO_(load_persistent_state())  &&
+        DO(load_persistent_state())  &&
         initialise_epics();
 
     if (Ok)
