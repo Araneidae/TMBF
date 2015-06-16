@@ -4,6 +4,7 @@
 O.*
 *.pyc
 *~
+/tryout-image
 
 /images
 /unused

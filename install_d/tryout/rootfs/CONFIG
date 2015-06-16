@@ -1,0 +1,49 @@
+# Definitions for Libera XCEP board
+
+TOOLCHAIN = arm-xscale
+
+CFLAGS = -O2 -mthumb
+
+ROOTFS_VERSION = ALBA TMBF Test System
+
+
+PACKAGES += busybox
+PACKAGES += ntp dropbear portmap
+PACKAGES += strace lsof
+
+TERMS = xterm xterm-color screen vt100 vt102
+
+# Dropbear configuration
+CFLAGS_dropbear = -O2
+DROPBEAR_KEYS = $(foreach key,dss rsa,$(configdir)/dropbear_$(key)_host_key)
+INETD_ENABLE = y
+
+
+# Kernel configuration
+CONSOLE_BAUD = 115200
+CONSOLE_TTY = ttyS0
+BOOTARGS = console=$(CONSOLE_TTY),$(CONSOLE_BAUD) mem=64M
+QUOTE_BOOTARGS = 0
+
+ROOT_PASSWORD = Jungle
+
+
+# Using u-boot to load a ramfs image together with the kernel.
+BOOT_LOADER = u-boot
+BOOT = initramfs
+MKIMAGE = /dls_sw/targetOS/u-boot/xcep/mkimage
+# TFTP_PREFIX = export/tmbf/
+KERNEL_ADDR = a0001000
+IMAGE_ADDR = a2000000
+
+# Pick up network configuration from u-boot config
+OPTIONS += network-mtd
+
+
+
+final-install:
+	$(install-files) $(configdir)/tmbf-files $(TMBF_BASE)
+	$(install) tmbf_ioc /etc
+	$(install) -f $(FPGA_IMAGE) /opt/lib/tmbf.bin
+
+# vim: set filetype=make:

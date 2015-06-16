@@ -1,0 +1,24 @@
+LINUX_VERSION = 2.6.30.10
+
+MD5_SUM_2.6.30.10 = eb6be465f914275967a5602cb33662f5
+
+PATCHES-2.6.30.10 = \
+    0001-Support-high-precision-ADM1023-remote-sensor.patch \
+    0002-Add-low_power-support-for-adm1021-driver.patch \
+    0003-XCEP-PXA255-Processor-Board.patch \
+    0004-Resize-XCEP-kernel-partition-to-accomodate-a-current.patch
+
+
+PATCHES = $(PATCHES-$(LINUX_VERSION):%=patches-$(LINUX_VERSION)/%)
+
+CONFIG = config-$(LINUX_VERSION)
+
+ARCH = arm
+TOOLCHAIN_VERSION = gcc-4.3.2-glibc-2.7
+COMPILER_PREFIX = arm-xscale-linux-gnueabi
+
+# Build a uImage target using u-boot's mkimage
+BUILD_TARGET = uImage
+PATH := $(PATH):$(U_BOOT_TOP)
+
+# vim: set filetype=make:

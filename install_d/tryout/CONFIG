@@ -1,0 +1,21 @@
+# Configuration for building tryout rootfs.
+
+# Rootfs builder used to assemble root file system
+ROOTFS_TOP = /dls_sw/prod/targetOS/rootfs/1-4
+
+# FPGA image to install in target build
+FPGA_IMAGE = /dls_sw/prod/hardware/LiberaBBFP/v3.00.0/neutrino_hbpp_top.bin
+
+# Temporary workspace for rootfs build
+BUILD_ROOT = /scratch/tmp/tmbf
+
+# Kernel
+KERNEL_NAME = uImage-libera-2.6.30.10-dls
+
+# Tools needed to build kernel
+U_BOOT_TOP = /dls_sw/targetOS/u-boot/xcep-dls-2
+BINUTILS_DIR = /dls_sw/targetOS/x-tools/$(TOOLCHAIN_VERSION)/$(COMPILER_PREFIX)
+include $(ROOTFS_TOP)/toolchains/arm-xscale
+
+
+# vim: set filetype=make:
