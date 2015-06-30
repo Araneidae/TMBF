@@ -10,6 +10,7 @@
 #include "error.h"
 #include "hardware.h"
 #include "detector.h"
+#include "cholesky.h"
 
 #include "tune_support.h"
 
@@ -139,6 +140,7 @@ void index_to_tune(
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Fitting one-pole model to IQ. */
 
+#define INCLUDE_FIT_OFFSET
 
 /* Fitting one pole filter to IQ data.  Given waveforms scale[] and wf[],
  * which we write here as s[] and iq[], this function computes complex
@@ -186,6 +188,7 @@ void index_to_tune(
  * where
  *      D = S(2) S(2 |iq|^2) - |S(w iq)|^2
  */
+#ifndef INCLUDE_FIT_OFFSET
 static bool fit_one_pole(
     unsigned int length, const double scale[], const double complex iq[],
     const double weights[], struct one_pole *fit)
@@ -220,6 +223,64 @@ static bool fit_one_pole(
     }
     else
         return false;
+}
+#else
+static bool fit_one_pole(
+    unsigned int length, const double scale[], const double complex iq[],
+    const double weights[], struct one_pole *fit)
+{
+    /* Compute the components of M^H W M and M^H W y. */
+    double S_w = 0;                     // S(w)
+    double complex S_w_iq = 0;          // S(w iq)
+    double S_w_iq2 = 0;                 // S(w |iq|^2)
+    double S_w_s = 0;                   // S(w s)
+    double S_w_s2 = 0;                  // S(w s^2)
+    double complex S_w_s_iq = 0;        // S(w s iq)
+    double S_w_s_iq2 = 0;               // S(w s |iq|^2)
+    double S_w_s2_iq = 0;               // S(w s^2 |iq|)
+
+    /* Offset s to help with numerical fit. */
+    double s0 = 0.5 * (scale[0] + scale[length-1]);
+
+    for (unsigned int i = 0; i < length; i ++)
+    {
+        double w = weights[i];
+        S_w += w;
+        double complex w_iq = w * iq[i];
+        double w_iq2        = w * cabs2(iq[i]);
+        S_w_iq    += w_iq;
+        S_w_iq2   += w_iq2;
+        double s = scale[i] - s0;
+        double s2 = s * s;
+        S_w_s     += w * s;
+        S_w_s2    += w * s2;
+        S_w_s_iq  += s * w_iq;
+        S_w_s_iq2 += s * w_iq2;
+        S_w_s2_iq += s2 * w_iq;
+    }
+
+    /* Assemble fit matrix. */
+    double diag[3] = { S_w, S_w_iq2, S_w_s2 };
+    double complex body[3] = { conj(S_w_iq), S_w_s, S_w_s_iq };
+    double complex vector[3] = { S_w_s_iq, S_w_s_iq2, S_w_s2_iq };
+
+    /* Perform the raw fit. */
+    double complex result[3];
+    cholesky_solve(3, diag, body, vector, result);
+
+    /* Extract result into fit. */
+    fit->a = result[0] + result[1] * result[2];
+    fit->b = result[1] + s0;
+    fit->c = result[2];
+
+    return true;
+}
+#endif
+
+
+static double complex peak_eval(const struct one_pole *fit, double f)
+{
+    return fit->a / (f - fit->b);
 }
 
 

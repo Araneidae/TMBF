@@ -5,7 +5,7 @@ from common import *
 MAX_PEAKS = 5
 
 # This needs to match sizeof(struct peak_fit_result) in tune_peaks.c.
-PEAK_FIT_SIZE = 296
+PEAK_FIT_SIZE = 376
 
 
 def peak_readbacks(suffix):

@@ -23,7 +23,7 @@ function fit = decode_fit(data)
     fit.ranges = reshape( ...
         read_int32_array(data, ranges_offset, 2*max_peaks), 2, []);
     fit.fits = reshape( ...
-        read_complex_array(data, fits_offset, 2*max_peaks), 2, []);
+        read_complex_array(data, fits_offset, 3*max_peaks), 3, []);
     fit.errors = read_double_array(data, errors_offset, max_peaks);
     fit.status = read_int32_array(data, status_offset, max_peaks);
 end

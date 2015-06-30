@@ -1,7 +1,7 @@
 /* Helper functions for tune measurement and curve fitting. */
 
 struct peak_range { unsigned int left; unsigned int right; };
-struct one_pole { double complex a; double complex b; };
+struct one_pole { double complex a; double complex b; complex double c; };
 
 
 /* Returns |z|^2, really ought to be in standard C library. */
@@ -34,12 +34,6 @@ static inline double peak_area(const struct one_pole *fit)
 {
     return cabs2(fit->a) / -cimag(fit->b);
 }
-
-static inline double complex peak_eval(const struct one_pole *fit, double f)
-{
-    return fit->a / (f - fit->b);
-}
-
 
 
 /* Returns value of maximum element of array. */

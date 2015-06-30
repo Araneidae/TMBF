@@ -85,6 +85,7 @@ tmbf_SRCS += tune_support.c     # Support library for tune measurement
 tmbf_SRCS += tune_peaks.c       # High level tune peak detection
 tmbf_SRCS += sensors.c          # Miscellaneous system health sensors
 tmbf_SRCS += tune_follow.c      # Support for tune following
+tmbf_SRCS += cholesky.c         # Special matrix inversion support
 
 tmbf_LIBS += epics_device
 tmbf_LIBS += $(EPICS_BASE_IOC_LIBS)

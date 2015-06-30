@@ -6,8 +6,8 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
 
     first_fits = first.fits(:, first.status == 0);
     second_fits = second.fits(:, second.status == 0);
-    m1 = model(s, first_fits);
-    m2 = model(s, second_fits);
+    m1 = model(s, first_fits, 0);
+    m2 = model(s, second_fits, 0);
 
     clf
 
@@ -51,11 +51,11 @@ function plot_result(s, iq, result, first_fit)
         % Plot the thresholded corrected data.  The correction is computed from
         % a combination of the fits successfully completed so far.
         k = [result.fits(:, 1:n-1) first_fit(:, n+1:end)];
-        plot(iq(r) - model(s(r), k), '.')
+        plot(iq(r) - model(s(r), k, 0), '.')
         strings{2*n-1} = sprintf('P%d data', n);
 
         % Plot the resulting model over the fitting range
-        plot(model(s(r), result.fits(:,n)))
+        plot(model(s(r), result.fits(:,n), 1))
         strings{2*n} = sprintf('P%d fit, e: %.3f', n, result.errors(n));
     end
     plot(complex(0), 'x')
@@ -63,11 +63,12 @@ function plot_result(s, iq, result, first_fit)
     axis equal
 end
 
-function z = model(s, fit)
+function z = model(s, fit, add_offset)
     z = zeros(size(s));
     for p = fit
         z = z + p(1) ./ (s - p(2));
     end
+    if add_offset; z = z + p(3); end
 end
 
 % This one is a bit annoying: in some versions of matlab it's not valid to call
