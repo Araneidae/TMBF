@@ -53,6 +53,8 @@ bool fit_quadratic(unsigned int length, const int wf[], double *result);
  * of one pole filters to each peak.  The following parameters are passed:
  *
  * peak_count   Number of peaks to fit (normally up to 3)
+ * threshold    Used to select subset of data by threshold (do we want this?)
+ * refine_fit   Controls existing fits are used to refine data
  * tune_scale   Frequency scale
  * wf_i, wf_q   Raw IQ detector data
  * power        |iq|^2, already calculated for convenience

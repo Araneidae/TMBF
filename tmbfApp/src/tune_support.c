@@ -188,27 +188,21 @@ void index_to_tune(
  */
 static bool fit_one_pole(
     unsigned int length, const double scale[], const double complex iq[],
-    const double *weights, struct one_pole *fit)
+    const double weights[], struct one_pole *fit)
 {
     /* Compute the components of M^H W M and M^H W y. */
+    double S_w = 0;                     // S(w)
     double complex S_w_iq = 0;          // S(w iq)
     double S_w_iq2 = 0;                 // S(w |iq|^2)
     double complex S_w_s_iq = 0;        // S(w s iq)
     double S_w_s_iq2 = 0;               // S(w s |iq|^2)
 
-    double S_w = weights ? 0 : length;  // S(w)
     for (unsigned int i = 0; i < length; i ++)
     {
-        double complex w_iq = iq[i];
-        double w_iq2 = cabs2(w_iq);
-        if (weights)
-        {
-            double w = weights[i];
-            S_w += w;
-            w_iq  *= w;
-            w_iq2 *= w;
-        }
-
+        double w = weights[i];
+        S_w += w;
+        double complex w_iq = w * iq[i];
+        double w_iq2        = w * cabs2(iq[i]);
         S_w_iq    += w_iq;
         S_w_iq2   += w_iq2;
         double s = scale[i];
@@ -321,18 +315,18 @@ static void adjust_iq_with_model(
  * model, and the second factor puts more emphasis on fitting the peak.
  *    Here we compute the weights if requested, using the given workspace which
  * is returned, otherwise NULL is returned. */
-static const double *maybe_compute_weights(
-    unsigned int count, bool compute, double weights[],
-    const double scale[], const struct one_pole *fit)
+static void compute_weights(
+    unsigned int count, bool refine_fit, double weights[],
+    const double scale[], const double complex iq[], const struct one_pole *fit)
 {
-    if (compute)
-    {
+    if (refine_fit)
+        /* Use the model for computing the weights. */
         for (unsigned int i = 0; i < count; i ++)
             weights[i] = 1 / cabs2(scale[i] - fit->b);
-        return weights;
-    }
     else
-        return NULL;
+        /* Use the raw data for weighting the fit. */
+        for (unsigned int i = 0; i < count; i ++)
+            weights[i] = cabs2(iq[i]);
 }
 
 
@@ -367,12 +361,11 @@ unsigned int fit_multiple_peaks(
         /* If performing fit refinement then we need a weights vector, so
          * compute this if necessary. */
         double weights[count];
-        const double *fit_weights =
-            maybe_compute_weights(count, refine_fit, weights, scale, fit);
+        compute_weights(count, refine_fit, weights, scale, iq, fit);
 
         /* Perform the fit, if this fails discard this and all subsequent fit
          * candidates. */
-        if (!fit_one_pole(count, scale, iq, fit_weights, fit))
+        if (!fit_one_pole(count, scale, iq, weights, fit))
             break;
 
         /* Finally compute the fit error. */
