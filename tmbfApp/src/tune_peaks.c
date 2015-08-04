@@ -448,10 +448,9 @@ static void fit_peaks(
     const struct channel_sweep *sweep, const double tune_scale[],
     struct peak_fit_result *peak_fit, bool refine_fit)
 {
-    double threshold = refine_fit ? 0 : peak_fit_threshold;
     unsigned int fit_count = fit_multiple_peaks(
-        peak_fit->peak_count, threshold, refine_fit,
-        tune_scale, sweep->wf_i, sweep->wf_q, sweep->power,
+        peak_fit->peak_count, refine_fit,
+        tune_scale, sweep->wf_i, sweep->wf_q,
         peak_fit->ranges, peak_fit->fits, peak_fit->errors);
 
     for (unsigned int i = 0; i < fit_count; i ++)

@@ -3,7 +3,6 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
     [first, second] = read_peak_fit(tmbf);
     iq = [1 1j] * lcaGet({[tmbf ':TUNE:I']; [tmbf ':TUNE:Q']});
     s = lcaGet([tmbf ':DET:SCALE']);
-    threshold = lcaGet([tmbf ':PEAK:THRESHOLD_S']);
 
     first_fits = first.fits(:, first.status == 0);
     second_fits = second.fits(:, second.status == 0);
@@ -28,7 +27,7 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
     title('Full model fit')
 
     subplot 223
-    plot_result(s, iq, first, [], threshold)
+    plot_result(s, iq, first, [])
     title('First fits')
 
     subplot 224
@@ -37,30 +36,22 @@ function [iq, s, first, second] = plot_peak_fit(tmbf)
     areas = abs(first_fits(1,:)).^2 ./ -imag(first_fits(2,:));
     [areas, ix] = sort(areas, 2, 'descend');
     first_fits = first_fits(:, ix(1:size(second_fits, 2)));
-    plot_result(s, iq, second, first_fits, 0)
+    plot_result(s, iq, second, first_fits)
     title('Second fits')
 end
 
-function range = threshold_range(power, range, threshold)
-    power = power(range);
-    min_iq = max(power) * threshold;
-    range = range(find(power >= threshold * max(power)));
-end
-
-function plot_result(s, iq, result, first_fit, threshold)
+function plot_result(s, iq, result, first_fit)
     hold all
     strings = {};
     power = abs(iq).^2;
     for n = 1:result.count
-        % r is the range of points over which we've done the fit, th_r is the
-        % set of points passing the threshold test.
+        % r is the range of points over which we've done the fit
         r = 1 + (result.ranges(1,n):result.ranges(2,n));
-        th_r = threshold_range(power, r, threshold);
 
         % Plot the thresholded corrected data.  The correction is computed from
         % a combination of the fits successfully completed so far.
         k = [result.fits(:, 1:n-1) first_fit(:, n+1:end)];
-        plot(iq(th_r) - model(s(th_r), k), '.')
+        plot(iq(r) - model(s(r), k), '.')
         strings{2*n-1} = sprintf('P%d data', n);
 
         % Plot the resulting model over the fitting range

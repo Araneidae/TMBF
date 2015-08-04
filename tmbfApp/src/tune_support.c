@@ -248,30 +248,6 @@ static double compute_fit_error(
 }
 
 
-/* Given data to process (scale_in, wf_i, wf_q) together with the associated
- * power already computed, and a data range with a threshold, scan the selected
- * data set and extract all points with relative power greater than the given
- * threshold.  Returns the number of points extracted. */
-static unsigned int extract_threshold_data(
-    const struct peak_range *range, double threshold, const int power[],
-    const double scale_in[], const short wf_i[], const short wf_q[],
-    double scale_out[], double complex iq[])
-{
-    unsigned int count = 0;
-    int maxval =
-        find_max_val(range->right - range->left + 1, power + range->left);
-    int minval = lround(threshold * maxval);
-    for (unsigned int ix = range->left; ix <= range->right; ix ++)
-        if (power[ix] >= minval)
-        {
-            scale_out[count] = scale_in[ix];
-            iq[count] = wf_i[ix] + I * wf_q[ix];
-            count += 1;
-        }
-    return count;
-}
-
-
 complex double eval_one_pole_model(
     unsigned int peak_count, const struct one_pole fits[], double s)
 {
@@ -336,9 +312,9 @@ static void compute_weights(
  * second time we refine the data by redoing the fit with weighting and
  * subtracting the best model from the data. */
 unsigned int fit_multiple_peaks(
-    unsigned int peak_count, double threshold, bool refine_fit,
+    unsigned int peak_count, bool refine_fit,
     const double scale_in[], const short wf_i[], const short wf_q[],
-    const int power[], const struct peak_range ranges[],
+    const struct peak_range ranges[],
     struct one_pole fits[], double errors[])
 {
     unsigned int peak_ix = 0;
@@ -348,11 +324,11 @@ unsigned int fit_multiple_peaks(
         struct one_pole *fit = &fits[peak_ix];
 
         /* Extract a block of (frequency, iq) data to fit this peak to. */
-        unsigned int max_count = range->right - range->left + 1;
-        double scale[max_count];
-        double complex iq[max_count];
-        unsigned int count = extract_threshold_data(
-            range, threshold, power, scale_in, wf_i, wf_q, scale, iq);
+        unsigned int count = range->right - range->left + 1;
+        double complex iq[count];
+        for (unsigned int i = 0; i < count; i ++)
+            iq[i] = wf_i[range->left + i] + I * wf_q[range->left + i];
+        const double *scale = &scale_in[range->left];
 
         /* Adjust the iq data block according to our current model knowledge. */
         adjust_iq_with_model(

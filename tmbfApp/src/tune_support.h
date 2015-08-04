@@ -53,18 +53,16 @@ bool fit_quadratic(unsigned int length, const int wf[], double *result);
  * of one pole filters to each peak.  The following parameters are passed:
  *
  * peak_count   Number of peaks to fit (normally up to 3)
- * threshold    Used to select subset of data by threshold (do we want this?)
  * refine_fit   Controls existing fits are used to refine data
- * tune_scale   Frequency scale
+ * scale_in     Frequency scale
  * wf_i, wf_q   Raw IQ detector data
- * power        |iq|^2, already calculated for convenience
  * ranges       List of ranges for each peak
  * fits         List of fitting results
  * errors       List of fit errors */
 unsigned int fit_multiple_peaks(
-    unsigned int peak_count, double threshold, bool refine_fit,
-    const double tune_scale[], const short wf_i[], const short wf_q[],
-    const int power[], const struct peak_range ranges[],
+    unsigned int peak_count, bool refine_fit,
+    const double scale_in[], const short wf_i[], const short wf_q[],
+    const struct peak_range ranges[],
     struct one_pole fits[], double errors[]);
 
 /* Given index into sweep and the corresponding tune scale computes the tune and
