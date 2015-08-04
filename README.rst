@@ -10,8 +10,8 @@ together with an Xscale PXA-255 ARM processor for control.
 
 The software provided here implements an EPICS interface to a specific FPGA
 implementation running on this instrument.  This system has been running at
-`Diamond Light Source <http://diamond.ac.uk>`_ for some years now and is
-expected to be installed at `ALBA <http://www.cells.es>`_ some time in 2015.
+`Diamond Light Source <http://diamond.ac.uk>`_ for some years now and was
+installed at `ALBA <http://www.cells.es>`_ in May 2015.
 
 To build this system you need the following:
 
