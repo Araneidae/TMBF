@@ -235,7 +235,7 @@ static bool fit_one_pole(
  *              SUM | data - model |
  *      error = ---------------------
  *                              2
- *                 SUM | model |
+ *                 SUM | data |
  *
  * It's looking like this might well be a reasonable estimate of fit quality. */
 static double compute_fit_error(
@@ -248,7 +248,7 @@ static double compute_fit_error(
     {
         double complex model = peak_eval(fit, scale[i]);
         error += cabs2(iq[i] - model);
-        sum   += cabs2(model);
+        sum   += cabs2(iq[i]);
     }
     return error / sum;
 }
