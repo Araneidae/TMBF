@@ -1,0 +1,34 @@
+# Synthesise installation of TMBF
+
+# FPGA loading files
+d 755 /opt
+d 755 /opt/bin
+f 755 /opt/bin bin/linux-arm_el/fp
+f 755 /opt/bin bin/linux-arm_el/ddrInit
+f 755 /opt/bin base/fpga_init
+f 755 /opt/bin base/load-fpga
+
+# FPGA configuration (FPGA image will go here as well)
+d 755 /opt/lib
+f 644 /opt/lib base/tmbf.delays
+
+# Persistent state file
+d 755 /opt/state
+
+# IOC files
+d 755 /opt/ioc
+d 755 /opt/ioc/db
+f 644 /opt/ioc/db db/access.acf
+f 644 /opt/ioc/db db/tmbf.db
+d 755 /opt/ioc/dbd
+f 644 /opt/ioc/dbd dbd/tmbf.dbd
+d 755 /opt/ioc/scripts
+f 755 /opt/ioc/scripts scripts/runioc
+f 755 /opt/ioc runioc
+d 755 /opt/ioc/bin
+d 755 /opt/ioc/bin/linux-arm_el
+f 755 /opt/ioc/bin/linux-arm_el bin/linux-arm_el/tmbf
+
+f 755 /etc/init.d install_d/epics
+l --- /etc/rc.d/K200epics ../init.d/epics
+l --- /etc/rc.d/S900epics ../init.d/epics

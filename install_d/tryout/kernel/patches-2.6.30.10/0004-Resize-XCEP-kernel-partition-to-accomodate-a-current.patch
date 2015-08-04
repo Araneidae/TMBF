@@ -1,0 +1,43 @@
+commit 96da8a96bdd1d9243ef405e702d15348e89a5193
+Author: Michael Abbott <michael.abbott@diamond.ac.uk>
+Date:   Mon Nov 30 13:18:34 2009 +0000
+
+    Resize XCEP kernel partition to accomodate a current kernel.
+    Also rename the mtd3 partition to something closer to practice.
+    Forcing the bootloader partitions read-only is a nuisance.
+
+diff --git a/arch/arm/mach-pxa/xcep.c b/arch/arm/mach-pxa/xcep.c
+index f9f1cf8..808166d 100644
+--- a/arch/arm/mach-pxa/xcep.c
++++ b/arch/arm/mach-pxa/xcep.c
+@@ -66,24 +66,24 @@ static struct mtd_partition xcep_partitions[] = {
+ 		.name =		"Bootloader",
+ 		.size =		0x00040000,
+ 		.offset =	0,
+-		.mask_flags =	MTD_WRITEABLE  /* force read-only */
++//		.mask_flags =	MTD_WRITEABLE  /* force read-only */
+ 	}, {
+ 		.name =		"Bootloader ENV",
+ 		.size =		0x00040000,
+ 		.offset =	0x00040000,
+-		.mask_flags =	MTD_WRITEABLE  /* force read-only */
++//		.mask_flags =	MTD_WRITEABLE  /* force read-only */
+ 	}, {
+ 		.name =		"Kernel",
+-		.size =		0x00100000,
++		.size =		0x00200000,
+ 		.offset =	0x00080000,
+ 	}, {
+-		.name =		"Rescue fs",
++		.name =		"Writeable state",
+ 		.size =		0x00280000,
+-		.offset =	0x00180000,
++		.offset =	0x00280000,
+ 	}, {
+ 		.name =		"Filesystem",
+ 		.size =		MTDPART_SIZ_FULL,
+-		.offset =	0x00400000
++		.offset =	0x00500000
+ 	}
+ };
+ 
