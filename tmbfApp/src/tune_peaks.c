@@ -216,7 +216,9 @@ enum peak_status {
     PEAK_GOOD,          // Peak accepted
     PEAK_NO_RANGE,      // No peak found
     PEAK_NO_FIT,        // Can't fit model to peak
-    PEAK_REJECTED       // Peak rejected after modelling
+    PEAK_OUTSIDE_RANGE, // Peak outside expected range
+    PEAK_FIT_ERROR,     // Peak fit error above threshold
+    PEAK_WIDTH_ERROR    // Peak width not in range
 };
 
 /* This structure contains information about a round of peak fitting.  It is
@@ -417,21 +419,27 @@ static void extract_good_peaks(
 /* Peak validity assessment.  Checks that the fit error is within the selected
  * threshold, and that the peak is wider that a selected threshold.  Note that
  * the width is in tune frequency units. */
-static bool assess_peak(
+static enum peak_status assess_peak(
     const struct peak_range *range, const double tune_scale[],
     const struct one_pole *fit, double error)
 {
     double left = tune_scale[range->left];
     double right = tune_scale[range->right];
     ENSURE_ORDERED(left, right);
-    return
+    if (peak_centre(fit) < left  ||  right < peak_centre(fit))
         /* Discard if peak not within fit area. */
-        left < peak_centre(fit)  &&  peak_centre(fit) < right  &&
+        return PEAK_OUTSIDE_RANGE;
+    else if (error >= max_fit_error)
         /* Discard if fit error too large. */
-        error < max_fit_error  &&
+        return PEAK_FIT_ERROR;
+    else if (
+            peak_width(fit) < min_peak_width  ||
+            max_peak_width < peak_width(fit))
         /* Discard if peak too narrow.  This will automatically reject peaks of
          * negative width, this should not arise! */
-        min_peak_width < peak_width(fit)  &&  peak_width(fit) < max_peak_width;
+        return PEAK_WIDTH_ERROR;
+    else
+        return PEAK_GOOD;
 }
 
 
@@ -447,12 +455,9 @@ static void fit_peaks(
         peak_fit->ranges, peak_fit->fits, peak_fit->errors);
 
     for (unsigned int i = 0; i < fit_count; i ++)
-        if (assess_peak(
-               &peak_fit->ranges[i], tune_scale,
-               &peak_fit->fits[i], peak_fit->errors[i]))
-            peak_fit->status[i] = PEAK_GOOD;
-        else
-            peak_fit->status[i] = PEAK_REJECTED;
+        peak_fit->status[i] = assess_peak(
+           &peak_fit->ranges[i], tune_scale,
+           &peak_fit->fits[i], peak_fit->errors[i]);
     for (unsigned int i = fit_count; i < peak_fit->peak_count; i ++)
     {
         peak_fit->status[i] = PEAK_NO_FIT;
