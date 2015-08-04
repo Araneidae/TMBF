@@ -115,6 +115,7 @@ endObjectProperties
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
+inputFocusUpdates
 major 4
 minor 6
 release 0
@@ -137,7 +138,6 @@ smartRefresh
 useHexPrefix
 newPos
 objType "controls"
-clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
