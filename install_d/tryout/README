@@ -1,0 +1,32 @@
+Instructions for TMBF tryout image.
+
+First place the following files on an accessible tftp server:
+
+1.  imagefile-rootfs.cpio.gz
+2.  uImage-libera-2.6.30.10-dls
+
+Now connect a serial console to the target Libera TMBF, reboot the target and
+interrupt the boot at the u-boot prompt.  At the boot prompt use the command
+printenv to check that the following variables have sensible settings:
+
+    ipaddr=172.23.252.9
+    netmask=255.255.240.0
+    gatewayip=
+    ethaddr=00:D0:50:31:02:43
+    hostname=xcep
+    serverip=172.23.240.2
+
+Now cut and paste the four commands in boot-script in turn:
+
+    tftpboot a0001000 uImage-libera-2.6.30.10-dls
+    tftpboot a2000000 imagefile-rootfs.cpio.gz
+    setenv bootargs console=ttyS0,115200 ...
+    bootm a0001000
+
+Note: please copy these commands from boot-script rather than this file.
+
+Libera TMBF will now boot.  It will take a couple of minutes for the FPGA
+loading script to complete, after which TMBF will be running.
+
+Note that the network configuration in the tryout system is taken from the
+u-boot network configuration.

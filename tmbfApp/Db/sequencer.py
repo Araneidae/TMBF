@@ -6,6 +6,10 @@ import tune
 
 SUPER_SEQ_STATES = 1024
 
+# Nominal RF frequency is for 60 cm bunch separation.
+RF_FREQ = 299792458 / 0.6
+REV_FREQ = RF_FREQ / BUNCHES_PER_TURN
+
 # The sequencer has eight possible states, however state 0 has somewhat
 # different behaviour from the remaining 7.
 
@@ -61,7 +65,7 @@ length = longIn('SEQ:LENGTH', DESC = 'Sequencer capture count')
 Trigger('SEQ:INFO',
     length, duration,
     records.calc('SEQ:DURATION:S',
-        CALC = 'A/B', INPA = duration, INPB = 533830, PREC = 3, EGU = 's',
+        CALC = 'A/B', INPA = duration, INPB = REV_FREQ, PREC = 3, EGU = 's',
         DESC = 'Capture duration'))
 
 longIn('SEQ:PC', DESC = 'Current sequencer state', SCAN = '.1 second')
@@ -87,7 +91,7 @@ super_duration = records.calc('SEQ:TOTAL:DURATION',
     CALC = 'A*B', INPA = CP(super_count), INPB = CP(duration),
     EGU = 'turns', DESC = 'Super sequence raw capture duration')
 records.calc('SEQ:TOTAL:DURATION:S',
-    CALC = 'A/B', INPA = CP(super_duration), INPB = 533830,
+    CALC = 'A/B', INPA = CP(super_duration), INPB = REV_FREQ,
     PREC = 3, EGU = 's', DESC = 'Super capture duration')
 records.calc('SEQ:TOTAL:LENGTH',
     CALC = 'A*B', INPA = CP(super_count), INPB = CP(length),

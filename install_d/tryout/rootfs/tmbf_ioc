@@ -1,0 +1,4 @@
+TMBF_IOC=/opt/ioc/runioc
+DESIGN=/opt/lib/tmbf.bin
+DESIGN_CONFIG_FILE=/opt/lib/tmbf.delays
+LOG_WF_LIMIT=20

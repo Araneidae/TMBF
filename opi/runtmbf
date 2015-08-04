@@ -9,7 +9,7 @@ if (($#)); then
         TS)     device=TS-DI-TMBF-01 ;;
         1|01)   device=SR23C-DI-TMBF-01 ;;
         2|02)   device=SR23C-DI-TMBF-02 ;;
-        *)      echo >&2 "Invalid argument"; exit ;;
+        *)      device="$1" ;;
     esac
 
     ARGS=(-m device=$device)

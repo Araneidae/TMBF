@@ -150,6 +150,7 @@ endObjectProperties
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
+inputFocusUpdates
 major 4
 minor 6
 release 0
@@ -171,7 +172,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -270,6 +270,7 @@ endObjectProperties
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
+inputFocusUpdates
 major 4
 minor 6
 release 0
@@ -291,7 +292,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -459,6 +459,7 @@ endObjectProperties
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
+inputFocusUpdates
 major 4
 minor 6
 release 0
@@ -480,7 +481,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -617,6 +617,7 @@ endObjectProperties
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
+inputFocusUpdates
 major 4
 minor 6
 release 0
@@ -638,7 +639,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -665,6 +665,7 @@ endObjectProperties
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
+inputFocusUpdates
 major 4
 minor 6
 release 0
@@ -686,7 +687,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -713,6 +713,7 @@ endObjectProperties
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
+inputFocusUpdates
 major 4
 minor 6
 release 0
@@ -734,7 +735,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -761,6 +761,7 @@ endObjectProperties
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
+inputFocusUpdates
 major 4
 minor 6
 release 0
@@ -782,7 +783,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -1576,6 +1576,7 @@ endObjectProperties
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
+inputFocusUpdates
 major 4
 minor 6
 release 0
@@ -1597,7 +1598,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-clipToDspLimits
 noExecuteClipMask
 endObjectProperties
 
@@ -2160,6 +2160,7 @@ endObjectProperties
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
+inputFocusUpdates
 major 4
 minor 6
 release 0
