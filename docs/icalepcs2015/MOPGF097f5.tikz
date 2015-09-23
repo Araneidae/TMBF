@@ -1,0 +1,145 @@
+\newcommand{\westcoord}[3]{
+    \coordinate (#1 #2) at ($(#1.south west)!#3!(#1.north west)$)}
+\newcommand{\eastcoord}[3]{
+    \coordinate (#1 #2) at ($(#1.south east)!#3!(#1.north east)$)}
+
+\begin{tikzpicture}[
+    box/.style={
+        draw, rectangle, very thick, highlight fill,
+        minimum width=1.8cm, minimum height=1.5cm},
+    adc-dac/.style={
+        draw, single arrow, very thick, accent fill,
+        inner ysep=2mm,
+        single arrow head extend=0pt, shape border rotate=#1},
+    wide box/.style={minimum width=3cm},
+    tall box/.style={minimum height=3cm},
+    trigger/.style={semithick, ->},
+    x=2cm, y=2.3cm]
+
+    % ADC input node
+    \node [adc-dac=180] (ADC) at (-1,0) {ADC};
+    \node [box] (adc) at (0,0) {ADC};
+    \draw [bus] (ADC) -- (adc);
+    \draw [bus, -] (ADC.west) -- +(-4mm,0);
+
+    % FIR processing node
+    \node [box] (fir) at (1.5,0) {FIR};
+
+    % DAC output node
+    \path node [box] (dac) at (5,0) {} (dac.east) node [anchor=east] {DAC};
+    \westcoord{dac}{fir in}{0.75};
+    \westcoord{dac}{nco1 in}{0.5};
+    \westcoord{dac}{nco2 in}{0.25};
+    \eastcoord{dac}{out}{0.2};
+    \node [adc-dac=0] (DAC) at ($(dac)+(1,0)$) {DAC};
+    \draw [bus] (dac) -- (DAC);
+    \draw [bus, -] (DAC.east) -- +(4mm,0);
+    \path [font=\scriptsize, anchor=west]
+        (dac fir in) node {FIR}
+        (dac nco1 in) node {NCO\textsubscript1}
+        (dac nco2 in) node {NCO\textsubscript2};
+
+    % Two NCO processing nodes
+    \newcommand{\nco}[3]{
+        \node [box, wide box] (#1) at #2 {#3};
+        \westcoord{#1}{adc in}{0.25};
+        \westcoord{#1}{fir in}{0.75};
+        \eastcoord{#1}{iq out}{0.25};
+        \eastcoord{#1}{nco out}{0.75};
+        \path [font=\scriptsize, anchor=west]
+            (#1 adc in) node {ADC}
+            (#1 fir in) node {FIR};
+        \path [font=\scriptsize, anchor=east]
+            (#1 nco out) node {NCO}
+            (#1 iq out) node {IQ};
+    }
+    \nco{nco1}{(2.5,-1)}{NCO\textsubscript{1} \&\\Tune PLL}
+    \nco{nco2}{(2.5,-2)}{NCO\textsubscript{2} \&\\Sequencer}
+
+    % Bunch selection centred above FIR and DAC with control signals
+    \node [box, minimum height=1.2cm] (bunch) at (2.8,0.8) {Bunch\\Select};
+
+    % Data capture output node
+    \node [box, wide box, tall box] (capture) at (5.6,-1.5) {Data\\Capture};
+    \westcoord{capture}{dac in}{0.8};
+    \westcoord{capture}{fir in}{0.7};
+    \westcoord{capture}{adc in}{0.6};
+    \westcoord{capture}{iq1 in}{0.35};
+    \westcoord{capture}{iq2 in}{0.25};
+    \path [font=\scriptsize, anchor=west]
+        (capture dac in) node {DAC}
+        (capture fir in) node {FIR}
+        (capture adc in) node {ADC}
+        ($(capture iq1 in)!0.5!(capture iq2 in)$) node {IQ};
+
+    % Triggering of sequencer and data capture
+    \node [box] (trigger) at (0,-2) {Triggers};
+    \draw [thick, font=\scriptsize, anchor=east]
+        ($(trigger.south west)!0.75!(trigger.north west)$) -- ++(-4mm,0)
+            node {TRG}
+        ($(trigger.south west)!0.5!(trigger.north west)$) -- ++(-4mm,0)
+            node {PM}
+        ($(trigger.south west)!0.25!(trigger.north west)$) -- ++(-4mm,0)
+            node {SCLK};
+    \draw [trigger, -]
+        let \p1 = (trigger |- capture), \p2 = ($(\p1)+(0.6,0)$) in
+        (trigger) -- ($(trigger)+(0.6,0)$) -- (\p2) coordinate (trigger p);
+    \draw [trigger] (trigger p) -- (capture);
+    \draw [trigger] (trigger p) -| (nco1);
+    \draw [trigger] (trigger p) -| (nco2);
+    \draw [trigger] (trigger p) |- (bunch);
+
+    % Bunch control signals: need to be drawn above triggers.
+    \multipath[control] { \draw (nco2) -| (3.5,0) |- (bunch); }
+    \node [anchor=south west, font=\small, text=black]
+        at (bunch.east) {bank select};
+    \multipath[control] {
+        \draw (bunch) -- (bunch |- 0,0.45) -| (fir);
+        \draw (bunch) -- (bunch |- 0,0.45) -| (dac);
+    }
+    \node [anchor=south east, font=\small] at (fir.north) {FIR\\select};
+    \node [anchor=south west, font=\small] at (dac.north)
+        {output select\\\& bunch gain};
+
+    % SBC control
+    \node [box] at (0,-1.25) {SBC\\Interface};
+
+    % ADC outputs to FIR, detectors and capture
+    \coordinate (adc fir) at ($(adc)!0.5!(fir)$);
+    \multipath[bus] {
+        \draw (adc) -- (fir);
+        \draw (adc fir) |- (nco1 adc in);
+        \draw (adc fir) |- (nco2 adc in);
+        \draw (adc fir) -- ++(0,-0.5) -- (4.1,-0.5) |- (capture adc in);
+    }
+
+    % FIR to DAC and capture
+    \multipath[bus] {
+        \draw (fir) -| (dac fir in -| 3, 0) -- (dac fir in);
+        \draw (dac fir in -| 4.3, 0) |- (capture fir in);
+    }
+
+    % Captured DAC out
+    \multipath[bus] {
+        \draw (dac out) -- (dac out -| 5.6,0) |- (4.5,-0.5) |- (capture dac in);
+    }
+    % Captured IQ
+    \multipath[bus] {
+        \draw (nco1 iq out) -- (nco1 iq out -| 3.7,0) |- (capture iq1 in);
+        \draw (nco2 iq out) -- +(1,0) |- (capture iq2 in); }
+
+    % DAC NCO inputs
+    \multipath[bus] {
+        \draw (nco1 nco out) -- (nco1 nco out -| 3.7,0) |- (dac nco1 in); }
+    \multipath[bus] {
+        \draw (nco2 nco out) -- (nco2 nco out -| 3.9,0) |- (dac nco2 in); }
+
+    % High resolution FIR inputs to detectors
+    \multipath[bus] {
+        \draw (fir) |- (nco1 fir in);
+        \draw (fir) |- (nco2 fir in);
+    }
+
+\end{tikzpicture}
+
+% vim: filetype=tex:

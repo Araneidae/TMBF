@@ -1,0 +1,62 @@
+\begin{tikzpicture}[
+    box/.style={draw, very thick, highlight fill},
+    small box/.style={box, font=\scriptsize},
+    small label/.style={font=\scriptsize, inner sep=0},
+    ]
+
+% This path defines the extent of the diagram to ensure it's centered nicely.
+\path (-4,0) (4,0);
+
+% Storage ring
+\node (sr) [
+    draw, control colour, text=black, ellipse,
+    line width=2mm, minimum width=30mm] {Storage\\Ring};
+
+\node [small box] (bpm) at (sr.west) {Button\\Block};
+
+% Hybrid circuit converting BPM ABCD to XYSQ
+\node [box] (hybrid) at (-2.8,-1) {Hybrid};
+\foreach \p/\n in {0.2/A, 0.4/B, 0.6/C, 0.8/D} {
+    \draw [->]
+        ($(bpm.north west)!\p!(bpm.south west)$) -|
+        ($(hybrid.north west)!\p!(hybrid.north east)$)
+        node [small label, above left] at +(0,0.8ex) {\n}; }
+
+% Front end
+\node [box] (front end) at (-2.8,-2) {Front End};
+\newcommand{\hybridfe}[2]{
+    \draw [->]
+        let \p1=($(hybrid.south west)!#1!(hybrid.south east)$) in
+        (\p1) -- (front end.north -| \p1)
+        node [small label, above left] at +(0,0.8ex) {#2};}
+\hybridfe{0.2}{X}
+\hybridfe{0.4}{Y}
+\draw [<-] (front end.west) -- ++(-3mm,0)
+    node [small label, above] {RF};
+
+\node [box, minimum width=20mm] (tmbf X) at (0,-1.6) {TMBF (X)};
+\node [box, minimum width=20mm] (tmbf Y) at (0,-2.4) {TMBF (Y)};
+\newcommand{\tmbfamp}[2]{
+    \draw [->]
+    ($(front end.north east)!#1!(front end.south east)$) --
+    +(0.5,0) |- (tmbf #2);
+}
+\tmbfamp{0.25}{X}
+\tmbfamp{0.75}{Y}
+
+% Amplifiers
+\node [box] (amplifier) at (2.8,-1) {Amplifiers};
+\draw [->] (tmbf X) -| ($(amplifier.south west)!0.25!(amplifier.south east)$);
+\draw [->] (tmbf Y) -| ($(amplifier.south west)!0.75!(amplifier.south east)$);
+
+% Striplines driving beam
+\node [small box] (stripline) at (sr.east) {Strip-\\lines};
+\foreach \p/\n in {0.25/X, 0.75/Y} {
+    \draw [->]
+        ($(amplifier.north west)!\p!(amplifier.north east)$) |-
+        ($(stripline.south east)!\p!(stripline.north east)$)
+        node [small label, above right] at +(0.8ex, 0.2ex) {\n};}
+
+\end{tikzpicture}
+
+% vim: filetype=tex:

@@ -1,0 +1,74 @@
+\begin{tikzpicture}[
+    basic node/.style={draw, highlight fill, thick},
+    cursor/.style={
+        accent fill, rounded corners, draw, very thin, fill opacity=0.5},
+    grid lines/.style={draw, thin, gray},
+]
+
+\newcommand{\horizspace}{2.5mm}
+\newcommand{\horizcount}{10}
+\newcommand{\cursorcount}{7}
+
+% Draw four memory banks, the last one the largest
+\path (0,0) coordinate (bank);
+\foreach \hhh in {3.5mm, 3.5mm, 3.5mm, 10mm}
+{
+    \node [
+        anchor=south, yshift=0.5mm,
+        basic node, draw=none, rectangle, inner sep=0,
+        minimum width=\horizspace*(\horizcount+1), minimum height=\hhh,
+    ] (bank) at (bank.north) {};
+    \foreach \xx in {1,...,\horizcount}{
+        \draw [grid lines]
+        ($(bank.south west)+\xx*(\horizspace,0)$) -- ++(0,\hhh);
+    }
+    \foreach \yy in {0.2, 0.4} {
+        \draw [grid lines]
+        let \n1={\horizspace*(\horizcount+1)} in
+        ($(bank.north west)!\yy!(bank.south west)$) -- ++(\n1,0);
+    }
+    \draw [thick] (bank.north west) rectangle (bank.south east);
+}
+
+% Define and draw the cursor, label the components
+\path let
+    \p1=($(bank.north west)+\cursorcount*(\horizspace,0)$),
+    \p2=($(\p1)+(\horizspace,-10mm)$) in
+    node [rectangle, tight fit={(\p1) (\p2)}] (cursor) {};
+\node [cursor, fit={(cursor)}] (cursor highlight) {};
+
+\foreach \vpos/\voff/\name in {
+    0.1/0.2/FIR select, 0.3/0/Output select, 0.7/-0.0/Output gain}
+{
+    \draw [control]
+        ($(cursor.north)!\vpos!(cursor.south)$)
+        node [circle, fill=control colour, inner sep=0, minimum size=1mm] {}
+        coordinate (p) -- (p -| bank.east)
+        -- ++(3mm,0) -- ++(0,\voff) -- ++(3mm,0)
+        node [anchor=west] {\name};
+}
+
+\begin{pgfonlayer}{background}
+    \node [rectangle, background fill, rounded corners,
+        fit={(0,0) (bank)}, inner sep=1.5mm] (memory) {};
+\end{pgfonlayer}
+
+\draw
+    (bank.west) node [
+        xshift=-0.5mm,
+        draw, thick, control colour, fill=white,
+        single arrow, anchor=east, inner sep=0,
+        minimum height=5mm, minimum width=5mm,
+        single arrow head extend=0.2mm] (select) {}
+    node [anchor=east] at (select.west) {Bank\\select};
+
+\path (memory.north west) node [anchor=south] (current) {Current bunch config};
+\draw [->] (current) -| (cursor highlight);
+
+\path (memory.east) node [
+anchor=north west] (counter) {Bunch counter,\\advances every 2ns};
+\draw [control] (counter) -- ++(0,-1.1cm) -| (memory.south -| cursor);
+
+\end{tikzpicture}
+
+% vim: filetype=tex:

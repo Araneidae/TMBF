@@ -1,0 +1,49 @@
+\begin{tikzpicture}[
+    adc-dac/.style={
+        draw, single arrow, thick, accent fill,
+        single arrow head extend=0pt, shape border rotate=#1},
+    outline/.style={draw=background colour, very thin},
+    ]
+
+\draw (-3,-0.6)
+    node [adc-dac=180,
+        label={[xshift=-1mm]below:4$\times$125\,Ms/s\\14\,bits/sample}]
+        {\phantom{ADC}} ++(0,0.2)
+    node [adc-dac=180] {\phantom{ADC}} ++(0,0.2)
+    node [adc-dac=180] {\phantom{ADC}} ++(0,0.2)
+    node (adc) [adc-dac=180] {ADC};
+
+    \draw (3,0) node (dac) [
+        adc-dac=0, label={[xshift=1mm]below:500\,Ms/s\\14\,bits/sample}]
+        {DAC};
+
+\path (0,-0.5)
+    node (fpga) [
+        outline, black,
+        rectangle, fill=background colour, rounded corners,
+        minimum height=30mm, minimum width=40mm] {}
+    node [anchor=north] at (fpga.north) {Xilinx Virtex-II Pro FPGA}
+    node (neutrino) [
+        rectangle, accent fill,
+        minimum height=22mm, minimum width=35mm] at +(0,-1mm) {}
+    node [anchor=south] at (neutrino.south) {Framework}
+    node [
+        rectangle, highlight fill,
+        minimum height=17mm, minimum width=30mm] at +(0,1.5mm) {DLS\\firmware};
+
+\path
+    (0,-3) node (arm) [outline, rectangle, accent fill]
+        {XScale ARM CPU\\64\,MB RAM\\32\,MB Flash}
+    (3,-3) node (ram) [outline, rectangle, accent fill]
+        {128\,MB\\DDR2\\RAM}
+    (-3,-3) node (ethernet) {100\,Mbit\\Ethernet};
+
+\draw [thick] (adc) -- (neutrino.west |- adc);
+\draw [thick] (dac) -- (neutrino.east |- dac);
+\draw [thick] (neutrino) -- (arm);
+\draw [thick] (neutrino.south east) +(0,3mm) -| (ram);
+\draw [thick] (ethernet) -- (arm);
+
+\end{tikzpicture}
+
+% vim: filetype=tex:

@@ -1,0 +1,110 @@
+\begin{tikzpicture}[
+    basic node/.style={draw, highlight fill, thick},
+    mul/.style={basic node, circle, inner sep=0},
+    tall box/.style={
+        basic node, rectangle, minimum height=10mm, minimum width=6mm},
+    y=6mm,
+]
+
+
+\path
+    node [background fill, fit={(-0.5,1.4) (5.2,-1.2)}, inner sep=0]
+        (detector) {}
+    (detector.north west) node [anchor=north west, font=\scriptsize]
+        {Detector};
+
+
+\path
+    (0,0) node [
+        basic node, trapezium, shape border rotate=270,
+        minimum width=8mm] (mux) {}
+    ++(0.8,0) node [mul] (mul win) {$\times$}
+    ++(1.5,0)
+    +(0,0.5) node [mul] (mul I) {$\times$}
+    +(0,-0.5) node [mul] (mul Q) {$\times$}
+    ++(1,0) node [tall box] (sum) {$\sum$}
+    ++(1,0) node [tall box] (det gain) {gain}
+    ++(0.7,0) coordinate (iq node)
+    ++(0.5,0) coordinate (iq);
+
+\draw [bus, <-] (mux.north west) -- ++(-0.5,0) node[anchor=east] {FIR};
+\draw [bus, <-] (mux.south west) -- ++(-0.5,0) node[anchor=east] {ADC};
+
+\draw [bus] (mux) -- (mul win);
+\draw [bus, <-]
+    (mul I) -- ++(-8mm,-8mm) coordinate (p) -- (p |- detector.south)
+    coordinate (det cos);
+\draw [bus, <-]
+    (mul Q) -- ++(-4mm,-4mm) coordinate (p) -- (p |- detector.south)
+    coordinate (det sin);
+\multipath [bus, multipath background=background colour] {
+    \draw (mul win) -- ++(0.5, 0) |- (mul I);
+    \draw (mul win) -- ++(0.5, 0) |- (mul Q);
+}
+\draw [bus] (mul I) -- (mul I -| sum.west)
+    node [midway, anchor=south, font=\scriptsize] {I};
+\draw [bus] (mul Q) -- (mul Q -| sum.west)
+    node [midway, anchor=south, font=\scriptsize] {Q};
+\draw [bus] (mul I -| sum.east) -- (mul I -| det gain.west);
+\draw [bus] (mul Q -| sum.east) -- (mul Q -| det gain.west);
+\draw [bus,-] (mul I -| det gain.east) -- ++(0.2,0) -- (iq node);
+\draw [bus,-] (mul Q -| det gain.east) -- ++(0.2,0) -- (iq node);
+\draw [bus] (iq node) -- (iq) node[anchor=west]{IQ};
+
+
+\path [background fill] (1.8,-2.7) coordinate (nco top) rectangle +(3.4,-2);
+
+% Place sequencer
+\path (0.5,-2.3)
+    node [tall box, anchor=north, minimum height=19mm] (seq) {sequencer};
+\path
+    (nco top)
+    ++(0.7, -1) node [tall box] (nco) {NCO}
+    ++(2,0) node [tall box] (nco gain) {gain}
+    ++(1,0) coordinate (nco out);
+\path
+    ($(nco.north east)!0.25!(nco.south east)$) coordinate (cos)
+    ($(nco.north east)!0.75!(nco.south east)$) coordinate (sin);
+\draw [<-, font=\small]
+    ($(seq.west)-(0,0.4)$) -- ++(-4mm,0) node [anchor=east] {gate};
+\draw [<-, font=\small]
+    ($(seq.west)+(0,0.4)$) -- ++(-4mm,0) node [anchor=east] {trig};
+
+\draw [bus]
+    (seq.east |- nco) -- (nco)
+    node[pos=0, anchor=south west, font=\scriptsize, inner sep=1pt] {freq};
+\draw [bus]
+    (seq.north) -- ++(0,0.4)
+    node[midway, anchor=south east, font=\scriptsize, inner sep=1pt] {window}
+    -| (mul win);
+\draw [->] ($(seq.north east)-(0,0.2)$) -| (sum.250)
+    node[anchor=west, font=\scriptsize, inner sep=2pt, pos=0.83] {control};
+
+
+\draw [bus, -]
+    (sin) -- ++(0.75,0) coordinate (p) -- (p |- nco top) coordinate (nco sin);
+\multipath[bus, multipath background=background colour] {
+    \draw [-]
+        (cos) -- ++(0.5,0) coordinate (p) -- (p |- nco top)
+        coordinate (nco cos);
+    \draw (cos) -- ++(0.5,0) |- (nco gain);
+}
+\multipath [bus, -] { \draw (nco cos) -- ++(0,0.5) -| (det cos); }
+\multipath [bus, -] { \draw (nco sin) -- ++(0,0.8) -| (det sin); }
+
+% Label the NCO outputs
+\path
+    (cos) node [anchor=south west, inner sep=1pt, font=\scriptsize] {cos}
+    (sin) node [anchor=south west, inner sep=1pt, font=\scriptsize] {sin};
+
+
+\draw [bus] (nco gain) -- (nco out) node[anchor=west] {NCO\textsubscript2};
+
+\draw [control] ($(seq.south east)+(0,0.3)$) coordinate (p) -- (p -| nco out)
+    node[anchor=west, font=\small] {bank\\select};
+\draw [control] ($(seq.south east)+(0,0.5)$) -| (nco gain);
+
+
+\end{tikzpicture}
+
+% vim: filetype=tex:

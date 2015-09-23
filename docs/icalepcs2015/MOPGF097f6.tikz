@@ -1,0 +1,47 @@
+\begin{tikzpicture}[
+    basic node/.style={draw, highlight fill, thick},
+    box/.style={basic node, minimum height=11mm},
+    add/.style={basic node, circle, minimum size=5mm, inner sep=0pt},
+    mid above/.style={midway, above, font=\scriptsize},
+    mid right/.style={midway, right, font=\scriptsize},
+    ref value/.style={font=\small, draw, dotted},
+    x=11mm, y=7mm,
+]
+
+\path
+    node [box] (detector) {detector}
+    ++(2,0) node [box] (cordic) {\small CORDIC\\$\text{IQ}\to\phi$}
+    ++(1.8,0) node [add] (error) {$-$}
+    ++(0,-2.2) node [box] (feedback) {$\displaystyle K_P+\frac{K_I}{1-z^{-1}}$}
+    +(0.5,-1.5) node [basic node] (buffer) {output buffer}
+    ++(-1.8,0) node [add] (f out) {$+$}
+    ++(0,-2.8) node (nco) [
+        box, rectangle split, rectangle split parts=2,
+        rectangle split horizontal, inner sep=1.5ex] {NCO}
+    (nco.two) node [rotate=90] {gain};
+
+
+\draw [bus, <-] (detector.160) -- ++(-3mm,0) node[anchor=east] {FIR};
+\draw [bus, <-] (detector.200) -- ++(-3mm,0) node[anchor=east] {ADC};
+
+\draw [bus] (detector) -- (cordic) node [mid above] {IQ};
+\draw [bus] (cordic) -- (error) node [mid above] {$\phi$};
+\draw [bus, <-] (error) -- ++(1,0) node [mid above] {$\phi_0$} coordinate (p);
+\node [anchor=west, ref value] at (p) {ref\\phase};
+\draw [bus] (error) -- (feedback)
+    node [mid right, pos=0.6] {$\delta\phi=\phi-\phi_0$};
+
+\draw [bus] (feedback) -- (f out) node [mid above] {$\delta\!f$};
+\draw [bus] (feedback.west) -- ++(-0.3,0) |- (buffer);
+\draw [bus, <-] (f out) -- ++(-1,0) node [mid above] {$f_0$} coordinate(p);
+\node [anchor=east, ref value] at (p) {ref\\freq};
+
+\draw [bus] (f out) -- (nco) node [mid right, left] {$f$};
+\draw [bus] (nco) -| (detector)
+    node [near end, anchor=east, font=\scriptsize] {cos\\sin};
+
+\draw [bus] (nco.east) -- ++(1,0) node [anchor=west] {NCO\textsubscript1};
+
+\end{tikzpicture}
+
+% vim: filetype=tex:

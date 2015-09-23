@@ -1,0 +1,61 @@
+\begin{tikzpicture}[
+    box/.style={draw, rectangle, very thick, highlight fill,
+        minimum width=11mm, minimum height=10mm},
+    mul/.style={draw, circle, very thick, highlight fill},
+    area label/.style={anchor=north west, font=\scriptsize, inner sep=1pt},
+    nco label/.style={anchor=east, font=\scriptsize, inner sep=0},
+    x=1.75cm, y=1.5cm,
+]
+
+\path [background fill] (0.4,1.5) coordinate (adc top) rectangle ++(2.1,-2);
+\path [background fill] (2.6,1.5) coordinate (fir top) rectangle ++(1.8,-2);
+\path [background fill] (5.0,1.5) coordinate (dac top) rectangle ++(3.6,-2);
+\path
+    (adc top) node [area label] {ADC}
+    (fir top) node [area label] {FIR}
+    (dac top) node [area label] {DAC};
+
+\path
+    (0,0) node (adc in) {ADC\\in}
+    ++(0.8,0) node (add offsets) [mul] {$+$}
+    +(0,1) node (offsets) {ADC\\offsets}
+    ++(0.8,0) node (adc filter) [box] {3-tap\\filter}
+    ++(0.4,0) +(0,1) node (adc minmax) [box] {ADC\\min/max}
+    ++(1.1,0) node (fir) [box] {FIR}
+    +(0,1) node (fir select) {FIR\\select}
+    ++(0.9,0) node (fir gain) [box] {FIR\\gain}
+    ++(1.5,0) node (mux) [box] {out\\MUX}
+    +(0,1) node (mux select) {output\\select}
+    ++(0.8,0) node (add gain) [mul] {$\times$}
+    +(0,1) node (gain) {bunch\\gain}
+    ++(0.8,0) node (dac filter) [box] {3-tap\\filter}
+    ++(0.5,0) +(0,1) node (dac minmax) [box] {DAC\\min/max}
+    ++(0.5,0) node (delay) [box] {$z^{-N}$}
+    ++(1,0) node (dac out) {DAC\\out};
+
+\draw [bus] (adc in) -- (add offsets);
+\draw [bus] (offsets) -- (add offsets);
+\draw [bus] (add offsets) -- (adc filter);
+\draw [bus] (adc filter) -| (adc minmax);
+\draw [control] (fir select) -- (fir);
+\draw [bus] (adc filter) -- (fir);
+\draw [bus] (fir) -- (fir gain);
+\draw [control] (mux select) -- (mux);
+\draw [bus] (mux) -- (add gain);
+\draw [control] (gain) -- (add gain);
+\draw [bus] (add gain) -- (dac filter);
+\draw [bus] (dac filter) -| (dac minmax);
+\draw [bus] (dac filter) -- (delay);
+\draw [bus] (delay) -- (dac out);
+
+% Inputs to output mux need more care
+\path (mux.north west) coordinate (mnw) (mux.south west) coordinate (msw);
+\draw [bus] (fir gain) -- ++(0.5,0) |- ($(mnw)!0.25!(msw)$);
+\draw [bus, <-] ($(mnw)!0.5!(msw)$) -- ++(-0.2,0)
+    node [nco label] {NCO\textsubscript1};
+\draw [bus, <-] ($(mnw)!0.75!(msw)$) -- ++(-0.2,0)
+    node [nco label] {NCO\textsubscript2};
+
+\end{tikzpicture}
+
+% vim: filetype=tex:
