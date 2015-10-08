@@ -1,0 +1,117 @@
+\documentclass[a0paper]{tikzposter}
+
+\usepackage{mathptmx}       % Mathematical PostScript fonts
+\usepackage{array}          % Mathematical PostScript fonts
+\usepackage{multicol}       % Mathematical PostScript fonts
+
+\definebackgroundstyle{samplebackgroundstyle}{
+\draw[inner sep=0pt, line width=0pt, color=white]
+(bottomleft) rectangle (topright);
+}
+
+\title{\begin{minipage}{\linewidth}\centering
+    Architecture of Transverse MultiBunch Feedback Processor at Diamond
+    \vspace{1cm}
+\end{minipage}
+}
+
+\author{M.G.~Abbott, G.~Rehm, I.S.~Uzun}
+\institute{Diamond Light Source, Oxfordshire, UK}
+
+%\usetheme{Default}
+\usetheme{Envelope}
+
+\hyphenpenalty=5000
+\setlength{\columnsep}{2cm}
+
+\usetheme{Envelope}
+\usebackgroundstyle{samplebackgroundstyle}
+
+\begin{document}
+
+\maketitle
+
+\begin{columns}
+    \column{0.5}
+    \block{TMBF Overview}{
+        \begin{center} \includegraphics[scale=4.25]{figure1.pdf}\end{center}
+        The Transverse Multi-Bunch Feedback system measures the position of each
+        bunch, detects the betatron oscillations of each bunch, and generates a
+        drive signal to suppress the oscillations.
+    }
+
+    \column{0.5}
+    \block{Libera System Platform}{
+        \begin{center} \includegraphics[scale=3]{figure2.pdf}\end{center}
+        The DLS TMBF system is implemented on the Instrumentation Technologies
+        Libera platform with the control system running EPICS on an ARM based
+        embedded Single Board Controller (SBC).
+    }
+\end{columns}
+
+\block{FPGA System Design And Data Paths}{
+    \begin{tabular}{c m{5cm}}
+        \begin{minipage}{0.55\textwidth}
+        \includegraphics[scale=2.75]{figure5.pdf}
+        \end{minipage}
+    &
+        \begin{minipage}{0.35\textwidth}
+        The main function of TMBF is to stabilise transverse oscillations of the
+        beam. This is done by running a separate 10-tap FIR on the position of
+        each of the stored bunches.  The core data processing chain combines
+        this feedback with up to two optional Numerically Controlled Oscillator
+        (NCO) outputs.
+        \vspace{2cm}
+        \newline
+        The main data flow is from the ADC, through the FIR with a separate FIR
+        filter selected for each bunch, and out through the DAC with the option
+        of adding up to two internally generated sine waves. The other paths are
+        for control and data capture. The SBC interface controls and
+        communicates with all other components of the system: the EPICS
+        interface is through this component.
+        \end{minipage}
+    \end{tabular}
+}
+
+\block{Data Processing Chain}{
+    \includegraphics[scale=3]{figure3.pdf}
+    \includegraphics[scale=3]{figure4.pdf}
+    \break
+    \begin{multicols}{2}
+    Data processing starts by adding a DC offset to each of the four ADC
+    channels to compensate for static ADC errors, followed by a 3-tap filter to
+    compensate for high frequency phase errors in the front end. The minimum and
+    maximum value per bunch of both the ADC and DAC streams is captured for
+    display. A 10-tap filter with programmable gain (in 6 dB steps) is applied
+    in turn to each bunch in the ring. The output multiplexer adds any
+    combination of its three inputs, which is then scaled by a bunch specific
+    gain. Finally an output pre-emphasis filter corrects for amplifier errors
+    and is followed by a delay line to correctly close the loop.
+    \end{multicols}
+}
+
+\begin{columns}
+\column{0.5}
+    \block{Tune PLL}{
+    \includegraphics[scale=3]{figure6.pdf}
+    \parbox[b]{12.5cm} {
+    The oscillator NCO\textsubscript1, can be used as part of a tune tracking
+    phase locked loop. The tune phase $\phi$ is measured at the operating
+    frequency $f$ and used to compute a sequence of frequency corrections
+    $\delta\!f$ to maintain the phase error $\delta\phi$ at zero. The phase and
+    frequency are configured via EPICS.
+    }
+}
+\column{0.5}
+    \block{Detector}{
+    \includegraphics[scale=3]{figure7.pdf}
+    \parbox[b]{12.5cm} {
+    Data from the beam is mixed with the excitation waveform in the detector to
+    measure a complete complex IQ response. Operation of this system produces a
+    waveform of IQ measurements which can be used for measuring betatron tune
+    and other machine parameters.
+    }
+}
+\end{columns}
+
+\end{document}

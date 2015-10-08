@@ -15,7 +15,7 @@
 \colorlet{accent colour}{orange!20}         % Accented filled areas
 \colorlet{background colour}{black!15}      % Background groups
 \colorlet{data colour}{black!50}            % Data flow
-\colorlet{control colour}{blue!50}             % Other lines etc
+\colorlet{control colour}{blue!50}          % Other lines etc
 
 
 % Common TikZ definitions
