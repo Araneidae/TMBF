@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DI_PATH="$(dirname "$(configure-ioc s -p DI-gui)")"/scripts
+DI_PATH="$(configure-ioc s -p DI-gui-dir)"/scripts
 
 
 if (($#)); then
@@ -9,6 +9,7 @@ if (($#)); then
         TS)     device=TS-DI-TMBF-01 ;;
         1|01)   device=SR23C-DI-TMBF-01 ;;
         2|02)   device=SR23C-DI-TMBF-02 ;;
+        3|03)   device=SR23C-DI-TMBF-03 ;;
         *)      device="$1" ;;
     esac
 
