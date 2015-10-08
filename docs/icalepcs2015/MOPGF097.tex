@@ -11,81 +11,14 @@
 \usepackage{enumitem}       % For more control over list parameters.
 
 
-% TikZ library imports
-\usetikzlibrary{positioning}        % Anchor placement support
-\usetikzlibrary{calc}               % Coordinate calculations
-\usetikzlibrary{shapes.geometric}   % cylinder
-\usetikzlibrary{shapes.arrows}      % arrow shapes
-\usetikzlibrary{shapes.multipart}
-\usetikzlibrary{fit}                % Fitting outline to shape
-\usetikzlibrary{arrows}
-
-% Define our colours
-\colorlet{normal colour}{green!60!blue!20}  % Normal coloured filled areas
-\colorlet{accent colour}{orange!20}         % Accented filled areas
-\colorlet{background colour}{black!15}      % Background groups
-\colorlet{data colour}{black!50}            % Data flow
-\colorlet{control colour}{blue!80}             % Other lines etc
-
-% Common TikZ definitions
-\tikzset{
-    % This seems a reasonably comfortable arrow shape
-    >=stealth,
-%
-    % Define a set of styles
-    % First some fills
-    background fill/.style={fill=background colour},
-    highlight fill/.style={fill=normal colour},
-    accent fill/.style={fill=accent colour},
-    % Next some lines
-    bus/.style={color=data colour, text=black, line width=0.6mm, ->},
-    control/.style={draw=control colour, very thick, ->},
-%
-    % Used for creating an exact fit to an existing list of objects
-    tight fit/.style={fit=#1, inner sep=0, line width=0},
-    % We almost always want centre aligned node text
-    every node/.style={align=center},
-}
-
-
-% New tikz key definitions to control behaviour of \multipath.
-\tikzset{
-    % Default colour for multipath background
-    multipath background/.initial=white,
-    multipath margin/.initial=0.3mm,
-}
-
-% Draws multiple paths with an outline on each path.  Call with path options as
-% first optional argument and with a list of paths as the second argument.
-\newcommand{\multipath}[2][]{
-    \begin{scope}[#1]
-        % Pick up multipath margin and background definitions
-        \newcommand{\margin}{\pgfkeysvalueof{/tikz/multipath margin}}
-        \newcommand{\background}{\pgfkeysvalueof{/tikz/multipath background}}
-
-        % Draw a white background a bit larger than the programmed line
-        % thickness.  We turn off any arrows and shorten the line a trifle to
-        % avoid any erosion of the endpoints.
-        \begin{scope}[
-            line width=\pgflinewidth+\margin, color=\background,
-            shorten >=\margin, shorten <=\margin, -]
-        #2
-        \end{scope}
-
-        % Now draw the target path with its original options.
-        #2
-    \end{scope}
-}
-
-
-% It's convenient to have a background layer
-\pgfdeclarelayer{background}
-\pgfsetlayers{background,main}
-
+\input{MOPGF097f0.tikz}     % PGF & TikZ configuration
 
 
 \hyphenpenalty 4000         % Tone down hyphenation.
 
+% Tricky hack to make the last line of each caption aligned.  This is ... umm ..
+% perhaps not altogether necessary, but I like the result.
+\newcommand{\squarecaption}[2][1]{\caption[#1]{#2\unskip\parfillskip 0pt}}
 
 
 \begin{document}
@@ -141,7 +74,7 @@ paper with many system refinements.
 \begin{centering}
 \input{MOPGF097f1.tikz}
 \end{centering}
-\caption{
+\squarecaption{
 TMBF system in context.  The Transverse Multi-Bunch Feedback system measures the
 position of each bunch, detects the betatron oscillations of each bunch, and
 generates a drive signal to suppress the oscillations.
@@ -154,10 +87,10 @@ generates a drive signal to suppress the oscillations.
 \begin{centering}
 \input{MOPGF097f2.tikz}
 \end{centering}
-\caption{
+\squarecaption{
 Libera System Platform.  The DLS TMBF system is implemented on the
 Instrumentation Technologies Libera platform with the control system running
-EPICS on an embedded Single Board Controller (SBC).
+EPICS on an ARM based embedded Single Board Controller (SBC).
 }
 \label{system}
 \end{figure}
@@ -193,7 +126,7 @@ described in more detail below.
 \begin{centering}
 \input{MOPGF097f3.tikz}
 \end{centering}
-\caption{
+\squarecaption{
 This is the core data processing chain in the TMBF processor.  Data processing
 starts by adding a DC offset to each of the four ADC channels to compensate for
 static ADC errors, followed by a 3-tap filter to compensate for high frequency
@@ -274,10 +207,11 @@ of bunch output motion.
 \begin{centering}
 \input{MOPGF097f4.tikz}
 \end{centering}
-\caption{
+\squarecaption{
 Bunch by bunch FIR and output control.  The sequencer selects one of four banks
-to be active.  Each bank contains bunch configuration information for each of
-the stored bunches, used to control filtering and output configuration.
+to be active, defining basic machine behaviour.  Each bank contains bunch
+configuration information for each of the stored bunches, used to control the
+feedback filter and the output configuration.
 }
 \label{bunch}
 \end{figure}
@@ -296,7 +230,7 @@ written through the EPICS interface.
 \begin{centering}
 \input{MOPGF097f5.tikz}
 \end{centering}
-\caption[fragile]{
+\squarecaption[fragile]{
 Here we see all of the major blocks of the FPGA system design and their
 data interconnections.  FPGA blocks are shown thus: \tikz \node [draw,
 rectangle, thick, highlight fill] {}; and analogue/digital converters
@@ -336,7 +270,7 @@ experiments.
 \begin{centering}
 \input{MOPGF097f6.tikz}
 \end{centering}
-\caption{
+\squarecaption{
 The oscillator NCO\textsubscript1, can be set to a fixed frequency, or
 can be used as part of a tune tracking phase locked loop.  The tune phase $\phi$
 is measured at the operating frequency $f$ and used to compute a sequence of
@@ -371,7 +305,7 @@ unit.
 \begin{centering}
 \input{MOPGF097f7.tikz}
 \end{centering}
-\caption{
+\squarecaption{
 The oscillator NCO\textsubscript2 is under control of the sequencer, and is only
 enabled while the sequencer is running a program.  The sequencer controls the
 NCO frequency and gain and performs programmed frequency sweeps.  Data from the

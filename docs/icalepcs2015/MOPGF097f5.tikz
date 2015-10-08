@@ -13,7 +13,7 @@
         single arrow head extend=0pt, shape border rotate=#1},
     wide box/.style={minimum width=3cm},
     tall box/.style={minimum height=3cm},
-    trigger/.style={semithick, ->},
+    trigger/.style={semithick, >=open triangle 60, shorten >=-6pt, ->},
     x=2cm, y=2.3cm]
 
     % ADC input node
@@ -85,8 +85,8 @@
         let \p1 = (trigger |- capture), \p2 = ($(\p1)+(0.6,0)$) in
         (trigger) -- ($(trigger)+(0.6,0)$) -- (\p2) coordinate (trigger p);
     \draw [trigger] (trigger p) -- (capture);
-    \draw [trigger] (trigger p) -| (nco1);
-    \draw [trigger] (trigger p) -| (nco2);
+    \draw [trigger, rounded corners] (trigger p) -| (nco1);
+    \draw [trigger, rounded corners] (trigger p) -| (nco2);
     \draw [trigger] (trigger p) |- (bunch);
 
     % Bunch control signals: need to be drawn above triggers.
