@@ -1,7 +1,9 @@
 # Need to run:
 #       module load texlive/2015
 #
-LATEX = /dls_sw/apps/texlive/2015/x86_64-linux/pdflatex
+PATH := /dls_sw/apps/texlive/2015/x86_64-linux/:$(PATH)
+
+LATEX = pdflatex
 
 DOCUMENT = MOPGF097
 
@@ -9,9 +11,12 @@ DEPENDS += $(wildcard *.tikz)
 
 # Seven figures need to be convered for the poster
 POSTER_DEPENDS += $(foreach n,1 2 3 4 5 6 7,figure$(n).pdf)
+POSTER_DEPENDS += diamond_logo.eps diamond-background.png
+
+TARGETS = $(DOCUMENT).pdf $(DOCUMENT)_poster.pdf
 
 
-default: $(DOCUMENT).pdf $(DOCUMENT)_poster.pdf
+default: $(TARGETS)
 
 CITE_GREP = There were undefined references.
 REF_GREP = Rerun to get cross-references right.
@@ -31,14 +36,12 @@ figure%.pdf: make_figures.pdf
             -dFirstPage=$* -dLastPage=$* \
             -sOutputFile=$@ $<
 
-%.pdf: %.eps
-	epstopdf $^
-
 clean:
 	rm -f *.aux *.log
+	rm -f $(filter-out $(TARGETS),$(wildcard *.pdf))
 
 clean-all: clean
-	rm -f *.pdf
+	rm -f $(TARGETS)
 
 
 $(DOCUMENT).pdf: $(DEPENDS)

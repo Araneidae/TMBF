@@ -4,9 +4,13 @@
 \usepackage{array}          % Mathematical PostScript fonts
 \usepackage{multicol}       % Mathematical PostScript fonts
 
-\definebackgroundstyle{samplebackgroundstyle}{
-\draw[inner sep=0pt, line width=0pt, color=white]
-(bottomleft) rectangle (topright);
+\definebackgroundstyle{dlsbackground}{
+    \node [anchor=south west, inner sep=0, line width=0] at (bottomleft)
+        {\includegraphics{diamond-background.png}};
+    \node [anchor=south east, inner sep=0, line width=0,
+           xshift=-1.25cm, yshift=1.16cm]
+        at (bottomleft -| topright)
+        {\includegraphics[scale=1.52]{diamond_logo.eps}};
 }
 
 \title{\begin{minipage}{\linewidth}\centering
@@ -18,14 +22,11 @@
 \author{M.G.~Abbott, G.~Rehm, I.S.~Uzun}
 \institute{Diamond Light Source, Oxfordshire, UK}
 
-%\usetheme{Default}
-\usetheme{Envelope}
-
 \hyphenpenalty=5000
 \setlength{\columnsep}{2cm}
 
 \usetheme{Envelope}
-\usebackgroundstyle{samplebackgroundstyle}
+\usebackgroundstyle{dlsbackground}
 
 \begin{document}
 
