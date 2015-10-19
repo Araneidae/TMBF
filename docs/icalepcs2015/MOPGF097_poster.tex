@@ -35,7 +35,9 @@
 \begin{columns}
     \column{0.5}
     \block{TMBF Overview}{
-        \begin{center} \includegraphics[scale=4.25]{figure1.pdf}\end{center}
+        \begin{center}
+            \includegraphics[scale=4.25, page=1]{figures.pdf}
+        \end{center}
         The Transverse Multi-Bunch Feedback system measures the position of each
         bunch, detects the betatron oscillations of each bunch, and generates a
         drive signal to suppress the oscillations.
@@ -43,7 +45,9 @@
 
     \column{0.5}
     \block{Libera System Platform}{
-        \begin{center} \includegraphics[scale=3]{figure2.pdf}\end{center}
+        \begin{center}
+            \includegraphics[scale=3, page=2]{figures.pdf}
+        \end{center}
         The DLS TMBF system is implemented on the Instrumentation Technologies
         Libera platform with the control system running EPICS on an ARM based
         embedded Single Board Controller (SBC).
@@ -53,7 +57,7 @@
 \block{FPGA System Design And Data Paths}{
     \begin{tabular}{c m{5cm}}
         \begin{minipage}{0.55\textwidth}
-        \includegraphics[scale=2.75]{figure5.pdf}
+            \includegraphics[scale=2.75, page=5]{figures.pdf}
         \end{minipage}
     &
         \begin{minipage}{0.35\textwidth}
@@ -75,8 +79,8 @@
 }
 
 \block{Data Processing Chain}{
-    \includegraphics[scale=3]{figure3.pdf}
-    \includegraphics[scale=3]{figure4.pdf}
+    \includegraphics[scale=3, page=3]{figures.pdf}
+    \includegraphics[scale=3, page=4]{figures.pdf}
     \break
     \begin{multicols}{2}
     Data processing starts by adding a DC offset to each of the four ADC
@@ -94,7 +98,7 @@
 \begin{columns}
 \column{0.5}
     \block{Tune PLL}{
-    \includegraphics[scale=3]{figure6.pdf}
+    \includegraphics[scale=3, page=6]{figures.pdf}
     \parbox[b]{12.5cm} {
     The oscillator NCO\textsubscript1, can be used as part of a tune tracking
     phase locked loop. The tune phase $\phi$ is measured at the operating
@@ -105,7 +109,7 @@
 }
 \column{0.5}
     \block{Detector}{
-    \includegraphics[scale=3]{figure7.pdf}
+    \includegraphics[scale=3, page=7]{figures.pdf}
     \parbox[b]{12.5cm} {
     Data from the beam is mixed with the excitation waveform in the detector to
     measure a complete complex IQ response. Operation of this system produces a
