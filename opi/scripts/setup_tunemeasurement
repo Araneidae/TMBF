@@ -21,13 +21,12 @@ import argparse
 from cothread import catools
 
 
-DEFAULT_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
+DEFAULT_CONFIG = '/homelocal/sicilia/app/ctdibbb/TMBF_tune.config'
 
 DEVICE_TO_AXIS = {
-    'SR23C-DI-TMBF-01': 'X',
-    'SR23C-DI-TMBF-02': 'Y',
-    'SR23C-DI-TMBF-03': 'T',
-    'TS-DI-TMBF-01': 'T',
+    'bbbsr0201': 'X',
+    'bbbsr0202': 'Y',
+    'bbbsrspare': 'T',
 }
 
 VALID_MODES = ['TUNE', 'AP', 'FB']
@@ -119,7 +118,8 @@ if args.debug:
         print '%s <= %d*[%s]' % (pv, BUNCH_COUNT, value)
 
 if args.ring_mode is None:
-    RING_MODE = catools.caget('SR-CS-RING-01:MODE', datatype = str)
+    RING_MODE = 'SR'
+#    RING_MODE = catools.caget('SR-CS-RING-01:MODE', datatype = str)
 else:
     RING_MODE = args.ring_mode
 

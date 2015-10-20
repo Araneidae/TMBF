@@ -1,7 +1,11 @@
 # Defaults and configuration for TMBF
+# 2015.10.19: Changes by Ubaldo
+# Settings for 
+# tune sweep_range: from 0.05 to 0.025
+# harmonic: from 80 to 20 
 
-harmonic = 80
-bunch = 450
+harmonic = 20 # 80
+bunch = 0
 
 # Settings for basic tune measurement.
 tune_threshold = 0.3
@@ -23,7 +27,7 @@ sweep_dwell_time = 100
 blanking_interval = 10000
 blanking_source = 'SCLK Input'
 
-sweep_range = 0.05
+sweep_range = 0.025 # 0.05
 alarm_range = 0.01
 tune_direction = 'Forwards'
 keep_feedback = 'No feedback'
@@ -50,7 +54,7 @@ AP_min_block_len = 5
 # Feedback on, single bunch tune measurement
 FB_dac_output = 1               # Enable FIR output in this mode
 FB_keep_feedback = 'Keep feedback'
-FB_harmonic = 933
+FB_harmonic = 20 # = 80
 FB_sweep_gain = '-48dB'
 
 
