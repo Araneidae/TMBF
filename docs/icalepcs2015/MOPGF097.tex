@@ -155,7 +155,7 @@ When this is detected, a saturated output is generated and the resulting
 overflow event is reported to the user through the EPICS interface.
 
 
-\subsection{ADC data in}
+\subsection{ADC Data In}
 
 The Libera platform uses four separate 125\,MHz ADCs to sample the 500\,MHz
 bunch position signal, and so the ADC input arrives as four parallel streams of
@@ -171,7 +171,7 @@ for each bunch; this is read out at 100\,ms intervals and used to provide an
 accessible overview of bunch motion.
 
 
-\subsection{FIR feedback processing}
+\subsection{FIR Feedback Processing}
 
 Next a 10-tap FIR is run on the stream from each bunch.  In practice, this means
 that 936 separate FIRs are run, with a delay of 936 bunches between each tap.
@@ -184,7 +184,7 @@ be used to apply a different filter to the isolated bunch in a hybrid fill;
 secondly, it can be useful as part of detailed machine physics experiments.
 
 
-\subsection{DAC data out}
+\subsection{DAC Data Out}
 
 Finally the filtered signal is prepared for output.  At this point three
 candidate output signals are selected and summed together: the FIR filtered
