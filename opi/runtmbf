@@ -22,7 +22,7 @@ fi
 
 export EPICS_CA_MAX_ARRAY_BYTES=1000000
 
-cd "$(dirname "$0")"
+cd "$(dirname "$(readlink -f "$0")")"
 
 PATH="$(pwd)"/scripts:"$PATH":"$DI_PATH"
 exec edm -x -eolc "${ARGS[@]}" "$FILE" &

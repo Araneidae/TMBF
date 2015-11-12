@@ -53,7 +53,7 @@ for state in range(1, 8):
 
     # This fellow is treated a little differently and is processed internally.
     aOut('SEQ:%d:END_FREQ' % state,
-        -BUNCHES_PER_TURN, BUNCHES_PER_TURN, 'tune', 5,
+        None, None, 'tune', 5,
         PINI = 'NO', DESC = 'Sweep NCO end frequency')
 
 # This is the only valid control in state 0.

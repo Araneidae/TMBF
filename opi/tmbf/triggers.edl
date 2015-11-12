@@ -2620,7 +2620,7 @@ x 272
 y 384
 w 80
 h 16
-controlPv "LI-TI-MTGEN-01:MODE"
+controlPv "LI-TI-MTGEN-01:STATUS.DESC"
 font "helvetica-medium-r-14.0"
 fgColor index 14
 fgAlarm
