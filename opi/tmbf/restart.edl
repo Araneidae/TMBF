@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1941
-y 348
+x 1978
+y 122
 w 472
-h 193
+h 209
 font "helvetica-medium-r-16.0"
 ctlFont "helvetica-medium-r-16.0"
 btnFont "helvetica-medium-r-16.0"
@@ -52,7 +52,7 @@ major 4
 minor 1
 release 0
 x 392
-y 160
+y 176
 w 72
 h 24
 fgColor index 25
@@ -137,7 +137,7 @@ major 4
 minor 3
 release 0
 x 8
-y 160
+y 176
 w 128
 h 24
 fgColor index 14
@@ -182,7 +182,7 @@ major 4
 minor 3
 release 0
 x 144
-y 160
+y 176
 w 128
 h 24
 fgColor index 14
@@ -206,7 +206,7 @@ release 0
 x 240
 y 72
 w 224
-h 72
+h 96
 lineColor index 14
 fill
 fillColor index 4
@@ -321,6 +321,54 @@ bgColor index 0
 useDisplayBg
 value {
   "Fix delays:"
+}
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 360
+y 136
+w 64
+h 20
+controlPv "$(device):FIR:DECIMATION_S"
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+autoHeight
+motifWidget
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+inputFocusUpdates
+objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 248
+y 136
+w 99
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "FIR decimation:"
 }
 autoSize
 endObjectProperties
