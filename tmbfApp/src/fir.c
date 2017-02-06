@@ -149,6 +149,7 @@ bool initialise_fir(void)
 {
     fir_filter_length = hw_read_fir_length();
     PUBLISH_WRITER_P(mbbo, "FIR:GAIN", hw_write_fir_gain);
+    PUBLISH_WRITER_P(ulongout, "FIR:DECIMATION", hw_write_fir_decimation);
     for (unsigned int i = 0; i < FIR_BANKS; i ++)
         publish_bank(i, &banks[i]);
     return true;

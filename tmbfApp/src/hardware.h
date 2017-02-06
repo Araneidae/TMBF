@@ -108,6 +108,8 @@ void hw_write_fir_taps(unsigned int bank, const int taps[]);
 /* Returns the number of coefficients in the FIR filters. */
 unsigned int hw_read_fir_length(void);
 
+void hw_write_fir_decimation(unsigned int decimation);
+
 
 /* * * * * * * * * * * * * */
 /* DAC: Data Output Stage */

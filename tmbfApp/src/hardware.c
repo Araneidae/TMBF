@@ -205,7 +205,7 @@ struct tmbf_config_space
             uint32_t super_count;       //  7  Sequencer super state count
             uint32_t dac_preemph_taps;  //  8  DAC pre-emphasis filter
             uint32_t adc_filter_taps;   //  9  ADC compensation filter
-            uint32_t unused_w_10;       // 10   (unused)
+            uint32_t bunch_decimation;  // 10  Bunch by bunch decimation factor
             uint32_t bunch_zero_offset; // 11  Bunch zero offset
             uint32_t ddr_trigger_delay; // 12  DDR Trigger delay control
             uint32_t buf_trigger_delay; // 13  BUF Trigger delay control
@@ -495,6 +495,11 @@ void hw_write_fir_taps(unsigned int bank, const int taps[])
     for (unsigned int i = 0; i < fir_filter_length; i++)
         config_space->fir_write = (uint32_t) taps[fir_filter_length - i - 1];
     UNLOCK();
+}
+
+void hw_write_fir_decimation(unsigned int decimation)
+{
+    config_space->bunch_decimation = decimation;
 }
 
 unsigned int hw_read_fir_length(void)

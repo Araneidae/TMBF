@@ -32,3 +32,6 @@ mbbOut('FIR:GAIN',
     DESC = 'FIR gain select', *dBrange(8, -6))
 records.longin('FIR:N_TAPS', VAL = FIR_LENGTH, PINI = 'YES',
     DESC = 'FIR filter length')
+
+longOut('FIR:DECIMATION', 0, 127,
+    DESC = 'Bunch by bunch decimation')
