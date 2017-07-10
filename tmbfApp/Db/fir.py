@@ -35,4 +35,4 @@ records.longin('FIR:N_TAPS', VAL = FIR_LENGTH, PINI = 'YES',
 
 longOut('FIR:DECIMATION', 1, 128,
     DESC = 'Bunch by bunch decimation')
-mbbOut('FIR:DECIMATE:GAIN', *dBrange(4, -6))
+mbbOut('FIR:DECIMATE:GAIN', *dBrange(3, -6))

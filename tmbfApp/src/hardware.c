@@ -498,12 +498,7 @@ static unsigned int fir_filter_length;      // Initialised at startup
 
 void hw_write_fir_gain(unsigned int gain)
 {
-    LOCK();
-    write_control_bits(20, 3, gain & 0x7);
-    // For (somewhat spurious) backwards compatibility, the top bit of the gain
-    // is written elsewhere and has inverted sense!
-    write_control_bits_3(9, 1, ~(gain >> 3));
-    UNLOCK();
+    WRITE_CONTROL_BITS_3(9, 4, gain);
 }
 
 void hw_write_fir_taps(unsigned int bank, const int taps[])
