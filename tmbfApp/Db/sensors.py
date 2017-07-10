@@ -117,6 +117,7 @@ overflows = [
     overflow('SE:OVF:FIR', 'FIR overflow'),
     overflow('SE:OVF:DAC', 'DAC overflow'),
     overflow('SE:OVF:COMP', 'DAC pre-emphasis overflow'),
+    overflow('SE:OVF:DECIMATE', 'FIR decimation overflow'),
 ]
 overflows.append(
     AggregateSeverity('SE:OVF', 'Numerical overflow', overflows))

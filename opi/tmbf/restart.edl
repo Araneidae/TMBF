@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1978
-y 122
+x 910
+y 485
 w 472
-h 209
+h 233
 font "helvetica-medium-r-16.0"
 ctlFont "helvetica-medium-r-16.0"
 btnFont "helvetica-medium-r-16.0"
@@ -52,7 +52,7 @@ major 4
 minor 1
 release 0
 x 392
-y 176
+y 200
 w 72
 h 24
 fgColor index 25
@@ -137,7 +137,7 @@ major 4
 minor 3
 release 0
 x 8
-y 176
+y 200
 w 128
 h 24
 fgColor index 14
@@ -182,7 +182,7 @@ major 4
 minor 3
 release 0
 x 144
-y 176
+y 200
 w 128
 h 24
 fgColor index 14
@@ -206,7 +206,7 @@ release 0
 x 240
 y 72
 w 224
-h 96
+h 120
 lineColor index 14
 fill
 fillColor index 4
@@ -371,5 +371,45 @@ value {
   "FIR decimation:"
 }
 autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 248
+y 160
+w 94
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Decimate gain:"
+}
+autoSize
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 360
+y 160
+w 96
+h 22
+fgColor index 14
+fgAlarm
+bgColor index 3
+inconsistentColor index 0
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):FIR:DECIMATE:GAIN_S"
+font "helvetica-medium-r-12.0"
 endObjectProperties
 

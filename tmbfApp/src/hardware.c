@@ -205,7 +205,7 @@ struct tmbf_config_space
             uint32_t super_count;       //  7  Sequencer super state count
             uint32_t dac_preemph_taps;  //  8  DAC pre-emphasis filter
             uint32_t adc_filter_taps;   //  9  ADC compensation filter
-            uint32_t bunch_decimation;  // 10  Bunch by bunch decimation factor
+            uint32_t control3;          // 10  Decimation control
             uint32_t bunch_zero_offset; // 11  Bunch zero offset
             uint32_t ddr_trigger_delay; // 12  DDR Trigger delay control
             uint32_t buf_trigger_delay; // 13  BUF Trigger delay control
@@ -261,9 +261,10 @@ static pthread_mutex_t global_lock = PTHREAD_MUTEX_INITIALIZER;
 #define LOCK()      pthread_mutex_lock(&global_lock);
 #define UNLOCK()    pthread_mutex_unlock(&global_lock);
 
-/* Images of what was last written to the two control bit fields. */
+/* Images of what was last written to the three control bit fields. */
 static uint32_t control_field_1 = 0;
 static uint32_t control_field_2 = 0;
+static uint32_t control_field_3 = 0;
 
 
 static uint32_t read_bit_field(
@@ -298,6 +299,13 @@ static void write_control_bits_2(
         &config_space->control2, &control_field_2, start, bits, value);
 }
 
+static void write_control_bits_3(
+    unsigned int start, unsigned int bits, uint32_t value)
+{
+    write_control_bit_field(
+        &config_space->control3, &control_field_3, start, bits, value);
+}
+
 /* Writes mask to the pulse register.  This generates simultaneous pulse events
  * for all selected bits. */
 static void pulse_mask(uint32_t mask)
@@ -319,6 +327,11 @@ static void pulse_control_bit(unsigned int bit)
 #define WRITE_CONTROL_BITS_2(start, length, value) \
     LOCK(); \
     write_control_bits_2(start, length, value); \
+    UNLOCK()
+
+#define WRITE_CONTROL_BITS_3(start, length, value) \
+    LOCK(); \
+    write_control_bits_3(start, length, value); \
     UNLOCK()
 
 #define READ_STATUS_BITS(start, length) \
@@ -485,7 +498,12 @@ static unsigned int fir_filter_length;      // Initialised at startup
 
 void hw_write_fir_gain(unsigned int gain)
 {
-    WRITE_CONTROL_BITS(20, 3, gain);
+    LOCK();
+    write_control_bits(20, 3, gain & 0x7);
+    // For (somewhat spurious) backwards compatibility, the top bit of the gain
+    // is written elsewhere and has inverted sense!
+    write_control_bits_3(9, 1, ~(gain >> 3));
+    UNLOCK();
 }
 
 void hw_write_fir_taps(unsigned int bank, const int taps[])
@@ -499,7 +517,12 @@ void hw_write_fir_taps(unsigned int bank, const int taps[])
 
 void hw_write_fir_decimation(unsigned int decimation)
 {
-    config_space->bunch_decimation = decimation;
+    WRITE_CONTROL_BITS_3(0, 7, decimation - 1);
+}
+
+void hw_write_fir_decimation_gain(unsigned int gain)
+{
+    WRITE_CONTROL_BITS_3(7, 2, gain);
 }
 
 unsigned int hw_read_fir_length(void)

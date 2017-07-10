@@ -47,7 +47,8 @@ def configure_timing_test(tmbf, compensate = False):
     # Disable delay compensation so we meaure raw delays and use loopback data
     tmbf.set('COMPENSATE_S', 'Normal' if compensate else 'Disabled')
     tmbf.set('LOOPBACK_S', 'Loopback')
-    tmbf.set('FIR:DECIMATION_S', 0)
+    tmbf.set('FIR:DECIMATION_S', 1)
+    tmbf.set('FIR:DECIMATE:GAIN_S', '0dB')
 
     # Configure ADC and DAC filters with identity filters.
     tmbf.set('ADC:OFFSET_S', 4 * [0])

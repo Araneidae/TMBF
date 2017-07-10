@@ -7,11 +7,11 @@
 INSTALL_HOST=/home/libera/nfs/testing
 
 # Version string as presented to users.
-TMBF_VERSION=3.4
+TMBF_VERSION=3.4.1
 
 # Expected FPGA API version.  Bottom four bits are ignored so that API
 # preserving point releases can be allowed.
-FPGA_VERSION=0x3000
+FPGA_VERSION=0x3010
 
 # Fundamental machine parameter: number of RF cycles in machine revolution.
 BUNCHES_PER_TURN=936

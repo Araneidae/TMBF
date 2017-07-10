@@ -47,6 +47,8 @@ enum {
     OVERFLOW_IQ_ACC_DDR = 9,    // Overflow in IQ detector accumulator
     OVERFLOW_IQ_SCALE_DDR = 10, // Overflow in IQ detector readout scaling
 
+    OVERFLOW_FIR_DECIMATE = 11, // Overflow in FIR decimation
+
     TRIGGER_SCLK_IN     = 16,   // Trigger source from SCLK seen
     TRIGGER_PM_IN       = 17,   // Postmortem trigger source seen
     TRIGGER_SEQ_IN      = 18,   // Sequencer trigger state seen
@@ -108,7 +110,11 @@ void hw_write_fir_taps(unsigned int bank, const int taps[]);
 /* Returns the number of coefficients in the FIR filters. */
 unsigned int hw_read_fir_length(void);
 
+/* Writes decimation factor. */
 void hw_write_fir_decimation(unsigned int decimation);
+
+/* Writes decimation output shift. */
+void hw_write_fir_decimation_gain(unsigned int gain);
 
 
 /* * * * * * * * * * * * * */

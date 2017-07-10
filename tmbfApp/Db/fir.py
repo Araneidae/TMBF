@@ -29,9 +29,10 @@ for bank in range(4):
 
 
 mbbOut('FIR:GAIN',
-    DESC = 'FIR gain select', *dBrange(8, -6))
+    DESC = 'FIR gain select', *dBrange(16, -6, 48))
 records.longin('FIR:N_TAPS', VAL = FIR_LENGTH, PINI = 'YES',
     DESC = 'FIR filter length')
 
-longOut('FIR:DECIMATION', 0, 127,
+longOut('FIR:DECIMATION', 1, 128,
     DESC = 'Bunch by bunch decimation')
+mbbOut('FIR:DECIMATE:GAIN', *dBrange(4, -6))
