@@ -170,7 +170,7 @@ $(trace_0_y_pv_value)</tooltip>
     <trace_0_y_pv>$(device):BUF:WFA</trace_0_y_pv>
     <trace_0_y_pv_value />
     <trace_count>1</trace_count>
-    <transparent>false</transparent>
+    <transparent>true</transparent>
     <trigger_pv></trigger_pv>
     <trigger_pv_value />
     <visible>true</visible>
@@ -464,7 +464,7 @@ $(trace_0_y_pv_value)</tooltip>
     <trace_0_y_pv>$(device):BUF:WFB</trace_0_y_pv>
     <trace_0_y_pv_value />
     <trace_count>1</trace_count>
-    <transparent>false</transparent>
+    <transparent>true</transparent>
     <trigger_pv></trigger_pv>
     <trigger_pv_value />
     <visible>true</visible>

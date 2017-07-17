@@ -286,7 +286,7 @@ $(trace_0_y_pv_value)</tooltip>
     <trace_0_y_pv>$(device):BUN:$(bank):GAINWF_S</trace_0_y_pv>
     <trace_0_y_pv_value />
     <trace_count>1</trace_count>
-    <transparent>false</transparent>
+    <transparent>true</transparent>
     <trigger_pv></trigger_pv>
     <trigger_pv_value />
     <visible>true</visible>
@@ -580,7 +580,7 @@ $(trace_0_y_pv_value)</tooltip>
     <trace_0_y_pv>$(device):BUN:$(bank):FIRWF_S</trace_0_y_pv>
     <trace_0_y_pv_value />
     <trace_count>1</trace_count>
-    <transparent>false</transparent>
+    <transparent>true</transparent>
     <trigger_pv></trigger_pv>
     <trigger_pv_value />
     <visible>true</visible>
@@ -728,7 +728,7 @@ $(trace_0_y_pv_value)</tooltip>
     <trace_0_y_pv>$(device):BUN:$(bank):OUTWF_S</trace_0_y_pv>
     <trace_0_y_pv_value />
     <trace_count>1</trace_count>
-    <transparent>false</transparent>
+    <transparent>true</transparent>
     <trigger_pv></trigger_pv>
     <trigger_pv_value />
     <visible>true</visible>
@@ -750,7 +750,7 @@ $(trace_0_y_pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -771,7 +771,7 @@ $(trace_0_y_pv_value)</tooltip>
     <name>EDM TextInput</name>
     <precision>0</precision>
     <precision_from_pv>true</precision_from_pv>
-    <pv_name>loc://gain</pv_name>
+    <pv_name>loc://$(DID)gain&lt;VDouble&gt;(1)</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
@@ -807,7 +807,7 @@ $(pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -828,7 +828,7 @@ $(pv_value)</tooltip>
     <name>EDM TextInput</name>
     <precision>0</precision>
     <precision_from_pv>true</precision_from_pv>
-    <pv_name>loc://bunch</pv_name>
+    <pv_name>loc://$(DID)bunch</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
@@ -1454,166 +1454,6 @@ $(pv_value)</tooltip>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
     <actions hook="false" hook_all="false" />
-    <auto_size>true</auto_size>
-    <background_color>
-      <color name="White" red="255" green="255" blue="255" />
-    </background_color>
-    <border_color>
-      <color name="Black" red="0" green="0" blue="0" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <fontdata fontName="liberation sans" height="12" style="1" pixels="true" />
-    </font>
-    <foreground_color>
-      <color name="Text: FG" red="0" green="0" blue="0" />
-    </foreground_color>
-    <height>14</height>
-    <horizontal_alignment>0</horizontal_alignment>
-    <name>EDM Label</name>
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <text>FIR:</text>
-    <tooltip></tooltip>
-    <transparent>true</transparent>
-    <vertical_alignment>1</vertical_alignment>
-    <visible>true</visible>
-    <widget_type>Label</widget_type>
-    <width>23</width>
-    <wrap_words>false</wrap_words>
-    <wuid>-5ecea5e5:15d3b322ccb:-689b</wuid>
-    <x>328</x>
-    <y>552</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
-    <actions hook="false" hook_all="false" />
-    <auto_size>true</auto_size>
-    <background_color>
-      <color name="White" red="255" green="255" blue="255" />
-    </background_color>
-    <border_color>
-      <color name="Black" red="0" green="0" blue="0" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <fontdata fontName="liberation sans" height="12" style="1" pixels="true" />
-    </font>
-    <foreground_color>
-      <color name="Text: FG" red="0" green="0" blue="0" />
-    </foreground_color>
-    <height>14</height>
-    <horizontal_alignment>0</horizontal_alignment>
-    <name>EDM Label</name>
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <text>FIR:</text>
-    <tooltip></tooltip>
-    <transparent>true</transparent>
-    <vertical_alignment>1</vertical_alignment>
-    <visible>true</visible>
-    <widget_type>Label</widget_type>
-    <width>23</width>
-    <wrap_words>false</wrap_words>
-    <wuid>-5ecea5e5:15d3b322ccb:-689a</wuid>
-    <x>328</x>
-    <y>552</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
-    <actions hook="false" hook_all="false" />
-    <auto_size>true</auto_size>
-    <background_color>
-      <color name="White" red="255" green="255" blue="255" />
-    </background_color>
-    <border_color>
-      <color name="Black" red="0" green="0" blue="0" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <fontdata fontName="liberation sans" height="12" style="1" pixels="true" />
-    </font>
-    <foreground_color>
-      <color name="Text: FG" red="0" green="0" blue="0" />
-    </foreground_color>
-    <height>14</height>
-    <horizontal_alignment>0</horizontal_alignment>
-    <name>EDM Label</name>
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <text>FIR:</text>
-    <tooltip></tooltip>
-    <transparent>true</transparent>
-    <vertical_alignment>1</vertical_alignment>
-    <visible>true</visible>
-    <widget_type>Label</widget_type>
-    <width>23</width>
-    <wrap_words>false</wrap_words>
-    <wuid>-5ecea5e5:15d3b322ccb:-6899</wuid>
-    <x>328</x>
-    <y>552</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
-    <actions hook="false" hook_all="false" />
-    <auto_size>true</auto_size>
-    <background_color>
-      <color name="White" red="255" green="255" blue="255" />
-    </background_color>
-    <border_color>
-      <color name="Black" red="0" green="0" blue="0" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <fontdata fontName="liberation sans" height="12" style="1" pixels="true" />
-    </font>
-    <foreground_color>
-      <color name="Text: FG" red="0" green="0" blue="0" />
-    </foreground_color>
-    <height>14</height>
-    <horizontal_alignment>0</horizontal_alignment>
-    <name>EDM Label</name>
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <text>FIR:</text>
-    <tooltip></tooltip>
-    <transparent>true</transparent>
-    <vertical_alignment>1</vertical_alignment>
-    <visible>true</visible>
-    <widget_type>Label</widget_type>
-    <width>23</width>
-    <wrap_words>false</wrap_words>
-    <wuid>-5ecea5e5:15d3b322ccb:-6898</wuid>
-    <x>328</x>
-    <y>552</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
-    <actions hook="false" hook_all="false" />
     <auto_size>false</auto_size>
     <background_color>
       <color name="Grey 40%" red="102" green="102" blue="102" />
@@ -1780,7 +1620,7 @@ $(pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -1801,7 +1641,7 @@ $(pv_value)</tooltip>
     <name>EDM TextInput</name>
     <precision>0</precision>
     <precision_from_pv>true</precision_from_pv>
-    <pv_name>loc://bunch</pv_name>
+    <pv_name>loc://$(DID)bunch&lt;VDouble&gt;(0)</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
@@ -2353,7 +2193,7 @@ $(pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -2374,7 +2214,7 @@ $(pv_value)</tooltip>
     <name>EDM TextInput</name>
     <precision>0</precision>
     <precision_from_pv>true</precision_from_pv>
-    <pv_name>loc://gain</pv_name>
+    <pv_name>loc://$(DID)gain</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
@@ -2422,7 +2262,7 @@ $(pv_value)</tooltip>
     <height>23</height>
     <label></label>
     <name>EDM menu button</name>
-    <pv_name>loc://fir</pv_name>
+    <pv_name>loc://$(DID)fir&lt;VEnum&gt;(0, "FIR 0", "FIR 1", "FIR 2", "FIR 3")</pv_name>
     <pv_value />
     <rules />
     <scale_options>
@@ -2466,7 +2306,7 @@ $(pv_value)</tooltip>
     <height>25</height>
     <label></label>
     <name>EDM menu button</name>
-    <pv_name>loc://fir</pv_name>
+    <pv_name>loc://$(DID)fir</pv_name>
     <pv_value />
     <rules />
     <scale_options>
@@ -2510,7 +2350,7 @@ $(pv_value)</tooltip>
     <height>23</height>
     <label></label>
     <name>EDM menu button</name>
-    <pv_name>loc://out</pv_name>
+    <pv_name>loc://$(DID)out</pv_name>
     <pv_value />
     <rules />
     <scale_options>
@@ -2554,7 +2394,7 @@ $(pv_value)</tooltip>
     <height>23</height>
     <label></label>
     <name>EDM menu button</name>
-    <pv_name>loc://out</pv_name>
+    <pv_name>loc://$(DID)out&lt;VEnum&gt;(0, "Off", "FIR", "NCO", "FIR+NCO", "Sweep", "Sw+FIR", "Sw+NCO", "Sw+NCO+FIR")</pv_name>
     <pv_value />
     <rules />
     <scale_options>
@@ -2586,7 +2426,7 @@ $(pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -2607,7 +2447,7 @@ $(pv_value)</tooltip>
     <name>EDM TextInput</name>
     <precision>0</precision>
     <precision_from_pv>true</precision_from_pv>
-    <pv_name>loc://bunch</pv_name>
+    <pv_name>loc://$(DID)bunch</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />
@@ -2749,7 +2589,7 @@ $(pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -2770,7 +2610,7 @@ $(pv_value)</tooltip>
     <name>EDM TextInput</name>
     <precision>0</precision>
     <precision_from_pv>true</precision_from_pv>
-    <pv_name>loc://bunch</pv_name>
+    <pv_name>loc://$(DID)bunch</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
     <rules />

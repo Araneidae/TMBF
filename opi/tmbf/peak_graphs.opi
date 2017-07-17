@@ -263,7 +263,7 @@ $(pv_value)</tooltip>
     <axis_count>3</axis_count>
     <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
     <background_color>
-      <color name="Grey 75%" red="192" green="192" blue="192" />
+      <color name="Canvas" red="200" green="200" blue="200" />
     </background_color>
     <border_alarm_sensitive>false</border_alarm_sensitive>
     <border_color>
@@ -279,7 +279,7 @@ $(pv_value)</tooltip>
     <height>80</height>
     <name>EDM xyGraph</name>
     <plot_area_background_color>
-      <color name="Grey 75%" red="192" green="192" blue="192" />
+      <color name="Canvas" red="200" green="200" blue="200" />
     </plot_area_background_color>
     <pv_name>$(trace_0_y_pv)</pv_name>
     <pv_value />
@@ -411,7 +411,7 @@ $(trace_0_y_pv_value)</tooltip>
     <axis_count>3</axis_count>
     <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
     <background_color>
-      <color name="Grey 75%" red="192" green="192" blue="192" />
+      <color name="Canvas" red="200" green="200" blue="200" />
     </background_color>
     <border_alarm_sensitive>false</border_alarm_sensitive>
     <border_color>
@@ -427,7 +427,7 @@ $(trace_0_y_pv_value)</tooltip>
     <height>80</height>
     <name>EDM xyGraph</name>
     <plot_area_background_color>
-      <color name="Grey 75%" red="192" green="192" blue="192" />
+      <color name="Canvas" red="200" green="200" blue="200" />
     </plot_area_background_color>
     <pv_name>$(trace_0_y_pv)</pv_name>
     <pv_value />
@@ -559,14 +559,14 @@ $(trace_0_y_pv_value)</tooltip>
     <axis_count>3</axis_count>
     <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
     <background_color>
-      <color name="Grey 75%" red="192" green="192" blue="192" />
+      <color name="Canvas" red="200" green="200" blue="200" />
     </background_color>
     <border_alarm_sensitive>false</border_alarm_sensitive>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
     <border_style>0</border_style>
-    <border_width>0</border_width>
+    <border_width>1</border_width>
     <enabled>true</enabled>
     <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
     <foreground_color>
@@ -575,7 +575,7 @@ $(trace_0_y_pv_value)</tooltip>
     <height>96</height>
     <name>EDM xyGraph</name>
     <plot_area_background_color>
-      <color name="Grey 75%" red="192" green="192" blue="192" />
+      <color name="Canvas" red="200" green="200" blue="200" />
     </plot_area_background_color>
     <pv_name>$(trace_0_y_pv)</pv_name>
     <pv_value />
@@ -609,11 +609,11 @@ $(trace_3_x_pv)
 $(trace_3_x_pv_value)</tooltip>
     <trace_0_anti_alias>false</trace_0_anti_alias>
     <trace_0_buffer_size>65536</trace_0_buffer_size>
-    <trace_0_concatenate_data>false</trace_0_concatenate_data>
-    <trace_0_line_width>1</trace_0_line_width>
+    <trace_0_concatenate_data>true</trace_0_concatenate_data>
+    <trace_0_line_width>2</trace_0_line_width>
     <trace_0_name>$(trace_0_y_pv)</trace_0_name>
     <trace_0_plot_mode>0</trace_0_plot_mode>
-    <trace_0_point_size>4</trace_0_point_size>
+    <trace_0_point_size>6</trace_0_point_size>
     <trace_0_point_style>0</trace_0_point_style>
     <trace_0_trace_color>
       <color name="Blue" red="0" green="0" blue="255" />
@@ -629,12 +629,12 @@ $(trace_3_x_pv_value)</tooltip>
     <trace_0_y_pv>$(device):PEAK:POWER:16</trace_0_y_pv>
     <trace_0_y_pv_value />
     <trace_1_anti_alias>false</trace_1_anti_alias>
-    <trace_1_buffer_size>1</trace_1_buffer_size>
+    <trace_1_buffer_size>1000</trace_1_buffer_size>
     <trace_1_concatenate_data>false</trace_1_concatenate_data>
     <trace_1_line_width>1</trace_1_line_width>
     <trace_1_name>$(trace_1_y_pv)</trace_1_name>
     <trace_1_plot_mode>0</trace_1_plot_mode>
-    <trace_1_point_size>6</trace_1_point_size>
+    <trace_1_point_size>8</trace_1_point_size>
     <trace_1_point_style>8</trace_1_point_style>
     <trace_1_trace_color>
       <color name="Red" red="255" green="0" blue="0" />
@@ -650,7 +650,7 @@ $(trace_3_x_pv_value)</tooltip>
     <trace_1_y_pv>$(device):PEAK:V:16</trace_1_y_pv>
     <trace_1_y_pv_value />
     <trace_2_anti_alias>false</trace_2_anti_alias>
-    <trace_2_buffer_size>1</trace_2_buffer_size>
+    <trace_2_buffer_size>1000</trace_2_buffer_size>
     <trace_2_concatenate_data>false</trace_2_concatenate_data>
     <trace_2_line_width>1</trace_2_line_width>
     <trace_2_name>$(trace_2_y_pv)</trace_2_name>
@@ -658,7 +658,7 @@ $(trace_3_x_pv_value)</tooltip>
     <trace_2_point_size>6</trace_2_point_size>
     <trace_2_point_style>6</trace_2_point_style>
     <trace_2_trace_color>
-      <color name="Mid Cyan" red="0" green="196" blue="196" />
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
     </trace_2_trace_color>
     <trace_2_trace_type>2</trace_2_trace_type>
     <trace_2_update_delay>0</trace_2_update_delay>
@@ -671,7 +671,7 @@ $(trace_3_x_pv_value)</tooltip>
     <trace_2_y_pv>$(device):PEAK:V:16</trace_2_y_pv>
     <trace_2_y_pv_value />
     <trace_3_anti_alias>false</trace_3_anti_alias>
-    <trace_3_buffer_size>1</trace_3_buffer_size>
+    <trace_3_buffer_size>1000</trace_3_buffer_size>
     <trace_3_concatenate_data>false</trace_3_concatenate_data>
     <trace_3_line_width>1</trace_3_line_width>
     <trace_3_name>$(trace_3_y_pv)</trace_3_name>
@@ -679,7 +679,7 @@ $(trace_3_x_pv_value)</tooltip>
     <trace_3_point_size>6</trace_3_point_size>
     <trace_3_point_style>6</trace_3_point_style>
     <trace_3_trace_color>
-      <color name="Mid Cyan" red="0" green="196" blue="196" />
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
     </trace_3_trace_color>
     <trace_3_trace_type>2</trace_3_trace_type>
     <trace_3_update_delay>0</trace_3_update_delay>
@@ -782,7 +782,7 @@ $(trace_3_x_pv_value)</tooltip>
     <axis_count>3</axis_count>
     <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
     <background_color>
-      <color name="Grey 75%" red="192" green="192" blue="192" />
+      <color name="Canvas" red="200" green="200" blue="200" />
     </background_color>
     <border_alarm_sensitive>false</border_alarm_sensitive>
     <border_color>
@@ -798,7 +798,7 @@ $(trace_3_x_pv_value)</tooltip>
     <height>96</height>
     <name>EDM xyGraph</name>
     <plot_area_background_color>
-      <color name="Grey 75%" red="192" green="192" blue="192" />
+      <color name="Canvas" red="200" green="200" blue="200" />
     </plot_area_background_color>
     <pv_name>$(trace_0_y_pv)</pv_name>
     <pv_value />
@@ -833,7 +833,7 @@ $(trace_3_x_pv_value)</tooltip>
     <trace_0_anti_alias>false</trace_0_anti_alias>
     <trace_0_buffer_size>65536</trace_0_buffer_size>
     <trace_0_concatenate_data>false</trace_0_concatenate_data>
-    <trace_0_line_width>1</trace_0_line_width>
+    <trace_0_line_width>2</trace_0_line_width>
     <trace_0_name>$(trace_0_y_pv)</trace_0_name>
     <trace_0_plot_mode>0</trace_0_plot_mode>
     <trace_0_point_size>4</trace_0_point_size>
@@ -857,7 +857,7 @@ $(trace_3_x_pv_value)</tooltip>
     <trace_1_line_width>1</trace_1_line_width>
     <trace_1_name>$(trace_1_y_pv)</trace_1_name>
     <trace_1_plot_mode>0</trace_1_plot_mode>
-    <trace_1_point_size>6</trace_1_point_size>
+    <trace_1_point_size>8</trace_1_point_size>
     <trace_1_point_style>8</trace_1_point_style>
     <trace_1_trace_color>
       <color name="Red" red="255" green="0" blue="0" />
@@ -873,7 +873,7 @@ $(trace_3_x_pv_value)</tooltip>
     <trace_1_y_pv>$(device):PEAK:V:64</trace_1_y_pv>
     <trace_1_y_pv_value />
     <trace_2_anti_alias>false</trace_2_anti_alias>
-    <trace_2_buffer_size>1</trace_2_buffer_size>
+    <trace_2_buffer_size>6</trace_2_buffer_size>
     <trace_2_concatenate_data>false</trace_2_concatenate_data>
     <trace_2_line_width>1</trace_2_line_width>
     <trace_2_name>$(trace_2_y_pv)</trace_2_name>
@@ -881,7 +881,7 @@ $(trace_3_x_pv_value)</tooltip>
     <trace_2_point_size>6</trace_2_point_size>
     <trace_2_point_style>6</trace_2_point_style>
     <trace_2_trace_color>
-      <color name="Mid Cyan" red="0" green="196" blue="196" />
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
     </trace_2_trace_color>
     <trace_2_trace_type>2</trace_2_trace_type>
     <trace_2_update_delay>0</trace_2_update_delay>
@@ -894,7 +894,7 @@ $(trace_3_x_pv_value)</tooltip>
     <trace_2_y_pv>$(device):PEAK:V:64</trace_2_y_pv>
     <trace_2_y_pv_value />
     <trace_3_anti_alias>false</trace_3_anti_alias>
-    <trace_3_buffer_size>1</trace_3_buffer_size>
+    <trace_3_buffer_size>6</trace_3_buffer_size>
     <trace_3_concatenate_data>false</trace_3_concatenate_data>
     <trace_3_line_width>1</trace_3_line_width>
     <trace_3_name>$(trace_3_y_pv)</trace_3_name>
@@ -902,7 +902,7 @@ $(trace_3_x_pv_value)</tooltip>
     <trace_3_point_size>6</trace_3_point_size>
     <trace_3_point_style>6</trace_3_point_style>
     <trace_3_trace_color>
-      <color name="Mid Cyan" red="0" green="196" blue="196" />
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
     </trace_3_trace_color>
     <trace_3_trace_type>2</trace_3_trace_type>
     <trace_3_update_delay>0</trace_3_update_delay>
@@ -1159,5 +1159,228 @@ $(pv_value)</tooltip>
     <wuid>-5ecea5e5:15d3b322ccb:-67ec</wuid>
     <x>8</x>
     <y>440</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <axis_0_auto_scale>false</axis_0_auto_scale>
+    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
+    <axis_0_auto_scale_tight>false</axis_0_auto_scale_tight>
+    <axis_0_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_axis_color>
+    <axis_0_axis_title></axis_0_axis_title>
+    <axis_0_dash_grid_line>true</axis_0_dash_grid_line>
+    <axis_0_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_grid_color>
+    <axis_0_log_scale>false</axis_0_log_scale>
+    <axis_0_maximum>256.0</axis_0_maximum>
+    <axis_0_minimum>0.0</axis_0_minimum>
+    <axis_0_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_0_scale_font>
+    <axis_0_scale_format></axis_0_scale_format>
+    <axis_0_show_grid>false</axis_0_show_grid>
+    <axis_0_time_format>0</axis_0_time_format>
+    <axis_0_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_0_title_font>
+    <axis_0_visible>false</axis_0_visible>
+    <axis_1_auto_scale>false</axis_1_auto_scale>
+    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
+    <axis_1_auto_scale_tight>false</axis_1_auto_scale_tight>
+    <axis_1_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_axis_color>
+    <axis_1_axis_title></axis_1_axis_title>
+    <axis_1_dash_grid_line>true</axis_1_dash_grid_line>
+    <axis_1_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_grid_color>
+    <axis_1_log_scale>false</axis_1_log_scale>
+    <axis_1_maximum>1.0E7</axis_1_maximum>
+    <axis_1_minimum>-1000.0</axis_1_minimum>
+    <axis_1_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_1_scale_font>
+    <axis_1_scale_format></axis_1_scale_format>
+    <axis_1_show_grid>false</axis_1_show_grid>
+    <axis_1_time_format>0</axis_1_time_format>
+    <axis_1_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_1_title_font>
+    <axis_1_visible>false</axis_1_visible>
+    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_2_auto_scale_threshold>0.0</axis_2_auto_scale_threshold>
+    <axis_2_auto_scale_tight>false</axis_2_auto_scale_tight>
+    <axis_2_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_axis_color>
+    <axis_2_axis_title></axis_2_axis_title>
+    <axis_2_dash_grid_line>true</axis_2_dash_grid_line>
+    <axis_2_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_grid_color>
+    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
+    <axis_2_log_scale>false</axis_2_log_scale>
+    <axis_2_maximum>1.0</axis_2_maximum>
+    <axis_2_minimum>0.0</axis_2_minimum>
+    <axis_2_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_2_scale_font>
+    <axis_2_scale_format></axis_2_scale_format>
+    <axis_2_show_grid>false</axis_2_show_grid>
+    <axis_2_time_format>0</axis_2_time_format>
+    <axis_2_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_2_title_font>
+    <axis_2_visible>false</axis_2_visible>
+    <axis_2_y_axis>true</axis_2_y_axis>
+    <axis_count>3</axis_count>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>0</border_width>
+    <enabled>true</enabled>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>353</height>
+    <name>EDM xyGraph_4</name>
+    <plot_area_background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </plot_area_background_color>
+    <pv_name>$(trace_0_y_pv)</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_legend>false</show_legend>
+    <show_plot_area_border>false</show_plot_area_border>
+    <show_toolbar>false</show_toolbar>
+    <title></title>
+    <title_font>
+      <fontdata fontName="Arial" height="12" style="1" pixels="true" />
+    </title_font>
+    <tooltip>$(trace_0_y_pv)
+$(trace_0_y_pv_value)
+$(trace_1_y_pv)
+$(trace_1_y_pv_value)
+$(trace_2_y_pv)
+$(trace_2_y_pv_value)
+$(trace_3_y_pv)
+$(trace_3_y_pv_value)
+$(trace_1_x_pv)
+$(trace_1_x_pv_value)
+$(trace_2_x_pv)
+$(trace_2_x_pv_value)
+$(trace_3_x_pv)
+$(trace_3_x_pv_value)</tooltip>
+    <trace_0_anti_alias>false</trace_0_anti_alias>
+    <trace_0_buffer_size>65536</trace_0_buffer_size>
+    <trace_0_concatenate_data>false</trace_0_concatenate_data>
+    <trace_0_line_width>1</trace_0_line_width>
+    <trace_0_name>$(trace_0_y_pv)</trace_0_name>
+    <trace_0_plot_mode>0</trace_0_plot_mode>
+    <trace_0_point_size>4</trace_0_point_size>
+    <trace_0_point_style>0</trace_0_point_style>
+    <trace_0_trace_color>
+      <color name="Blue" red="0" green="0" blue="255" />
+    </trace_0_trace_color>
+    <trace_0_trace_type>0</trace_0_trace_type>
+    <trace_0_update_delay>0</trace_0_update_delay>
+    <trace_0_update_mode>0</trace_0_update_mode>
+    <trace_0_visible>true</trace_0_visible>
+    <trace_0_x_axis_index>0</trace_0_x_axis_index>
+    <trace_0_x_pv></trace_0_x_pv>
+    <trace_0_x_pv_value />
+    <trace_0_y_axis_index>1</trace_0_y_axis_index>
+    <trace_0_y_pv>$(device):PEAK:POWER:16</trace_0_y_pv>
+    <trace_0_y_pv_value />
+    <trace_1_anti_alias>false</trace_1_anti_alias>
+    <trace_1_buffer_size>1</trace_1_buffer_size>
+    <trace_1_concatenate_data>false</trace_1_concatenate_data>
+    <trace_1_line_width>1</trace_1_line_width>
+    <trace_1_name>$(trace_1_y_pv)</trace_1_name>
+    <trace_1_plot_mode>0</trace_1_plot_mode>
+    <trace_1_point_size>8</trace_1_point_size>
+    <trace_1_point_style>8</trace_1_point_style>
+    <trace_1_trace_color>
+      <color name="Red" red="255" green="0" blue="0" />
+    </trace_1_trace_color>
+    <trace_1_trace_type>2</trace_1_trace_type>
+    <trace_1_update_delay>0</trace_1_update_delay>
+    <trace_1_update_mode>0</trace_1_update_mode>
+    <trace_1_visible>true</trace_1_visible>
+    <trace_1_x_axis_index>0</trace_1_x_axis_index>
+    <trace_1_x_pv>$(device):PEAK:IX:16</trace_1_x_pv>
+    <trace_1_x_pv_value />
+    <trace_1_y_axis_index>1</trace_1_y_axis_index>
+    <trace_1_y_pv>$(device):PEAK:V:16</trace_1_y_pv>
+    <trace_1_y_pv_value />
+    <trace_2_anti_alias>false</trace_2_anti_alias>
+    <trace_2_buffer_size>1</trace_2_buffer_size>
+    <trace_2_concatenate_data>false</trace_2_concatenate_data>
+    <trace_2_line_width>1</trace_2_line_width>
+    <trace_2_name>$(trace_2_y_pv)</trace_2_name>
+    <trace_2_plot_mode>0</trace_2_plot_mode>
+    <trace_2_point_size>6</trace_2_point_size>
+    <trace_2_point_style>6</trace_2_point_style>
+    <trace_2_trace_color>
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
+    </trace_2_trace_color>
+    <trace_2_trace_type>2</trace_2_trace_type>
+    <trace_2_update_delay>0</trace_2_update_delay>
+    <trace_2_update_mode>0</trace_2_update_mode>
+    <trace_2_visible>true</trace_2_visible>
+    <trace_2_x_axis_index>0</trace_2_x_axis_index>
+    <trace_2_x_pv>$(device):PEAK:L:16</trace_2_x_pv>
+    <trace_2_x_pv_value />
+    <trace_2_y_axis_index>1</trace_2_y_axis_index>
+    <trace_2_y_pv>$(device):PEAK:V:16</trace_2_y_pv>
+    <trace_2_y_pv_value />
+    <trace_3_anti_alias>false</trace_3_anti_alias>
+    <trace_3_buffer_size>1</trace_3_buffer_size>
+    <trace_3_concatenate_data>false</trace_3_concatenate_data>
+    <trace_3_line_width>1</trace_3_line_width>
+    <trace_3_name>$(trace_3_y_pv)</trace_3_name>
+    <trace_3_plot_mode>0</trace_3_plot_mode>
+    <trace_3_point_size>6</trace_3_point_size>
+    <trace_3_point_style>6</trace_3_point_style>
+    <trace_3_trace_color>
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
+    </trace_3_trace_color>
+    <trace_3_trace_type>2</trace_3_trace_type>
+    <trace_3_update_delay>0</trace_3_update_delay>
+    <trace_3_update_mode>0</trace_3_update_mode>
+    <trace_3_visible>true</trace_3_visible>
+    <trace_3_x_axis_index>0</trace_3_x_axis_index>
+    <trace_3_x_pv>$(device):PEAK:R:16</trace_3_x_pv>
+    <trace_3_x_pv_value />
+    <trace_3_y_axis_index>1</trace_3_y_axis_index>
+    <trace_3_y_pv>$(device):PEAK:V:16</trace_3_y_pv>
+    <trace_3_y_pv_value />
+    <trace_count>4</trace_count>
+    <transparent>false</transparent>
+    <trigger_pv></trigger_pv>
+    <trigger_pv_value />
+    <visible>true</visible>
+    <widget_type>Dawn XY Graph</widget_type>
+    <width>480</width>
+    <wuid>6dba3a2c:15d5074ae75:-6b71</wuid>
+    <x>520</x>
+    <y>64</y>
   </widget>
 </display>

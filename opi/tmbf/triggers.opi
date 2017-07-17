@@ -1260,7 +1260,7 @@ $(pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -1273,10 +1273,10 @@ $(pv_value)</tooltip>
     </foreground_color>
     <format_type>0</format_type>
     <height>20</height>
-    <horizontal_alignment>2</horizontal_alignment>
+    <horizontal_alignment>0</horizontal_alignment>
     <limits_from_pv>false</limits_from_pv>
-    <maximum>Infinity</maximum>
-    <minimum>-Infinity</minimum>
+    <maximum>1.7976931348623157E308</maximum>
+    <minimum>-1.7976931348623157E308</minimum>
     <multiline_input>false</multiline_input>
     <name>EDM TextInput</name>
     <precision>0</precision>
@@ -1785,7 +1785,7 @@ $(pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -1798,10 +1798,10 @@ $(pv_value)</tooltip>
     </foreground_color>
     <format_type>0</format_type>
     <height>24</height>
-    <horizontal_alignment>2</horizontal_alignment>
+    <horizontal_alignment>0</horizontal_alignment>
     <limits_from_pv>false</limits_from_pv>
-    <maximum>Infinity</maximum>
-    <minimum>-Infinity</minimum>
+    <maximum>1.7976931348623157E308</maximum>
+    <minimum>-1.7976931348623157E308</minimum>
     <multiline_input>false</multiline_input>
     <name>EDM TextInput</name>
     <precision>0</precision>
@@ -1842,7 +1842,7 @@ $(pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -1855,10 +1855,10 @@ $(pv_value)</tooltip>
     </foreground_color>
     <format_type>0</format_type>
     <height>24</height>
-    <horizontal_alignment>2</horizontal_alignment>
+    <horizontal_alignment>0</horizontal_alignment>
     <limits_from_pv>false</limits_from_pv>
-    <maximum>Infinity</maximum>
-    <minimum>-Infinity</minimum>
+    <maximum>1.7976931348623157E308</maximum>
+    <minimum>-1.7976931348623157E308</minimum>
     <multiline_input>false</multiline_input>
     <name>EDM TextInput</name>
     <precision>0</precision>
@@ -2019,7 +2019,7 @@ $(pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -2032,10 +2032,10 @@ $(pv_value)</tooltip>
     </foreground_color>
     <format_type>0</format_type>
     <height>20</height>
-    <horizontal_alignment>2</horizontal_alignment>
+    <horizontal_alignment>0</horizontal_alignment>
     <limits_from_pv>false</limits_from_pv>
-    <maximum>Infinity</maximum>
-    <minimum>-Infinity</minimum>
+    <maximum>1.7976931348623157E308</maximum>
+    <minimum>-1.7976931348623157E308</minimum>
     <multiline_input>false</multiline_input>
     <name>EDM TextInput</name>
     <precision>0</precision>
@@ -3536,7 +3536,7 @@ $(pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -3549,10 +3549,10 @@ $(pv_value)</tooltip>
     </foreground_color>
     <format_type>0</format_type>
     <height>24</height>
-    <horizontal_alignment>2</horizontal_alignment>
+    <horizontal_alignment>0</horizontal_alignment>
     <limits_from_pv>false</limits_from_pv>
-    <maximum>Infinity</maximum>
-    <minimum>-Infinity</minimum>
+    <maximum>1.7976931348623157E308</maximum>
+    <minimum>-1.7976931348623157E308</minimum>
     <multiline_input>false</multiline_input>
     <name>EDM TextInput</name>
     <precision>0</precision>
@@ -5479,7 +5479,7 @@ $(pv_value)</tooltip>
     <border_color>
       <color red="0" green="128" blue="255" />
     </border_color>
-    <border_style>0</border_style>
+    <border_style>3</border_style>
     <border_width>1</border_width>
     <confirm_message></confirm_message>
     <enabled>true</enabled>
@@ -5492,10 +5492,10 @@ $(pv_value)</tooltip>
     </foreground_color>
     <format_type>0</format_type>
     <height>24</height>
-    <horizontal_alignment>2</horizontal_alignment>
+    <horizontal_alignment>0</horizontal_alignment>
     <limits_from_pv>false</limits_from_pv>
-    <maximum>Infinity</maximum>
-    <minimum>-Infinity</minimum>
+    <maximum>1.7976931348623157E308</maximum>
+    <minimum>-1.7976931348623157E308</minimum>
     <multiline_input>false</multiline_input>
     <name>EDM TextInput</name>
     <precision>0</precision>

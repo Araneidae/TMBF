@@ -251,7 +251,7 @@ $(trace_1_y_pv_value)</tooltip>
     <trace_1_y_pv>$(device):DAC:MINBUF</trace_1_y_pv>
     <trace_1_y_pv_value />
     <trace_count>2</trace_count>
-    <transparent>false</transparent>
+    <transparent>true</transparent>
     <trigger_pv></trigger_pv>
     <trigger_pv_value />
     <visible>true</visible>
@@ -545,7 +545,7 @@ $(trace_0_y_pv_value)</tooltip>
     <trace_0_y_pv>$(device):DAC:DIFFBUF</trace_0_y_pv>
     <trace_0_y_pv_value />
     <trace_count>1</trace_count>
-    <transparent>false</transparent>
+    <transparent>true</transparent>
     <trigger_pv></trigger_pv>
     <trigger_pv_value />
     <visible>true</visible>
@@ -709,12 +709,12 @@ $(pv_value)</tooltip>
     <foreground_color>
       <color name="Black" red="0" green="0" blue="0" />
     </foreground_color>
-    <format_type>0</format_type>
+    <format_type>2</format_type>
     <height>16</height>
     <horizontal_alignment>2</horizontal_alignment>
     <name>EDM TextInput</name>
-    <precision>0</precision>
-    <precision_from_pv>true</precision_from_pv>
+    <precision>3</precision>
+    <precision_from_pv>false</precision_from_pv>
     <pv_name>$(device):DAC:STD</pv_name>
     <pv_value />
     <rotation_angle>0.0</rotation_angle>
