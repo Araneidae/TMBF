@@ -765,7 +765,7 @@ $(pv_value)</tooltip>
   <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
     <actions hook="false" hook_all="false">
       <action type="EXECUTE_CMD">
-        <command>../scripts/run-command 'Setup Close Loop + SB Tune Meas.' ./setup_tunemeasurement $(device) FB</command>
+        <command>../scripts/run-command 'Setup Close Loop + SB Tune Meas.' ../scripts/setup_tunemeasurement $(device) FB</command>
         <command_directory>$(opi.dir)</command_directory>
         <wait_time>10</wait_time>
         <description></description>
@@ -818,7 +818,7 @@ $(pv_value)</tooltip>
   <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
     <actions hook="false" hook_all="false">
       <action type="EXECUTE_CMD">
-        <command>../scripts/run-command 'Setup Tune Measurement Special' ./setup_tunemeasurement $(device) AP</command>
+        <command>../scripts/run-command 'Setup Tune Measurement Special' ../scripts/setup_tunemeasurement $(device) AP</command>
         <command_directory>$(opi.dir)</command_directory>
         <wait_time>10</wait_time>
         <description></description>
