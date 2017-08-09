@@ -2,9 +2,9 @@
 <display typeId="org.csstudio.opibuilder.Display" version="1.0.0">
   <actions hook="false" hook_all="false" />
   <auto_scale_widgets>
-    <auto_scale_widgets>false</auto_scale_widgets>
-    <min_width>-1</min_width>
-    <min_height>-1</min_height>
+    <auto_scale_widgets>true</auto_scale_widgets>
+    <min_width>0</min_width>
+    <min_height>0</min_height>
   </auto_scale_widgets>
   <auto_zoom_to_fit_all>false</auto_zoom_to_fit_all>
   <background_color>
