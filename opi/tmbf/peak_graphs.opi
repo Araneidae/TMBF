@@ -1,0 +1,1386 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display typeId="org.csstudio.opibuilder.Display" version="1.0.0">
+  <actions hook="false" hook_all="false" />
+  <auto_scale_widgets>
+    <auto_scale_widgets>true</auto_scale_widgets>
+    <min_width>0</min_width>
+    <min_height>0</min_height>
+  </auto_scale_widgets>
+  <auto_zoom_to_fit_all>false</auto_zoom_to_fit_all>
+  <background_color>
+    <color name="Canvas" red="200" green="200" blue="200" />
+  </background_color>
+  <boy_version>5.1.0.201705030834</boy_version>
+  <foreground_color>
+    <color name="Black" red="0" green="0" blue="0" />
+  </foreground_color>
+  <grid_space>8</grid_space>
+  <height>471</height>
+  <macros>
+    <include_parent_macros>true</include_parent_macros>
+  </macros>
+  <name>Peak Detection</name>
+  <rules />
+  <scripts />
+  <show_close_button>true</show_close_button>
+  <show_edit_range>true</show_edit_range>
+  <show_grid>true</show_grid>
+  <show_ruler>true</show_ruler>
+  <snap_to_geometry>true</snap_to_geometry>
+  <widget_type>Display</widget_type>
+  <width>513</width>
+  <wuid>-5ecea5e5:15d3b322ccb:-67f8</wuid>
+  <x>368</x>
+  <y>77</y>
+  <widget typeId="org.csstudio.opibuilder.widgets.Rectangle" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <alpha>255</alpha>
+    <anti_alias>true</anti_alias>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </background_color>
+    <bg_gradient_color>
+      <color red="255" green="255" blue="255" />
+    </bg_gradient_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <fg_gradient_color>
+      <color red="255" green="255" blue="255" />
+    </fg_gradient_color>
+    <fill_level>0.0</fill_level>
+    <font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="255" green="0" blue="0" />
+    </foreground_color>
+    <gradient>false</gradient>
+    <height>385</height>
+    <horizontal_fill>true</horizontal_fill>
+    <line_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </line_color>
+    <line_style>0</line_style>
+    <line_width>1</line_width>
+    <name>EDM Rectangle</name>
+    <pv_name></pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>false</transparent>
+    <visible>true</visible>
+    <widget_type>Rectangle</widget_type>
+    <width>497</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67f7</wuid>
+    <x>8</x>
+    <y>48</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color name="DI title" red="198" green="181" blue="198" />
+    </background_color>
+    <border_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="18" style="0" pixels="true" />
+    </font>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>32</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>EDM Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>$(device) Tune Peak Detection</text>
+    <tooltip></tooltip>
+    <transparent>false</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>512</width>
+    <wrap_words>false</wrap_words>
+    <wuid>-5ecea5e5:15d3b322ccb:-67f6</wuid>
+    <x>0</x>
+    <y>0</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
+    <actions hook="false" hook_all="false">
+      <action type="EXECUTE_CMD">
+        <command>diagnostics-help TMBF_peak_detect</command>
+        <command_directory>$(opi.dir)</command_directory>
+        <wait_time>10</wait_time>
+        <description></description>
+      </action>
+    </actions>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Controller: BG" red="205" green="205" blue="205" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="14" style="1" pixels="true" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>25</height>
+    <image></image>
+    <name>EDM shell command</name>
+    <push_action_index>0</push_action_index>
+    <pv_name></pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <style>0</style>
+    <text>?</text>
+    <toggle_button>false</toggle_button>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <visible>true</visible>
+    <widget_type>Action Button</widget_type>
+    <width>25</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67f5</wuid>
+    <x>4</x>
+    <y>4</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <axis_0_auto_scale>false</axis_0_auto_scale>
+    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
+    <axis_0_auto_scale_tight>false</axis_0_auto_scale_tight>
+    <axis_0_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_axis_color>
+    <axis_0_axis_title></axis_0_axis_title>
+    <axis_0_dash_grid_line>true</axis_0_dash_grid_line>
+    <axis_0_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_grid_color>
+    <axis_0_log_scale>false</axis_0_log_scale>
+    <axis_0_maximum>256.0</axis_0_maximum>
+    <axis_0_minimum>0.0</axis_0_minimum>
+    <axis_0_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_0_scale_font>
+    <axis_0_scale_format></axis_0_scale_format>
+    <axis_0_show_grid>false</axis_0_show_grid>
+    <axis_0_time_format>0</axis_0_time_format>
+    <axis_0_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_0_title_font>
+    <axis_0_visible>false</axis_0_visible>
+    <axis_1_auto_scale>true</axis_1_auto_scale>
+    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
+    <axis_1_auto_scale_tight>false</axis_1_auto_scale_tight>
+    <axis_1_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_axis_color>
+    <axis_1_axis_title></axis_1_axis_title>
+    <axis_1_dash_grid_line>true</axis_1_dash_grid_line>
+    <axis_1_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_grid_color>
+    <axis_1_log_scale>false</axis_1_log_scale>
+    <axis_1_maximum>1.0</axis_1_maximum>
+    <axis_1_minimum>0.0</axis_1_minimum>
+    <axis_1_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_1_scale_font>
+    <axis_1_scale_format></axis_1_scale_format>
+    <axis_1_show_grid>false</axis_1_show_grid>
+    <axis_1_time_format>0</axis_1_time_format>
+    <axis_1_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_1_title_font>
+    <axis_1_visible>false</axis_1_visible>
+    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_2_auto_scale_threshold>0.0</axis_2_auto_scale_threshold>
+    <axis_2_auto_scale_tight>false</axis_2_auto_scale_tight>
+    <axis_2_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_axis_color>
+    <axis_2_axis_title></axis_2_axis_title>
+    <axis_2_dash_grid_line>true</axis_2_dash_grid_line>
+    <axis_2_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_grid_color>
+    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
+    <axis_2_log_scale>false</axis_2_log_scale>
+    <axis_2_maximum>1.0</axis_2_maximum>
+    <axis_2_minimum>0.0</axis_2_minimum>
+    <axis_2_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_2_scale_font>
+    <axis_2_scale_format></axis_2_scale_format>
+    <axis_2_show_grid>false</axis_2_show_grid>
+    <axis_2_time_format>0</axis_2_time_format>
+    <axis_2_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_2_title_font>
+    <axis_2_visible>false</axis_2_visible>
+    <axis_2_y_axis>true</axis_2_y_axis>
+    <axis_count>3</axis_count>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>0</border_width>
+    <enabled>true</enabled>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>80</height>
+    <name>EDM xyGraph</name>
+    <plot_area_background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </plot_area_background_color>
+    <pv_name>$(trace_0_y_pv)</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_legend>false</show_legend>
+    <show_plot_area_border>false</show_plot_area_border>
+    <show_toolbar>false</show_toolbar>
+    <title></title>
+    <title_font>
+      <fontdata fontName="Arial" height="12" style="1" pixels="true" />
+    </title_font>
+    <tooltip>$(trace_0_y_pv)
+$(trace_0_y_pv_value)</tooltip>
+    <trace_0_anti_alias>false</trace_0_anti_alias>
+    <trace_0_buffer_size>65536</trace_0_buffer_size>
+    <trace_0_concatenate_data>false</trace_0_concatenate_data>
+    <trace_0_line_width>1</trace_0_line_width>
+    <trace_0_name>$(trace_0_y_pv)</trace_0_name>
+    <trace_0_plot_mode>0</trace_0_plot_mode>
+    <trace_0_point_size>4</trace_0_point_size>
+    <trace_0_point_style>0</trace_0_point_style>
+    <trace_0_trace_color>
+      <color name="Blue" red="0" green="0" blue="255" />
+    </trace_0_trace_color>
+    <trace_0_trace_type>0</trace_0_trace_type>
+    <trace_0_update_delay>0</trace_0_update_delay>
+    <trace_0_update_mode>0</trace_0_update_mode>
+    <trace_0_visible>true</trace_0_visible>
+    <trace_0_x_axis_index>0</trace_0_x_axis_index>
+    <trace_0_x_pv></trace_0_x_pv>
+    <trace_0_x_pv_value />
+    <trace_0_y_axis_index>1</trace_0_y_axis_index>
+    <trace_0_y_pv>$(device):PEAK:PDD:16</trace_0_y_pv>
+    <trace_0_y_pv_value />
+    <trace_count>1</trace_count>
+    <transparent>false</transparent>
+    <trigger_pv></trigger_pv>
+    <trigger_pv_value />
+    <visible>true</visible>
+    <widget_type>Dawn XY Graph</widget_type>
+    <width>480</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67f4</wuid>
+    <x>16</x>
+    <y>160</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <axis_0_auto_scale>false</axis_0_auto_scale>
+    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
+    <axis_0_auto_scale_tight>false</axis_0_auto_scale_tight>
+    <axis_0_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_axis_color>
+    <axis_0_axis_title></axis_0_axis_title>
+    <axis_0_dash_grid_line>true</axis_0_dash_grid_line>
+    <axis_0_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_grid_color>
+    <axis_0_log_scale>false</axis_0_log_scale>
+    <axis_0_maximum>64.0</axis_0_maximum>
+    <axis_0_minimum>0.0</axis_0_minimum>
+    <axis_0_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_0_scale_font>
+    <axis_0_scale_format></axis_0_scale_format>
+    <axis_0_show_grid>false</axis_0_show_grid>
+    <axis_0_time_format>0</axis_0_time_format>
+    <axis_0_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_0_title_font>
+    <axis_0_visible>false</axis_0_visible>
+    <axis_1_auto_scale>true</axis_1_auto_scale>
+    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
+    <axis_1_auto_scale_tight>false</axis_1_auto_scale_tight>
+    <axis_1_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_axis_color>
+    <axis_1_axis_title></axis_1_axis_title>
+    <axis_1_dash_grid_line>true</axis_1_dash_grid_line>
+    <axis_1_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_grid_color>
+    <axis_1_log_scale>false</axis_1_log_scale>
+    <axis_1_maximum>1.0</axis_1_maximum>
+    <axis_1_minimum>0.0</axis_1_minimum>
+    <axis_1_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_1_scale_font>
+    <axis_1_scale_format></axis_1_scale_format>
+    <axis_1_show_grid>false</axis_1_show_grid>
+    <axis_1_time_format>0</axis_1_time_format>
+    <axis_1_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_1_title_font>
+    <axis_1_visible>false</axis_1_visible>
+    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_2_auto_scale_threshold>0.0</axis_2_auto_scale_threshold>
+    <axis_2_auto_scale_tight>false</axis_2_auto_scale_tight>
+    <axis_2_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_axis_color>
+    <axis_2_axis_title></axis_2_axis_title>
+    <axis_2_dash_grid_line>true</axis_2_dash_grid_line>
+    <axis_2_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_grid_color>
+    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
+    <axis_2_log_scale>false</axis_2_log_scale>
+    <axis_2_maximum>1.0</axis_2_maximum>
+    <axis_2_minimum>0.0</axis_2_minimum>
+    <axis_2_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_2_scale_font>
+    <axis_2_scale_format></axis_2_scale_format>
+    <axis_2_show_grid>false</axis_2_show_grid>
+    <axis_2_time_format>0</axis_2_time_format>
+    <axis_2_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_2_title_font>
+    <axis_2_visible>false</axis_2_visible>
+    <axis_2_y_axis>true</axis_2_y_axis>
+    <axis_count>3</axis_count>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>0</border_width>
+    <enabled>true</enabled>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>80</height>
+    <name>EDM xyGraph</name>
+    <plot_area_background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </plot_area_background_color>
+    <pv_name>$(trace_0_y_pv)</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_legend>false</show_legend>
+    <show_plot_area_border>false</show_plot_area_border>
+    <show_toolbar>false</show_toolbar>
+    <title></title>
+    <title_font>
+      <fontdata fontName="Arial" height="12" style="1" pixels="true" />
+    </title_font>
+    <tooltip>$(trace_0_y_pv)
+$(trace_0_y_pv_value)</tooltip>
+    <trace_0_anti_alias>false</trace_0_anti_alias>
+    <trace_0_buffer_size>65536</trace_0_buffer_size>
+    <trace_0_concatenate_data>false</trace_0_concatenate_data>
+    <trace_0_line_width>1</trace_0_line_width>
+    <trace_0_name>$(trace_0_y_pv)</trace_0_name>
+    <trace_0_plot_mode>0</trace_0_plot_mode>
+    <trace_0_point_size>4</trace_0_point_size>
+    <trace_0_point_style>0</trace_0_point_style>
+    <trace_0_trace_color>
+      <color name="Blue" red="0" green="0" blue="255" />
+    </trace_0_trace_color>
+    <trace_0_trace_type>0</trace_0_trace_type>
+    <trace_0_update_delay>0</trace_0_update_delay>
+    <trace_0_update_mode>0</trace_0_update_mode>
+    <trace_0_visible>true</trace_0_visible>
+    <trace_0_x_axis_index>0</trace_0_x_axis_index>
+    <trace_0_x_pv></trace_0_x_pv>
+    <trace_0_x_pv_value />
+    <trace_0_y_axis_index>1</trace_0_y_axis_index>
+    <trace_0_y_pv>$(device):PEAK:PDD:64</trace_0_y_pv>
+    <trace_0_y_pv_value />
+    <trace_count>1</trace_count>
+    <transparent>false</transparent>
+    <trigger_pv></trigger_pv>
+    <trigger_pv_value />
+    <visible>true</visible>
+    <widget_type>Dawn XY Graph</widget_type>
+    <width>480</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67f3</wuid>
+    <x>16</x>
+    <y>344</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <axis_0_auto_scale>false</axis_0_auto_scale>
+    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
+    <axis_0_auto_scale_tight>false</axis_0_auto_scale_tight>
+    <axis_0_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_axis_color>
+    <axis_0_axis_title></axis_0_axis_title>
+    <axis_0_dash_grid_line>true</axis_0_dash_grid_line>
+    <axis_0_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_grid_color>
+    <axis_0_log_scale>false</axis_0_log_scale>
+    <axis_0_maximum>256.0</axis_0_maximum>
+    <axis_0_minimum>0.0</axis_0_minimum>
+    <axis_0_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_0_scale_font>
+    <axis_0_scale_format></axis_0_scale_format>
+    <axis_0_show_grid>false</axis_0_show_grid>
+    <axis_0_time_format>0</axis_0_time_format>
+    <axis_0_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_0_title_font>
+    <axis_0_visible>false</axis_0_visible>
+    <axis_1_auto_scale>true</axis_1_auto_scale>
+    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
+    <axis_1_auto_scale_tight>false</axis_1_auto_scale_tight>
+    <axis_1_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_axis_color>
+    <axis_1_axis_title></axis_1_axis_title>
+    <axis_1_dash_grid_line>true</axis_1_dash_grid_line>
+    <axis_1_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_grid_color>
+    <axis_1_log_scale>false</axis_1_log_scale>
+    <axis_1_maximum>1.0</axis_1_maximum>
+    <axis_1_minimum>0.0</axis_1_minimum>
+    <axis_1_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_1_scale_font>
+    <axis_1_scale_format></axis_1_scale_format>
+    <axis_1_show_grid>false</axis_1_show_grid>
+    <axis_1_time_format>0</axis_1_time_format>
+    <axis_1_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_1_title_font>
+    <axis_1_visible>false</axis_1_visible>
+    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_2_auto_scale_threshold>0.0</axis_2_auto_scale_threshold>
+    <axis_2_auto_scale_tight>false</axis_2_auto_scale_tight>
+    <axis_2_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_axis_color>
+    <axis_2_axis_title></axis_2_axis_title>
+    <axis_2_dash_grid_line>true</axis_2_dash_grid_line>
+    <axis_2_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_grid_color>
+    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
+    <axis_2_log_scale>false</axis_2_log_scale>
+    <axis_2_maximum>1.0</axis_2_maximum>
+    <axis_2_minimum>0.0</axis_2_minimum>
+    <axis_2_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_2_scale_font>
+    <axis_2_scale_format></axis_2_scale_format>
+    <axis_2_show_grid>false</axis_2_show_grid>
+    <axis_2_time_format>0</axis_2_time_format>
+    <axis_2_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_2_title_font>
+    <axis_2_visible>false</axis_2_visible>
+    <axis_2_y_axis>true</axis_2_y_axis>
+    <axis_count>3</axis_count>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>96</height>
+    <name>EDM xyGraph</name>
+    <plot_area_background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </plot_area_background_color>
+    <pv_name>$(trace_0_y_pv)</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_legend>false</show_legend>
+    <show_plot_area_border>false</show_plot_area_border>
+    <show_toolbar>false</show_toolbar>
+    <title></title>
+    <title_font>
+      <fontdata fontName="Arial" height="12" style="1" pixels="true" />
+    </title_font>
+    <tooltip>$(trace_0_y_pv)
+$(trace_0_y_pv_value)
+$(trace_1_y_pv)
+$(trace_1_y_pv_value)
+$(trace_2_y_pv)
+$(trace_2_y_pv_value)
+$(trace_3_y_pv)
+$(trace_3_y_pv_value)
+$(trace_1_x_pv)
+$(trace_1_x_pv_value)
+$(trace_2_x_pv)
+$(trace_2_x_pv_value)
+$(trace_3_x_pv)
+$(trace_3_x_pv_value)</tooltip>
+    <trace_0_anti_alias>false</trace_0_anti_alias>
+    <trace_0_buffer_size>65536</trace_0_buffer_size>
+    <trace_0_concatenate_data>true</trace_0_concatenate_data>
+    <trace_0_line_width>2</trace_0_line_width>
+    <trace_0_name>$(trace_0_y_pv)</trace_0_name>
+    <trace_0_plot_mode>0</trace_0_plot_mode>
+    <trace_0_point_size>6</trace_0_point_size>
+    <trace_0_point_style>0</trace_0_point_style>
+    <trace_0_trace_color>
+      <color name="Blue" red="0" green="0" blue="255" />
+    </trace_0_trace_color>
+    <trace_0_trace_type>0</trace_0_trace_type>
+    <trace_0_update_delay>0</trace_0_update_delay>
+    <trace_0_update_mode>0</trace_0_update_mode>
+    <trace_0_visible>true</trace_0_visible>
+    <trace_0_x_axis_index>0</trace_0_x_axis_index>
+    <trace_0_x_pv></trace_0_x_pv>
+    <trace_0_x_pv_value />
+    <trace_0_y_axis_index>1</trace_0_y_axis_index>
+    <trace_0_y_pv>$(device):PEAK:POWER:16</trace_0_y_pv>
+    <trace_0_y_pv_value />
+    <trace_1_anti_alias>false</trace_1_anti_alias>
+    <trace_1_buffer_size>1000</trace_1_buffer_size>
+    <trace_1_concatenate_data>false</trace_1_concatenate_data>
+    <trace_1_line_width>1</trace_1_line_width>
+    <trace_1_name>$(trace_1_y_pv)</trace_1_name>
+    <trace_1_plot_mode>0</trace_1_plot_mode>
+    <trace_1_point_size>8</trace_1_point_size>
+    <trace_1_point_style>8</trace_1_point_style>
+    <trace_1_trace_color>
+      <color name="Red" red="255" green="0" blue="0" />
+    </trace_1_trace_color>
+    <trace_1_trace_type>2</trace_1_trace_type>
+    <trace_1_update_delay>0</trace_1_update_delay>
+    <trace_1_update_mode>0</trace_1_update_mode>
+    <trace_1_visible>true</trace_1_visible>
+    <trace_1_x_axis_index>0</trace_1_x_axis_index>
+    <trace_1_x_pv>$(device):PEAK:IX:16</trace_1_x_pv>
+    <trace_1_x_pv_value />
+    <trace_1_y_axis_index>1</trace_1_y_axis_index>
+    <trace_1_y_pv>$(device):PEAK:V:16</trace_1_y_pv>
+    <trace_1_y_pv_value />
+    <trace_2_anti_alias>false</trace_2_anti_alias>
+    <trace_2_buffer_size>1000</trace_2_buffer_size>
+    <trace_2_concatenate_data>false</trace_2_concatenate_data>
+    <trace_2_line_width>1</trace_2_line_width>
+    <trace_2_name>$(trace_2_y_pv)</trace_2_name>
+    <trace_2_plot_mode>0</trace_2_plot_mode>
+    <trace_2_point_size>6</trace_2_point_size>
+    <trace_2_point_style>6</trace_2_point_style>
+    <trace_2_trace_color>
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
+    </trace_2_trace_color>
+    <trace_2_trace_type>2</trace_2_trace_type>
+    <trace_2_update_delay>0</trace_2_update_delay>
+    <trace_2_update_mode>0</trace_2_update_mode>
+    <trace_2_visible>true</trace_2_visible>
+    <trace_2_x_axis_index>0</trace_2_x_axis_index>
+    <trace_2_x_pv>$(device):PEAK:L:16</trace_2_x_pv>
+    <trace_2_x_pv_value />
+    <trace_2_y_axis_index>1</trace_2_y_axis_index>
+    <trace_2_y_pv>$(device):PEAK:V:16</trace_2_y_pv>
+    <trace_2_y_pv_value />
+    <trace_3_anti_alias>false</trace_3_anti_alias>
+    <trace_3_buffer_size>1000</trace_3_buffer_size>
+    <trace_3_concatenate_data>false</trace_3_concatenate_data>
+    <trace_3_line_width>1</trace_3_line_width>
+    <trace_3_name>$(trace_3_y_pv)</trace_3_name>
+    <trace_3_plot_mode>0</trace_3_plot_mode>
+    <trace_3_point_size>6</trace_3_point_size>
+    <trace_3_point_style>6</trace_3_point_style>
+    <trace_3_trace_color>
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
+    </trace_3_trace_color>
+    <trace_3_trace_type>2</trace_3_trace_type>
+    <trace_3_update_delay>0</trace_3_update_delay>
+    <trace_3_update_mode>0</trace_3_update_mode>
+    <trace_3_visible>true</trace_3_visible>
+    <trace_3_x_axis_index>0</trace_3_x_axis_index>
+    <trace_3_x_pv>$(device):PEAK:R:16</trace_3_x_pv>
+    <trace_3_x_pv_value />
+    <trace_3_y_axis_index>1</trace_3_y_axis_index>
+    <trace_3_y_pv>$(device):PEAK:V:16</trace_3_y_pv>
+    <trace_3_y_pv_value />
+    <trace_count>4</trace_count>
+    <transparent>false</transparent>
+    <trigger_pv></trigger_pv>
+    <trigger_pv_value />
+    <visible>true</visible>
+    <widget_type>Dawn XY Graph</widget_type>
+    <width>480</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67f2</wuid>
+    <x>16</x>
+    <y>64</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <axis_0_auto_scale>false</axis_0_auto_scale>
+    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
+    <axis_0_auto_scale_tight>false</axis_0_auto_scale_tight>
+    <axis_0_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_axis_color>
+    <axis_0_axis_title></axis_0_axis_title>
+    <axis_0_dash_grid_line>true</axis_0_dash_grid_line>
+    <axis_0_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_grid_color>
+    <axis_0_log_scale>false</axis_0_log_scale>
+    <axis_0_maximum>64.0</axis_0_maximum>
+    <axis_0_minimum>0.0</axis_0_minimum>
+    <axis_0_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_0_scale_font>
+    <axis_0_scale_format></axis_0_scale_format>
+    <axis_0_show_grid>false</axis_0_show_grid>
+    <axis_0_time_format>0</axis_0_time_format>
+    <axis_0_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_0_title_font>
+    <axis_0_visible>false</axis_0_visible>
+    <axis_1_auto_scale>true</axis_1_auto_scale>
+    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
+    <axis_1_auto_scale_tight>false</axis_1_auto_scale_tight>
+    <axis_1_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_axis_color>
+    <axis_1_axis_title></axis_1_axis_title>
+    <axis_1_dash_grid_line>true</axis_1_dash_grid_line>
+    <axis_1_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_grid_color>
+    <axis_1_log_scale>false</axis_1_log_scale>
+    <axis_1_maximum>1.0</axis_1_maximum>
+    <axis_1_minimum>0.0</axis_1_minimum>
+    <axis_1_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_1_scale_font>
+    <axis_1_scale_format></axis_1_scale_format>
+    <axis_1_show_grid>false</axis_1_show_grid>
+    <axis_1_time_format>0</axis_1_time_format>
+    <axis_1_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_1_title_font>
+    <axis_1_visible>false</axis_1_visible>
+    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_2_auto_scale_threshold>0.0</axis_2_auto_scale_threshold>
+    <axis_2_auto_scale_tight>false</axis_2_auto_scale_tight>
+    <axis_2_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_axis_color>
+    <axis_2_axis_title></axis_2_axis_title>
+    <axis_2_dash_grid_line>true</axis_2_dash_grid_line>
+    <axis_2_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_grid_color>
+    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
+    <axis_2_log_scale>false</axis_2_log_scale>
+    <axis_2_maximum>1.0</axis_2_maximum>
+    <axis_2_minimum>0.0</axis_2_minimum>
+    <axis_2_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_2_scale_font>
+    <axis_2_scale_format></axis_2_scale_format>
+    <axis_2_show_grid>false</axis_2_show_grid>
+    <axis_2_time_format>0</axis_2_time_format>
+    <axis_2_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_2_title_font>
+    <axis_2_visible>false</axis_2_visible>
+    <axis_2_y_axis>true</axis_2_y_axis>
+    <axis_count>3</axis_count>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>0</border_width>
+    <enabled>true</enabled>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>96</height>
+    <name>EDM xyGraph</name>
+    <plot_area_background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </plot_area_background_color>
+    <pv_name>$(trace_0_y_pv)</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_legend>false</show_legend>
+    <show_plot_area_border>false</show_plot_area_border>
+    <show_toolbar>false</show_toolbar>
+    <title></title>
+    <title_font>
+      <fontdata fontName="Arial" height="12" style="1" pixels="true" />
+    </title_font>
+    <tooltip>$(trace_0_y_pv)
+$(trace_0_y_pv_value)
+$(trace_1_y_pv)
+$(trace_1_y_pv_value)
+$(trace_2_y_pv)
+$(trace_2_y_pv_value)
+$(trace_3_y_pv)
+$(trace_3_y_pv_value)
+$(trace_1_x_pv)
+$(trace_1_x_pv_value)
+$(trace_2_x_pv)
+$(trace_2_x_pv_value)
+$(trace_3_x_pv)
+$(trace_3_x_pv_value)</tooltip>
+    <trace_0_anti_alias>false</trace_0_anti_alias>
+    <trace_0_buffer_size>65536</trace_0_buffer_size>
+    <trace_0_concatenate_data>false</trace_0_concatenate_data>
+    <trace_0_line_width>2</trace_0_line_width>
+    <trace_0_name>$(trace_0_y_pv)</trace_0_name>
+    <trace_0_plot_mode>0</trace_0_plot_mode>
+    <trace_0_point_size>4</trace_0_point_size>
+    <trace_0_point_style>0</trace_0_point_style>
+    <trace_0_trace_color>
+      <color name="Blue" red="0" green="0" blue="255" />
+    </trace_0_trace_color>
+    <trace_0_trace_type>0</trace_0_trace_type>
+    <trace_0_update_delay>0</trace_0_update_delay>
+    <trace_0_update_mode>0</trace_0_update_mode>
+    <trace_0_visible>true</trace_0_visible>
+    <trace_0_x_axis_index>0</trace_0_x_axis_index>
+    <trace_0_x_pv></trace_0_x_pv>
+    <trace_0_x_pv_value />
+    <trace_0_y_axis_index>1</trace_0_y_axis_index>
+    <trace_0_y_pv>$(device):PEAK:POWER:64</trace_0_y_pv>
+    <trace_0_y_pv_value />
+    <trace_1_anti_alias>false</trace_1_anti_alias>
+    <trace_1_buffer_size>1</trace_1_buffer_size>
+    <trace_1_concatenate_data>false</trace_1_concatenate_data>
+    <trace_1_line_width>1</trace_1_line_width>
+    <trace_1_name>$(trace_1_y_pv)</trace_1_name>
+    <trace_1_plot_mode>0</trace_1_plot_mode>
+    <trace_1_point_size>8</trace_1_point_size>
+    <trace_1_point_style>8</trace_1_point_style>
+    <trace_1_trace_color>
+      <color name="Red" red="255" green="0" blue="0" />
+    </trace_1_trace_color>
+    <trace_1_trace_type>2</trace_1_trace_type>
+    <trace_1_update_delay>0</trace_1_update_delay>
+    <trace_1_update_mode>0</trace_1_update_mode>
+    <trace_1_visible>true</trace_1_visible>
+    <trace_1_x_axis_index>0</trace_1_x_axis_index>
+    <trace_1_x_pv>$(device):PEAK:IX:64</trace_1_x_pv>
+    <trace_1_x_pv_value />
+    <trace_1_y_axis_index>1</trace_1_y_axis_index>
+    <trace_1_y_pv>$(device):PEAK:V:64</trace_1_y_pv>
+    <trace_1_y_pv_value />
+    <trace_2_anti_alias>false</trace_2_anti_alias>
+    <trace_2_buffer_size>6</trace_2_buffer_size>
+    <trace_2_concatenate_data>false</trace_2_concatenate_data>
+    <trace_2_line_width>1</trace_2_line_width>
+    <trace_2_name>$(trace_2_y_pv)</trace_2_name>
+    <trace_2_plot_mode>0</trace_2_plot_mode>
+    <trace_2_point_size>6</trace_2_point_size>
+    <trace_2_point_style>6</trace_2_point_style>
+    <trace_2_trace_color>
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
+    </trace_2_trace_color>
+    <trace_2_trace_type>2</trace_2_trace_type>
+    <trace_2_update_delay>0</trace_2_update_delay>
+    <trace_2_update_mode>0</trace_2_update_mode>
+    <trace_2_visible>true</trace_2_visible>
+    <trace_2_x_axis_index>0</trace_2_x_axis_index>
+    <trace_2_x_pv>$(device):PEAK:L:64</trace_2_x_pv>
+    <trace_2_x_pv_value />
+    <trace_2_y_axis_index>1</trace_2_y_axis_index>
+    <trace_2_y_pv>$(device):PEAK:V:64</trace_2_y_pv>
+    <trace_2_y_pv_value />
+    <trace_3_anti_alias>false</trace_3_anti_alias>
+    <trace_3_buffer_size>6</trace_3_buffer_size>
+    <trace_3_concatenate_data>false</trace_3_concatenate_data>
+    <trace_3_line_width>1</trace_3_line_width>
+    <trace_3_name>$(trace_3_y_pv)</trace_3_name>
+    <trace_3_plot_mode>0</trace_3_plot_mode>
+    <trace_3_point_size>6</trace_3_point_size>
+    <trace_3_point_style>6</trace_3_point_style>
+    <trace_3_trace_color>
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
+    </trace_3_trace_color>
+    <trace_3_trace_type>2</trace_3_trace_type>
+    <trace_3_update_delay>0</trace_3_update_delay>
+    <trace_3_update_mode>0</trace_3_update_mode>
+    <trace_3_visible>true</trace_3_visible>
+    <trace_3_x_axis_index>0</trace_3_x_axis_index>
+    <trace_3_x_pv>$(device):PEAK:R:64</trace_3_x_pv>
+    <trace_3_x_pv_value />
+    <trace_3_y_axis_index>1</trace_3_y_axis_index>
+    <trace_3_y_pv>$(device):PEAK:V:64</trace_3_y_pv>
+    <trace_3_y_pv_value />
+    <trace_count>4</trace_count>
+    <transparent>false</transparent>
+    <trigger_pv></trigger_pv>
+    <trigger_pv_value />
+    <visible>true</visible>
+    <widget_type>Dawn XY Graph</widget_type>
+    <width>480</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67f1</wuid>
+    <x>16</x>
+    <y>248</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
+    <actions hook="false" hook_all="false">
+      <action type="EXECUTE_JAVASCRIPT">
+        <path></path>
+        <scriptText><![CDATA[importPackage(Packages.org.csstudio.opibuilder.scriptUtil);ScriptUtil.closeAssociatedOPI(widget);]]></scriptText>
+        <embedded>true</embedded>
+        <description></description>
+      </action>
+    </actions>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Controller: BG" red="205" green="205" blue="205" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="12" style="1" pixels="true" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Exit: FG" red="196" green="0" blue="196" />
+    </foreground_color>
+    <height>25</height>
+    <image></image>
+    <name>EDM Exit Button</name>
+    <push_action_index>0</push_action_index>
+    <pv_name></pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <style>0</style>
+    <text>EXIT</text>
+    <toggle_button>false</toggle_button>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <visible>true</visible>
+    <widget_type>Action Button</widget_type>
+    <width>65</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67f0</wuid>
+    <x>440</x>
+    <y>440</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color name="Grey 40%" red="102" green="102" blue="102" />
+    </background_color>
+    <border_color>
+      <color name="Grey 90%" red="230" green="230" blue="230" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="12" style="0" pixels="true" />
+    </font>
+    <foreground_color>
+      <color name="Grey 90%" red="230" green="230" blue="230" />
+    </foreground_color>
+    <height>16</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>EDM Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>Smoothing &amp; D2</text>
+    <tooltip></tooltip>
+    <transparent>false</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>120</width>
+    <wrap_words>false</wrap_words>
+    <wuid>-5ecea5e5:15d3b322ccb:-67ef</wuid>
+    <x>8</x>
+    <y>40</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Rectangle" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <alpha>255</alpha>
+    <anti_alias>true</anti_alias>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="White" red="255" green="255" blue="255" />
+    </background_color>
+    <bg_gradient_color>
+      <color red="255" green="255" blue="255" />
+    </bg_gradient_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <fg_gradient_color>
+      <color red="255" green="255" blue="255" />
+    </fg_gradient_color>
+    <fill_level>0.0</fill_level>
+    <font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="255" green="0" blue="0" />
+    </foreground_color>
+    <gradient>false</gradient>
+    <height>17</height>
+    <horizontal_fill>true</horizontal_fill>
+    <line_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </line_color>
+    <line_style>0</line_style>
+    <line_width>1</line_width>
+    <name>EDM Rectangle</name>
+    <pv_name></pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>true</transparent>
+    <visible>true</visible>
+    <widget_type>Rectangle</widget_type>
+    <width>121</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67ee</wuid>
+    <x>8</x>
+    <y>40</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.MenuButton" version="1.0.0">
+    <actions_from_pv>true</actions_from_pv>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Controller: BG" red="205" green="205" blue="205" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>6</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="12" style="0" pixels="true" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>25</height>
+    <label></label>
+    <name>EDM menu button</name>
+    <pv_name>$(device):PEAK:SEL_S</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_down_arrow>true</show_down_arrow>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>false</transparent>
+    <visible>true</visible>
+    <widget_type>Menu Button</widget_type>
+    <width>81</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67ed</wuid>
+    <x>80</x>
+    <y>440</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>true</auto_size>
+    <background_color>
+      <color name="White" red="255" green="255" blue="255" />
+    </background_color>
+    <border_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="12" style="1" pixels="true" />
+    </font>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>14</height>
+    <horizontal_alignment>0</horizontal_alignment>
+    <name>EDM Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>Smoothing:</text>
+    <tooltip></tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>65</width>
+    <wrap_words>false</wrap_words>
+    <wuid>-5ecea5e5:15d3b322ccb:-67ec</wuid>
+    <x>8</x>
+    <y>440</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <axis_0_auto_scale>false</axis_0_auto_scale>
+    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
+    <axis_0_auto_scale_tight>false</axis_0_auto_scale_tight>
+    <axis_0_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_axis_color>
+    <axis_0_axis_title></axis_0_axis_title>
+    <axis_0_dash_grid_line>true</axis_0_dash_grid_line>
+    <axis_0_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_grid_color>
+    <axis_0_log_scale>false</axis_0_log_scale>
+    <axis_0_maximum>256.0</axis_0_maximum>
+    <axis_0_minimum>0.0</axis_0_minimum>
+    <axis_0_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_0_scale_font>
+    <axis_0_scale_format></axis_0_scale_format>
+    <axis_0_show_grid>false</axis_0_show_grid>
+    <axis_0_time_format>0</axis_0_time_format>
+    <axis_0_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_0_title_font>
+    <axis_0_visible>false</axis_0_visible>
+    <axis_1_auto_scale>false</axis_1_auto_scale>
+    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
+    <axis_1_auto_scale_tight>false</axis_1_auto_scale_tight>
+    <axis_1_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_axis_color>
+    <axis_1_axis_title></axis_1_axis_title>
+    <axis_1_dash_grid_line>true</axis_1_dash_grid_line>
+    <axis_1_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_grid_color>
+    <axis_1_log_scale>false</axis_1_log_scale>
+    <axis_1_maximum>1.0E7</axis_1_maximum>
+    <axis_1_minimum>-1000.0</axis_1_minimum>
+    <axis_1_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_1_scale_font>
+    <axis_1_scale_format></axis_1_scale_format>
+    <axis_1_show_grid>false</axis_1_show_grid>
+    <axis_1_time_format>0</axis_1_time_format>
+    <axis_1_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_1_title_font>
+    <axis_1_visible>false</axis_1_visible>
+    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_2_auto_scale_threshold>0.0</axis_2_auto_scale_threshold>
+    <axis_2_auto_scale_tight>false</axis_2_auto_scale_tight>
+    <axis_2_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_axis_color>
+    <axis_2_axis_title></axis_2_axis_title>
+    <axis_2_dash_grid_line>true</axis_2_dash_grid_line>
+    <axis_2_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_grid_color>
+    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
+    <axis_2_log_scale>false</axis_2_log_scale>
+    <axis_2_maximum>1.0</axis_2_maximum>
+    <axis_2_minimum>0.0</axis_2_minimum>
+    <axis_2_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_2_scale_font>
+    <axis_2_scale_format></axis_2_scale_format>
+    <axis_2_show_grid>false</axis_2_show_grid>
+    <axis_2_time_format>0</axis_2_time_format>
+    <axis_2_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_2_title_font>
+    <axis_2_visible>false</axis_2_visible>
+    <axis_2_y_axis>true</axis_2_y_axis>
+    <axis_count>3</axis_count>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>0</border_width>
+    <enabled>true</enabled>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>353</height>
+    <name>EDM xyGraph_4</name>
+    <plot_area_background_color>
+      <color name="Canvas" red="200" green="200" blue="200" />
+    </plot_area_background_color>
+    <pv_name>$(trace_0_y_pv)</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_legend>false</show_legend>
+    <show_plot_area_border>false</show_plot_area_border>
+    <show_toolbar>false</show_toolbar>
+    <title></title>
+    <title_font>
+      <fontdata fontName="Arial" height="12" style="1" pixels="true" />
+    </title_font>
+    <tooltip>$(trace_0_y_pv)
+$(trace_0_y_pv_value)
+$(trace_1_y_pv)
+$(trace_1_y_pv_value)
+$(trace_2_y_pv)
+$(trace_2_y_pv_value)
+$(trace_3_y_pv)
+$(trace_3_y_pv_value)
+$(trace_1_x_pv)
+$(trace_1_x_pv_value)
+$(trace_2_x_pv)
+$(trace_2_x_pv_value)
+$(trace_3_x_pv)
+$(trace_3_x_pv_value)</tooltip>
+    <trace_0_anti_alias>false</trace_0_anti_alias>
+    <trace_0_buffer_size>65536</trace_0_buffer_size>
+    <trace_0_concatenate_data>false</trace_0_concatenate_data>
+    <trace_0_line_width>1</trace_0_line_width>
+    <trace_0_name>$(trace_0_y_pv)</trace_0_name>
+    <trace_0_plot_mode>0</trace_0_plot_mode>
+    <trace_0_point_size>4</trace_0_point_size>
+    <trace_0_point_style>0</trace_0_point_style>
+    <trace_0_trace_color>
+      <color name="Blue" red="0" green="0" blue="255" />
+    </trace_0_trace_color>
+    <trace_0_trace_type>0</trace_0_trace_type>
+    <trace_0_update_delay>0</trace_0_update_delay>
+    <trace_0_update_mode>0</trace_0_update_mode>
+    <trace_0_visible>true</trace_0_visible>
+    <trace_0_x_axis_index>0</trace_0_x_axis_index>
+    <trace_0_x_pv></trace_0_x_pv>
+    <trace_0_x_pv_value />
+    <trace_0_y_axis_index>1</trace_0_y_axis_index>
+    <trace_0_y_pv>$(device):PEAK:POWER:16</trace_0_y_pv>
+    <trace_0_y_pv_value />
+    <trace_1_anti_alias>false</trace_1_anti_alias>
+    <trace_1_buffer_size>1</trace_1_buffer_size>
+    <trace_1_concatenate_data>false</trace_1_concatenate_data>
+    <trace_1_line_width>1</trace_1_line_width>
+    <trace_1_name>$(trace_1_y_pv)</trace_1_name>
+    <trace_1_plot_mode>0</trace_1_plot_mode>
+    <trace_1_point_size>8</trace_1_point_size>
+    <trace_1_point_style>8</trace_1_point_style>
+    <trace_1_trace_color>
+      <color name="Red" red="255" green="0" blue="0" />
+    </trace_1_trace_color>
+    <trace_1_trace_type>2</trace_1_trace_type>
+    <trace_1_update_delay>0</trace_1_update_delay>
+    <trace_1_update_mode>0</trace_1_update_mode>
+    <trace_1_visible>true</trace_1_visible>
+    <trace_1_x_axis_index>0</trace_1_x_axis_index>
+    <trace_1_x_pv>$(device):PEAK:IX:16</trace_1_x_pv>
+    <trace_1_x_pv_value />
+    <trace_1_y_axis_index>1</trace_1_y_axis_index>
+    <trace_1_y_pv>$(device):PEAK:V:16</trace_1_y_pv>
+    <trace_1_y_pv_value />
+    <trace_2_anti_alias>false</trace_2_anti_alias>
+    <trace_2_buffer_size>1</trace_2_buffer_size>
+    <trace_2_concatenate_data>false</trace_2_concatenate_data>
+    <trace_2_line_width>1</trace_2_line_width>
+    <trace_2_name>$(trace_2_y_pv)</trace_2_name>
+    <trace_2_plot_mode>0</trace_2_plot_mode>
+    <trace_2_point_size>6</trace_2_point_size>
+    <trace_2_point_style>6</trace_2_point_style>
+    <trace_2_trace_color>
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
+    </trace_2_trace_color>
+    <trace_2_trace_type>2</trace_2_trace_type>
+    <trace_2_update_delay>0</trace_2_update_delay>
+    <trace_2_update_mode>0</trace_2_update_mode>
+    <trace_2_visible>true</trace_2_visible>
+    <trace_2_x_axis_index>0</trace_2_x_axis_index>
+    <trace_2_x_pv>$(device):PEAK:L:16</trace_2_x_pv>
+    <trace_2_x_pv_value />
+    <trace_2_y_axis_index>1</trace_2_y_axis_index>
+    <trace_2_y_pv>$(device):PEAK:V:16</trace_2_y_pv>
+    <trace_2_y_pv_value />
+    <trace_3_anti_alias>false</trace_3_anti_alias>
+    <trace_3_buffer_size>1</trace_3_buffer_size>
+    <trace_3_concatenate_data>false</trace_3_concatenate_data>
+    <trace_3_line_width>1</trace_3_line_width>
+    <trace_3_name>$(trace_3_y_pv)</trace_3_name>
+    <trace_3_plot_mode>0</trace_3_plot_mode>
+    <trace_3_point_size>6</trace_3_point_size>
+    <trace_3_point_style>6</trace_3_point_style>
+    <trace_3_trace_color>
+      <color name="Dark Cyan" red="0" green="128" blue="128" />
+    </trace_3_trace_color>
+    <trace_3_trace_type>2</trace_3_trace_type>
+    <trace_3_update_delay>0</trace_3_update_delay>
+    <trace_3_update_mode>0</trace_3_update_mode>
+    <trace_3_visible>true</trace_3_visible>
+    <trace_3_x_axis_index>0</trace_3_x_axis_index>
+    <trace_3_x_pv>$(device):PEAK:R:16</trace_3_x_pv>
+    <trace_3_x_pv_value />
+    <trace_3_y_axis_index>1</trace_3_y_axis_index>
+    <trace_3_y_pv>$(device):PEAK:V:16</trace_3_y_pv>
+    <trace_3_y_pv_value />
+    <trace_count>4</trace_count>
+    <transparent>false</transparent>
+    <trigger_pv></trigger_pv>
+    <trigger_pv_value />
+    <visible>true</visible>
+    <widget_type>Dawn XY Graph</widget_type>
+    <width>480</width>
+    <wuid>6dba3a2c:15d5074ae75:-6b71</wuid>
+    <x>520</x>
+    <y>64</y>
+  </widget>
+</display>

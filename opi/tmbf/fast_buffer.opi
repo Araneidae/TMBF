@@ -1,0 +1,561 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display typeId="org.csstudio.opibuilder.Display" version="1.0.0">
+  <actions hook="false" hook_all="false" />
+  <auto_scale_widgets>
+    <auto_scale_widgets>true</auto_scale_widgets>
+    <min_width>0</min_width>
+    <min_height>0</min_height>
+  </auto_scale_widgets>
+  <auto_zoom_to_fit_all>false</auto_zoom_to_fit_all>
+  <background_color>
+    <color name="Canvas" red="200" green="200" blue="200" />
+  </background_color>
+  <boy_version>5.1.0.201705030834</boy_version>
+  <foreground_color>
+    <color name="Black" red="0" green="0" blue="0" />
+  </foreground_color>
+  <grid_space>8</grid_space>
+  <height>448</height>
+  <macros>
+    <include_parent_macros>true</include_parent_macros>
+  </macros>
+  <name>Internal Buffers</name>
+  <rules />
+  <scripts />
+  <show_close_button>true</show_close_button>
+  <show_edit_range>true</show_edit_range>
+  <show_grid>true</show_grid>
+  <show_ruler>true</show_ruler>
+  <snap_to_geometry>true</snap_to_geometry>
+  <widget_type>Display</widget_type>
+  <width>641</width>
+  <wuid>-5ecea5e5:15d3b322ccb:-67d7</wuid>
+  <x>428</x>
+  <y>93</y>
+  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <axis_0_auto_scale>false</axis_0_auto_scale>
+    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
+    <axis_0_auto_scale_tight>false</axis_0_auto_scale_tight>
+    <axis_0_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_axis_color>
+    <axis_0_axis_title></axis_0_axis_title>
+    <axis_0_dash_grid_line>true</axis_0_dash_grid_line>
+    <axis_0_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_grid_color>
+    <axis_0_log_scale>false</axis_0_log_scale>
+    <axis_0_maximum>16500.0</axis_0_maximum>
+    <axis_0_minimum>-200.0</axis_0_minimum>
+    <axis_0_scale_font>
+      <fontdata fontName="liberation sans" height="12" style="0" pixels="true" />
+    </axis_0_scale_font>
+    <axis_0_scale_format></axis_0_scale_format>
+    <axis_0_show_grid>false</axis_0_show_grid>
+    <axis_0_time_format>0</axis_0_time_format>
+    <axis_0_title_font>
+      <fontdata fontName="liberation sans" height="12" style="0" pixels="true" />
+    </axis_0_title_font>
+    <axis_0_visible>true</axis_0_visible>
+    <axis_1_auto_scale>true</axis_1_auto_scale>
+    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
+    <axis_1_auto_scale_tight>false</axis_1_auto_scale_tight>
+    <axis_1_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_axis_color>
+    <axis_1_axis_title></axis_1_axis_title>
+    <axis_1_dash_grid_line>true</axis_1_dash_grid_line>
+    <axis_1_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_grid_color>
+    <axis_1_log_scale>false</axis_1_log_scale>
+    <axis_1_maximum>1.0</axis_1_maximum>
+    <axis_1_minimum>0.0</axis_1_minimum>
+    <axis_1_scale_font>
+      <fontdata fontName="liberation sans" height="12" style="0" pixels="true" />
+    </axis_1_scale_font>
+    <axis_1_scale_format></axis_1_scale_format>
+    <axis_1_show_grid>false</axis_1_show_grid>
+    <axis_1_time_format>0</axis_1_time_format>
+    <axis_1_title_font>
+      <fontdata fontName="liberation sans" height="12" style="0" pixels="true" />
+    </axis_1_title_font>
+    <axis_1_visible>true</axis_1_visible>
+    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_2_auto_scale_threshold>0.0</axis_2_auto_scale_threshold>
+    <axis_2_auto_scale_tight>false</axis_2_auto_scale_tight>
+    <axis_2_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_axis_color>
+    <axis_2_axis_title></axis_2_axis_title>
+    <axis_2_dash_grid_line>true</axis_2_dash_grid_line>
+    <axis_2_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_grid_color>
+    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
+    <axis_2_log_scale>false</axis_2_log_scale>
+    <axis_2_maximum>1.0</axis_2_maximum>
+    <axis_2_minimum>0.0</axis_2_minimum>
+    <axis_2_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_2_scale_font>
+    <axis_2_scale_format></axis_2_scale_format>
+    <axis_2_show_grid>false</axis_2_show_grid>
+    <axis_2_time_format>0</axis_2_time_format>
+    <axis_2_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_2_title_font>
+    <axis_2_visible>false</axis_2_visible>
+    <axis_2_y_axis>true</axis_2_y_axis>
+    <axis_count>3</axis_count>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>0</border_width>
+    <enabled>true</enabled>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>184</height>
+    <name>EDM xyGraph</name>
+    <plot_area_background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </plot_area_background_color>
+    <pv_name>$(trace_0_y_pv)</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_legend>false</show_legend>
+    <show_plot_area_border>false</show_plot_area_border>
+    <show_toolbar>false</show_toolbar>
+    <title></title>
+    <title_font>
+      <fontdata fontName="Arial" height="12" style="1" pixels="true" />
+    </title_font>
+    <tooltip>$(trace_0_y_pv)
+$(trace_0_y_pv_value)</tooltip>
+    <trace_0_anti_alias>false</trace_0_anti_alias>
+    <trace_0_buffer_size>65536</trace_0_buffer_size>
+    <trace_0_concatenate_data>false</trace_0_concatenate_data>
+    <trace_0_line_width>1</trace_0_line_width>
+    <trace_0_name>$(trace_0_y_pv)</trace_0_name>
+    <trace_0_plot_mode>0</trace_0_plot_mode>
+    <trace_0_point_size>4</trace_0_point_size>
+    <trace_0_point_style>0</trace_0_point_style>
+    <trace_0_trace_color>
+      <color name="Red" red="255" green="0" blue="0" />
+    </trace_0_trace_color>
+    <trace_0_trace_type>0</trace_0_trace_type>
+    <trace_0_update_delay>0</trace_0_update_delay>
+    <trace_0_update_mode>3</trace_0_update_mode>
+    <trace_0_visible>true</trace_0_visible>
+    <trace_0_x_axis_index>0</trace_0_x_axis_index>
+    <trace_0_x_pv></trace_0_x_pv>
+    <trace_0_x_pv_value />
+    <trace_0_y_axis_index>1</trace_0_y_axis_index>
+    <trace_0_y_pv>$(device):BUF:WFA</trace_0_y_pv>
+    <trace_0_y_pv_value />
+    <trace_count>1</trace_count>
+    <transparent>true</transparent>
+    <trigger_pv></trigger_pv>
+    <trigger_pv_value />
+    <visible>true</visible>
+    <widget_type>Dawn XY Graph</widget_type>
+    <width>624</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67d6</wuid>
+    <x>8</x>
+    <y>40</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color name="DI title" red="198" green="181" blue="198" />
+    </background_color>
+    <border_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="18" style="0" pixels="true" />
+    </font>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>32</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>EDM Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>$(device) Internal Buffer</text>
+    <tooltip></tooltip>
+    <transparent>false</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>648</width>
+    <wrap_words>false</wrap_words>
+    <wuid>-5ecea5e5:15d3b322ccb:-67d5</wuid>
+    <x>0</x>
+    <y>0</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
+    <actions hook="false" hook_all="false">
+      <action type="EXECUTE_JAVASCRIPT">
+        <path></path>
+        <scriptText><![CDATA[importPackage(Packages.org.csstudio.opibuilder.scriptUtil);ScriptUtil.closeAssociatedOPI(widget);]]></scriptText>
+        <embedded>true</embedded>
+        <description></description>
+      </action>
+    </actions>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Controller: BG" red="205" green="205" blue="205" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="12" style="0" pixels="true" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Controller: FG" red="0" green="0" blue="196" />
+    </foreground_color>
+    <height>25</height>
+    <image></image>
+    <name>EDM Exit Button</name>
+    <push_action_index>0</push_action_index>
+    <pv_name></pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <style>0</style>
+    <text>EXIT</text>
+    <toggle_button>false</toggle_button>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <visible>true</visible>
+    <widget_type>Action Button</widget_type>
+    <width>65</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67d4</wuid>
+    <x>568</x>
+    <y>416</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
+    <actions hook="false" hook_all="false">
+      <action type="EXECUTE_CMD">
+        <command>diagnostics-help TMBF_Buffer</command>
+        <command_directory>$(opi.dir)</command_directory>
+        <wait_time>10</wait_time>
+        <description></description>
+      </action>
+    </actions>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Controller: BG" red="205" green="205" blue="205" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="14" style="1" pixels="true" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>25</height>
+    <image></image>
+    <name>EDM shell command</name>
+    <push_action_index>0</push_action_index>
+    <pv_name></pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <style>0</style>
+    <text>?</text>
+    <toggle_button>false</toggle_button>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <visible>true</visible>
+    <widget_type>Action Button</widget_type>
+    <width>25</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67d3</wuid>
+    <x>4</x>
+    <y>4</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <axis_0_auto_scale>false</axis_0_auto_scale>
+    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
+    <axis_0_auto_scale_tight>false</axis_0_auto_scale_tight>
+    <axis_0_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_axis_color>
+    <axis_0_axis_title></axis_0_axis_title>
+    <axis_0_dash_grid_line>true</axis_0_dash_grid_line>
+    <axis_0_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_grid_color>
+    <axis_0_log_scale>false</axis_0_log_scale>
+    <axis_0_maximum>16500.0</axis_0_maximum>
+    <axis_0_minimum>-200.0</axis_0_minimum>
+    <axis_0_scale_font>
+      <fontdata fontName="liberation sans" height="12" style="0" pixels="true" />
+    </axis_0_scale_font>
+    <axis_0_scale_format></axis_0_scale_format>
+    <axis_0_show_grid>false</axis_0_show_grid>
+    <axis_0_time_format>0</axis_0_time_format>
+    <axis_0_title_font>
+      <fontdata fontName="liberation sans" height="12" style="0" pixels="true" />
+    </axis_0_title_font>
+    <axis_0_visible>true</axis_0_visible>
+    <axis_1_auto_scale>true</axis_1_auto_scale>
+    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
+    <axis_1_auto_scale_tight>false</axis_1_auto_scale_tight>
+    <axis_1_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_axis_color>
+    <axis_1_axis_title></axis_1_axis_title>
+    <axis_1_dash_grid_line>true</axis_1_dash_grid_line>
+    <axis_1_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_grid_color>
+    <axis_1_log_scale>false</axis_1_log_scale>
+    <axis_1_maximum>1.0</axis_1_maximum>
+    <axis_1_minimum>0.0</axis_1_minimum>
+    <axis_1_scale_font>
+      <fontdata fontName="liberation sans" height="12" style="0" pixels="true" />
+    </axis_1_scale_font>
+    <axis_1_scale_format></axis_1_scale_format>
+    <axis_1_show_grid>false</axis_1_show_grid>
+    <axis_1_time_format>0</axis_1_time_format>
+    <axis_1_title_font>
+      <fontdata fontName="liberation sans" height="12" style="0" pixels="true" />
+    </axis_1_title_font>
+    <axis_1_visible>true</axis_1_visible>
+    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_2_auto_scale_threshold>0.0</axis_2_auto_scale_threshold>
+    <axis_2_auto_scale_tight>false</axis_2_auto_scale_tight>
+    <axis_2_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_axis_color>
+    <axis_2_axis_title></axis_2_axis_title>
+    <axis_2_dash_grid_line>true</axis_2_dash_grid_line>
+    <axis_2_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_grid_color>
+    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
+    <axis_2_log_scale>false</axis_2_log_scale>
+    <axis_2_maximum>16600.0</axis_2_maximum>
+    <axis_2_minimum>8300.0</axis_2_minimum>
+    <axis_2_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_2_scale_font>
+    <axis_2_scale_format></axis_2_scale_format>
+    <axis_2_show_grid>false</axis_2_show_grid>
+    <axis_2_time_format>0</axis_2_time_format>
+    <axis_2_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_2_title_font>
+    <axis_2_visible>false</axis_2_visible>
+    <axis_2_y_axis>true</axis_2_y_axis>
+    <axis_count>3</axis_count>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>0</border_width>
+    <enabled>true</enabled>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>184</height>
+    <name>EDM xyGraph</name>
+    <plot_area_background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </plot_area_background_color>
+    <pv_name>$(trace_0_y_pv)</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_legend>false</show_legend>
+    <show_plot_area_border>false</show_plot_area_border>
+    <show_toolbar>false</show_toolbar>
+    <title></title>
+    <title_font>
+      <fontdata fontName="Arial" height="12" style="1" pixels="true" />
+    </title_font>
+    <tooltip>$(trace_0_y_pv)
+$(trace_0_y_pv_value)</tooltip>
+    <trace_0_anti_alias>false</trace_0_anti_alias>
+    <trace_0_buffer_size>65536</trace_0_buffer_size>
+    <trace_0_concatenate_data>false</trace_0_concatenate_data>
+    <trace_0_line_width>1</trace_0_line_width>
+    <trace_0_name>$(trace_0_y_pv)</trace_0_name>
+    <trace_0_plot_mode>0</trace_0_plot_mode>
+    <trace_0_point_size>4</trace_0_point_size>
+    <trace_0_point_style>0</trace_0_point_style>
+    <trace_0_trace_color>
+      <color name="Mid Blue" red="0" green="0" blue="196" />
+    </trace_0_trace_color>
+    <trace_0_trace_type>0</trace_0_trace_type>
+    <trace_0_update_delay>0</trace_0_update_delay>
+    <trace_0_update_mode>3</trace_0_update_mode>
+    <trace_0_visible>true</trace_0_visible>
+    <trace_0_x_axis_index>0</trace_0_x_axis_index>
+    <trace_0_x_pv></trace_0_x_pv>
+    <trace_0_x_pv_value />
+    <trace_0_y_axis_index>1</trace_0_y_axis_index>
+    <trace_0_y_pv>$(device):BUF:WFB</trace_0_y_pv>
+    <trace_0_y_pv_value />
+    <trace_count>1</trace_count>
+    <transparent>true</transparent>
+    <trigger_pv></trigger_pv>
+    <trigger_pv_value />
+    <visible>true</visible>
+    <widget_type>Dawn XY Graph</widget_type>
+    <width>624</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67d2</wuid>
+    <x>8</x>
+    <y>224</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.MenuButton" version="1.0.0">
+    <actions_from_pv>true</actions_from_pv>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>6</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="14" style="0" pixels="true" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>25</height>
+    <label></label>
+    <name>EDM menu button</name>
+    <pv_name>$(device):BUF:SELECT_S</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_down_arrow>true</show_down_arrow>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>false</transparent>
+    <visible>true</visible>
+    <widget_type>Menu Button</widget_type>
+    <width>121</width>
+    <wuid>-5ecea5e5:15d3b322ccb:-67d1</wuid>
+    <x>440</x>
+    <y>416</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>true</auto_size>
+    <background_color>
+      <color name="White" red="255" green="255" blue="255" />
+    </background_color>
+    <border_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="12" style="1" pixels="true" />
+    </font>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>14</height>
+    <horizontal_alignment>0</horizontal_alignment>
+    <name>EDM Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>Data Source:</text>
+    <tooltip></tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>75</width>
+    <wrap_words>false</wrap_words>
+    <wuid>-5ecea5e5:15d3b322ccb:-67d0</wuid>
+    <x>336</x>
+    <y>416</y>
+  </widget>
+</display>
